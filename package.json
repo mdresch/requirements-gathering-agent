@@ -8,9 +8,20 @@
   "type": "module",
   "dependencies": {
     "@azure-rest/ai-inference": "*",
-    "@azure/core-auth": "*"
+    "@azure/core-auth": "*",
+    "openai": "^5.0.1"
   },
   "devDependencies": {
-    "@types/node": "^22.15.24"
+    "@types/node": "^22.15.29",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "bin": {
+    "requirements-gathering-agent": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts"
   }
 }
