@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A simple informational website for a local bakery.",
   "main": "index.js",
-  "scripts": {},
   "dependencies": {},
   "license": "MIT"
 }
