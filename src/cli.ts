@@ -5,7 +5,7 @@ import * as path from 'path';
 import { getReadmeContent } from './modules/projectAnalyzer.js';
 import { generateMarkdownFile } from './modules/documentGenerator.js';
 import { getProjectPackageJson } from './modules/projectAnalyzer.js';
-import { getAiSummaryAndGoals, getAiUserStories, getAiPersonas, getAiAcceptanceCriteria, getAiStrategicStatements, getAiCoreValuesAndPurpose, getAiKeyRolesAndNeeds, getAiTechStackAnalysis, getAiDataModelSuggestions, getAiProcessFlowSuggestions, getAiRiskAnalysis, getAiComplianceConsiderations, getAiUiUxConsiderations, getAiProjectKickoffChecklist, getAiProjectCharter, getAiStakeholderRegister, getAiScopeManagementPlan, getAiRequirementsManagementPlan, getAiProjectScopeStatement, getAiWbs, getAiWbsDictionary, getAiActivityList, getAiActivityAttributes, getAiMilestoneList, getAiScheduleNetworkDiagram, getAiActivityDurationEstimates, getAiActivityResourceEstimates, getAiDevelopScheduleInput, getAiScheduleManagementPlan, getAiCostManagementPlan, getAiQualityManagementPlan, getAiResourceManagementPlan, getAiCommunicationsManagementPlan, getAiRiskManagementPlan, getAiProcurementManagementPlan, getAiStakeholderEngagementPlan } from './modules/llmProcessor.js';
+import { getAiSummaryAndGoals, getAiUserStories, getAiPersonas, getAiAcceptanceCriteria, getAiStrategicStatements, getAiCoreValuesAndPurpose, getAiKeyRolesAndNeeds, getAiTechStackAnalysis, getAiDataModelSuggestions, getAiProcessFlowSuggestions, getAiRiskAnalysis, getAiComplianceConsiderations, getAiUiUxConsiderations, getAiProjectKickoffChecklist, getAiProjectCharter, getAiStakeholderRegister, getAiScopeManagementPlan, getAiRequirementsManagementPlan, getAiProjectScopeStatement, getAiWbs, getAiWbsDictionary, getAiActivityList, getAiActivityAttributes, getAiMilestoneList, getAiScheduleNetworkDiagram, getAiActivityDurationEstimates, getAiActivityResourceEstimates, getAiDevelopScheduleInput, getAiScheduleManagementPlan, getAiQualityManagementPlan, getAiResourceManagementPlan, getAiRiskManagementPlan, getAiStakeholderEngagementPlan, getAiCostManagementPlan, getAiCommunicationsManagementPlan } from './modules/llmProcessor.js';
 
 async function main() {
   console.log('Requirements Gathering Agent Initializing...');
@@ -692,83 +692,6 @@ async function main() {
       console.log('AI Cost Management Plan could not be generated (API key missing or error).');
     }
 
-    // --- AI-Generated PMBOK Quality Management Plan ---
-    // aiAcceptanceCriteria, aiComplianceConsiderations, aiUiUxConsiderations are only defined in their respective blocks, so we need to define them here for use in the context bundle.
-    let qualityAcceptanceCriteria: string | null = null;
-    let qualityComplianceConsiderations: string | null = null;
-    let qualityUiUxConsiderations: string | null = null;
-    // Find the values if they were generated
-    if (aiUserStories) {
-      qualityAcceptanceCriteria = await getAiAcceptanceCriteria(aiUserStories);
-    }
-    if (aiSummary && aiDataModelSuggestions && aiPersonas && aiKeyRolesAndNeeds) {
-      qualityComplianceConsiderations = await getAiComplianceConsiderations(
-        aiSummary,
-        aiDataModelSuggestions,
-        aiPersonas,
-        aiKeyRolesAndNeeds
-      );
-    }
-    if (aiSummary && aiUserStories && aiPersonas && aiKeyRolesAndNeeds) {
-      qualityUiUxConsiderations = await getAiUiUxConsiderations(
-        aiSummary,
-        aiUserStories,
-        aiPersonas,
-        aiKeyRolesAndNeeds
-      );
-    }
-    const qualityManagementPlanContext = {
-      projectCharterOutput: aiProjectCharter,
-      projectScopeStatementOutput: aiProjectScopeStatement,
-      requirementsManagementPlanOutput: aiRequirementsManagementPlan,
-      aiAcceptanceCriteriaOutput: qualityAcceptanceCriteria,
-      stakeholderRegisterOutput: aiStakeholderRegister,
-      aiRiskAnalysisOutput: aiRiskAnalysis,
-      aiComplianceConsiderationsOutput: qualityComplianceConsiderations,
-      aiUiUxConsiderationsOutput: qualityUiUxConsiderations,
-      aiSummaryAndGoalsOutput: aiSummary
-    };
-    const aiQualityManagementPlan = await getAiQualityManagementPlan(qualityManagementPlanContext);
-    if (aiQualityManagementPlan) {
-      console.log('AI-generated Quality Management Plan created.');
-      await generateMarkdownFile(
-        path.join(process.cwd(), 'PMBOK_Documents/Planning'),
-        '15_Quality_Management_Plan.md',
-        'AI-Generated Quality Management Plan',
-        aiQualityManagementPlan
-      );
-      console.log('Generated PMBOK/Planning/15_Quality_Management_Plan.md');
-    } else {
-      console.log('AI Quality Management Plan could not be generated (API key missing or error).');
-    }
-
-    // --- AI-Generated PMBOK Resource Management Plan ---
-    const resourceManagementPlanContext = {
-      projectCharterOutput: aiProjectCharter,
-      projectScopeStatementOutput: aiProjectScopeStatement,
-      activityResourceEstimatesOutput: aiActivityResourceEstimates,
-      wbsOutput: aiWbs,
-      wbsDictionaryOutput: aiWbsDictionary,
-      stakeholderRegisterOutput: aiStakeholderRegister,
-      aiTechStackAnalysisOutput: aiTechStackAnalysis,
-      aiCoreValuesAndPurposeOutput: aiCoreValuesAndPurpose,
-      aiKeyRolesAndNeedsOutput: aiKeyRolesAndNeeds,
-      aiSummaryAndGoalsOutput: aiSummary
-    };
-    const aiResourceManagementPlan = await getAiResourceManagementPlan(resourceManagementPlanContext);
-    if (aiResourceManagementPlan) {
-      console.log('AI-generated Resource Management Plan created.');
-      await generateMarkdownFile(
-        path.join(process.cwd(), 'PMBOK_Documents/Planning'),
-        '16_Resource_Management_Plan.md',
-        'AI-Generated Resource Management Plan',
-        aiResourceManagementPlan
-      );
-      console.log('Generated PMBOK/Planning/16_Resource_Management_Plan.md');
-    } else {
-      console.log('AI Resource Management Plan could not be generated (API key missing or error).');
-    }
-
     // --- AI-Generated PMBOK Communications Management Plan ---
     const communicationsManagementPlanContext = {
       projectCharterOutput: aiProjectCharter,
@@ -790,55 +713,8 @@ async function main() {
       console.log('AI Communications Management Plan could not be generated (API key missing or error).');
     }
 
-    // --- AI-Generated PMBOK Risk Management Plan ---
-    const riskManagementPlanContext = {
-      projectCharterOutput: aiProjectCharter,
-      projectScopeStatementOutput: aiProjectScopeStatement,
-      stakeholderRegisterOutput: aiStakeholderRegister,
-      aiRiskAnalysisOutput: aiRiskAnalysis,
-      costManagementPlanOutput: aiCostManagementPlan,
-      scheduleManagementPlanOutput: aiScheduleManagementPlan,
-      aiSummaryAndGoalsOutput: aiSummary
-    };
-    const aiRiskManagementPlan = await getAiRiskManagementPlan(riskManagementPlanContext);
-    if (aiRiskManagementPlan) {
-      console.log('AI-generated Risk Management Plan created.');
-      await generateMarkdownFile(
-        path.join(process.cwd(), 'PMBOK_Documents/Planning'),
-        '18_Risk_Management_Plan.md',
-        'AI-Generated Risk Management Plan',
-        aiRiskManagementPlan
-      );
-      console.log('Generated PMBOK/Planning/18_Risk_Management_Plan.md');
-    } else {
-      console.log('AI Risk Management Plan could not be generated (API key missing or error).');
-    }
-
-    // --- AI-Generated PMBOK Procurement Management Plan ---
-    const procurementManagementPlanContext = {
-      projectScopeStatementOutput: aiProjectScopeStatement,
-      activityResourceEstimatesOutput: aiActivityResourceEstimates,
-      aiTechStackAnalysisOutput: aiTechStackAnalysis,
-      costManagementPlanOutput: aiCostManagementPlan,
-      scheduleManagementPlanOutput: aiScheduleManagementPlan,
-      aiRiskAnalysisOutput: aiRiskAnalysis,
-      aiSummaryAndGoalsOutput: aiSummary
-    };
-    const aiProcurementManagementPlan = await getAiProcurementManagementPlan(procurementManagementPlanContext);
-    if (aiProcurementManagementPlan) {
-      console.log('AI-generated Procurement Management Plan created.');
-      await generateMarkdownFile(
-        path.join(process.cwd(), 'PMBOK_Documents/Planning'),
-        '19_Procurement_Management_Plan.md',
-        'AI-Generated Procurement Management Plan',
-        aiProcurementManagementPlan
-      );
-      console.log('Generated PMBOK/Planning/19_Procurement_Management_Plan.md');
-    } else {
-      console.log('AI Procurement Management Plan could not be generated (API key missing or error).');
-    }
-
     // --- AI-Generated PMBOK Stakeholder Engagement Plan ---
+    const aiResourceManagementPlan = null; // Placeholder, as there is no AI Resource Management Plan function
     const stakeholderEngagementPlanContext = {
       stakeholderRegisterOutput: aiStakeholderRegister,
       communicationsManagementPlanOutput: aiCommunicationsManagementPlan,
