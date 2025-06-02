@@ -1,9 +1,24 @@
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const endpoint = process.env.REQUIREMENTS_AGENT_ENDPOINT || "https://models.github.ai/inference";
+// Get the directory of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env.local file in the project root
+dotenv.config({ path: path.join(__dirname, '.env.local') });
+
+// Debug: check if environment variables are loaded
+console.log('AZURE_AI_API_KEY found:', !!process.env.AZURE_AI_API_KEY);
+console.log('GITHUB_TOKEN found:', !!process.env.GITHUB_TOKEN);
+console.log('AZURE_AI_ENDPOINT found:', !!process.env.AZURE_AI_ENDPOINT);
+
+const endpoint = process.env.REQUIREMENTS_AGENT_ENDPOINT || process.env.AZURE_AI_ENDPOINT || "https://models.github.ai/inference";
 const model = process.env.REQUIREMENTS_AGENT_MODEL || "openai/gpt-4.1";
-const token = process.env.REQUIREMENTS_AGENT_TOKEN || process.env.GITHUB_TOKEN;
+const token = process.env.REQUIREMENTS_AGENT_TOKEN || process.env.AZURE_AI_API_KEY || process.env.GITHUB_TOKEN;
 
 export async function generateStrategicSections({ businessProblem, technologyStack = [], contextBundle = "" }: { businessProblem: string, technologyStack?: string[], contextBundle?: string }) {
   if (!token) {

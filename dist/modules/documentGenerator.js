@@ -8,6 +8,8 @@ import * as path from 'path';
  * @param content - The main content to write.
  */
 export async function generateMarkdownFile(outputDir, fileName, title, content) {
+    // Ensure the output directory exists
+    await fs.mkdir(outputDir, { recursive: true });
     const filePath = path.join(outputDir, fileName);
     const fileContent = `# ${title}\n\n${content}`;
     await fs.writeFile(filePath, fileContent, 'utf-8');

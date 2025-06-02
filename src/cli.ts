@@ -1,7 +1,24 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs/promises';
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 import * as path from 'path';
+
+// Get the directory of the current module and project root
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
+
+// Load environment variables from .env.local file in the project root
+dotenv.config({ path: path.join(projectRoot, '.env.local') });
+
+// Debug: check if environment variables are loaded
+console.log('Environment variables loaded:');
+console.log('AZURE_AI_API_KEY found:', !!process.env.AZURE_AI_API_KEY);
+console.log('GITHUB_TOKEN found:', !!process.env.GITHUB_TOKEN);
+console.log('AZURE_AI_ENDPOINT found:', !!process.env.AZURE_AI_ENDPOINT);
+
+import * as fs from 'fs/promises';
 import { getReadmeContent } from './modules/projectAnalyzer.js';
 import { generateMarkdownFile } from './modules/documentGenerator.js';
 import { getProjectPackageJson } from './modules/projectAnalyzer.js';

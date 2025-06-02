@@ -1,28 +1,13 @@
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 
-let client: any = null;
-let clientInitialized = false;
+const endpoint = process.env.REQUIREMENTS_AGENT_ENDPOINT || "https://models.github.ai/inference";
+const model = process.env.REQUIREMENTS_AGENT_MODEL || "openai/gpt-4.1";
+const token = process.env.REQUIREMENTS_AGENT_TOKEN || process.env.GITHUB_TOKEN;
 
-function initializeClient() {
-    if (clientInitialized) return client;
-    
-    const endpoint = process.env.REQUIREMENTS_AGENT_ENDPOINT || process.env.AZURE_AI_ENDPOINT || "https://models.github.ai/inference";
-    const model = process.env.REQUIREMENTS_AGENT_MODEL || "openai/gpt-4.1";
-    const token = process.env.REQUIREMENTS_AGENT_TOKEN || process.env.AZURE_AI_API_KEY || process.env.GITHUB_TOKEN;
-
-    client = token ? ModelClient(endpoint, new AzureKeyCredential(token)) : null;
-    clientInitialized = true;
-    
-    if (!token) {
-        console.warn('REQUIREMENTS_AGENT_TOKEN, AZURE_AI_API_KEY, or GITHUB_TOKEN environment variable not set. LLM functionalities will be skipped.');
-    }
-    
-    return client;
-}
-
-function getModel() {
-    return process.env.REQUIREMENTS_AGENT_MODEL || "openai/gpt-4.1";
+const client = token ? ModelClient(endpoint, new AzureKeyCredential(token)) : null;
+if (!token) {
+    console.warn('REQUIREMENTS_AGENT_TOKEN or GITHUB_TOKEN environment variable not set. LLM functionalities will be skipped.');
 }
 
 /**
@@ -31,7 +16,6 @@ function getModel() {
  * @returns The AI-generated summary and goals, or null if unavailable.
  */
 export async function getAiSummaryAndGoals(textContent: string): Promise<string | null> {
-    const client = initializeClient();
     if (!client) {
         console.log('AI client not initialized. Skipping AI summary.');
         return null;
@@ -43,19 +27,19 @@ export async function getAiSummaryAndGoals(textContent: string): Promise<string 
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
-        });        if (isUnexpected(response)) {
-            console.error('Error calling AI API:', response.body?.error || response.body || 'Unknown error');
-            console.error('Response status:', response.status);
+        });
+
+        if (isUnexpected(response)) {
+            console.error('Error calling AI API:', response.body.error);
             return null;
         }
 
         return response.body.choices[0]?.message?.content?.trim() || null;
     } catch (error) {
         console.error('Error calling AI API:', error);
-        console.error('Error details:', error instanceof Error ? error.message : String(error));
         return null;
     }
 }
@@ -66,8 +50,7 @@ export async function getAiSummaryAndGoals(textContent: string): Promise<string 
  * @returns The AI-generated user stories, or null if unavailable.
  */
 export async function getAiUserStories(projectContext: string): Promise<string | null> {
-    const client = initializeClient();
-  if (!client) {
+    if (!client) {
         console.log('LLM client not initialized. Skipping AI user stories.');
         return null;
     }
@@ -78,7 +61,7 @@ export async function getAiUserStories(projectContext: string): Promise<string |
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -105,7 +88,6 @@ export async function getAiPersonas(
   projectContext: string,
   userStoriesContent?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI personas.');
     return null;
@@ -117,7 +99,7 @@ export async function getAiPersonas(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -140,7 +122,6 @@ export async function getAiPersonas(
  * @returns The AI-generated acceptance criteria, or null if unavailable.
  */
 export async function getAiAcceptanceCriteria(userStoriesContent: string): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI acceptance criteria.');
     return null;
@@ -152,7 +133,7 @@ export async function getAiAcceptanceCriteria(userStoriesContent: string): Promi
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -175,7 +156,6 @@ export async function getAiAcceptanceCriteria(userStoriesContent: string): Promi
  * @returns The AI-generated Vision and Mission statements, or null if unavailable.
  */
 export async function getAiStrategicStatements(projectSummaryAndGoals: string): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI strategic statements.');
     return null;
@@ -187,7 +167,7 @@ export async function getAiStrategicStatements(projectSummaryAndGoals: string): 
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -214,7 +194,6 @@ export async function getAiCoreValuesAndPurpose(
   projectSummaryAndGoals: string,
   visionAndMission: string
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI core values and purpose.');
     return null;
@@ -226,7 +205,7 @@ export async function getAiCoreValuesAndPurpose(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -255,7 +234,6 @@ export async function getAiKeyRolesAndNeeds(
   userStories?: string | null,
   personas?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI key roles and needs.');
     return null;
@@ -267,7 +245,7 @@ export async function getAiKeyRolesAndNeeds(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -294,7 +272,6 @@ export async function getAiTechStackAnalysis(
   packageJsonData: Record<string, any>,
   projectSummary?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI tech stack analysis.');
     return null;
@@ -306,7 +283,7 @@ export async function getAiTechStackAnalysis(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -335,7 +312,6 @@ export async function getAiDataModelSuggestions(
   userStories?: string | null,
   personas?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI data model suggestions.');
     return null;
@@ -347,7 +323,7 @@ export async function getAiDataModelSuggestions(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -376,7 +352,6 @@ export async function getAiProcessFlowSuggestions(
   userStories?: string | null,
   keyRolesAndNeeds?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI process flow suggestions.');
     return null;
@@ -388,7 +363,7 @@ export async function getAiProcessFlowSuggestions(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -419,7 +394,6 @@ export async function getAiRiskAnalysis(
   dataModelSuggestions?: string | null,
   processFlows?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI risk analysis.');
     return null;
@@ -431,7 +405,7 @@ export async function getAiRiskAnalysis(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -462,7 +436,6 @@ export async function getAiComplianceConsiderations(
   personas?: string | null,
   keyRolesAndNeeds?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI compliance considerations.');
     return null;
@@ -474,7 +447,7 @@ export async function getAiComplianceConsiderations(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -505,7 +478,6 @@ export async function getAiUiUxConsiderations(
   personas?: string | null,
   keyRolesAndNeeds?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI UI/UX considerations.');
     return null;
@@ -517,7 +489,7 @@ export async function getAiUiUxConsiderations(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -550,7 +522,6 @@ export async function getAiProjectKickoffChecklist(
   techStackAnalysis?: string | null,
   riskAnalysis?: string | null
 ): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI project kickoff checklist.');
     return null;
@@ -562,7 +533,7 @@ export async function getAiProjectKickoffChecklist(
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -593,7 +564,6 @@ export async function getAiProjectCharter(contextBundle: {
   personas?: string | null,
   techStackAnalysis?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Project Charter.');
     return null;
@@ -605,7 +575,7 @@ export async function getAiProjectCharter(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -634,7 +604,6 @@ export async function getAiStakeholderRegister(contextBundle: {
   projectCharterOutput?: string | null,
   readmeContent?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Stakeholder Register.');
     return null;
@@ -646,7 +615,7 @@ export async function getAiStakeholderRegister(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -673,7 +642,6 @@ export async function getAiScopeManagementPlan(contextBundle: {
   stakeholderRegisterOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Scope Management Plan.');
     return null;
@@ -685,7 +653,7 @@ export async function getAiScopeManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -713,7 +681,6 @@ export async function getAiRequirementsManagementPlan(contextBundle: {
   scopeManagementPlanOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Requirements Management Plan.');
     return null;
@@ -725,7 +692,7 @@ export async function getAiRequirementsManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -759,7 +726,6 @@ export async function getAiProjectScopeStatement(contextBundle: {
   aiUiUxConsiderationsOutput?: string | null,
   aiRiskAnalysisOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Project Scope Statement.');
     return null;
@@ -771,7 +737,7 @@ export async function getAiProjectScopeStatement(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -798,7 +764,6 @@ export async function getAiWbs(contextBundle: {
   aiUserStoriesOutput?: string | null,
   aiProcessFlowsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI WBS generation.');
     return null;
@@ -810,7 +775,7 @@ export async function getAiWbs(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -840,7 +805,6 @@ export async function getAiWbsDictionary(contextBundle: {
   aiKeyRolesAndNeedsOutput?: string | null,
   stakeholderRegisterOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI WBS Dictionary generation.');
     return null;
@@ -852,7 +816,7 @@ export async function getAiWbsDictionary(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -880,7 +844,6 @@ export async function getAiActivityList(contextBundle: {
   projectScopeStatementOutput?: string | null,
   aiUserStoriesOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Activity List generation.');
     return null;
@@ -892,7 +855,7 @@ export async function getAiActivityList(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -921,7 +884,6 @@ export async function getAiActivityAttributes(contextBundle: {
   aiRiskAnalysisOutput?: string | null,
   aiTechStackAnalysisOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Activity Attributes generation.');
     return null;
@@ -933,7 +895,7 @@ export async function getAiActivityAttributes(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -962,7 +924,6 @@ export async function getAiActivityDurationEstimates(contextBundle: {
   aiRiskAnalysisOutput?: string | null,
   aiTechStackAnalysisOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Activity Duration Estimates generation.');
     return null;
@@ -974,7 +935,7 @@ export async function getAiActivityDurationEstimates(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1003,7 +964,6 @@ export async function getAiMilestoneList(contextBundle: {
   projectScopeStatementOutput?: string | null,
   projectCharterOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Milestone List generation.');
     return null;
@@ -1015,7 +975,7 @@ export async function getAiMilestoneList(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1042,7 +1002,6 @@ export async function getAiScheduleNetworkDiagram(contextBundle: {
   activityAttributesOutput?: string | null,
   milestoneListOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Schedule Network Diagram generation.');
     return null;
@@ -1054,7 +1013,7 @@ export async function getAiScheduleNetworkDiagram(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1084,7 +1043,6 @@ export async function getAiActivityResourceEstimates(contextBundle: {
   aiTechStackAnalysisOutput?: string | null,
   stakeholderRegisterOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Activity Resource Estimates generation.');
     return null;
@@ -1096,7 +1054,7 @@ export async function getAiActivityResourceEstimates(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1127,7 +1085,6 @@ export async function getAiDevelopScheduleInput(contextBundle: {
   milestoneListOutput?: string | null,
   projectScopeStatementOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Develop Schedule input generation.');
     return null;
@@ -1139,7 +1096,7 @@ export async function getAiDevelopScheduleInput(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1167,7 +1124,6 @@ export async function getAiScheduleManagementPlan(contextBundle: {
   developScheduleInputOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Schedule Management Plan.');
     return null;
@@ -1179,7 +1135,7 @@ export async function getAiScheduleManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1211,7 +1167,6 @@ export async function getAiCostManagementPlan(contextBundle: {
   aiRiskAnalysisOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Cost Management Plan.');
     return null;
@@ -1223,7 +1178,7 @@ export async function getAiCostManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1256,7 +1211,6 @@ export async function getAiQualityManagementPlan(contextBundle: {
   aiUiUxConsiderationsOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Quality Management Plan.');
     return null;
@@ -1267,7 +1221,7 @@ export async function getAiQualityManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1301,7 +1255,6 @@ export async function getAiResourceManagementPlan(contextBundle: {
   aiKeyRolesAndNeedsOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Resource Management Plan.');
     return null;
@@ -1311,7 +1264,7 @@ export async function getAiResourceManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1339,7 +1292,6 @@ export async function getAiCommunicationsManagementPlan(contextBundle: {
   stakeholderRegisterOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Communications Management Plan.');
     return null;
@@ -1349,7 +1301,7 @@ export async function getAiCommunicationsManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1380,7 +1332,6 @@ export async function getAiRiskManagementPlan(contextBundle: {
   scheduleManagementPlanOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Risk Management Plan.');
     return null;
@@ -1391,7 +1342,7 @@ export async function getAiRiskManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1422,7 +1373,6 @@ export async function getAiProcurementManagementPlan(contextBundle: {
   aiRiskAnalysisOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Procurement Management Plan.');
     return null;
@@ -1432,7 +1382,7 @@ export async function getAiProcurementManagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });
@@ -1462,7 +1412,6 @@ export async function getAiStakeholderEngagementPlan(contextBundle: {
   aiKeyRolesAndNeedsOutput?: string | null,
   aiSummaryAndGoalsOutput?: string | null
 }): Promise<string | null> {
-  const client = initializeClient();
   if (!client) {
     console.log('LLM client not initialized. Skipping AI Stakeholder Engagement Plan.');
     return null;
@@ -1472,7 +1421,7 @@ export async function getAiStakeholderEngagementPlan(contextBundle: {
         const response = await client.path("/chat/completions").post({
             body: {
                 messages: [{ role: "user", content: prompt }],
-                model: getModel(),
+                model: model,
                 temperature: 0.5,
             }
         });

@@ -14,6 +14,9 @@ export async function generateMarkdownFile(
   title: string,
   content: string
 ): Promise<void> {
+  // Ensure the output directory exists
+  await fs.mkdir(outputDir, { recursive: true });
+  
   const filePath = path.join(outputDir, fileName);
   const fileContent = `# ${title}\n\n${content}`;
   await fs.writeFile(filePath, fileContent, 'utf-8');
