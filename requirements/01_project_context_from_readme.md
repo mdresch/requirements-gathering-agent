@@ -123,6 +123,23 @@ node dist/cli.js
 npm run dev
 ```
 
+# Using a High-Token LLM Model
+
+To use a large-context LLM (such as GPT-4-32k, Claude 3, etc.) for requirements and PMBOK document generation, set the environment variable `REQUIREMENTS_AGENT_MODEL` to your desired model name before running the agent. This enables processing and generating longer documents without token limit issues.
+
+**Example (Linux/macOS):**
+```bash
+export REQUIREMENTS_AGENT_MODEL="openai/gpt-4-32k"
+# Then run your application as usual
+```
+
+If you use a `.env` file, add:
+```
+REQUIREMENTS_AGENT_MODEL=openai/gpt-4-32k
+```
+
+The agent will automatically use the specified model for all LLM-powered operations.
+
 ## API Reference
 
 ### Core Functions
