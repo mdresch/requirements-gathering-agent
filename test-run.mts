@@ -1,75 +1,105 @@
-import { generateStrategicSections, generateRequirements } from './index.js';
+import { getAiSummaryAndGoals, getAiUserStories, getAiProjectCharter } from './index.js';
 import { mkdir, writeFile } from 'fs/promises';
 
 (async () => {
   // Ensure docs directory exists
   try {
-    await mkdir('./requirements-gathering-agent/docs', { recursive: true });
+    await mkdir('./docs', { recursive: true });
   } catch (err) {
     console.error('Error creating docs directory:', err);
   }
 
-  // Step 1: Generate strategic sections
-  const strategic = await generateStrategicSections({
-    businessProblem: 'A SaaS platform for remote team collaboration',
-    technologyStack: ["Node.js", "React", "PostgreSQL"],
-    contextBundle: 'The platform enables real-time chat, file sharing, and project management for distributed teams.'
-  });
-  console.log('Strategic:', strategic);
+  console.log('Testing Requirements Gathering Agent functions...');
+  
+  const sampleContext = `
+# Test Project
+A SaaS platform for remote team collaboration
 
-  // Step 2: Generate requirements
-  const requirements = await generateRequirements({
-    businessProblem: 'A SaaS platform for remote team collaboration',
-    technologyStack: ["Node.js", "React", "PostgreSQL"],
-    contextBundle: 'The platform enables real-time chat, file sharing, and project management for distributed teams.'
-  });
-  console.log('Requirements:', requirements);
+## Features
+- Real-time chat functionality
+- File sharing and storage
+- Project management tools
+- Team collaboration features
 
-  // Step 3: Write outputs to files with granular error handling
-  const techStackDoc = `# Technology Stack\n\n${["Node.js", "React", "PostgreSQL"].map(t => `- ${t}`).join('\n')}`;
-  const processFlowsDoc = `# Process Flows\n\n- Real-time chat workflow\n- File sharing workflow\n- Project management workflow`;
-  const dataModelDoc = `# Data Model\n\n- User\n- Team\n- Message\n- File\n- Project\n- Task`;
-  const businessStatement = `# Business Statement\n\n**Vision:** ${strategic.vision}\n\n**Mission:** ${strategic.mission}\n\n**Core Values:**\n${strategic.coreValues.map(v => `- ${v}`).join('\n')}\n\n**Purpose:** ${strategic.purpose}\n`;
+## Technology Stack
+- Node.js backend
+- React frontend
+- PostgreSQL database
+- WebSocket for real-time features
+`;
 
-  // Format requirements as Markdown with business problem statement
-  const businessProblem = 'A SaaS platform for remote team collaboration';
-  function requirementsToMarkdown(requirements, businessProblem) {
-    let md = `# Requirements Statement\n\n**Business Problem:** ${businessProblem}\n\n`;
-    md += requirements.map(r => `## Role: ${r.role}\n\n**Needs:**\n${r.needs.map(n => `- ${n}`).join('\n')}\n\n**Processes:**\n${r.processes.map(p => `- ${p}`).join('\n')}\n`).join('\n');
-    return md;
-  }
-  const requirementsMarkdown = requirementsToMarkdown(requirements, businessProblem);
-
+  // Test AI Summary and Goals generation
   try {
-    await writeFile('./requirements-gathering-agent/docs/business-statement.md', businessStatement);
-    console.log('Wrote business-statement.md');
-  } catch (err) {
-    console.error('Error writing business-statement.md:', err);
-  }
-  try {
-    await writeFile('./requirements-gathering-agent/docs/technology-stack.md', techStackDoc);
-    console.log('Wrote technology-stack.md');
-  } catch (err) {
-    console.error('Error writing technology-stack.md:', err);
-  }
-  try {
-    await writeFile('./requirements-gathering-agent/docs/process-flows.md', processFlowsDoc);
-    console.log('Wrote process-flows.md');
-  } catch (err) {
-    console.error('Error writing process-flows.md:', err);
-  }
-  try {
-    await writeFile('./requirements-gathering-agent/docs/data-model.md', dataModelDoc);
-    console.log('Wrote data-model.md');
-  } catch (err) {
-    console.error('Error writing data-model.md:', err);
-  }
-  try {
-    await writeFile('./requirements-gathering-agent/docs/requirements-agent-output.md', requirementsMarkdown);
-    console.log('Wrote requirements-agent-output.md');
-  } catch (err) {
-    console.error('Error writing requirements-agent-output.md:', err);
+    console.log('Testing getAiSummaryAndGoals...');
+    const summary = await getAiSummaryAndGoals(sampleContext);
+    if (summary) {
+      console.log('✅ AI Summary generated successfully');
+      await writeFile('./docs/test-summary.md', summary);
+    } else {
+      console.log('❌ AI Summary generation failed (likely missing API key)');
+    }
+  } catch (error) {
+    console.log('❌ AI Summary generation error:', error.message);
   }
 
-  console.log('All documentation generation attempts complete.');
+  // Test AI User Stories generation
+  try {
+    console.log('Testing getAiUserStories...');
+    const userStories = await getAiUserStories(sampleContext);
+    if (userStories) {
+      console.log('✅ AI User Stories generated successfully');
+      await writeFile('./docs/test-user-stories.md', userStories);
+    } else {
+      console.log('❌ AI User Stories generation failed (likely missing API key)');
+    }
+  } catch (error) {
+    console.log('❌ AI User Stories generation error:', error.message);
+  }
+
+  // Test AI Project Charter generation
+  try {
+    console.log('Testing getAiProjectCharter...');
+    const charter = await getAiProjectCharter({
+      summaryAndGoals: 'Sample project summary',
+      strategicStatements: 'Sample strategic statements',
+      coreValuesAndPurpose: 'Sample core values',
+      keyRolesAndNeeds: 'Sample roles and needs',
+      riskAnalysis: 'Sample risk analysis',
+      personas: 'Sample personas',
+      techStackAnalysis: 'Sample tech analysis'
+    });
+    if (charter) {
+      console.log('✅ AI Project Charter generated successfully');
+      await writeFile('./docs/test-project-charter.md', charter);
+    } else {
+      console.log('❌ AI Project Charter generation failed (likely missing API key)');
+    }
+  } catch (error) {
+    console.log('❌ AI Project Charter generation error:', error.message);
+  }
+
+  // Write some sample documentation to demonstrate directory structure
+  const sampleDocs = [
+    {
+      file: './docs/sample-tech-stack.md',
+      content: `# Technology Stack\n\n- Node.js\n- React\n- PostgreSQL\n- WebSocket`
+    },
+    {
+      file: './docs/sample-requirements.md', 
+      content: `# Sample Requirements\n\n## Functional Requirements\n- Real-time messaging\n- File upload/download\n- Project management\n\n## Non-Functional Requirements\n- Performance\n- Security\n- Scalability`
+    }
+  ];
+
+  for (const doc of sampleDocs) {
+    try {
+      await writeFile(doc.file, doc.content);
+      console.log(`✅ Created ${doc.file}`);
+    } catch (error) {
+      console.log(`❌ Failed to create ${doc.file}:`, error.message);
+    }
+  }
+
+  console.log('\n✅ Test completed! Check ./docs/ directory for generated files.');
+  console.log('Note: AI functions require valid API keys to generate content.');
+  console.log('📁 Directory structure created in project root as expected.');
 })();

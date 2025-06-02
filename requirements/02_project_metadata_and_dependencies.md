@@ -4,9 +4,9 @@
 
 ## Core Information
 - **Name:** `requirements-gathering-agent`
-- **Version:** `0.1.0`
-- **Description:** `Reusable LLM-powered requirements gathering agent for any project.`
-- **Main Entry Point:** `index.ts`
+- **Version:** `1.0.0`
+- **Description:** `Comprehensive PMBOK project management documentation generation agent powered by LLM`
+- **Main Entry Point:** `dist/index.js`
 
 ## Dependencies
 - `@azure-rest/ai-inference`: `^1.0.0-beta.6`

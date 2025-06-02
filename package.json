@@ -1,11 +1,12 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "0.1.0",
-  "description": "Reusable LLM-powered requirements gathering agent for any project.",
-  "main": "index.ts",
-  "types": "index.ts",
+  "version": "1.0.0",
+  "description": "Comprehensive PMBOK project management documentation generation agent powered by LLM",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "type": "module",
+  "keywords": ["pmbok", "project-management", "documentation", "requirements", "llm", "azure", "github"],
   "dependencies": {
     "@azure-rest/ai-inference": "^1.0.0-beta.6",
     "@azure/core-auth": "^1.9.0",
@@ -16,14 +17,33 @@
     "@types/node": "^22.15.29",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+  },  "bin": {
+    "requirements-agent": "./dist/cli.js"
   },
-  "bin": {
-    "requirements-gathering-agent": "./dist/cli.js"
-  },
-  "scripts": {
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },  "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
     "dev": "ts-node src/cli.ts",
-    "generate-docs": "npm run build && npm start"
-  }
+    "generate-docs": "npm run build && npm start",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/requirements-gathering-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/requirements-gathering-agent/issues"
+  },
+  "homepage": "https://github.com/your-username/requirements-gathering-agent#readme"
 }
