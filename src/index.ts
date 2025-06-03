@@ -117,5 +117,5 @@ export interface UserRequirement {
 }
 
 // Version information
-export const version = '2.0.0';
+export const version = '2.1.1';
 export const name = 'requirements-gathering-agent';

@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 async function main() {
     try {
-        console.log('🚀 Requirements Gathering Agent v2.0.0');
+        console.log('🚀 Requirements Gathering Agent v2.1.1');
         console.log('🔧 Initializing...');
         // Validate environment and AI provider
         const isValid = await validateEnvironment();
@@ -61,7 +61,7 @@ async function validateEnvironment() {
     }
     // Check for version flag
     if (process.argv.includes('--version') || process.argv.includes('-v')) {
-        console.log('2.0.0');
+        console.log('2.1.1');
         return false;
     }
     // Load environment variables

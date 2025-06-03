@@ -17,7 +17,7 @@ const __dirname = dirname(__filename);
 
 async function main() {
   try {
-    console.log('🚀 Requirements Gathering Agent v2.0.0');
+    console.log('🚀 Requirements Gathering Agent v2.1.1');
     console.log('🔧 Initializing...');
     
     // Validate environment and AI provider
@@ -72,7 +72,7 @@ async function validateEnvironment(): Promise<boolean> {
 
   // Check for version flag
   if (process.argv.includes('--version') || process.argv.includes('-v')) {
-    console.log('2.0.0');
+    console.log('2.1.1');
     return false;
   }
 

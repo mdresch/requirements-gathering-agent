@@ -1,6 +1,6 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "AI-powered PMBOK documentation generator using Azure OpenAI - generates comprehensive project management documents from README context",
   "main": "dist/cli.js",
   "type": "module",
@@ -41,9 +41,9 @@
     "entra-id"
   ],
   "author": {
-    "name": "Menno van der Krift",
-    "email": "menno@cbaconsult.eu",
-    "url": "https://cbaconsult.eu"
+    "name": "Menno Drescher",
+    "email": "menno.drescher@gmail.com",
+    "url": ""
   },
   "repository": {
     "type": "git",
@@ -55,6 +55,7 @@
   "homepage": "https://github.com/mdresch/requirements-gathering-agent#readme",
   "license": "MIT",
   "dependencies": {
+    "@azure-rest/ai-inference": "^1.0.0-beta.6",
     "@azure/identity": "^4.4.1",
     "@azure/openai": "^2.0.0",
     "dotenv": "^16.4.7",
