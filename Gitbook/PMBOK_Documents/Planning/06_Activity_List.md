@@ -1,91 +1,55 @@
 # AI-Generated Activity List
 
-Certainly! Below is a structured Activity List, decomposing each lowest-level WBS element into specific activities required for its completion. Each activity is assigned a unique Activity ID, a concise description, and references its parent WBS ID.
+Certainly! Below is a **detailed Activity List** for **Project Execution** of the Requirements Gathering Agent project, including:
+
+- Activity Name  
+- Description  
+- Dependencies (predecessor activities)  
+- Estimated Duration  
+- Required Resources  
+
+This activity list maps the WBS and user stories into actionable tasks for execution.
 
 ---
 
-# Activity List for Requirements Gathering Agent Project
+# Activity List for Project Execution
 
-| Activity ID             | WBS ID Reference | Activity Name/Description                                                      |
-|-------------------------|------------------|--------------------------------------------------------------------------------|
-| **1.1-A1**             | 1.1              | Develop project management framework and initial planning documents          |
-| **1.1-A2**             | 1.1              | Define project scope, objectives, and success criteria                        |
-| **1.1-A3**             | 1.1              | Identify and allocate project resources and roles                              |
-| **1.1-A4**             | 1.1              | Create project schedule and milestone plan                                    |
-| **1.2-A1**             | 1.2              | Gather stakeholder needs and expectations through interviews/workshops     |
-| **1.2-A2**             | 1.2              | Document detailed project scope and objectives                                |
-| **1.2-A3**             | 1.2              | Validate scope and objectives with key stakeholders                            |
-| **1.3-A1**             | 1.3              | Develop stakeholder communication plan and reporting templates               |
-| **1.3-A2**             | 1.3              | Establish communication channels and schedule regular updates                |
-| **1.3-A3**             | 1.3              | Prepare and distribute status reports and meeting minutes                     |
-| **2.1-A1**             | 2.1              | Conduct interviews with users and stakeholders                                 |
-| **2.1-A2**             | 2.1              | Organize requirements workshops and review existing documentation            |
-| **2.1-A3**             | 2.1              | Collect and document user requirements and needs                               |
-| **2.1-A4**             | 2.1              | Validate requirements with stakeholders                                         |
-| **2.2-A1**             | 2.2              | Analyze collected requirements to define functional specifications             |
-| **2.2-A2**             | 2.2              | Define non-functional requirements (performance, security, usability, etc.)  |
-| **2.2-A3**             | 2.2              | Create requirements traceability matrix                                         |
-| **2.2-A4**             | 2.2              | Review and approve detailed requirements with stakeholders                     |
-| **3.1-A1**             | 3.1              | Design high-level system architecture diagrams                                   |
-| **3.1-A2**             | 3.1              | Develop detailed architecture specifications including API and CLI interfaces   |
-| **3.1-A3**             | 3.1              | Review architecture designs with technical leads                                |
-| **3.2-A1**             | 3.2              | Create wireframes and prototypes for user interface components                   |
-| **3.2-A2**             | 3.2              | Conduct usability review and refine UI designs                                   |
-| **3.2-A3**             | 3.2              | Document UI design specifications and interaction flows                         |
-| **3.3-A1**             | 3.3              | Implement backend modules for AI integration and document generation            |
-| **3.3-A2**             | 3.3              | Develop API endpoints for system components                                        |
-| **3.3-A3**             | 3.3              | Integrate Azure AI services with backend logic                                    |
-| **3.3-A4**             | 3.3              | Perform unit testing of backend modules                                              |
-| **3.4-A1**             | 3.4              | Develop features for creating and editing document templates                     |
-| **3.4-A2**             | 3.4              | Implement template management interface and storage mechanisms                   |
-| **3.4-A3**             | 3.4              | Validate template customization and standards compliance                          |
-| **3.5-A1**             | 3.5              | Develop document export functionality (PDF, Word formats)                         |
-| **3.5-A2**             | 3.5              | Integrate storage solutions for saving generated documents                        |
-| **3.5-A3**             | 3.5              | Test export and storage features for reliability and security                     |
-| **4.1-A1**             | 4.1              | Configure Azure AI authentication and access controls                              |
-| **4.1-A2**             | 4.1              | Deploy AI models in Azure environment                                               |
-| **4.2-A1**             | 4.2              | Fine-tune AI models for accuracy and relevance                                     |
-| **4.2-A2**             | 4.2              | Validate AI model performance with test datasets                                    |
-| **4.3-A1**             | 4.3              | Develop RESTful APIs for AI and backend system integration                          |
-| **4.3-A2**             | 4.3              | Document API specifications and usage guidelines                                    |
-| **4.3-A3**             | 4.3              | Conduct integration testing of APIs with system components                          |
-| **5.1-A1**             | 5.1              | Develop project management document generation and editing features               |
-| **5.1-A2**             | 5.1              | Implement review and approval workflows for project documents                     |
-| **5.1-A3**             | 5.1              | Enable export of project management documents in required formats                  |
-| **5.2-A1**             | 5.2              | Build tools for triggering technical report generation                            |
-| **5.2-A2**             | 5.2              | Create interface for reviewing technical artifacts                                |
-| **5.2-A3**             | 5.2              | Integrate artifact management with system workflows                                |
-| **5.3-A1**             | 5.3              | Develop template customization interface for documentation specialists            |
-| **5.3-A2**             | 5.3              | Implement document export features for compliance and standards                     |
-| **5.3-A3**             | 5.3              | Validate templates and exported documents against organizational standards          |
-| **5.4-A1**             | 5.4              | Develop CLI commands for system automation and integration                          |
-| **5.4-A2**             | 5.4              | Configure CI/CD pipelines for automated build, test, and deployment                |
-| **5.4-A3**             | 5.4              | Automate system deployment processes in Azure environment                            |
-| **6.1-A1**             | 6.1              | Write and execute unit tests for individual modules                                |
-| **6.1-A2**             | 6.1              | Review code coverage and fix identified issues                                    |
-| **6.2-A1**             | 6.2              | Develop and execute integration test cases between modules and APIs                |
-| **6.2-A2**             | 6.2              | Document integration test results and address issues                               |
-| **6.3-A1**             | 6.3              | Prepare UAT test cases based on user stories and acceptance criteria              |
-| **6.3-A2**             | 6.3              | Facilitate UAT sessions with end-users and collect feedback                        |
-| **6.3-A3**             | 6.3              | Obtain formal sign-off from stakeholders on UAT outcomes                            |
-| **6.4-A1**             | 6.4              | Conduct performance testing (load, stress tests)                                    |
-| **6.4-A2**             | 6.4              | Perform security vulnerability assessments and remediation                          |
-| **6.4-A3**             | 6.4              | Document security and performance test reports                                    |
-| **7.1-A1**             | 7.1              | Develop deployment strategy and environment setup plan                            |
-| **7.1-A2**             | 7.1              | Prepare deployment environments (cloud, on-premises, staging)                     |
-| **7.2-A1**             | 7.2              | Create CI/CD pipeline scripts for automated deployment                              |
-| **7.2-A2**             | 7.2              | Test CI/CD pipelines for reliability and repeatability                            |
-| **7.3-A1**             | 7.3              | Deploy system components to Azure cloud environment                                |
-| **7.3-A2**             | 7.3              | Validate deployment success and system stability                                    |
-| **7.4-A1**             | 7.4              | Prepare user and technical documentation for end-users and administrators          |
-| **7.4-A2**             | 7.4              | Conduct training sessions for users and support staff                              |
-| **8.1-A1**             | 8.1              | Monitor system performance and usage post-deployment                                |
-| **8.1-A2**             | 8.1              | Generate performance and stability reports                                        |
-| **8.2-A1**             | 8.2              | Log and prioritize bugs or issues identified during operation                     |
-| **8.2-A2**             | 8.2              | Develop patches and bug fixes, deploy updates                                    |
-| **8.3-A1**             | 8.3              | Collect user feedback for system improvements                                      |
-| **8.3-A2**             | 8.3              | Implement enhancements to AI models, workflows, and interfaces                     |
-
----
-
-This activity list provides a detailed breakdown of tasks aligned with each work package, facilitating project planning, resource allocation, and tracking. Adjustments can be made based on specific project needs or further details.
+| Activity ID | Activity Name                                  | Description                                                                                     | Dependencies                     | Duration (Days) | Resources                                   |
+|-------------|------------------------------------------------|-------------------------------------------------------------------------------------------------|---------------------------------|-----------------|---------------------------------------------|
+| 1           | Kickoff Meeting                                | Align stakeholders on objectives, scope, timelines, and roles                                  | None                            | 1               | Project Manager, PMO Lead, Key Stakeholders |
+| 2           | Develop Project Management Plan                | Create comprehensive plan covering scope, schedule, budget, risk, and communication           | 1                               | 5               | Project Manager, PMO Lead                    |
+| 3           | Stakeholder Identification                      | Identify and document all stakeholders and their roles                                        | 2                               | 3               | Business Analyst, Project Manager            |
+| 4           | Requirements Elicitation                         | Gather functional and non-functional requirements, user stories, and acceptance criteria       | 3                               | 10              | Business Analyst, Stakeholders               |
+| 5           | Requirements Analysis                            | Analyze requirements for PMBOK compliance and regulatory constraints; define JSON schemas      | 4                               | 8               | Business Analyst, Compliance Officer         |
+| 6           | Solution Architecture Design                     | Design system architecture, modular components, AI integration, credential management          | 5                               | 7               | Software Architect, Systems Integrator       |
+| 7           | Setup Development Environment                    | Prepare development/test environments; configure Azure AI services and credentials              | 6                               | 4               | DevOps Engineer, Software Developers         |
+| 8           | Develop Project Charter Module                   | Code module generating PMBOK-compliant Project Charter JSON document                            | 7                               | 8               | Software Developers                           |
+| 9           | Develop Stakeholder Register Module              | Code module generating Stakeholder Register JSON                                              | 7                               | 7               | Software Developers                           |
+| 10          | Develop Requirements Management Plan Module      | Code module generating Requirements Management Plan with traceability                          | 7                               | 8               | Software Developers                           |
+| 11          | Develop Technology Stack Analysis Module         | Code module providing tech assessment and recommendations                                     | 7                               | 6               | Software Developers                           |
+| 12          | Develop Risk Management Plan Module              | Code module generating Risk Management Plan JSON                                              | 7                               | 7               | Software Developers                           |
+| 13          | Develop Quality Management Plan Module           | Code module for Quality Management Plan generation                                            | 7                               | 7               | Software Developers                           |
+| 14          | Develop Compliance Considerations Module         | Code module producing compliance documentation                                               | 7                               | 6               | Software Developers, Compliance Officer      |
+| 15          | Develop WBS & Dictionary Module                   | Module generating Work Breakdown Structure and Dictionary in JSON                             | 7                               | 7               | Software Developers                           |
+| 16          | Develop Azure AI Credentials & Usage Module      | Securely manage Azure AI API credentials and usage reporting                                  | 7                               | 5               | Software Developers, PMO Administrator        |
+| 17          | Develop CLI Interface & Command Handlers         | Provide CLI commands for document generation and module interaction                           | 7                               | 8               | Software Developers                           |
+| 18          | Develop JSON Schema Validation Module            | Validate JSON outputs against predefined schemas                                              | 7                               | 6               | Software Developers                           |
+| 19          | Integration of Modules & AI API                   | Integrate all modules with AI inference calls, output validation, CLI parameters              | 8-18                            | 10              | Software Developers, DevOps Engineer          |
+| 20          | Internal Documentation of Code & APIs             | Document codebase, APIs, JSON schemas, module interfaces                                      | 19                              | 5               | Software Developers                           |
+| 21          | Develop Test Strategy & Test Cases                 | Define testing approach based on user stories and acceptance criteria                         | 4,5,6                          | 5               | QA Lead, Test Analysts                        |
+| 22          | Unit Testing of Modules                             | Test individual modules for functionality and schema compliance                               | 8-18                            | 10              | QA Engineers, Software Developers             |
+| 23          | Integration Testing                                 | Test integrated modules and AI API calls                                                     | 19,22                          | 8               | QA Engineers, Software Developers             |
+| 24          | System & Acceptance Testing                         | Conduct end-to-end scenarios, security tests, and user acceptance testing                    | 23                             | 7               | QA Lead, End Users (PMO, Stakeholders)        |
+| 25          | Defect Logging and Resolution                       | Track and fix defects found during testing                                                  | 22-24                          | 10              | QA Engineers, Software Developers             |
+| 26          | Test Reporting                                      | Prepare test summaries and recommendations                                                 | 24,25                          | 3               | QA Lead                                       |
+| 27          | Deployment Planning                                 | Prepare deployment plan, user access, and rollback procedures                               | 19,20                          | 4               | Project Manager, DevOps Engineer               |
+| 28          | Setup Production Environment                        | Configure Azure AI and secure credential storage for production                             | 27                             | 3               | DevOps Engineer                                |
+| 29          | Release Execution (Deployment & Smoke Testing)     | Deploy CLI tool to production and perform smoke tests                                       | 28                             | 3               | DevOps Engineer, QA Lead                        |
+| 30          | Release Documentation                               | Prepare user guides, installation instructions, and release notes                          | 29                             | 4               | Technical Writer                               |
+| 31          | Develop Training Materials                          | Create user guides, tutorials, slides, FAQs                                              | 30                             | 7               | Training Specialist, Technical Writer          |
+| 32          | Conduct Training Sessions                           | Deliver workshops, Q&A, and hands-on sessions for users                                   | 31                             | 5               | Trainers, Project Manager                       |
+| 33          | Setup User Support Helpdesk                         | Establish support channels and escalation procedures                                      | 30                             | 4               | Support Team, PMO Administrator                 |
+| 34          | Collect User Feedback & Plan Continuous Improvement | Conduct surveys, analyze feedback, plan updates to tool and materials                     | 32,33                          | 6               | Project Manager, Business Analyst, Support Team |
+| 35          | Monitor Usage & Performance                         | Track Azure AI usage, costs, adoption metrics                                            | 29                             | Ongoing         | PMO Administrator, DevOps Engineer              |
+| 36          | Issue Resolution & Patch Releases                    | Fix bugs, security issues; release patches                                               | 35                             | Ongoing         | Software Developers, QA Team                    |
+| 37          | Implement Feature Enhancements                        | Develop new modules, improve AI accuracy, enhance usability                              | 36                             | O

@@ -255,8 +255,8 @@ Create a script to generate all project documentation:
 ```typescript
 import { writeFile, mkdir } from 'fs/promises';
 import { 
-  generateStrategicSections,
-  generateRequirements,
+  getAiSummaryAndGoals,
+  getAiUserStories,
   getAiProjectCharter,
   getAiScopeManagementPlan,
   getAiScheduleManagementPlan,
@@ -266,37 +266,51 @@ import {
 } from './requirements-gathering-agent/index.js';
 
 async function generateProjectDocumentation() {
-  const projectInput = {
-    businessProblem: 'A SaaS platform for remote team collaboration',
-    technologyStack: ['Node.js', 'React', 'PostgreSQL'],
-    contextBundle: 'The platform enables real-time chat, file sharing, and project management for distributed teams.'
-  };
+  const projectContext = `
+# Your Project Name
+A comprehensive description of your project
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Technology Stack
+- Node.js backend
+- React frontend
+- PostgreSQL database
+`;
 
   // Create docs directory
   await mkdir('./docs', { recursive: true });
 
-  // Generate strategic documents
-  const strategic = await generateStrategicSections(projectInput);
-  const requirements = await generateRequirements(projectInput);
-
-  // Generate PMBOK documents
-  const charter = await getAiProjectCharter(projectInput);
-  const scopePlan = await getAiScopeManagementPlan(projectInput);
-  const schedulePlan = await getAiScheduleManagementPlan(projectInput);
-  const riskPlan = await getAiRiskManagementPlan(projectInput);
-  const wbs = await getAiWbs(projectInput);
-  const stakeholders = await getAiStakeholderRegister(projectInput);
+  // Generate AI-powered documents
+  const summary = await getAiSummaryAndGoals(projectContext);
+  const userStories = await getAiUserStories(projectContext);
+  
+  // Generate PMBOK documents with proper context objects
+  const charter = await getAiProjectCharter({
+    summaryAndGoals: summary,
+    strategicStatements: 'Generated strategic statements',
+    coreValuesAndPurpose: 'Generated core values',
+    keyRolesAndNeeds: 'Generated roles and needs',
+    riskAnalysis: 'Generated risk analysis', 
+    personas: 'Generated personas',
+    techStackAnalysis: 'Generated tech analysis'
+  });
+  
+  const scopePlan = await getAiScopeManagementPlan({
+    projectCharterOutput: charter,
+    stakeholderRegisterOutput: 'Generated stakeholder register',
+    aiSummaryAndGoalsOutput: summary
+  });
 
   // Write all documents
   await Promise.all([
-    writeFile('./docs/strategic-plan.json', JSON.stringify(strategic, null, 2)),
-    writeFile('./docs/requirements.json', JSON.stringify(requirements, null, 2)),
+    writeFile('./docs/project-summary.md', summary),
+    writeFile('./docs/user-stories.md', userStories),
     writeFile('./docs/project-charter.md', charter),
-    writeFile('./docs/scope-management-plan.md', scopePlan),
-    writeFile('./docs/schedule-management-plan.md', schedulePlan),
-    writeFile('./docs/risk-management-plan.md', riskPlan),
-    writeFile('./docs/work-breakdown-structure.md', wbs),
-    writeFile('./docs/stakeholder-register.md', stakeholders)
+    writeFile('./docs/scope-management-plan.md', scopePlan)
   ]);
 
   console.log('✅ Project documentation generated successfully!');
@@ -304,6 +318,8 @@ async function generateProjectDocumentation() {
 
 generateProjectDocumentation().catch(console.error);
 ```
+
+> **Note**: When copying the agent to your project, import from the relative path. When using as an npm package, import from the package name.
 
 ## Example: Complete Project Setup
 

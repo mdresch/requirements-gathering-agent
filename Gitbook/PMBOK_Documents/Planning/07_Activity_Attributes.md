@@ -1,171 +1,51 @@
 # AI-Generated Activity Attributes
 
-Below is the draft **Activity Attributes** for each activity based on the provided **Activity List**, **WBS Dictionary**, **Risk Analysis**, and **Tech Stack Analysis**. Each activity includes expanded details and logical relationships, resource requirements, constraints, and assumptions.
+Certainly! Below is a comprehensive **Activity Attributes** table based on your detailed activity list, including:
+
+- **Activity ID**  
+- **Activity Name**  
+- **Activity Code** (custom coded by WBS and sequence)  
+- **Predecessors** (with finish-to-start (FS), start-to-start (SS), leads/lags)  
+- **Successors**  
+- **Resource Requirements**  
+- **Leads and Lags**  
+- **Constraints** (if applicable)  
 
 ---
 
-### **Activity Attributes**
+# Detailed Activity Attributes for Requirements Gathering Agent Project Execution
 
----
-
-#### **Activity ID:** WP1.1.1-A1  
-- **WBS ID Reference:** 1.1.1  
-- **Activity Name/Description:** Design the architecture and flow for the CLI interface  
-- **Suggested Predecessor Activities (Activity IDs):** None (First activity in CLI development)  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.1-A2  
-- **Suggested Logical Relationship with Predecessors:** N/A  
-- **Resource Requirements (High-Level Types):** Lead Developer, Software Architect  
-- **Known Constraints related to this activity:**  
-  - Must align with overall system architecture and PMBOK-aligned output generation requirements.  
-  - Limited by the capabilities of Node.js for CLI design.  
-- **Key Assumptions for this activity:**  
-  - CLI will be modular and extensible for future features.  
-  - Developers have access to relevant user stories and requirements documentation.  
-
----
-
-#### **Activity ID:** WP1.1.1-A2  
-- **WBS ID Reference:** 1.1.1  
-- **Activity Name/Description:** Develop core CLI functionality for user interaction  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.1-A1  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.1-A3  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** Developer, QA Tester  
-- **Known Constraints related to this activity:**  
-  - Must support all required inputs and outputs as defined in the scope.  
-  - CLI must integrate seamlessly with backend AI services.  
-- **Key Assumptions for this activity:**  
-  - Node.js and TypeScript will suffice for CLI implementation.  
-  - Developers have access to Azure AI and OpenAI APIs for integration.  
-
----
-
-#### **Activity ID:** WP1.1.1-A3  
-- **WBS ID Reference:** 1.1.1  
-- **Activity Name/Description:** Test and debug CLI commands and workflows  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.1-A2  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.1-A4  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** QA Tester, Developer  
-- **Known Constraints related to this activity:**  
-  - Testing must cover all edge cases for user inputs and outputs.  
-  - Limited by the available testing framework (e.g., Jest or Mocha).  
-- **Key Assumptions for this activity:**  
-  - Test cases will be prepared prior to testing.  
-  - CLI workflows are functional and align with user expectations.  
-
----
-
-#### **Activity ID:** WP1.1.1-A4  
-- **WBS ID Reference:** 1.1.1  
-- **Activity Name/Description:** Create user documentation for the CLI  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.1-A3  
-- **Suggested Successor Activities (Activity IDs):** None (Final activity for CLI development)  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** Technical Writer, Developer  
-- **Known Constraints related to this activity:**  
-  - Documentation must be comprehensive and user-friendly.  
-  - Limited by the availability of finalized CLI workflows.  
-- **Key Assumptions for this activity:**  
-  - Developers will provide input for technical details.  
-  - Documentation will follow standard best practices for CLI tools.  
-
----
-
-#### **Activity ID:** WP1.1.2-A1  
-- **WBS ID Reference:** 1.1.2  
-- **Activity Name/Description:** Design API endpoints for external system integration  
-- **Suggested Predecessor Activities (Activity IDs):** None (First activity in API development)  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.2-A2  
-- **Suggested Logical Relationship with Predecessors:** N/A  
-- **Resource Requirements (High-Level Types):** API Specialist, Software Architect  
-- **Known Constraints related to this activity:**  
-  - APIs must adhere to RESTful standards.  
-  - Must align with Azure AI and OpenAI integration requirements.  
-- **Key Assumptions for this activity:**  
-  - APIs will be designed to handle input submission, document generation, and output retrieval.  
-  - Developers have access to API design best practices and user stories.  
-
----
-
-#### **Activity ID:** WP1.1.2-A2  
-- **WBS ID Reference:** 1.1.2  
-- **Activity Name/Description:** Develop API functionality for input submission and output  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.2-A1  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.2-A3  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** API Specialist, Developer  
-- **Known Constraints related to this activity:**  
-  - APIs must support all required input/output formats (e.g., JSON).  
-  - Development limited by Azure AI and OpenAI API rate limits.  
-- **Key Assumptions for this activity:**  
-  - APIs will be secure and scalable for future integrations.  
-  - Developers have access to all necessary SDKs and libraries.  
-
----
-
-#### **Activity ID:** WP1.1.2-A3  
-- **WBS ID Reference:** 1.1.2  
-- **Activity Name/Description:** Perform security testing for API endpoints  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.2-A2  
-- **Suggested Successor Activities (Activity IDs):** WP1.1.2-A4  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** QA Tester, Security Specialist  
-- **Known Constraints related to this activity:**  
-  - Must address vulnerabilities in third-party dependencies.  
-  - Testing limited by available security tools.  
-- **Key Assumptions for this activity:**  
-  - APIs will be tested for common vulnerabilities (e.g., OWASP Top 10).  
-  - Security testing will include rate-limiting and authentication mechanisms.  
-
----
-
-#### **Activity ID:** WP1.1.2-A4  
-- **WBS ID Reference:** 1.1.2  
-- **Activity Name/Description:** Write API documentation for developers  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.1.2-A3  
-- **Suggested Successor Activities (Activity IDs):** None (Final activity for API development)  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** Technical Writer, API Specialist  
-- **Known Constraints related to this activity:**  
-  - Documentation must include usage examples and error handling details.  
-  - Limited by the availability of finalized API workflows.  
-- **Key Assumptions for this activity:**  
-  - Developers will provide input for technical details.  
-  - API documentation will follow industry standards (e.g., OpenAPI Specification).  
-
----
-
-#### **Activity ID:** WP1.2.1-A1  
-- **WBS ID Reference:** 1.2.1  
-- **Activity Name/Description:** Set up Azure AI services (e.g., LLM configuration)  
-- **Suggested Predecessor Activities (Activity IDs):** None (First activity in AI setup)  
-- **Suggested Successor Activities (Activity IDs):** WP1.2.1-A2  
-- **Suggested Logical Relationship with Predecessors:** N/A  
-- **Resource Requirements (High-Level Types):** Cloud Engineer, AI Specialist  
-- **Known Constraints related to this activity:**  
-  - Limited by Azure AI service availability and configuration options.  
-  - Must comply with project security requirements.  
-- **Key Assumptions for this activity:**  
-  - Azure AI services are available and compatible with project requirements.  
-  - Cloud engineers have access to required Azure subscriptions.  
-
----
-
-#### **Activity ID:** WP1.2.1-A2  
-- **WBS ID Reference:** 1.2.1  
-- **Activity Name/Description:** Integrate Azure AI services with the Requirements Agent  
-- **Suggested Predecessor Activities (Activity IDs):** WP1.2.1-A1  
-- **Suggested Successor Activities (Activity IDs):** WP1.2.1-A3  
-- **Suggested Logical Relationship with Predecessors:** FS (Finish-to-Start)  
-- **Resource Requirements (High-Level Types):** AI Specialist, Developer  
-- **Known Constraints related to this activity:**  
-  - Integration must align with backend architecture.  
-  - Limited by Azure AI SDK capabilities.  
-- **Key Assumptions for this activity:**  
-  - Azure AI services are functional and accessible.  
-  - Developers have access to integration guides and SDKs.  
-
----
-
-The same structure can be applied to the remaining activities. Let me know if you want me to continue drafting attributes for additional activities!
+| Activity ID | Activity Name                                  | Activity Code | Predecessors                  | Successors                  | Resource Requirements                                   | Lead/Lag                         | Constraints / Notes                                |
+|-------------|------------------------------------------------|---------------|-------------------------------|-----------------------------|--------------------------------------------------------|---------------------------------|---------------------------------------------------|
+| 1           | Kickoff Meeting                                | 1.0-KICKOFF   | None                          | 2                           | Project Manager, PMO Lead, Key Stakeholders             | None                            | Must occur before any planning activity            |
+| 2           | Develop Project Management Plan                | 1.1-PMP       | 1 (FS)                       | 3                           | Project Manager, PMO Lead                               | None                            | Requires kickoff outputs and agreements            |
+| 3           | Stakeholder Identification                      | 1.2-STAKE     | 2 (FS)                       | 4                           | Business Analyst, Project Manager                       | None                            | Stakeholder input critical for requirements        |
+| 4           | Requirements Elicitation                         | 2.1-REQ-ELIC  | 3 (FS)                       | 5, 21                       | Business Analyst, Stakeholders                          | None                            | Stakeholder availability can affect duration       |
+| 5           | Requirements Analysis                            | 2.2-REQ-ANAL  | 4 (FS)                       | 6, 21                       | Business Analyst, Compliance Officer                    | None                            | Compliance input critical before design             |
+| 6           | Solution Architecture Design                     | 2.3-ARCH      | 5 (FS)                       | 7, 21                       | Software Architect, Systems Integrator                  | None                            | Architecture depends on analyzed requirements       |
+| 7           | Setup Development Environment                    | 3.1-ENV       | 6 (FS)                       | 8-18                        | DevOps Engineer, Software Developers                    | None                            | Azure credentials must be provisioned beforehand    |
+| 8           | Develop Project Charter Module                   | 3.2.1-PCHART  | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Module interfaces per architecture design           |
+| 9           | Develop Stakeholder Register Module              | 3.2.2-STKREG  | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Must align with requirements analysis               |
+| 10          | Develop Requirements Management Plan Module      | 3.2.3-REQMGT  | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Must support traceability matrix                     |
+| 11          | Develop Technology Stack Analysis Module         | 3.2.4-TECHAN  | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Analysis data from architecture design              |
+| 12          | Develop Risk Management Plan Module              | 3.2.5-RISK    | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Risk categories per PMBOK                            |
+| 13          | Develop Quality Management Plan Module           | 3.2.6-QUAL    | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Quality metrics defined in requirements             |
+| 14          | Develop Compliance Considerations Module         | 3.2.7-COMP    | 7 (FS)                       | 19, 22                      | Software Developers, Compliance Officer                | None                            | Compliance officer must review                       |
+| 15          | Develop WBS & Dictionary Module                   | 3.2.8-WBS     | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | WBS depends on requirements and architecture         |
+| 16          | Develop Azure AI Credentials & Usage Module      | 3.2.9-AZAI    | 7 (FS)                       | 19, 22                      | Software Developers, PMO Administrator                  | None                            | Secure storage and validation required              |
+| 17          | Develop CLI Interface & Command Handlers         | 3.2.10-CLI   | 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | CLI must interface with all modules                  |
+| 18          | Develop JSON Schema Validation Module            | 3.2.11-SCHEMA| 7 (FS)                       | 19, 22                      | Software Developers                                    | None                            | Schema definitions finalized before testing          |
+| 19          | Integration of Modules & AI API                   | 3.3-INTEGR   | 8-18 (FS)                    | 20, 23, 27                  | Software Developers, DevOps Engineer                    | None                            | Integration requires all modules unit tested         |
+| 20          | Internal Documentation of Code & APIs             | 3.4-DOC      | 19 (FS)                      | 27                          | Software Developers                                    | None                            | Documentation concurrent with deployment planning    |
+| 21          | Develop Test Strategy & Test Cases                 | 4.1-TESTSTRAT| 4, 5, 6 (FS)                 | 22                          | QA Lead, Test Analysts                                 | None                            | Test strategy based on requirements & architecture   |
+| 22          | Unit Testing of Modules                             | 4.2-UNITTEST | 8-18 (FS)                   | 23, 25                      | QA Engineers, Software Developers                      | None                            | Unit tests before integration testing                |
+| 23          | Integration Testing                                 | 4.3-INTEGRTST| 19, 22 (FS)                 | 24, 25                      | QA Engineers, Software Developers                      | None                            | Integration tested with AI API                        |
+| 24          | System & Acceptance Testing                         | 4.4-ACCTST   | 23 (FS)                     | 25, 26                      | QA Lead, End Users (PMO, Stakeholders)                 | None                            | User acceptance critical for release                  |
+| 25          | Defect Logging and Resolution                       | 4.5-DEFECT   | 22-24 (FS)                  | 26                          | QA Engineers, Software Developers                      | None                            | Iterative defect cycle until no critical defects     |
+| 26          | Test Reporting                                      | 4.6-TESTREP  | 24, 25 (FS)                 | None                        | QA Lead                                               | None                            | Final test reports for stakeholder review            |
+| 27          | Deployment Planning                                 | 5.1-DEPPLN   | 19, 20 (FS)                 | 28                          | Project Manager, DevOps Engineer                        | None                            | Plan must include rollback and access control        |
+| 28          | Setup Production Environment                        | 5.2-PRODENV  | 27 (FS)                     | 29                          | DevOps Engineer                                       | None                            | Prod environment must be secure and tested           |
+| 29          | Release Execution (Deployment & Smoke Testing)     | 5.3-RELEASE  | 28 (FS)                     | 30, 35                      | DevOps Engineer, QA Lead                               | None                            | Smoke test success required before user release      |
+| 30          | Release Documentation                               | 5.4-RELDOCK  | 29 (FS)                     | 31, 33                      | Technical Writer                                     | None                            | Documentation supports training and support          |
+| 31          | Develop Training Materials                          | 6.1-TRAINMAT | 30 (FS)                     | 32                          | Training Specialist, Technical Writer                  | None                            | Materials based on final release                      |
+| 32          | Conduct Training Sessions                           | 6.2-TRAIN    | 31 (FS)                     | 34                          | Trainers, Project

@@ -1,54 +1,49 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "1.0.0",
-  "description": "Comprehensive PMBOK project management documentation generation agent powered by LLM",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "license": "MIT",
+  "version": "2.0.0",
+  "description": "AI-powered PMBOK documentation generator using Azure OpenAI - generates comprehensive project management documents from README context",
+  "main": "dist/cli.js",
   "type": "module",
-  "keywords": [
-    "pmbok",
-    "project-management",
-    "documentation",
-    "requirements",
-    "llm",
-    "azure",
-    "github"
-  ],
-  "dependencies": {
-    "@azure-rest/ai-inference": "^1.0.0-beta.6",
-    "@azure/core-auth": "^1.9.0",
-    "axios": "^1.9.0",
-    "dotenv": "^16.5.0",
-    "openai": "^5.0.1"
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "devDependencies": {
-    "@types/axios": "^0.9.36",
-    "@types/node": "^22.15.29",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
-  },  "bin": {
+  "bin": {
     "requirements-gathering-agent": "dist/cli.js",
-    "requirements-agent": "dist/cli.js"
-  },
-  "files": [
-    "dist/**/*",
-    "README.md",
-    "LICENSE"
-  ],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+    "requirements-agent": "dist/cli.js",
+    "rga": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
-    "dev": "ts-node src/cli.ts",
-    "generate-docs": "npm run build && npm start",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "requirements-gathering",
+    "pmbok",
+    "project-management",
+    "azure-openai",
+    "ai-documentation",
+    "business-analysis",
+    "typescript",
+    "cli",
+    "requirements-analysis",
+    "project-charter",
+    "stakeholder-analysis",
+    "work-breakdown-structure",
+    "risk-management",
+    "scope-management",
+    "ai-assistant",
+    "document-generation",
+    "entra-id"
+  ],
+  "author": {
+    "name": "Menno van der Krift",
+    "email": "menno@cbaconsult.eu",
+    "url": "https://cbaconsult.eu"
   },
   "repository": {
     "type": "git",
@@ -57,5 +52,26 @@
   "bugs": {
     "url": "https://github.com/mdresch/requirements-gathering-agent/issues"
   },
-  "homepage": "https://github.com/mdresch/requirements-gathering-agent#readme"
+  "homepage": "https://github.com/mdresch/requirements-gathering-agent#readme",
+  "license": "MIT",
+  "dependencies": {
+    "@azure/identity": "^4.4.1",
+    "@azure/openai": "^2.0.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2",
+    "rimraf": "^6.0.1"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ],
+  "preferGlobal": true,
+  "publishConfig": {
+    "access": "public"
+  }
 }

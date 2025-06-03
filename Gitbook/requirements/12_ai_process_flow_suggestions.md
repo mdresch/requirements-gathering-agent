@@ -1,135 +1,240 @@
 # AI-Generated Process Flow Suggestions
 
-Based on the project context, user stories, and key roles, here are the key high-level user flows and system processes:
+Certainly! Below are detailed business process flows for the **Requirements Gathering Agent** development, deployment, and usage, aligned with your detailed project description, objectives, and user stories. The processes cover key stages from initial requirements elicitation to ongoing maintenance and user support.
 
 ---
 
-### **1. Generate and Customize Project Management Documentation**
+# 1. **Project Documentation Generation Process**
 
-**High-Level User Flow:**
-- Project Manager initiates documentation generation.
-- The system prompts for customization options (scope, objectives, standards).
-- AI engine generates the documentation artifacts.
-- User reviews and optionally modifies the generated documents.
-- Final documents are exported or stored for sharing.
+### Purpose:
+Automate generation of PMBOK-compliant project management documents (charters, registers, plans, etc.) using AI-powered inference.
 
----
+### Actors:
+- Project Manager (PM)
+- Business Analyst (BA)
+- Software Architect
+- Developer
+- Quality Assurance (QA)
+- Systems Integrator
+- CLI/User Interface
 
-### **2. Technical Analysis and Artifact Generation by Developers**
+### Flow Steps:
 
-**High-Level User Flow:**
-- Developer triggers technical report generation via CLI or integrated tool.
-- The system collects project parameters and technical requirements.
-- AI generates technical analysis, risk assessments, and requirements.
-- Developer reviews and integrates artifacts into project workflows.
-- Artifacts are exported or stored for further use.
+1. **Input Collection**
+   - PM/BA provides basic project inputs (e.g., project name, objectives, stakeholders, constraints).
+   - Inputs can be manual entry or imported from existing systems.
 
----
+2. **Document Request Initiation**
+   - User invokes CLI/API command to generate a specific document (e.g., Project Charter) or a full document set.
 
-### **3. Integration into CI/CD Pipelines and Deployment**
+3. **Pre-processing & Validation**
+   - System validates input completeness.
+   - Checks for required fields per PMBOK schema.
+   - If incomplete, prompts user to provide missing info.
 
-**High-Level User Flow:**
-- DevOps engineer configures the system within the CI/CD pipeline.
-- The pipeline triggers documentation generation at specific stages (e.g., post-build).
-- The system authenticates with Azure AI, generates necessary documents.
-- Generated documentation is automatically stored or deployed as part of the pipeline.
-- The process repeats with each build/update to keep documentation current.
+4. **AI Inference Call**
+   - Module sends input data to Azure AI API.
+   - Azure AI performs inference to generate content aligned with PMBOK standards.
 
----
+5. **Document Assembly**
+   - AI response parsed and structured into JSON format per predefined schemas.
+   - Metadata (timestamp, version, project ID) appended.
 
-## Step-by-step Descriptions
+6. **Schema Validation**
+   - JSON output validated against strict schema for structure and completeness.
+   - If errors, system logs and returns error feedback.
 
-### **Process 1: Generating and Customizing Project Management Documents**
+7. **Output Delivery**
+   - Valid JSON document saved to user-specified directory or returned via API.
+   - Human-readable formatted version optionally generated.
 
-1. **Initiate Generation:**  
-   The Project Manager accesses the system interface (web or CLI) and selects "Generate Project Management Plan."
+8. **User Review & Feedback**
+   - User reviews generated document.
+   - Provides feedback or requests regeneration if necessary.
 
-2. **Input Customization:**  
-   The system prompts for project-specific inputs: scope, objectives, stakeholder info, standards, and templates.
-
-3. **AI Document Creation:**  
-   Using Azure AI, the system processes inputs and generates comprehensive project management documents aligned with PMBOK standards.
-
-4. **Review & Edit:**  
-   The Project Manager reviews the generated documents within the interface, making edits if necessary.
-
-5. **Export & Save:**  
-   Finalized documents are exported in preferred formats (PDF, Word) or stored in the system for sharing.
-
----
-
-### **Process 2: Technical Analysis Report Generation**
-
-1. **Trigger Generation:**  
-   A Developer runs a CLI command or uses an integrated tool to request technical analysis.
-
-2. **Provide Parameters:**  
-   The system prompts for technical details: requirements, risk factors, technical constraints.
-
-3. **AI Processing:**  
-   Azure AI processes the inputs and generates detailed technical reports, including risk assessments and requirements documentation.
-
-4. **Review & Integration:**  
-   The Developer reviews the artifacts, making adjustments if needed, then incorporates them into the project documentation or planning.
-
-5. **Export & Storage:**  
-   The reports are exported or stored for reference and further analysis.
+9. **Integration**
+   - Documents can be integrated with PM tools or CI/CD pipelines.
 
 ---
 
-### **Process 3: Automated Documentation in CI/CD Pipelines**
+# 2. **Azure AI API Credentials and Usage Management Process**
 
-1. **Pipeline Configuration:**  
-   DevOps sets up the system within the CI/CD pipeline, configuring triggers (e.g., after build completion).
+### Purpose:
+Securely manage Azure AI API credentials and monitor usage to ensure secure and cost-effective AI integration.
 
-2. **Authentication & Setup:**  
-   The system authenticates with Azure AI securely, using API keys or OAuth.
+### Actors:
+- PMO Administrator
+- DevOps Engineer
 
-3. **Documentation Generation:**  
-   Upon trigger, the system automatically generates updated project artifacts or plans based on current project data.
+### Flow Steps:
 
-4. **Artifact Storage/Deployment:**  
-   Generated documents are stored in repositories, dashboards, or deployed to stakeholder portals.
+1. **Credential Input**
+   - PMO Administrator uses CLI or config file to input/update Azure API keys.
 
-5. **Repeat & Maintain:**  
-   The process repeats with each pipeline run, ensuring documentation stays current.
+2. **Validation**
+   - System validates credentials by performing a test API call.
+   - On success, credentials saved securely (encrypted storage or secrets vault).
+   - On failure, error feedback provided with remediation instructions.
+
+3. **Access Control**
+   - Credentials access restricted by role-based permissions.
+   - Rotation policy enforced per organizational security standards.
+
+4. **Usage Monitoring**
+   - System collects API call counts, costs, and performance metrics.
+   - Usage reports accessible via admin dashboard or CLI command.
+
+5. **Alerts & Reporting**
+   - Threshold-based alerts for excessive usage or errors.
+   - Regular usage summaries emailed to PMO administrators.
 
 ---
 
-## Mermaid.js Flowcharts
+# 3. **Modular Document Generation and CLI Workflow**
 
-### **Flowchart for "Generating and Customizing Project Management Documents"**
+### Purpose:
+Enable flexible generation of individual or grouped PM documents via CLI for integration and automation.
+
+### Actors:
+- Developer
+- Systems Integrator
+- Project Manager
+
+### Flow Steps:
+
+1. **Command Invocation**
+   - User runs CLI command with parameters (e.g., `generate-project-charter --projectId XYZ --output ./docs`).
+
+2. **Parameter Validation**
+   - CLI validates parameters and checks for required inputs.
+
+3. **Document Generation**
+   - Calls internal module functions for requested document(s).
+   - Each document generated independently or as part of a batch.
+
+4. **Error Handling**
+   - CLI displays clear error messages for missing inputs or generation failures.
+   - Logs retained for diagnostics.
+
+5. **Output Management**
+   - JSON outputs written to specified locations.
+   - Optionally triggers downstream actions (e.g., upload to PM tool).
+
+6. **Feedback**
+   - CLI prints summary of generated files and statuses.
+
+---
+
+# 4. **Technology Stack Analysis and Recommendation Process**
+
+### Purpose:
+Provide technical architecture recommendations based on project domain and constraints.
+
+### Actors:
+- Software Architect
+- PMO Lead
+
+### Flow Steps:
+
+1. **Input Domain and Constraints**
+   - Architect inputs project domain, current tech stack, constraints (budget, compliance).
+
+2. **Analysis Execution**
+   - System invokes AI inference with inputs to analyze existing technologies and identify gaps.
+
+3. **Recommendation Generation**
+   - AI returns assessment including pros/cons and suggested frameworks, libraries, architecture patterns.
+
+4. **Structured Output**
+   - Recommendations formatted as JSON with sections: analysis, pros/cons, recommendations.
+
+5. **Review and Approval**
+   - Architect reviews output and integrates into overall project documentation.
+
+---
+
+# 5. **Quality Assurance and Compliance Validation Process**
+
+### Purpose:
+Ensure generated documents meet PMBOK, quality, and compliance standards.
+
+### Actors:
+- QA Lead
+- Compliance Officer
+
+### Flow Steps:
+
+1. **Test Case Definition**
+   - QA defines test cases based on acceptance criteria for each document type.
+
+2. **Automated Validation**
+   - Run JSON schema validation on generated documents.
+   - Verify inclusion of mandatory sections and traceability links.
+
+3. **Functional Testing**
+   - Perform manual and automated tests to check content accuracy and completeness.
+
+4. **Compliance Review**
+   - Compliance Officer reviews compliance-related documents for regulatory adherence.
+
+5. **Feedback Loop**
+   - Issues logged and communicated to development.
+   - Retesting after fixes.
+
+---
+
+# 6. **User Support and Training Process**
+
+### Purpose:
+Provide guidance, training, and support for users of the Requirements Gathering Agent.
+
+### Actors:
+- Support Staff
+- End Users (PM, BA, Developers)
+
+### Flow Steps:
+
+1. **Documentation Creation**
+   - Develop user guides, FAQs, CLI usage manuals, and API references.
+
+2. **Training Sessions**
+   - Conduct onboarding webinars and workshops.
+
+3. **Helpdesk Support**
+   - Provide channels for issue reporting and assistance.
+
+4. **User Feedback Collection**
+   - Regular surveys to gather user satisfaction and improvement suggestions.
+
+5. **Continuous Improvement**
+   - Update documentation and training materials based on feedback.
+
+---
+
+# Summary Diagram (High-Level)
 
 ```mermaid
-graph TD
-    A[Start: User initiates document generation] --> B[Prompt for customization inputs]
-    B --> C[User provides scope, objectives, standards]
-    C --> D[System calls Azure AI to generate documents]
-    D --> E[AI returns generated documents]
-    E --> F[User reviews documents]
-    F --> G{Satisfied?}
-    G -- Yes --> H[Export or save documents]
-    G -- No --> F
-    H --> I[End]
-```
+flowchart TD
+  A[Input Project Data] --> B[Invoke Document Generation]
+  B --> C[Validate Inputs]
+  C -->|Valid| D[Call Azure AI Inference]
+  D --> E[Format Output JSON]
+  E --> F[Validate JSON Schema]
+  F -->|Valid| G[Save & Deliver Document]
+  F -->|Invalid| H[Return Error Feedback]
+  G --> I[User Review & Integration]
+  I --> J[Feedback & Regeneration?]
+  J -->|Yes| B
+  J -->|No| K[Process Complete]
 
----
+  subgraph Credential Management
+    M[Input API Keys] --> N[Validate Keys]
+    N --> O[Store Securely]
+    O --> P[Monitor Usage & Alerts]
+  end
 
-### **Flowchart for "Technical Analysis Report Generation"**
-
-```mermaid
-graph TD
-    A[Developer triggers report generation] --> B[Provide technical parameters]
-    B --> C[System processes inputs with Azure AI]
-    C --> D[AI generates technical analysis & risk assessments]
-    D --> E[Developer reviews artifacts]
-    E --> F{Satisfied?}
-    F -- Yes --> G[Export or integrate reports]
-    F -- No --> E
-    G --> H[End]
-```
-
----
-
-**Summary:**  
-These processes encapsulate the core workflows of the Requirements Gathering Agent, supporting project documentation automation, technical analysis, and seamless integration into development pipelines, aligned with user needs and organizational standards.
+  subgraph CLI Workflow
+    Q[CLI Command] --> R[Validate Command]
+    R --> S[Generate Document(s)]
+    S --> T[Output JSON]
+   

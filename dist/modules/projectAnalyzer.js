@@ -37,3 +37,4 @@ export async function getProjectPackageJson(projectPath) {
         return null;
     }
 }
+//# sourceMappingURL=projectAnalyzer.js.map

@@ -1,87 +1,235 @@
 # AI-Generated Acceptance Criteria
 
-### User Stories for Project Manager
-
-**1. Generate comprehensive project management plans automatically**
-
-- Given that the user has provided project details and objectives, When the Project Management Plan generation is initiated, Then the system produces a detailed plan that covers scope, timelines, milestones, and resource allocations.
-- Given that the project management plan has been generated, When reviewed, Then it includes all key sections such as objectives, deliverables, and stakeholder roles.
-- Given that the plan is generated, When the user exports or downloads it, Then the document is available in a standard format (e.g., PDF or Word) with consistent formatting and structure.
-
-**2. Customize the scope and objectives of generated documents**
-
-- Given that the user is on the customization interface, When they modify scope and objectives fields, Then the generated project plan reflects these changes accurately.
-- Given that the user has input specific project goals, When the system generates the plan, Then the scope and objectives sections include the user-specified details.
-- Given that the user saves customization settings, When a new project plan is generated, Then it incorporates the saved customizations by default.
-
-**3. Review AI-generated project artifacts within a user-friendly interface**
-
-- Given that the user accesses the review interface, When they open a generated document, Then it displays clearly labeled sections with options for editing or approving.
-- Given that the user reviews a document, When they identify issues or inaccuracies, Then they can provide feedback or request revisions directly within the interface.
-- Given that the user approves a document, When they confirm, Then the system records the approval status and allows for version control or download.
+Here are detailed acceptance criteria for each user story using Given-When-Then format, expanding where appropriate:
 
 ---
 
-### User Stories for Software Developer / Technical Team Member
+1. **Project Manager – Generate PMBOK-aligned Project Charter**
 
-**1. Generate technical analysis reports automatically**
+- Given valid basic project inputs (e.g., project name, purpose, objectives),  
+  When I invoke the Project Charter generation,  
+  Then the system outputs a JSON-formatted document containing:  
+  - project purpose  
+  - objectives  
+  - high-level requirements  
+  - milestones  
+  - assumptions  
+  - constraints  
+  - authorization signatures.
 
-- Given that the developer has provided project technical inputs, When the report generation is triggered, Then the system produces a comprehensive technical analysis report including architecture, dependencies, and technical risks.
-- Given that the report is generated, When viewed, Then it includes sections on system requirements, technical constraints, and potential bottlenecks.
-- Given that the report is generated, When exported, Then the document is available in common formats (e.g., PDF, Word) with accurate formatting.
+- Given the generated Project Charter,  
+  When I review the document,  
+  Then it contains all required PMBOK sections with no missing elements.
 
-**2. Integrate documentation generation into existing workflow via CLI**
-
-- Given that the developer has installed the CLI tool, When they run the documentation generation command within their development environment, Then the tool executes successfully and generates the appropriate documentation.
-- Given that the CLI is used to generate documentation, When the command is executed with specific project parameters, Then the output matches the provided inputs and follows the predefined templates.
-- Given that the CLI is integrated into the workflow, When a project build is completed, Then the documentation is automatically updated or generated as part of the build process.
-
-**3. Access detailed project artifacts including requirements and risk assessments**
-
-- Given that the user requests project artifacts, When they select the relevant section, Then the system displays detailed technical requirements, constraints, and risk assessments.
-- Given that the artifacts are generated, When reviewed, Then they include comprehensive technical details that help in understanding project scope and potential issues.
-- Given that the user downloads the artifacts, When they open the files, Then all relevant technical information is correctly formatted and complete.
-
----
-
-### User Stories for Documentation Specialist / Business Analyst
-
-**1. Customize templates for AI-generated documents**
-
-- Given that the user accesses the template customization interface, When they modify templates to match organizational standards, Then the generated documents adhere to these customized templates.
-- Given that a template has been customized, When a new document is generated, Then it reflects the style, branding, and formatting specified in the template.
-- Given that the user saves template changes, When documents are generated subsequently, Then they automatically incorporate the latest template modifications.
-
-**2. Produce stakeholder analysis and communication plans**
-
-- Given that the user requests stakeholder analysis, When the system generates the document, Then it includes stakeholder roles, interests, influence levels, and communication strategies.
-- Given that the communication plan is generated, When reviewed, Then it specifies communication channels, frequency, and responsible parties for each stakeholder group.
-- Given that the user customizes stakeholder inputs, When the system regenerates the analysis, Then it reflects the updated stakeholder information.
-
-**3. Export generated documents into common formats**
-
-- Given that a document has been generated, When the user chooses to export, Then the system provides options such as PDF or Word formats.
-- Given that the document is exported, When opened outside the system, Then it maintains formatting, structure, and content integrity.
-- Given that the user exports multiple documents, When they save them, Then all files are correctly formatted and accessible for sharing or archiving.
+- Given the JSON output,  
+  When I parse or view the document,  
+  Then it is human-readable and machine-parseable, conforming to formatting standards.
 
 ---
 
-### User Stories for DevOps / Integration Engineer
+2. **Business Analyst – Generate Stakeholder Register**
 
-**1. Integrate Requirements Gathering Agent with CI/CD pipeline**
+- Given project context details and stakeholder input data,  
+  When I generate the Stakeholder Register,  
+  Then the system lists all stakeholders with:  
+  - name  
+  - role  
+  - contact information  
+  - classification (e.g., internal/external)  
+  - engagement strategy.
 
-- Given that the CI/CD pipeline is configured, When the Requirements Gathering Agent is integrated, Then documentation updates are triggered automatically during build or deployment processes.
-- Given that a build completes, When the integration is active, Then the latest requirements and project artifacts are generated or updated without manual intervention.
-- Given that the documentation is generated via CI/CD, When the pipeline runs, Then it produces artifacts that are stored in the designated repository or documentation system.
+- Given the Stakeholder Register output,  
+  When I validate it,  
+  Then it aligns with PMBOK stakeholder management standards.
 
-**2. Support modular integration points via API or CLI**
+- Given the output,  
+  When I export or consume the data,  
+  Then the Stakeholder Register is in strict JSON format with no schema violations.
 
-- Given that the system exposes API/CLI endpoints, When an external tool calls these endpoints, Then the system responds with the requested documentation or status information successfully.
-- Given that the integration is configured, When a developer invokes the API/CLI, Then the system performs the requested action (e.g., generate, retrieve, update documentation) within acceptable response times.
-- Given that the system is embedded into various environments, When different tools or platforms use the API/CLI, Then they can seamlessly generate or access project documentation.
+---
 
-**3. Support Azure AI authentication and deployment**
+3. **Project Manager – Generate Requirements Management Plan**
 
-- Given that the system is configured for Azure AI, When a user authenticates with Azure credentials, Then the system successfully connects to Azure AI services.
-- Given that deployment is initiated, When the system is deployed in Azure, Then it operates securely with proper authentication and access controls.
-- Given that the system interacts with Azure AI, When performing documentation generation tasks, Then it adheres to Azure security and scalability best practices.
+- Given a request to generate the Requirements Management Plan,  
+  When the system processes it,  
+  Then the output includes:  
+  - requirements elicitation methodologies  
+  - analysis techniques  
+  - traceability matrix format  
+  - change control procedures.
+
+- Given the generated plan,  
+  When I review it,  
+  Then it aligns with PMBOK planning process group standards.
+
+- Given the JSON output,  
+  When validated against the schema,  
+  Then no errors or missing required fields are detected.
+
+---
+
+4. **Software Architect – Technology Stack Analysis and Recommendations**
+
+- Given project domain information and constraints (e.g., budget, compliance),  
+  When I request technology stack analysis,  
+  Then the system outputs an assessment including:  
+  - existing technologies  
+  - recommended frameworks and libraries  
+  - architecture patterns.
+
+- Given the recommendations,  
+  When I review them,  
+  Then they consider scalability, maintainability, and compliance requirements.
+
+- Given the JSON output,  
+  When parsed,  
+  Then it is structured with clearly defined sections: analysis, pros/cons, and recommendations.
+
+---
+
+5. **PMO Administrator – Manage Azure AI API Credentials and Usage**
+
+- Given the admin accesses the module,  
+  When inputting or updating Azure AI API keys via CLI or config files,  
+  Then the module accepts the keys securely.
+
+- Given API keys are entered,  
+  When saved,  
+  Then the system validates the credentials and provides immediate error feedback if invalid.
+
+- Given valid credentials,  
+  When monitoring usage,  
+  Then usage metrics (calls made, cost estimates) are accessible via the admin interface.
+
+- Given stored credentials,  
+  When at rest,  
+  Then they are stored using best security practices (e.g., encryption, restricted access).
+
+---
+
+6. **Developer – Output All Documents in Strict JSON Format**
+
+- Given any generated document,  
+  When outputted,  
+  Then it validates against its predefined JSON schema without errors.
+
+- Given the JSON output,  
+  When inspected,  
+  Then it includes metadata fields such as generation timestamp, version, and project ID.
+
+- Given CLI or API usage,  
+  When specifying an option/flag for JSON output only,  
+  Then the system outputs documents exclusively in JSON format.
+
+---
+
+7. **Project Manager – Generate Risk Management Plan**
+
+- Given a generation request,  
+  When producing the Risk Management Plan,  
+  Then the output includes:  
+  - risk categories  
+  - identified risks with descriptions  
+  - probability and impact ratings  
+  - response plans  
+  - assigned owners.
+
+- Given the Risk Management Plan,  
+  When reviewed,  
+  Then it aligns with PMBOK risk management processes.
+
+- Given the JSON output,  
+  When parsed,  
+  Then it contains a traceable structure linking each risk element clearly.
+
+---
+
+8. **Product Owner – Generate Work Breakdown Structure (WBS) and WBS Dictionary**
+
+- Given project scope data,  
+  When generating the WBS,  
+  Then the output displays a hierarchical decomposition with unique IDs for each element.
+
+- Given the WBS Dictionary generation,  
+  When produced,  
+  Then it contains detailed descriptions, responsible parties, and acceptance criteria for each work package.
+
+- Given the JSON output,  
+  When imported into scheduling tools,  
+  Then it is compatible and correctly formatted.
+
+---
+
+9. **Systems Integrator – CLI Interface for Document Generation**
+
+- Given the CLI is installed,  
+  When issuing commands like `generate-project-charter`, `generate-stakeholder-register`, or `generate-full-docs`,  
+  Then the system generates respective JSON documents.
+
+- Given commands accept parameters (e.g., input files, output directories),  
+  When executed,  
+  Then output files are saved to specified locations.
+
+- Given command execution,  
+  When errors occur (e.g., invalid inputs),  
+  Then CLI provides meaningful feedback and error messages.
+
+---
+
+10. **Quality Assurance Lead – Generate Quality Management Plan**
+
+- Given a request to generate the Quality Management Plan,  
+  When produced,  
+  Then it includes:  
+  - quality metrics  
+  - control methods  
+  - roles and responsibilities  
+  - audit schedules.
+
+- Given the plan,  
+  When reviewed,  
+  Then it adheres to PMBOK quality management knowledge area standards.
+
+- Given the JSON output,  
+  When validated,  
+  Then it includes traceability links to scope and requirements documents.
+
+---
+
+11. **Compliance Officer – Generate Compliance Considerations Documentation**
+
+- Given project regulatory context,  
+  When generating Compliance Considerations documentation,  
+  Then it lists:  
+  - applicable regulations  
+  - compliance strategies  
+  - audit checkpoints  
+  - responsible personnel.
+
+- Given the document,  
+  When evaluated,  
+  Then it aligns with organizational and industry compliance frameworks.
+
+- Given the JSON output format,  
+  When integrated into compliance systems,  
+  Then it supports easy retrieval and tracking.
+
+---
+
+12. **Project Manager – Support Modular Documentation Generation**
+
+- Given the API or CLI,  
+  When requesting generation of individual or grouped documents,  
+  Then the system generates only those specified without running full documentation generation.
+
+- Given partial document generation,  
+  When executed,  
+  Then no dependency or data integrity errors occur.
+
+- Given module documentation,  
+  When accessed,  
+  Then it clearly states available modules, their dependencies, and usage instructions.
+
+---
+
+If you want, I can provide example JSON schema snippets or test cases for any story.
