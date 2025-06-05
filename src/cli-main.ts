@@ -39,10 +39,6 @@ interface GeneratedDocument {
     content: string | null;
 }
 
-/**
- * Type definition for document generator functions
- */
-type DocumentGenerator = (context: string) => Promise<string>;
 
 export async function main(options: GenerationOptions = { 
     outputDir: 'generated-documents',
