@@ -46,6 +46,13 @@ requirements-gathering-agent --with-retry
 
 Create a `.env` file with your AI provider configuration:
 
+### Google AI Studio (Free Tier Available)
+```bash
+GOOGLE_AI_API_KEY=your-google-ai-api-key
+GOOGLE_AI_MODEL=gemini-1.5-flash
+```
+Get your API key: https://makersuite.google.com/app/apikey
+
 ### Azure OpenAI (Recommended)
 ```bash
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
@@ -136,6 +143,9 @@ Options:
 ```
 
 ## Authentication
+
+### Google AI Studio
+Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 ### Azure OpenAI with Entra ID
 ```bash

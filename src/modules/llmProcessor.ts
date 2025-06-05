@@ -2,6 +2,7 @@ import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 import { AzureOpenAI } from "openai";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -9,6 +10,7 @@ dotenv.config();
 
 let client: any = null;
 let azureOpenAIClient: AzureOpenAI | null = null;
+let googleAIClient: GoogleGenerativeAI | null = null;
 let clientInitialized = false;
 let rateLimitHit = false;
 let skipAI = false;
@@ -20,10 +22,13 @@ interface ChatMessage {
 }
 
 // Determine which AI provider to use based on environment variables
-function getAIProvider(): 'azure-openai' | 'github-ai' | 'ollama' | 'azure-ai-studio' {
+function getAIProvider(): 'azure-openai' | 'github-ai' | 'ollama' | 'azure-ai-studio' | 'google-ai' {
     const endpoint = process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT || "https://models.github.ai/inference";
     
-    if (endpoint.includes('openai.azure.com') && process.env.USE_ENTRA_ID === 'true') {
+    // Check for Google AI Studio first
+    if (process.env.GOOGLE_AI_API_KEY) {
+        return 'google-ai';
+    } else if (endpoint.includes('openai.azure.com') && process.env.USE_ENTRA_ID === 'true') {
         return 'azure-openai';
     } else if (endpoint.includes('openai.azure.com')) {
         return 'azure-ai-studio';
@@ -35,7 +40,7 @@ function getAIProvider(): 'azure-openai' | 'github-ai' | 'ollama' | 'azure-ai-st
 }
 
 function initializeClient() {
-    if (clientInitialized) return { client, azureOpenAIClient };
+    if (clientInitialized) return { client, azureOpenAIClient, googleAIClient };
     
     const provider = getAIProvider();
     const endpoint = process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT || "https://models.github.ai/inference";
@@ -44,6 +49,21 @@ function initializeClient() {
     console.log(`🔍 Detected AI Provider: ${provider}`);
 
     switch (provider) {
+        case 'google-ai':
+            try {
+                console.log('✅ Initializing Google AI Studio client');
+                const googleApiKey = process.env.GOOGLE_AI_API_KEY;
+                if (!googleApiKey) {
+                    console.error('❌ GOOGLE_AI_API_KEY is required for Google AI Studio');
+                    break;
+                }
+                googleAIClient = new GoogleGenerativeAI(googleApiKey);
+                console.log('🚀 Google AI Studio initialized successfully');
+            } catch (error: any) {
+                console.error('❌ Failed to initialize Google AI Studio:', error.message);
+            }
+            break;
+
         case 'azure-openai':
             try {
                 console.log('✅ Initializing Azure OpenAI client with Entra ID authentication');
@@ -97,16 +117,21 @@ function initializeClient() {
             client = token ? ModelClient(endpoint, new AzureKeyCredential(token)) : null;
             break;
     }
-    
-    if (!client && !azureOpenAIClient) {
+      if (!client && !azureOpenAIClient && !googleAIClient) {
         console.warn('⚠️  No AI client initialized - check your environment variables');
     }
     
     clientInitialized = true;
-    return { client, azureOpenAIClient };
+    return { client, azureOpenAIClient, googleAIClient };
 }
 
 function getModel() {
+    const provider = getAIProvider();
+    
+    if (provider === 'google-ai') {
+        return process.env.GOOGLE_AI_MODEL || "gemini-1.5-flash";
+    }
+    
     return process.env.DEPLOYMENT_NAME || process.env.REQUIREMENTS_AGENT_MODEL || "gpt-4o-mini";
 }
 
@@ -130,11 +155,9 @@ async function handleAICall<T>(operation: () => Promise<T>, operationName: strin
     if (skipAI) {
         console.log(`⏭️ Skipping ${operationName} (AI disabled due to previous errors)`);
         return null;
-    }
-
-    try {
-        const { client, azureOpenAIClient } = initializeClient();
-        if (!client && !azureOpenAIClient) {
+    }    try {
+        const { client, azureOpenAIClient, googleAIClient } = initializeClient();
+        if (!client && !azureOpenAIClient && !googleAIClient) {
             console.log(`⚠️ No AI client available for ${operationName}`);
             return null;
         }
@@ -159,10 +182,39 @@ async function handleAICall<T>(operation: () => Promise<T>, operationName: strin
 
 // Universal AI call function that works with both client types
 async function makeAICall(messages: ChatMessage[], maxTokens: number = 1200): Promise<any> {
-    const { client, azureOpenAIClient } = initializeClient();
+    const { client, azureOpenAIClient, googleAIClient } = initializeClient();
     const provider = getAIProvider();
 
-    if (provider === 'azure-openai' && azureOpenAIClient) {
+    if (provider === 'google-ai' && googleAIClient) {
+        // Use Google AI Studio
+        console.log('🔗 Making Google AI Studio call');
+        const model = googleAIClient.getGenerativeModel({ model: getModel() });
+        
+        // Convert messages to Google AI format
+        const systemMessage = messages.find(m => m.role === 'system')?.content || '';
+        const userMessage = messages.find(m => m.role === 'user')?.content || '';
+        
+        // Combine system and user messages for Google AI
+        const prompt = systemMessage ? `${systemMessage}\n\n${userMessage}` : userMessage;
+        
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+                maxOutputTokens: maxTokens,
+                temperature: 0.7,
+                topP: 1,
+            }
+        });
+        
+        // Return in a format compatible with other providers
+        return {
+            choices: [{
+                message: {
+                    content: result.response.text()
+                }
+            }]
+        };
+    } else if (provider === 'azure-openai' && azureOpenAIClient) {
         // Use Azure OpenAI with Entra ID
         console.log('🔐 Making Azure OpenAI call with Entra ID authentication');
         const deployment = getModel();

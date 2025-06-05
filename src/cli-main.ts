@@ -36,7 +36,7 @@ interface GeneratedDocument {
     /** Name of the document (used for file naming) */
     name: string;
     /** Generated content of the document */
-    content: string | null;
+    content: string;
 }
 
 
@@ -112,12 +112,10 @@ A comprehensive software project requiring PMBOK documentation.
             // Regular exponential backoff with 60s cap for other retries
             const exponentialDelay = baseDelay * Math.pow(2, attempt);
             return Math.min(exponentialDelay, maxRegularDelay);
-        };
-
-        /**
+        };        /**
          * Generate document with retry logic and progress reporting
          */
-        const generateWithProgress = async (name: string, generator: DocumentGenerator): Promise<string> => {
+        const generateWithProgress = async (name: string, generator: (context: string) => Promise<string | null>): Promise<string> => {
             let lastError: Error | null = null;
             let attempt = 0;
 
@@ -127,9 +125,11 @@ A comprehensive software project requiring PMBOK documentation.
                         console.log(`🔄 Retry attempt ${attempt}/${options.retries} for ${name}...`);
                     } else if (!options.quiet) {
                         console.log(`🤖 Generating ${name}...`);
+                    }                    const result = await generator(projectContext);
+                    
+                    if (!result) {
+                        throw new Error(`No content generated for ${name}`);
                     }
-
-                    const result = await generator(projectContext);
                     
                     if (attempt > 0 && !options.quiet) {
                         console.log(`✅ Successfully generated ${name} after ${attempt} retry(ies)`);
@@ -172,7 +172,7 @@ A comprehensive software project requiring PMBOK documentation.
         const documentTasks: Array<{
             name: string;
             displayName: string;
-            generator: DocumentGenerator;
+            generator: (context: string) => Promise<string | null>;
         }> = [
             { 
                 name: 'project-summary',
@@ -214,16 +214,15 @@ A comprehensive software project requiring PMBOK documentation.
         // Track generation results
         const results: {
             successful: GeneratedDocument[];
-            failed: Array<{ name: string; error: Error; task: { name: string; displayName: string; generator: DocumentGenerator } }>;
+            failed: Array<{ name: string; error: Error; task: { name: string; displayName: string; generator: (context: string) => Promise<string | null> } }>;
         } = {
             successful: [],
             failed: []
         };
 
         // Initial generation attempt
-        let currentAttempt = 0;
-        let failedTasks: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
-        let tasksForCurrentAttempt: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
+        let currentAttempt = 0;        let failedTasks: Array<{ name: string; displayName: string; generator: (context: string) => Promise<string | null> }> = [];
+        let tasksForCurrentAttempt: Array<{ name: string; displayName: string; generator: (context: string) => Promise<string | null> }> = [];
 
         // First attempt - try all documents
         tasksForCurrentAttempt = [...documentTasks];
@@ -320,10 +319,9 @@ A comprehensive software project requiring PMBOK documentation.
         // Save successful documents
         if (results.successful.length > 0) {
             if (!options.quiet) console.log('\n💾 Saving generated documents...');
-            
-            for (const doc of results.successful) {
+              for (const doc of results.successful) {
                 const filePath = join(options.outputDir, `${doc.name}.${options.format}`);
-                await generateMarkdownFile(doc.name, doc.content, options);
+                await generateMarkdownFile(doc.name, doc.content);
                 if (!options.quiet) console.log(`✅ Generated: ${filePath}`);
             }
         }

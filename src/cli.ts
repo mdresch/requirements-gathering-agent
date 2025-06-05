@@ -99,36 +99,33 @@ async function main() {
     const generateTypes = new Set(args.filter(arg => arg.startsWith('--generate-')).map(arg => arg.replace('--generate-', '')));
     const generateAll = generateTypes.size === 0;
 
-    try {
-      if (generateAll || generateTypes.has('core')) {
+    try {      if (generateAll || generateTypes.has('core')) {
         if (!options.quiet) console.log('🎯 Generating core documents...');
-        await DocumentGenerator.generateCoreDocuments(context, options);
+        await DocumentGenerator.generateCoreDocuments(context);
       }
       
       if (generateAll || generateTypes.has('management')) {
         if (!options.quiet) console.log('📋 Generating management plans...');
-        await DocumentGenerator.generateManagementPlans(context, options);
+        await DocumentGenerator.generateManagementPlans(context);
       }
       
       if (generateAll || generateTypes.has('planning')) {
         if (!options.quiet) console.log('🏗️ Generating planning artifacts...');
-        await DocumentGenerator.generatePlanningArtifacts(context, options);
+        await DocumentGenerator.generatePlanningArtifacts(context);
       }
       
       if (generateAll || generateTypes.has('technical')) {
         if (!options.quiet) console.log('⚙️ Generating technical analysis...');
-        await DocumentGenerator.generateTechnicalAnalysis(context, options);
+        await DocumentGenerator.generateTechnicalAnalysis(context);
       }
 
       if (!options.quiet) {
         console.log('🎉 Document generation completed successfully!');
         console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
       }
-    } catch (genError: any) {
-      if (options.retries > 0) {
+    } catch (genError: any) {      if (options.retries > 0) {
         if (!options.quiet) console.log(`🔄 Retrying failed operations (${options.retries} attempts remaining)...`);
-        options.retries--;
-        await generateDocumentsWithRetry(context, options);
+        await generateDocumentsWithRetry(context, { maxRetries: options.retries });
       } else {
         throw genError;
       }
@@ -207,6 +204,11 @@ async function validateEnvironment(): Promise<boolean> {
 function detectConfiguredProviders(): string[] {
   const providers: string[] = [];
   
+  // Check Google AI Studio
+  if (process.env.GOOGLE_AI_API_KEY) {
+    providers.push('Google AI Studio');
+  }
+  
   // Check Azure OpenAI with Entra ID
   if (process.env.AZURE_OPENAI_ENDPOINT && process.env.USE_ENTRA_ID === 'true') {
     providers.push('Azure OpenAI (Entra ID)');
@@ -235,6 +237,11 @@ function detectConfiguredProviders(): string[] {
 
 function suggestProviderConfiguration(): void {
   console.log('\n🔧 Quick setup suggestions:');
+  
+  console.log('\n🟣 For Google AI Studio (Free tier available):');
+  console.log('   GOOGLE_AI_API_KEY=your-google-ai-api-key');
+  console.log('   GOOGLE_AI_MODEL=gemini-1.5-flash');
+  console.log('   Get API key: https://makersuite.google.com/app/apikey');
   
   console.log('\n🔷 For Azure OpenAI with Entra ID (Enterprise):');
   console.log('   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/');
@@ -313,6 +320,10 @@ DOCUMENT TYPES:
 
 CONFIGURATION:
   Create a .env file with your AI provider configuration:
+  
+  Google AI Studio (Free tier available):
+    GOOGLE_AI_API_KEY=your-google-ai-api-key
+    GOOGLE_AI_MODEL=gemini-1.5-flash
   
   Azure OpenAI with Entra ID (Recommended):
     AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
