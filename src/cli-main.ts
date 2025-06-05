@@ -15,9 +15,41 @@ import {
 } from './modules/llmProcessor.js';
 import { generateMarkdownFile } from './modules/fileUtils.js';
 
-export async function main() {
+/**
+ * Options for document generation
+ */
+interface GenerationOptions {
+    /** Output directory for generated documents */
+    outputDir: string;
+    /** Whether to suppress progress messages */
+    quiet: boolean;
+    /** Output format (markdown, json, yaml) */
+    format: string;
+    /** Number of retry attempts for failed generations */
+    retries: number;
+}
+
+/**
+ * Structure of a generated document
+ */
+interface GeneratedDocument {
+    /** Name of the document (used for file naming) */
+    name: string;
+    /** Generated content of the document */
+    content: string | null;
+}
+
+
+export async function main(options: GenerationOptions = { 
+    outputDir: 'generated-documents',
+    quiet: false,
+    format: 'markdown',
+    retries: 0
+}) {
     try {
-        console.log('📋 Starting PMBOK document generation...');
+        if (!options.quiet) {
+            console.log('📋 Starting PMBOK document generation...');
+        }
         
         // Look for README.md or project description file
         const readmePath = join(process.cwd(), 'README.md');
@@ -25,7 +57,9 @@ export async function main() {
         
         if (existsSync(readmePath)) {
             projectContext = readFileSync(readmePath, 'utf-8');
-            console.log('✅ Found README.md - using as project context');
+            if (!options.quiet) {
+                console.log('✅ Found README.md - using as project context');
+            }
         } else {
             projectContext = `
 # Sample Project
@@ -43,57 +77,279 @@ A comprehensive software project requiring PMBOK documentation.
 - PostgreSQL database
 - Azure cloud deployment
             `.trim();
-            console.log('📝 Using default project context (no README.md found)');
-        }
-
-        // Generate AI-powered documents
-        console.log('🤖 Generating AI Summary and Goals...');
-        const summary = await getAiSummaryAndGoals(projectContext);
-        
-        console.log('📖 Generating User Stories...');
-        const userStories = await getAiUserStories(projectContext);
-        
-        console.log('📜 Generating Project Charter...');
-        const charter = await getAiProjectCharter(projectContext);
-        
-        console.log('📊 Generating Scope Management Plan...');
-        const scopePlan = await getAiScopeManagementPlan(projectContext);
-        
-        console.log('⚠️ Generating Risk Management Plan...');
-        const riskPlan = await getAiRiskManagementPlan(projectContext);
-        
-        console.log('🏗️ Generating Work Breakdown Structure...');
-        const wbs = await getAiWbs(projectContext);
-        
-        console.log('👥 Generating Stakeholder Register...');
-        const stakeholders = await getAiStakeholderRegister(projectContext);
-
-        // Generate markdown files
-        const docs = [
-            { name: 'project-summary', content: summary },
-            { name: 'user-stories', content: userStories },
-            { name: 'project-charter', content: charter },
-            { name: 'scope-management-plan', content: scopePlan },
-            { name: 'risk-management-plan', content: riskPlan },
-            { name: 'work-breakdown-structure', content: wbs },
-            { name: 'stakeholder-register', content: stakeholders }
-        ];
-
-        console.log('💾 Saving generated documents...');
-        for (const doc of docs) {
-            if (doc.content) {
-                await generateMarkdownFile(doc.name, doc.content);
-                console.log(`✅ Generated: ${doc.name}.md`);
-            } else {
-                console.log(`⚠️ Skipped: ${doc.name} (no content generated)`);
+            if (!options.quiet) {
+                console.log('📝 Using default project context (no README.md found)');
             }
         }
 
-        console.log('🎉 Document generation completed successfully!');
-        console.log('📁 Check the current directory for generated .md files');
+        /**
+         * Sleep for specified milliseconds
+         */
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        /**
+         * Calculate delay for retry attempt using exponential backoff with special handling
+         * for the third retry attempt.
+         * 
+         * Delay progression:
+         * - First retry: Exponential backoff starting at 1s, up to 60s
+         * - Second retry: Exponential backoff starting at 1s, up to 60s
+         * - Third retry: Fixed 2-minute delay to allow AI more processing time
+         * 
+         * @param attempt - The current retry attempt number (0-based)
+         * @returns Delay in milliseconds
+         */
+        const getRetryDelay = (attempt: number): number => {
+            const baseDelay = 1000; // Start with 1 second
+            const maxRegularDelay = 60000; // Max 60 seconds for regular retries
+            const extendedDelay = 120000; // 2 minutes for third retry
+            
+            // Special case: Third retry (attempt = 2) gets extended delay
+            if (attempt === 2) {
+                return extendedDelay;
+            }
+            
+            // Regular exponential backoff with 60s cap for other retries
+            const exponentialDelay = baseDelay * Math.pow(2, attempt);
+            return Math.min(exponentialDelay, maxRegularDelay);
+        };
+
+        /**
+         * Generate document with retry logic and progress reporting
+         */
+        const generateWithProgress = async (name: string, generator: DocumentGenerator): Promise<string> => {
+            let lastError: Error | null = null;
+            let attempt = 0;
+
+            while (attempt <= options.retries) {
+                try {
+                    if (attempt > 0 && !options.quiet) {
+                        console.log(`🔄 Retry attempt ${attempt}/${options.retries} for ${name}...`);
+                    } else if (!options.quiet) {
+                        console.log(`🤖 Generating ${name}...`);
+                    }
+
+                    const result = await generator(projectContext);
+                    
+                    if (attempt > 0 && !options.quiet) {
+                        console.log(`✅ Successfully generated ${name} after ${attempt} retry(ies)`);
+                    }
+                    
+                    return result;
+
+                } catch (error) {
+                    lastError = error instanceof Error ? error : new Error(String(error));
+                    
+                    if (attempt < options.retries) {
+                        const delay = getRetryDelay(attempt);
+                        if (!options.quiet) {
+                            console.error(`⚠️ Error generating ${name} (attempt ${attempt + 1}/${options.retries + 1}):`, lastError.message);
+                            
+                            // Special message for extended delay on 3rd retry
+                            if (attempt === 2) {
+                                console.log(`⏳ Third retry - Extended wait of 2 minutes to allow AI more processing time...`);
+                            } else {
+                                console.log(`⏳ Waiting ${delay/1000} seconds before retrying...`);
+                            }
+                        }
+                        await sleep(delay);
+                    } else {
+                        if (!options.quiet) {
+                            console.error(`❌ Failed to generate ${name} after ${options.retries + 1} attempts:`, lastError.message);
+                        }
+                        throw new Error(`Failed to generate ${name} after ${options.retries + 1} attempts: ${lastError.message}`);
+                    }
+                }
+                
+                attempt++;
+            }
+
+            // This should never be reached due to the throw in the last catch block
+            throw lastError || new Error(`Failed to generate ${name}`);
+        };
+
+        // Define document generation tasks
+        const documentTasks: Array<{
+            name: string;
+            displayName: string;
+            generator: DocumentGenerator;
+        }> = [
+            { 
+                name: 'project-summary',
+                displayName: 'AI Summary and Goals',
+                generator: getAiSummaryAndGoals
+            },
+            { 
+                name: 'user-stories',
+                displayName: 'User Stories',
+                generator: getAiUserStories
+            },
+            { 
+                name: 'project-charter',
+                displayName: 'Project Charter',
+                generator: getAiProjectCharter
+            },
+            { 
+                name: 'scope-management-plan',
+                displayName: 'Scope Management Plan',
+                generator: getAiScopeManagementPlan
+            },
+            { 
+                name: 'risk-management-plan',
+                displayName: 'Risk Management Plan',
+                generator: getAiRiskManagementPlan
+            },
+            { 
+                name: 'work-breakdown-structure',
+                displayName: 'Work Breakdown Structure',
+                generator: getAiWbs
+            },
+            { 
+                name: 'stakeholder-register',
+                displayName: 'Stakeholder Register',
+                generator: getAiStakeholderRegister
+            }
+        ];
+
+        // Track generation results
+        const results: {
+            successful: GeneratedDocument[];
+            failed: Array<{ name: string; error: Error; task: { name: string; displayName: string; generator: DocumentGenerator } }>;
+        } = {
+            successful: [],
+            failed: []
+        };
+
+        // Initial generation attempt
+        let currentAttempt = 0;
+        let failedTasks: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
+        let tasksForCurrentAttempt: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
+
+        // First attempt - try all documents
+        tasksForCurrentAttempt = [...documentTasks];
+
+        while (currentAttempt <= options.retries) {
+            const isRetryAttempt = currentAttempt > 0;
+            
+            if (isRetryAttempt) {
+                if (failedTasks.length === 0) {
+                    break; // No failed tasks to retry
+                }
+                
+                if (!options.quiet) {
+                    console.log(`\n🔄 Retry attempt ${currentAttempt}/${options.retries} for failed documents...`);
+                    console.log(`📝 Retrying ${failedTasks.length} failed document(s)...`);
+                }
+                
+                // On retry, only process previously failed tasks
+                tasksForCurrentAttempt = [...failedTasks];
+                failedTasks = []; // Clear failed tasks for this attempt
+            }
+
+            // Process current batch of tasks
+            for (const task of tasksForCurrentAttempt) {
+                try {
+                    if (!options.quiet) {
+                        console.log(`${isRetryAttempt ? '🔄' : '🤖'} Generating ${task.displayName}...`);
+                    }
+                    
+                    const content = await generateWithProgress(task.displayName, task.generator);
+                    
+                    // Add to successful results if not already present
+                    if (!results.successful.some(doc => doc.name === task.name)) {
+                        results.successful.push({
+                            name: task.name,
+                            content
+                        });
+                    }
+                    
+                    if (isRetryAttempt && !options.quiet) {
+                        console.log(`✅ Successfully generated ${task.displayName} on retry attempt ${currentAttempt}`);
+                    }
+                } catch (error) {
+                    const errorObj = error instanceof Error ? error : new Error(String(error));
+                    
+                    // Add to failed tasks for next retry attempt
+                    failedTasks.push(task);
+                    
+                    // On final retry, add to permanent failed results
+                    if (currentAttempt === options.retries) {
+                        results.failed.push({
+                            name: task.name,
+                            error: errorObj,
+                            task: task
+                        });
+                    }
+                    
+                    if (!options.quiet) {
+                        const attemptMsg = isRetryAttempt ? ` (retry attempt ${currentAttempt})` : '';
+                        console.error(`⚠️ Failed to generate ${task.displayName}${attemptMsg}: ${errorObj.message}`);
+                    }
+                }
+            }
+
+            // If this was the last retry or no failures, break
+            if (currentAttempt >= options.retries || failedTasks.length === 0) {
+                break;
+            }
+
+            // Prepare for next retry
+            const delay = getRetryDelay(currentAttempt);
+            if (!options.quiet) {
+                console.log(`\n⚠️ ${failedTasks.length} document(s) failed to generate`);
+                if (currentAttempt === 2) {
+                    console.log(`⏳ Third retry - Extended wait of 2 minutes to allow AI more processing time...`);
+                } else {
+                    console.log(`⏳ Waiting ${delay/1000} seconds before retrying failed documents...`);
+                }
+            }
+            
+            await sleep(delay);
+            currentAttempt++;
+        }
+
+        // Report generation summary
+        if (!options.quiet) {
+            console.log('\n📊 Document Generation Summary:');
+            console.log(`✅ Successfully generated: ${results.successful.length} documents`);
+            if (results.failed.length > 0) {
+                console.log(`❌ Failed to generate: ${results.failed.length} documents`);
+            }
+        }
+
+        // Save successful documents
+        if (results.successful.length > 0) {
+            if (!options.quiet) console.log('\n💾 Saving generated documents...');
+            
+            for (const doc of results.successful) {
+                const filePath = join(options.outputDir, `${doc.name}.${options.format}`);
+                await generateMarkdownFile(doc.name, doc.content, options);
+                if (!options.quiet) console.log(`✅ Generated: ${filePath}`);
+            }
+        }
+
+        // Report failures in detail
+        if (results.failed.length > 0) {
+            if (!options.quiet) {
+                console.log('\n❌ Failed Documents:');
+                for (const failure of results.failed) {
+                    console.error(`  • ${failure.name}: ${failure.error.message}`);
+                }
+            }
+            
+            // If all documents failed, throw error
+            if (results.successful.length === 0) {
+                throw new Error('All document generations failed. Check the error messages above for details.');
+            }
+        }
+
+        if (!options.quiet) {
+            console.log('🎉 Document generation completed successfully!');
+            console.log(`📁 Check ${options.outputDir}/ for generated files`);
+        }
 
     } catch (error) {
-        console.error('❌ Error in document generation:', error);
+        if (!options.quiet) console.error('❌ Error in document generation:', error);
         throw error;
     }
 }
