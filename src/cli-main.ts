@@ -228,25 +228,38 @@ A comprehensive software project requiring PMBOK documentation.
         };
 
         // Initial generation attempt
-        let tasksToProcess = documentTasks;
         let currentAttempt = 0;
         let failedTasks: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
+        let tasksForCurrentAttempt: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
+
+        // First attempt - try all documents
+        tasksForCurrentAttempt = [...documentTasks];
 
         while (currentAttempt <= options.retries) {
-            if (currentAttempt > 0 && !options.quiet) {
-                console.log(`\n🔄 Retry attempt ${currentAttempt}/${options.retries} for failed documents...`);
-                console.log(`📝 Retrying ${failedTasks.length} failed document(s)...`);
+            const isRetryAttempt = currentAttempt > 0;
+            
+            if (isRetryAttempt) {
+                if (failedTasks.length === 0) {
+                    break; // No failed tasks to retry
+                }
+                
+                if (!options.quiet) {
+                    console.log(`\n🔄 Retry attempt ${currentAttempt}/${options.retries} for failed documents...`);
+                    console.log(`📝 Retrying ${failedTasks.length} failed document(s)...`);
+                }
+                
+                // On retry, only process previously failed tasks
+                tasksForCurrentAttempt = [...failedTasks];
+                failedTasks = []; // Clear failed tasks for this attempt
             }
 
-            // Process only failed tasks after first attempt
-            const currentTasks = currentAttempt === 0 ? tasksToProcess : failedTasks;
-            failedTasks = []; // Reset failed tasks for this attempt
-
-            for (const task of currentTasks) {
+            // Process current batch of tasks
+            for (const task of tasksForCurrentAttempt) {
                 try {
                     if (!options.quiet) {
-                        console.log(`${currentAttempt === 0 ? '🤖' : '🔄'} Generating ${task.displayName}...`);
+                        console.log(`${isRetryAttempt ? '🔄' : '🤖'} Generating ${task.displayName}...`);
                     }
+                    
                     const content = await generateWithProgress(task.displayName, task.generator);
                     
                     // Add to successful results if not already present
@@ -257,14 +270,16 @@ A comprehensive software project requiring PMBOK documentation.
                         });
                     }
                     
-                    if (currentAttempt > 0 && !options.quiet) {
+                    if (isRetryAttempt && !options.quiet) {
                         console.log(`✅ Successfully generated ${task.displayName} on retry attempt ${currentAttempt}`);
                     }
                 } catch (error) {
                     const errorObj = error instanceof Error ? error : new Error(String(error));
+                    
+                    // Add to failed tasks for next retry attempt
                     failedTasks.push(task);
                     
-                    // Only add to failed results if this is the last retry attempt
+                    // On final retry, add to permanent failed results
                     if (currentAttempt === options.retries) {
                         results.failed.push({
                             name: task.name,
@@ -274,13 +289,14 @@ A comprehensive software project requiring PMBOK documentation.
                     }
                     
                     if (!options.quiet) {
-                        console.error(`⚠️ Failed to generate ${task.displayName}: ${errorObj.message}`);
+                        const attemptMsg = isRetryAttempt ? ` (retry attempt ${currentAttempt})` : '';
+                        console.error(`⚠️ Failed to generate ${task.displayName}${attemptMsg}: ${errorObj.message}`);
                     }
                 }
             }
 
-            // If no failures or no more retries, break
-            if (failedTasks.length === 0 || currentAttempt >= options.retries) {
+            // If this was the last retry or no failures, break
+            if (currentAttempt >= options.retries || failedTasks.length === 0) {
                 break;
             }
 
