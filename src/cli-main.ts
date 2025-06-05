@@ -97,9 +97,14 @@ A comprehensive software project requiring PMBOK documentation.
         /**
          * Calculate delay for retry attempt using exponential backoff
          */
+        /**
+         * Calculate delay for retry attempt using exponential backoff
+         * @param attempt - The current retry attempt number (0-based)
+         * @returns Delay in milliseconds, with exponential backoff up to 60 seconds
+         */
         const getRetryDelay = (attempt: number): number => {
             const baseDelay = 1000; // Start with 1 second
-            const maxDelay = 30000; // Max 30 seconds
+            const maxDelay = 60000; // Max 60 seconds (1 minute)
             const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
             return delay;
         };
