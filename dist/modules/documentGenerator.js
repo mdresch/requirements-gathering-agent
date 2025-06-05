@@ -19,25 +19,26 @@ const GENERATION_TASKS = [
     { key: 'resource-management-plan', name: 'Resource Management Plan', func: 'getAiResourceManagementPlan', emoji: '👨‍💼', category: 'management-plans', priority: 10 },
     { key: 'communication-management-plan', name: 'Communication Management Plan', func: 'getAiCommunicationManagementPlan', emoji: '📢', category: 'management-plans', priority: 11 },
     { key: 'procurement-management-plan', name: 'Procurement Management Plan', func: 'getAiProcurementManagementPlan', emoji: '🛒', category: 'management-plans', priority: 12 },
+    // Stakeholder Management (Updated with proper priority order)
     { key: 'stakeholder-engagement-plan', name: 'Stakeholder Engagement Plan', func: 'getAiStakeholderEngagementPlan', emoji: '🤝', category: 'stakeholder-management', priority: 13 },
-    // Planning Artifacts (Medium Priority)
-    { key: 'work-breakdown-structure', name: 'Work Breakdown Structure', func: 'getAiWbs', emoji: '🏗️', category: 'planning-artifacts', priority: 14 },
-    { key: 'wbs-dictionary', name: 'WBS Dictionary', func: 'getAiWbsDictionary', emoji: '📚', category: 'planning-artifacts', priority: 15 },
-    { key: 'activity-list', name: 'Activity List', func: 'getAiActivityList', emoji: '📋', category: 'planning-artifacts', priority: 16 },
-    { key: 'activity-duration-estimates', name: 'Activity Duration Estimates', func: 'getAiActivityDurationEstimates', emoji: '⏱️', category: 'planning-artifacts', priority: 17 },
-    { key: 'activity-resource-estimates', name: 'Activity Resource Estimates', func: 'getAiActivityResourceEstimates', emoji: '📦', category: 'planning-artifacts', priority: 18 },
-    { key: 'schedule-network-diagram', name: 'Schedule Network Diagram', func: 'getAiScheduleNetworkDiagram', emoji: '🔗', category: 'planning-artifacts', priority: 19 },
-    { key: 'milestone-list', name: 'Milestone List', func: 'getAiMilestoneList', emoji: '🎯', category: 'planning-artifacts', priority: 20 },
-    { key: 'schedule-development-input', name: 'Schedule Development Input', func: 'getAiDevelopScheduleInput', emoji: '📅', category: 'planning-artifacts', priority: 21 },
-    // Stakeholder Management
-    { key: 'stakeholder-register', name: 'Stakeholder Register', func: 'getAiStakeholderRegister', emoji: '👥', category: 'stakeholder-management', priority: 22 },
-    // Technical Analysis (Lower Priority but Important)
-    { key: 'data-model-suggestions', name: 'Data Model Suggestions', func: 'getAiDataModelSuggestions', emoji: '🗄️', category: 'technical-analysis', priority: 23 },
-    { key: 'tech-stack-analysis', name: 'Tech Stack Analysis', func: 'getAiTechStackAnalysis', emoji: '⚙️', category: 'technical-analysis', priority: 24 },
-    { key: 'risk-analysis', name: 'Risk Analysis', func: 'getAiRiskAnalysis', emoji: '🔍', category: 'technical-analysis', priority: 25 },
-    { key: 'acceptance-criteria', name: 'Acceptance Criteria', func: 'getAiAcceptanceCriteria', emoji: '✔️', category: 'technical-analysis', priority: 26 },
-    { key: 'compliance-considerations', name: 'Compliance Considerations', func: 'getAiComplianceConsiderations', emoji: '⚖️', category: 'technical-analysis', priority: 27 },
-    { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 28 }
+    { key: 'stakeholder-register', name: 'Stakeholder Register', func: 'getAiStakeholderRegister', emoji: '👥', category: 'stakeholder-management', priority: 14 },
+    { key: 'stakeholder-analysis', name: 'Stakeholder Analysis', func: 'getAiStakeholderAnalysis', emoji: '📈', category: 'stakeholder-management', priority: 15 },
+    // Planning Artifacts (Medium Priority - updated priorities)
+    { key: 'work-breakdown-structure', name: 'Work Breakdown Structure', func: 'getAiWbs', emoji: '🏗️', category: 'planning-artifacts', priority: 16 },
+    { key: 'wbs-dictionary', name: 'WBS Dictionary', func: 'getAiWbsDictionary', emoji: '📚', category: 'planning-artifacts', priority: 17 },
+    { key: 'activity-list', name: 'Activity List', func: 'getAiActivityList', emoji: '📋', category: 'planning-artifacts', priority: 18 },
+    { key: 'activity-duration-estimates', name: 'Activity Duration Estimates', func: 'getAiActivityDurationEstimates', emoji: '⏱️', category: 'planning-artifacts', priority: 19 },
+    { key: 'activity-resource-estimates', name: 'Activity Resource Estimates', func: 'getAiActivityResourceEstimates', emoji: '📦', category: 'planning-artifacts', priority: 20 },
+    { key: 'schedule-network-diagram', name: 'Schedule Network Diagram', func: 'getAiScheduleNetworkDiagram', emoji: '🔗', category: 'planning-artifacts', priority: 21 },
+    { key: 'milestone-list', name: 'Milestone List', func: 'getAiMilestoneList', emoji: '🎯', category: 'planning-artifacts', priority: 22 },
+    { key: 'schedule-development-input', name: 'Schedule Development Input', func: 'getAiDevelopScheduleInput', emoji: '📅', category: 'planning-artifacts', priority: 23 },
+    // Technical Analysis (Lower Priority but Important - updated priorities)
+    { key: 'data-model-suggestions', name: 'Data Model Suggestions', func: 'getAiDataModelSuggestions', emoji: '🗄️', category: 'technical-analysis', priority: 24 },
+    { key: 'tech-stack-analysis', name: 'Tech Stack Analysis', func: 'getAiTechStackAnalysis', emoji: '⚙️', category: 'technical-analysis', priority: 25 },
+    { key: 'risk-analysis', name: 'Risk Analysis', func: 'getAiRiskAnalysis', emoji: '🔍', category: 'technical-analysis', priority: 26 },
+    { key: 'acceptance-criteria', name: 'Acceptance Criteria', func: 'getAiAcceptanceCriteria', emoji: '✔️', category: 'technical-analysis', priority: 27 },
+    { key: 'compliance-considerations', name: 'Compliance Considerations', func: 'getAiComplianceConsiderations', emoji: '⚖️', category: 'technical-analysis', priority: 28 },
+    { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 29 }
 ];
 export class DocumentGenerator {
     options;
@@ -52,7 +53,9 @@ export class DocumentGenerator {
             delayBetweenCalls: options.delayBetweenCalls || 500,
             continueOnError: options.continueOnError ?? true,
             generateIndex: options.generateIndex ?? true,
-            cleanup: options.cleanup ?? true
+            cleanup: options.cleanup ?? true,
+            outputDir: options.outputDir || 'generated-documents', // Default output directory
+            format: options.format || 'markdown' // Default format
         };
         this.results = {
             success: false,
@@ -80,17 +83,31 @@ export class DocumentGenerator {
     async generateSingleDocument(task) {
         try {
             console.log(`${task.emoji} Generating ${task.name}...`);
+            // Fix the type assertion and error handling
             const aiFunction = llmProcessor[task.func];
             if (typeof aiFunction !== 'function') {
-                const error = `AI function ${task.func} not found`;
+                const error = `AI function ${task.func} not found in llmProcessor module`;
                 console.error(`❌ ${error}`);
+                // Fix the type issue with Object.keys
+                const availableFunctions = Object.keys(llmProcessor).filter(key => typeof llmProcessor[key] === 'function');
+                console.error(`Available functions:`, availableFunctions);
                 this.results.errors.push({ task: task.name, error });
                 return false;
             }
             const content = await aiFunction(this.context);
             if (content && content.trim().length > 0) {
-                saveDocument(task.key, content);
-                this.results.generatedFiles.push(`${task.category}/${DOCUMENT_CONFIG[task.key]?.filename || task.key + '.md'}`);
+                const documentKey = task.key;
+                const config = DOCUMENT_CONFIG[documentKey];
+                if (!config) {
+                    console.error(`❌ Unknown document key: ${documentKey}`);
+                    // Fix saveDocument call - remove the third parameter
+                    saveDocument(documentKey, content);
+                    this.results.generatedFiles.push(`${task.category}/${documentKey}.md`);
+                    console.log(`✅ Generated: ${task.name} (using default filename)`);
+                    return true;
+                }
+                saveDocument(documentKey, content);
+                this.results.generatedFiles.push(`${task.category}/${config.filename}`);
                 console.log(`✅ Generated: ${task.name}`);
                 return true;
             }
@@ -207,6 +224,15 @@ export class DocumentGenerator {
         const generator = new DocumentGenerator(context, {
             includeCategories: ['technical-analysis'],
             delayBetweenCalls: 500
+        });
+        return await generator.generateAll();
+    }
+    // Add a static convenience method specifically for stakeholder documents
+    static async generateStakeholderDocuments(context) {
+        const generator = new DocumentGenerator(context, {
+            includeCategories: ['stakeholder-management'],
+            delayBetweenCalls: 800,
+            maxConcurrent: 1
         });
         return await generator.generateAll();
     }

@@ -694,3 +694,61 @@ class ContextManager {
 // Initialize context manager
 const contextManager = new ContextManager(3000);
 
+// Add the missing stakeholder analysis function
+export async function getAiStakeholderAnalysis(context: string): Promise<string | null> {
+    return await handleAICall(async () => {
+        const messages = createMessages(
+            "You are a PMBOK-certified project manager specializing in stakeholder management. Create a comprehensive stakeholder analysis document following PMBOK 7th Edition standards.",
+            `Based on the following project context, generate a comprehensive PMBOK stakeholder analysis document.
+
+Project Context:
+${context}
+
+Please create a detailed stakeholder analysis that includes:
+
+## Stakeholder Analysis
+
+### 1. Stakeholder Identification
+- List all project stakeholders
+- Categorize stakeholders (internal, external, primary, secondary)
+- Identify stakeholder groups and individuals
+
+### 2. Stakeholder Assessment
+- Power/Interest Grid analysis
+- Influence/Impact matrix
+- Stakeholder attitudes (supportive, neutral, resistant)
+- Current engagement levels
+
+### 3. Stakeholder Prioritization
+- High priority stakeholders requiring active management
+- Medium priority stakeholders requiring regular monitoring
+- Low priority stakeholders requiring minimal effort
+
+### 4. Stakeholder Requirements and Expectations
+- Business requirements by stakeholder group
+- Success criteria from each stakeholder perspective
+- Potential conflicts between stakeholder interests
+
+### 5. Communication Preferences
+- Preferred communication methods by stakeholder
+- Frequency of communication needed
+- Information requirements and reporting needs
+
+### 6. Engagement Strategies
+- Specific strategies for high-influence stakeholders
+- Approaches for managing resistant stakeholders
+- Methods to maintain support from champions
+
+### 7. Risk Assessment
+- Stakeholder-related risks
+- Mitigation strategies for stakeholder risks
+- Contingency plans for stakeholder issues
+
+Follow PMBOK 7th Edition standards and best practices. Be specific and actionable.`
+        );
+
+        const response = await makeAICall(messages, 1800);
+        return extractContent(response);
+    }, 'Stakeholder Analysis Generation');
+}
+

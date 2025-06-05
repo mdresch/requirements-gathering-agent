@@ -119,6 +119,25 @@ async function main() {
         await DocumentGenerator.generateTechnicalAnalysis(context);
       }
 
+      // Fix the stakeholder generation section
+      if (args.includes('--generate-stakeholder')) {
+        console.log('📊 Generating stakeholder management documents...');
+        
+        const results = await generateDocumentsWithRetry(context, {
+            includeCategories: ['stakeholder-management'],
+            maxRetries: options.retries
+        });
+
+        if (results?.success) {
+            console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} stakeholder documents`);
+            console.log(`📁 Check the ${options.outputDir}/stakeholder-management/ directory`);
+        } else {
+            console.error('❌ Failed to generate stakeholder documents');
+            process.exit(1);
+        }
+        return;
+      }
+
       if (!options.quiet) {
         console.log('🎉 Document generation completed successfully!');
         console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
@@ -316,6 +335,7 @@ DOCUMENT TYPES:
   --generate-management   Generate management plans
   --generate-planning     Generate planning artifacts
   --generate-technical    Generate technical analysis
+  --generate-stakeholder  Generate stakeholder management documents
   (If no types specified, generates all document types)
 
 CONFIGURATION:
