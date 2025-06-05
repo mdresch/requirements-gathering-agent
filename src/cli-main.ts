@@ -99,13 +99,22 @@ A comprehensive software project requiring PMBOK documentation.
          */
         /**
          * Calculate delay for retry attempt using exponential backoff
+         * Special case: 3rd retry (attempt = 2) uses 2 minutes delay to allow AI more time
          * @param attempt - The current retry attempt number (0-based)
-         * @returns Delay in milliseconds, with exponential backoff up to 60 seconds
+         * @returns Delay in milliseconds
          */
         const getRetryDelay = (attempt: number): number => {
             const baseDelay = 1000; // Start with 1 second
-            const maxDelay = 60000; // Max 60 seconds (1 minute)
-            const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+            const maxRegularDelay = 60000; // Regular max 60 seconds
+            const extendedDelay = 120000; // Extended delay 120 seconds (2 minutes)
+            
+            // Special case for 3rd retry (attempt = 2)
+            if (attempt === 2) {
+                return extendedDelay;
+            }
+            
+            // Regular exponential backoff for other attempts
+            const delay = Math.min(baseDelay * Math.pow(2, attempt), maxRegularDelay);
             return delay;
         };
 
@@ -139,7 +148,13 @@ A comprehensive software project requiring PMBOK documentation.
                         const delay = getRetryDelay(attempt);
                         if (!options.quiet) {
                             console.error(`⚠️ Error generating ${name} (attempt ${attempt + 1}/${options.retries + 1}):`, lastError.message);
-                            console.log(`⏳ Waiting ${delay/1000} seconds before retrying...`);
+                            
+                            // Special message for extended delay on 3rd retry
+                            if (attempt === 2) {
+                                console.log(`⏳ Third retry - Extended wait of 2 minutes to allow AI more processing time...`);
+                            } else {
+                                console.log(`⏳ Waiting ${delay/1000} seconds before retrying...`);
+                            }
                         }
                         await sleep(delay);
                     } else {
