@@ -89,21 +89,67 @@ A comprehensive software project requiring PMBOK documentation.
         // Type definition for document generator functions
         type DocumentGenerator = (context: string) => Promise<string>;
         
-        // Generate AI-powered documents with progress reporting
-        const generateWithProgress = async (name: string, generator: DocumentGenerator) => {
-            if (!options.quiet) console.log(`🤖 Generating ${name}...`);
-            try {
-                const result = await generator(projectContext);
-                return result;
-            } catch (error) {
-                if (!options.quiet) console.error(`⚠️ Error generating ${name}:`, error);
-                // Ensure error is properly typed and handled
-                if (error instanceof Error) {
-                    throw error;
-                } else {
-                    throw new Error(`Failed to generate ${name}: ${String(error)}`);
+        /**
+         * Sleep for specified milliseconds
+         */
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        /**
+         * Calculate delay for retry attempt using exponential backoff
+         */
+        const getRetryDelay = (attempt: number): number => {
+            const baseDelay = 1000; // Start with 1 second
+            const maxDelay = 30000; // Max 30 seconds
+            const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+            return delay;
+        };
+
+        /**
+         * Generate document with retry logic and progress reporting
+         */
+        const generateWithProgress = async (name: string, generator: DocumentGenerator): Promise<string> => {
+            let lastError: Error | null = null;
+            let attempt = 0;
+
+            while (attempt <= options.retries) {
+                try {
+                    if (attempt > 0 && !options.quiet) {
+                        console.log(`🔄 Retry attempt ${attempt}/${options.retries} for ${name}...`);
+                    } else if (!options.quiet) {
+                        console.log(`🤖 Generating ${name}...`);
+                    }
+
+                    const result = await generator(projectContext);
+                    
+                    if (attempt > 0 && !options.quiet) {
+                        console.log(`✅ Successfully generated ${name} after ${attempt} retry(ies)`);
+                    }
+                    
+                    return result;
+
+                } catch (error) {
+                    lastError = error instanceof Error ? error : new Error(String(error));
+                    
+                    if (attempt < options.retries) {
+                        const delay = getRetryDelay(attempt);
+                        if (!options.quiet) {
+                            console.error(`⚠️ Error generating ${name} (attempt ${attempt + 1}/${options.retries + 1}):`, lastError.message);
+                            console.log(`⏳ Waiting ${delay/1000} seconds before retrying...`);
+                        }
+                        await sleep(delay);
+                    } else {
+                        if (!options.quiet) {
+                            console.error(`❌ Failed to generate ${name} after ${options.retries + 1} attempts:`, lastError.message);
+                        }
+                        throw new Error(`Failed to generate ${name} after ${options.retries + 1} attempts: ${lastError.message}`);
+                    }
                 }
+                
+                attempt++;
             }
+
+            // This should never be reached due to the throw in the last catch block
+            throw lastError || new Error(`Failed to generate ${name}`);
         };
 
         // Define document generation tasks
@@ -149,24 +195,63 @@ A comprehensive software project requiring PMBOK documentation.
             }
         ];
 
-        // Generate all documents with progress tracking
-        const docs: GeneratedDocument[] = await Promise.all(
-            documentTasks.map(async task => ({
-                name: task.name,
-                content: await generateWithProgress(task.displayName, task.generator)
-            }))
-        );
+        // Track generation results
+        const results: {
+            successful: GeneratedDocument[];
+            failed: Array<{ name: string; error: Error }>;
+        } = {
+            successful: [],
+            failed: []
+        };
 
-        // Save generated documents
-        if (!options.quiet) console.log('💾 Saving generated documents...');
-        
-        for (const doc of docs) {
-            if (doc.content) {
+        // Generate documents with individual error handling
+        for (const task of documentTasks) {
+            try {
+                const content = await generateWithProgress(task.displayName, task.generator);
+                results.successful.push({
+                    name: task.name,
+                    content
+                });
+            } catch (error) {
+                results.failed.push({
+                    name: task.name,
+                    error: error instanceof Error ? error : new Error(String(error))
+                });
+            }
+        }
+
+        // Report generation summary
+        if (!options.quiet) {
+            console.log('\n📊 Document Generation Summary:');
+            console.log(`✅ Successfully generated: ${results.successful.length} documents`);
+            if (results.failed.length > 0) {
+                console.log(`❌ Failed to generate: ${results.failed.length} documents`);
+            }
+        }
+
+        // Save successful documents
+        if (results.successful.length > 0) {
+            if (!options.quiet) console.log('\n💾 Saving generated documents...');
+            
+            for (const doc of results.successful) {
                 const filePath = join(options.outputDir, `${doc.name}.${options.format}`);
                 await generateMarkdownFile(doc.name, doc.content, options);
                 if (!options.quiet) console.log(`✅ Generated: ${filePath}`);
-            } else {
-                if (!options.quiet) console.log(`⚠️ Skipped: ${doc.name} (no content generated)`);
+            }
+        }
+
+        // Report failures in detail
+        if (results.failed.length > 0) {
+            if (!options.quiet) {
+                console.log('\n❌ Failed Documents:');
+                for (const failure of results.failed) {
+                    console.error(`  • ${failure.name}: ${failure.error.message}`);
+                }
+            }
+            
+            // If all documents failed, throw error
+            if (results.successful.length === 0) {
+                throw new Error('All document generations failed. Check the error messages above for details.');
             }
         }
 
