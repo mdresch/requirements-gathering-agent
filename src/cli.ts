@@ -186,6 +186,7 @@ async function validateEnvironment(): Promise<boolean> {
     console.log('⚠️  No AI provider configuration found.');
     console.log('📋 Please configure at least one AI provider in your .env file.');
     console.log('📖 See .env.example for configuration options.');
+    console.log('🔍 Ensure you have set the required environment variables for your AI provider. See RGA --help');
     console.log('💡 Run with --help for more information.');
     
     // Provide specific guidance based on missing configuration
