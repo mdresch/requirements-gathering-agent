@@ -191,31 +191,33 @@ async function validateEnvironment() {
     return true;
 }
 function detectConfiguredProviders() {
-    const providers = [];
-    // Check Google AI Studio
-    if (process.env.GOOGLE_AI_API_KEY) {
-        providers.push('Google AI Studio');
-    }
-    // Check Azure OpenAI with Entra ID
-    if (process.env.AZURE_OPENAI_ENDPOINT && process.env.USE_ENTRA_ID === 'true') {
-        providers.push('Azure OpenAI (Entra ID)');
-    }
-    // Check Azure OpenAI with API Key
-    if (process.env.AZURE_AI_ENDPOINT?.includes('openai.azure.com') && process.env.AZURE_AI_API_KEY) {
-        providers.push('Azure OpenAI (API Key)');
-    }
-    // Check GitHub AI
-    if (process.env.GITHUB_TOKEN &&
-        (process.env.AZURE_AI_ENDPOINT?.includes('models.inference.ai.azure.com') ||
-            process.env.AZURE_AI_ENDPOINT?.includes('models.github.ai'))) {
-        providers.push('GitHub AI');
-    }
-    // Check Ollama
-    if (process.env.AZURE_AI_ENDPOINT?.includes('localhost:11434') ||
-        process.env.AZURE_AI_ENDPOINT?.includes('127.0.0.1:11434')) {
-        providers.push('Ollama (Local)');
-    }
-    return providers;
+    const providerConfigs = [
+        {
+            name: 'Google AI Studio',
+            check: () => !!process.env.GOOGLE_AI_API_KEY
+        },
+        {
+            name: 'Azure OpenAI (Entra ID)',
+            check: () => !!process.env.AZURE_OPENAI_ENDPOINT && process.env.USE_ENTRA_ID === 'true'
+        },
+        {
+            name: 'Azure OpenAI (API Key)',
+            check: () => !!(process.env.AZURE_AI_ENDPOINT?.includes('openai.azure.com') && process.env.AZURE_AI_API_KEY)
+        },
+        {
+            name: 'GitHub AI',
+            check: () => !!(process.env.GITHUB_TOKEN && (process.env.AZURE_AI_ENDPOINT?.includes('models.inference.ai.azure.com') ||
+                process.env.AZURE_AI_ENDPOINT?.includes('models.github.ai')))
+        },
+        {
+            name: 'Ollama (Local)',
+            check: () => !!(process.env.AZURE_AI_ENDPOINT?.includes('localhost:11434') ||
+                process.env.AZURE_AI_ENDPOINT?.includes('127.0.0.1:11434'))
+        }
+    ];
+    return providerConfigs
+        .filter(config => config.check())
+        .map(config => config.name);
 }
 function suggestProviderConfiguration() {
     console.log('\n🔧 Quick setup suggestions:');

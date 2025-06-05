@@ -186,7 +186,7 @@ async function makeAICall(messages: ChatMessage[], maxTokens: number = 1200): Pr
     const provider = getAIProvider();
 
     if (provider === 'google-ai' && googleAIClient) {
-        // Use Google AI Studio
+        // Use Google AI Studio with proper error handling
         console.log('🔗 Making Google AI Studio call');
         const model = googleAIClient.getGenerativeModel({ model: getModel() });
         
@@ -197,41 +197,73 @@ async function makeAICall(messages: ChatMessage[], maxTokens: number = 1200): Pr
         // Combine system and user messages for Google AI
         const prompt = systemMessage ? `${systemMessage}\n\n${userMessage}` : userMessage;
         
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: {
-                maxOutputTokens: maxTokens,
-                temperature: 0.7,
-                topP: 1,
-            }
-        });
-        
-        // Return in a format compatible with other providers
-        return {
-            choices: [{
-                message: {
-                    content: result.response.text()
+        try {
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: {
+                    maxOutputTokens: maxTokens,
+                    temperature: 0.7,
+                    topP: 1,
                 }
-            }]
-        };
+            });
+            
+            // Return in a format compatible with other providers
+            return {
+                choices: [{
+                    message: {
+                        content: result.response.text()
+                    }
+                }]
+            };
+        } catch (error: any) {
+            console.error('❌ Error in Google AI Studio call:', error);
+            
+            // Handle specific Google AI errors
+            if (error.message?.includes('SAFETY')) {
+                throw new Error('Content was blocked by Google AI safety filters. Please modify your request.');
+            } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+                throw new Error('Google AI quota exceeded. Please check your usage limits.');
+            } else if (error.message?.includes('API_KEY_INVALID')) {
+                throw new Error('Invalid Google AI API key. Please check your GOOGLE_AI_API_KEY environment variable.');
+            } else if (error.message?.includes('RATE_LIMIT_EXCEEDED')) {
+                throw new Error('Google AI rate limit exceeded. Please wait before making another request.');
+            }
+            
+            throw error;
+        }
     } else if (provider === 'azure-openai' && azureOpenAIClient) {
-        // Use Azure OpenAI with Entra ID
+        // Use Azure OpenAI with Entra ID and enhanced error handling
         console.log('🔐 Making Azure OpenAI call with Entra ID authentication');
         const deployment = getModel();
         
-        return await azureOpenAIClient.chat.completions.create({
-            model: deployment, // Required model parameter
-            messages: messages.map(msg => ({
-                role: msg.role,
-                content: msg.content
-            })),
-            max_tokens: maxTokens,
-            temperature: 0.7,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-            stop: null
-        });
+        try {
+            return await azureOpenAIClient.chat.completions.create({
+                model: deployment, // Required model parameter
+                messages: messages.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                })),
+                max_tokens: maxTokens,
+                temperature: 0.7,
+                top_p: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0,
+                stop: null
+            });
+        } catch (error: any) {
+            console.error('❌ Error in Azure OpenAI call:', error);
+            
+            // Handle specific Azure OpenAI errors
+            if (error.status === 401) {
+                throw new Error('Azure OpenAI authentication failed. Please run "az login" or check your credentials.');
+            } else if (error.status === 429) {
+                throw new Error('Azure OpenAI rate limit exceeded. Please wait before making another request.');
+            } else if (error.status === 404) {
+                throw new Error(`Azure OpenAI deployment "${deployment}" not found. Please check your model configuration.`);
+            }
+            
+            throw error;
+        }
     } else if (client) {
         // Use inference client for GitHub AI, Ollama, or Azure with API key
         const endpoint = process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT || "";
@@ -244,22 +276,37 @@ async function makeAICall(messages: ChatMessage[], maxTokens: number = 1200): Pr
             console.log(`📡 Using Azure OpenAI API path: ${apiPath}`);
         }
         
-        const response = await client.path(apiPath).post({
-            body: {
-                messages,
-                model: getModel(),
-                max_tokens: maxTokens,
-                temperature: 0.7
+        try {
+            const response = await client.path(apiPath).post({
+                body: {
+                    messages,
+                    model: getModel(),
+                    max_tokens: maxTokens,
+                    temperature: 0.7
+                }
+            });
+
+            if (isUnexpected(response)) {
+                throw new Error(`API call failed: ${response.status} ${response.body?.error?.message || 'Unknown error'}`);
             }
-        });
 
-        if (isUnexpected(response)) {
-            throw new Error(`API call failed: ${response.status} ${response.body?.error?.message || ''}`);
+            return response;
+        } catch (error: any) {
+            console.error(`❌ Error in ${provider} call:`, error);
+            
+            // Handle common API errors
+            if (error.message?.includes('401') || error.message?.includes('authentication')) {
+                throw new Error(`Authentication failed for ${provider}. Please check your API key or credentials.`);
+            } else if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+                throw new Error(`Rate limit exceeded for ${provider}. Please wait before making another request.`);
+            } else if (error.message?.includes('404')) {
+                throw new Error(`Model or endpoint not found for ${provider}. Please check your configuration.`);
+            }
+            
+            throw error;
         }
-
-        return response;
     } else {
-        throw new Error('No AI client available');
+        throw new Error('No AI client available. Please check your environment configuration.');
     }
 }
 
