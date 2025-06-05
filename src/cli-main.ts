@@ -95,27 +95,30 @@ A comprehensive software project requiring PMBOK documentation.
         const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
         /**
-         * Calculate delay for retry attempt using exponential backoff
-         */
-        /**
-         * Calculate delay for retry attempt using exponential backoff
-         * Special case: 3rd retry (attempt = 2) uses 2 minutes delay to allow AI more time
+         * Calculate delay for retry attempt using exponential backoff with special handling
+         * for the third retry attempt.
+         * 
+         * Delay progression:
+         * - First retry: Exponential backoff starting at 1s, up to 60s
+         * - Second retry: Exponential backoff starting at 1s, up to 60s
+         * - Third retry: Fixed 2-minute delay to allow AI more processing time
+         * 
          * @param attempt - The current retry attempt number (0-based)
          * @returns Delay in milliseconds
          */
         const getRetryDelay = (attempt: number): number => {
             const baseDelay = 1000; // Start with 1 second
-            const maxRegularDelay = 60000; // Regular max 60 seconds
-            const extendedDelay = 120000; // Extended delay 120 seconds (2 minutes)
+            const maxRegularDelay = 60000; // Max 60 seconds for regular retries
+            const extendedDelay = 120000; // 2 minutes for third retry
             
-            // Special case for 3rd retry (attempt = 2)
+            // Special case: Third retry (attempt = 2) gets extended delay
             if (attempt === 2) {
                 return extendedDelay;
             }
             
-            // Regular exponential backoff for other attempts
-            const delay = Math.min(baseDelay * Math.pow(2, attempt), maxRegularDelay);
-            return delay;
+            // Regular exponential backoff with 60s cap for other retries
+            const exponentialDelay = baseDelay * Math.pow(2, attempt);
+            return Math.min(exponentialDelay, maxRegularDelay);
         };
 
         /**
@@ -227,41 +230,64 @@ A comprehensive software project requiring PMBOK documentation.
         // Initial generation attempt
         let tasksToProcess = documentTasks;
         let currentAttempt = 0;
+        let failedTasks: Array<{ name: string; displayName: string; generator: DocumentGenerator }> = [];
 
         while (currentAttempt <= options.retries) {
             if (currentAttempt > 0 && !options.quiet) {
                 console.log(`\n🔄 Retry attempt ${currentAttempt}/${options.retries} for failed documents...`);
+                console.log(`📝 Retrying ${failedTasks.length} failed document(s)...`);
             }
 
-            // Process only failed or new tasks
-            for (const task of tasksToProcess) {
+            // Process only failed tasks after first attempt
+            const currentTasks = currentAttempt === 0 ? tasksToProcess : failedTasks;
+            failedTasks = []; // Reset failed tasks for this attempt
+
+            for (const task of currentTasks) {
                 try {
                     if (!options.quiet) {
                         console.log(`${currentAttempt === 0 ? '🤖' : '🔄'} Generating ${task.displayName}...`);
                     }
                     const content = await generateWithProgress(task.displayName, task.generator);
-                    results.successful.push({
-                        name: task.name,
-                        content
-                    });
+                    
+                    // Add to successful results if not already present
+                    if (!results.successful.some(doc => doc.name === task.name)) {
+                        results.successful.push({
+                            name: task.name,
+                            content
+                        });
+                    }
+                    
+                    if (currentAttempt > 0 && !options.quiet) {
+                        console.log(`✅ Successfully generated ${task.displayName} on retry attempt ${currentAttempt}`);
+                    }
                 } catch (error) {
-                    results.failed.push({
-                        name: task.name,
-                        error: error instanceof Error ? error : new Error(String(error)),
-                        task: task
-                    });
+                    const errorObj = error instanceof Error ? error : new Error(String(error));
+                    failedTasks.push(task);
+                    
+                    // Only add to failed results if this is the last retry attempt
+                    if (currentAttempt === options.retries) {
+                        results.failed.push({
+                            name: task.name,
+                            error: errorObj,
+                            task: task
+                        });
+                    }
+                    
+                    if (!options.quiet) {
+                        console.error(`⚠️ Failed to generate ${task.displayName}: ${errorObj.message}`);
+                    }
                 }
             }
 
             // If no failures or no more retries, break
-            if (results.failed.length === 0 || currentAttempt >= options.retries) {
+            if (failedTasks.length === 0 || currentAttempt >= options.retries) {
                 break;
             }
 
             // Prepare for next retry
             const delay = getRetryDelay(currentAttempt);
             if (!options.quiet) {
-                console.log(`\n⚠️ ${results.failed.length} document(s) failed to generate`);
+                console.log(`\n⚠️ ${failedTasks.length} document(s) failed to generate`);
                 if (currentAttempt === 2) {
                     console.log(`⏳ Third retry - Extended wait of 2 minutes to allow AI more processing time...`);
                 } else {
@@ -270,11 +296,6 @@ A comprehensive software project requiring PMBOK documentation.
             }
             
             await sleep(delay);
-            
-            // Update tasks to process - only retry failed ones
-            tasksToProcess = results.failed.map(f => f.task);
-            results.failed = []; // Clear failed array for next attempt
-            
             currentAttempt++;
         }
 
