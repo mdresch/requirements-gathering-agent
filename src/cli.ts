@@ -18,47 +18,88 @@ const __dirname = dirname(__filename);
 async function main() {
   try {
     console.log('🚀 Requirements Gathering Agent v2.1.1');
-    console.log('🔧 Initializing...');
+    
+    // Parse command line arguments
+    const args = process.argv.slice(2);
+    const options = {
+      outputDir: args.includes('--output') ? args[args.indexOf('--output') + 1] : 'generated-documents',
+      quiet: args.includes('--quiet'),
+      format: args.includes('--format') ? args[args.indexOf('--format') + 1] : 'markdown',
+      retries: args.includes('--retries') ? parseInt(args[args.indexOf('--retries') + 1]) : 0
+    };
+
+    // Show version
+    if (args.includes('--version') || args.includes('-v')) {
+      console.log('v2.1.1');
+      return;
+    }
+
+    // Show help
+    if (args.includes('--help') || args.includes('-h')) {
+      printHelp();
+      return;
+    }
+
+    if (!options.quiet) {
+      console.log('🔧 Initializing...');
+    }
     
     // Validate environment and AI provider
     const isValid = await validateEnvironment();
     if (!isValid) {
-        return;
+      return;
     }
-    
-    console.log('🚀 Starting document generation...');
+
+    if (!options.quiet) {
+      console.log('🚀 Starting document generation...');
+    }
     
     // Read project context
     const context = readProjectContext();
     
-    // Parse command line arguments for selective generation
-    const args = process.argv.slice(2);
-    
-    if (args.includes('--core-only')) {
-        console.log('🎯 Generating core documents only...');
-        await DocumentGenerator.generateCoreDocuments(context);
-    } else if (args.includes('--management-plans')) {
-        console.log('📋 Generating management plans only...');
-        await DocumentGenerator.generateManagementPlans(context);
-    } else if (args.includes('--planning-artifacts')) {
-        console.log('🏗️ Generating planning artifacts only...');
-        await DocumentGenerator.generatePlanningArtifacts(context);
-    } else if (args.includes('--technical-analysis')) {
-        console.log('⚙️ Generating technical analysis only...');
-        await DocumentGenerator.generateTechnicalAnalysis(context);
-    } else if (args.includes('--with-retry')) {
-        console.log('🔄 Generating with retry logic...');
-        await generateDocumentsWithRetry(context, { maxRetries: 3 });
-    } else {
-        console.log('📋 Generating all PMBOK documents...');
-        await generateAllDocuments(context);
+    // Determine which documents to generate
+    const generateTypes = new Set(args.filter(arg => arg.startsWith('--generate-')).map(arg => arg.replace('--generate-', '')));
+    const generateAll = generateTypes.size === 0;
+
+    try {
+      if (generateAll || generateTypes.has('core')) {
+        if (!options.quiet) console.log('🎯 Generating core documents...');
+        await DocumentGenerator.generateCoreDocuments(context, options);
+      }
+      
+      if (generateAll || generateTypes.has('management')) {
+        if (!options.quiet) console.log('📋 Generating management plans...');
+        await DocumentGenerator.generateManagementPlans(context, options);
+      }
+      
+      if (generateAll || generateTypes.has('planning')) {
+        if (!options.quiet) console.log('🏗️ Generating planning artifacts...');
+        await DocumentGenerator.generatePlanningArtifacts(context, options);
+      }
+      
+      if (generateAll || generateTypes.has('technical')) {
+        if (!options.quiet) console.log('⚙️ Generating technical analysis...');
+        await DocumentGenerator.generateTechnicalAnalysis(context, options);
+      }
+
+      if (!options.quiet) {
+        console.log('🎉 Document generation completed successfully!');
+        console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
+      }
+    } catch (genError: any) {
+      if (options.retries > 0) {
+        if (!options.quiet) console.log(`🔄 Retrying failed operations (${options.retries} attempts remaining)...`);
+        options.retries--;
+        await generateDocumentsWithRetry(context, options);
+      } else {
+        throw genError;
+      }
     }
-    
-    console.log('🎉 Document generation completed successfully!');
-    console.log('📁 Check the generated-documents/ directory for organized output');
-    
   } catch (error: any) {
-    console.error('❌ Fatal error:', error.message);
+    console.error('❌ Error:', error.message);
+    if (!error.message.includes('Configuration error')) {
+      console.error('Stack trace:', error.stack);
+    }
     process.exit(1);
   }
 }
@@ -210,21 +251,26 @@ async function validateAzureAuthentication(): Promise<void> {
 
 function printHelp(): void {
   console.log(`
-Requirements Gathering Agent v2.0.0
+Requirements Gathering Agent v2.1.1
 AI-powered PMBOK documentation generator
 
 USAGE:
-  requirements-gathering-agent [options]
-  requirements-agent [options]
+  requirements-gathering-agent [options] [document-types]
 
 OPTIONS:
   -h, --help              Show this help message
   -v, --version           Show version information
-  --core-only             Generate only core analysis documents
-  --management-plans      Generate only management plans
-  --planning-artifacts    Generate only planning artifacts
-  --technical-analysis    Generate only technical analysis
-  --with-retry            Generate with retry logic for failed documents
+  --output <dir>          Specify output directory (default: generated-documents)
+  --format <fmt>          Output format: markdown|json|yaml (default: markdown)
+  --quiet                 Suppress progress messages (good for CI/CD)
+  --retries <n>          Number of retry attempts for failed generations
+
+DOCUMENT TYPES:
+  --generate-core         Generate core analysis documents
+  --generate-management   Generate management plans
+  --generate-planning     Generate planning artifacts
+  --generate-technical    Generate technical analysis
+  (If no types specified, generates all document types)
 
 CONFIGURATION:
   Create a .env file with your AI provider configuration:
@@ -254,11 +300,23 @@ AUTHENTICATION:
   For Ollama: Start ollama serve
 
 EXAMPLES:
-  requirements-gathering-agent                 # Generate all documents
-  requirements-gathering-agent --core-only     # Generate core documents only
-  requirements-gathering-agent --with-retry    # Generate with retry logic
-  npm start                                    # Using npm
-  node dist/cli.js                            # Direct execution
+  # Generate all documents
+  requirements-gathering-agent
+
+  # Generate specific document types
+  requirements-gathering-agent --generate-core --generate-technical
+
+  # Specify output directory and format
+  requirements-gathering-agent --output ./docs --format yaml
+
+  # CI/CD pipeline usage
+  requirements-gathering-agent --quiet --retries 3 --output ./artifacts
+
+  # Using npm
+  npm start -- --generate-core --output ./docs
+
+  # Direct execution
+  node dist/cli.js --generate-management --format json
 
 TROUBLESHOOTING:
   • Build first: npm run build
@@ -267,8 +325,8 @@ TROUBLESHOOTING:
   • Test Ollama: curl http://localhost:11434/api/tags
   • Check deployment: az cognitiveservices account deployment list
 
-OUTPUT:
-  Generated documents are organized in: generated-documents/
+OUTPUT STRUCTURE:
+  <output-dir>/
   ├── core-analysis/          # User stories, personas, requirements
   ├── project-charter/        # Formal project authorization
   ├── management-plans/       # PMBOK management plans

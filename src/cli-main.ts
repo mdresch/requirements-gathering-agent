@@ -15,9 +15,23 @@ import {
 } from './modules/llmProcessor.js';
 import { generateMarkdownFile } from './modules/fileUtils.js';
 
-export async function main() {
+interface GenerationOptions {
+    outputDir: string;
+    quiet: boolean;
+    format: string;
+    retries: number;
+}
+
+export async function main(options: GenerationOptions = { 
+    outputDir: 'generated-documents',
+    quiet: false,
+    format: 'markdown',
+    retries: 0
+}) {
     try {
-        console.log('📋 Starting PMBOK document generation...');
+        if (!options.quiet) {
+            console.log('📋 Starting PMBOK document generation...');
+        }
         
         // Look for README.md or project description file
         const readmePath = join(process.cwd(), 'README.md');
@@ -25,7 +39,9 @@ export async function main() {
         
         if (existsSync(readmePath)) {
             projectContext = readFileSync(readmePath, 'utf-8');
-            console.log('✅ Found README.md - using as project context');
+            if (!options.quiet) {
+                console.log('✅ Found README.md - using as project context');
+            }
         } else {
             projectContext = `
 # Sample Project
@@ -43,57 +59,61 @@ A comprehensive software project requiring PMBOK documentation.
 - PostgreSQL database
 - Azure cloud deployment
             `.trim();
-            console.log('📝 Using default project context (no README.md found)');
-        }
-
-        // Generate AI-powered documents
-        console.log('🤖 Generating AI Summary and Goals...');
-        const summary = await getAiSummaryAndGoals(projectContext);
-        
-        console.log('📖 Generating User Stories...');
-        const userStories = await getAiUserStories(projectContext);
-        
-        console.log('📜 Generating Project Charter...');
-        const charter = await getAiProjectCharter(projectContext);
-        
-        console.log('📊 Generating Scope Management Plan...');
-        const scopePlan = await getAiScopeManagementPlan(projectContext);
-        
-        console.log('⚠️ Generating Risk Management Plan...');
-        const riskPlan = await getAiRiskManagementPlan(projectContext);
-        
-        console.log('🏗️ Generating Work Breakdown Structure...');
-        const wbs = await getAiWbs(projectContext);
-        
-        console.log('👥 Generating Stakeholder Register...');
-        const stakeholders = await getAiStakeholderRegister(projectContext);
-
-        // Generate markdown files
-        const docs = [
-            { name: 'project-summary', content: summary },
-            { name: 'user-stories', content: userStories },
-            { name: 'project-charter', content: charter },
-            { name: 'scope-management-plan', content: scopePlan },
-            { name: 'risk-management-plan', content: riskPlan },
-            { name: 'work-breakdown-structure', content: wbs },
-            { name: 'stakeholder-register', content: stakeholders }
-        ];
-
-        console.log('💾 Saving generated documents...');
-        for (const doc of docs) {
-            if (doc.content) {
-                await generateMarkdownFile(doc.name, doc.content);
-                console.log(`✅ Generated: ${doc.name}.md`);
-            } else {
-                console.log(`⚠️ Skipped: ${doc.name} (no content generated)`);
+            if (!options.quiet) {
+                console.log('📝 Using default project context (no README.md found)');
             }
         }
 
-        console.log('🎉 Document generation completed successfully!');
-        console.log('📁 Check the current directory for generated .md files');
+        // Generate AI-powered documents with progress reporting
+        const generateWithProgress = async (name: string, generator: Function) => {
+            if (!options.quiet) console.log(`🤖 Generating ${name}...`);
+            try {
+                const result = await generator(projectContext);
+                return result;
+            } catch (error) {
+                if (!options.quiet) console.error(`⚠️ Error generating ${name}:`, error);
+                throw error;
+            }
+        };
+
+        // Generate all documents with progress tracking
+        const docs = await Promise.all([
+            generateWithProgress('AI Summary and Goals', getAiSummaryAndGoals)
+                .then(content => ({ name: 'project-summary', content })),
+            generateWithProgress('User Stories', getAiUserStories)
+                .then(content => ({ name: 'user-stories', content })),
+            generateWithProgress('Project Charter', getAiProjectCharter)
+                .then(content => ({ name: 'project-charter', content })),
+            generateWithProgress('Scope Management Plan', getAiScopeManagementPlan)
+                .then(content => ({ name: 'scope-management-plan', content })),
+            generateWithProgress('Risk Management Plan', getAiRiskManagementPlan)
+                .then(content => ({ name: 'risk-management-plan', content })),
+            generateWithProgress('Work Breakdown Structure', getAiWbs)
+                .then(content => ({ name: 'work-breakdown-structure', content })),
+            generateWithProgress('Stakeholder Register', getAiStakeholderRegister)
+                .then(content => ({ name: 'stakeholder-register', content }))
+        ]);
+
+        // Save generated documents
+        if (!options.quiet) console.log('💾 Saving generated documents...');
+        
+        for (const doc of docs) {
+            if (doc.content) {
+                const filePath = join(options.outputDir, `${doc.name}.${options.format}`);
+                await generateMarkdownFile(doc.name, doc.content, options);
+                if (!options.quiet) console.log(`✅ Generated: ${filePath}`);
+            } else {
+                if (!options.quiet) console.log(`⚠️ Skipped: ${doc.name} (no content generated)`);
+            }
+        }
+
+        if (!options.quiet) {
+            console.log('🎉 Document generation completed successfully!');
+            console.log(`📁 Check ${options.outputDir}/ for generated files`);
+        }
 
     } catch (error) {
-        console.error('❌ Error in document generation:', error);
+        if (!options.quiet) console.error('❌ Error in document generation:', error);
         throw error;
     }
 }
