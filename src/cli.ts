@@ -19,13 +19,51 @@ async function main() {
   try {
     console.log('🚀 Requirements Gathering Agent v2.1.1');
     
-    // Parse command line arguments
+    // Parse and validate command line arguments
     const args = process.argv.slice(2);
+    
+    // Helper function to safely get argument value
+    const getArgValue = (flag: string, defaultValue: string, validValues?: string[]): string => {
+      const index = args.indexOf(flag);
+      if (index === -1) return defaultValue;
+      
+      if (index + 1 >= args.length || args[index + 1].startsWith('--')) {
+        console.error(`❌ Error: Missing value for ${flag} flag.`);
+        process.exit(1);
+      }
+      
+      const value = args[index + 1];
+      if (validValues && !validValues.includes(value)) {
+        console.error(`❌ Error: Invalid value for ${flag}. Valid values are: ${validValues.join(', ')}`);
+        process.exit(1);
+      }
+      
+      return value;
+    };
+
+    // Helper function to parse numeric argument
+    const getNumericValue = (flag: string, defaultValue: number): number => {
+      const value = getArgValue(flag, defaultValue.toString());
+      const numValue = parseInt(value);
+      
+      if (isNaN(numValue)) {
+        console.error(`❌ Error: Value for ${flag} must be a number.`);
+        process.exit(1);
+      }
+      
+      if (numValue < 0) {
+        console.error(`❌ Error: Value for ${flag} must be non-negative.`);
+        process.exit(1);
+      }
+      
+      return numValue;
+    };
+
     const options = {
-      outputDir: args.includes('--output') ? args[args.indexOf('--output') + 1] : 'generated-documents',
+      outputDir: getArgValue('--output', 'generated-documents'),
       quiet: args.includes('--quiet'),
-      format: args.includes('--format') ? args[args.indexOf('--format') + 1] : 'markdown',
-      retries: args.includes('--retries') ? parseInt(args[args.indexOf('--retries') + 1]) : 0
+      format: getArgValue('--format', 'markdown', ['markdown', 'json', 'yaml']),
+      retries: getNumericValue('--retries', 0)
     };
 
     // Show version
