@@ -15,12 +15,34 @@ import {
 } from './modules/llmProcessor.js';
 import { generateMarkdownFile } from './modules/fileUtils.js';
 
+/**
+ * Options for document generation
+ */
 interface GenerationOptions {
+    /** Output directory for generated documents */
     outputDir: string;
+    /** Whether to suppress progress messages */
     quiet: boolean;
+    /** Output format (markdown, json, yaml) */
     format: string;
+    /** Number of retry attempts for failed generations */
     retries: number;
 }
+
+/**
+ * Structure of a generated document
+ */
+interface GeneratedDocument {
+    /** Name of the document (used for file naming) */
+    name: string;
+    /** Generated content of the document */
+    content: string | null;
+}
+
+/**
+ * Type definition for document generator functions
+ */
+type DocumentGenerator = (context: string) => Promise<string>;
 
 export async function main(options: GenerationOptions = { 
     outputDir: 'generated-documents',
@@ -64,35 +86,76 @@ A comprehensive software project requiring PMBOK documentation.
             }
         }
 
+        // Type definition for document generator functions
+        type DocumentGenerator = (context: string) => Promise<string>;
+        
         // Generate AI-powered documents with progress reporting
-        const generateWithProgress = async (name: string, generator: Function) => {
+        const generateWithProgress = async (name: string, generator: DocumentGenerator) => {
             if (!options.quiet) console.log(`🤖 Generating ${name}...`);
             try {
                 const result = await generator(projectContext);
                 return result;
             } catch (error) {
                 if (!options.quiet) console.error(`⚠️ Error generating ${name}:`, error);
-                throw error;
+                // Ensure error is properly typed and handled
+                if (error instanceof Error) {
+                    throw error;
+                } else {
+                    throw new Error(`Failed to generate ${name}: ${String(error)}`);
+                }
             }
         };
 
+        // Define document generation tasks
+        const documentTasks: Array<{
+            name: string;
+            displayName: string;
+            generator: DocumentGenerator;
+        }> = [
+            { 
+                name: 'project-summary',
+                displayName: 'AI Summary and Goals',
+                generator: getAiSummaryAndGoals
+            },
+            { 
+                name: 'user-stories',
+                displayName: 'User Stories',
+                generator: getAiUserStories
+            },
+            { 
+                name: 'project-charter',
+                displayName: 'Project Charter',
+                generator: getAiProjectCharter
+            },
+            { 
+                name: 'scope-management-plan',
+                displayName: 'Scope Management Plan',
+                generator: getAiScopeManagementPlan
+            },
+            { 
+                name: 'risk-management-plan',
+                displayName: 'Risk Management Plan',
+                generator: getAiRiskManagementPlan
+            },
+            { 
+                name: 'work-breakdown-structure',
+                displayName: 'Work Breakdown Structure',
+                generator: getAiWbs
+            },
+            { 
+                name: 'stakeholder-register',
+                displayName: 'Stakeholder Register',
+                generator: getAiStakeholderRegister
+            }
+        ];
+
         // Generate all documents with progress tracking
-        const docs = await Promise.all([
-            generateWithProgress('AI Summary and Goals', getAiSummaryAndGoals)
-                .then(content => ({ name: 'project-summary', content })),
-            generateWithProgress('User Stories', getAiUserStories)
-                .then(content => ({ name: 'user-stories', content })),
-            generateWithProgress('Project Charter', getAiProjectCharter)
-                .then(content => ({ name: 'project-charter', content })),
-            generateWithProgress('Scope Management Plan', getAiScopeManagementPlan)
-                .then(content => ({ name: 'scope-management-plan', content })),
-            generateWithProgress('Risk Management Plan', getAiRiskManagementPlan)
-                .then(content => ({ name: 'risk-management-plan', content })),
-            generateWithProgress('Work Breakdown Structure', getAiWbs)
-                .then(content => ({ name: 'work-breakdown-structure', content })),
-            generateWithProgress('Stakeholder Register', getAiStakeholderRegister)
-                .then(content => ({ name: 'stakeholder-register', content }))
-        ]);
+        const docs: GeneratedDocument[] = await Promise.all(
+            documentTasks.map(async task => ({
+                name: task.name,
+                content: await generateWithProgress(task.displayName, task.generator)
+            }))
+        );
 
         // Save generated documents
         if (!options.quiet) console.log('💾 Saving generated documents...');
