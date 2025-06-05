@@ -86,9 +86,6 @@ A comprehensive software project requiring PMBOK documentation.
             }
         }
 
-        // Type definition for document generator functions
-        type DocumentGenerator = (context: string) => Promise<string>;
-        
         /**
          * Sleep for specified milliseconds
          */
