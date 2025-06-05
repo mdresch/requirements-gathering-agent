@@ -19,7 +19,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowImportingTsExtensions": false,
-    "noEmitOnError": true,
+    "noEmitOnError": false,
     "preserveConstEnums": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": false

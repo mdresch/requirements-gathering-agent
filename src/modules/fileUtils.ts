@@ -1,5 +1,6 @@
 /**
  * File utility functions for Requirements Gathering Agent
+ * Version: 2.1.2
  */
 
 import { writeFile, mkdir } from 'fs/promises';
@@ -95,3 +96,6 @@ export async function generateProjectDocumentation(
         throw error;
     }
 }
+
+// Version export for tracking
+export const fileUtilsVersion = '2.1.2';

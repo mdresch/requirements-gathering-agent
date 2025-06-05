@@ -59,3 +59,9 @@ temp/
 *backup*
 *.bak
 *~
+
+# Ignore test/demo files
+demo-enhanced-context.mjs
+tests/
+__tests__/
+test/

@@ -310,7 +310,381 @@ export class DocumentGenerator {
         });
         return await generator.generateAll();
     }
+
+    // Add this static method
+
+    public static async generateAllWithValidation(context: string): Promise<{ result: GenerationResult; validation: any }> {
+        // Generate all documents
+        const generator = new DocumentGenerator(context, {
+            maxConcurrent: 1,
+            delayBetweenCalls: 500,
+            continueOnError: true,
+            generateIndex: true,
+            cleanup: true
+        });
+        
+        const result = await generator.generateAll();
+        
+        // Validate generation
+        console.log('\n🔍 Validating document generation...');
+        const validation = await generator.validateGeneration();
+        
+        if (validation.isComplete) {
+            console.log('✅ All documents generated successfully!');
+        } else {
+            console.log('❌ Some documents are missing:');
+            validation.missing.forEach(doc => console.log(`   • ${doc}`));
+        }
+        
+        return { result, validation };
+    }
+
+    public async validateGeneration(): Promise<{ isComplete: boolean; missing: string[]; errors: string[] }> {
+        const validation = {
+            isComplete: true,
+            missing: [] as string[],
+            errors: [] as string[]
+        };
+
+        // Check if all expected documents exist
+        for (const task of GENERATION_TASKS) {
+            const config = DOCUMENT_CONFIG[task.key];
+            const expectedPath = config 
+                ? `generated-documents/${task.category}/${config.filename}`
+                : `generated-documents/${task.category}/${task.key}.md`;
+            
+            try {
+                await fs.access(expectedPath);
+                console.log(`✅ Found: ${task.name}`);
+            } catch (error) {
+                validation.missing.push(`${task.name} (${expectedPath})`);
+                validation.isComplete = false;
+            }
+        }
+
+        // Check for README.md
+        try {
+            await fs.access('generated-documents/README.md');
+            console.log(`✅ Found: Documentation Index`);
+        } catch (error) {
+            validation.missing.push('Documentation Index (README.md)');
+            validation.isComplete = false;
+        }
+
+        return validation;
+    }
+
+    // Add this method to the DocumentGenerator class
+
+    public async validatePMBOKCompliance(): Promise<{
+        compliance: boolean;
+        consistencyScore: number;
+        findings: {
+            critical: string[];
+            warnings: string[];
+            recommendations: string[];
+        };
+        documentQuality: Record<string, {
+            score: number;
+            issues: string[];
+            strengths: string[];
+        }>;
+    }> {
+        console.log('\n📋 Starting PMBOK 7.0 Compliance Validation...');
+        
+        const validation = {
+            compliance: true,
+            consistencyScore: 0,
+            findings: {
+                critical: [] as string[],
+                warnings: [] as string[],
+                recommendations: [] as string[]
+            },
+            documentQuality: {} as Record<string, any>
+        };
+
+        // PMBOK 7.0 Required Document Categories
+        const pmbok7Requirements = {
+            'project-charter': {
+                required: ['project purpose', 'measurable objectives', 'high-level requirements', 'assumptions', 'constraints', 'project approval requirements'],
+                category: 'project-charter'
+            },
+            'stakeholder-register': {
+                required: ['identification information', 'assessment information', 'stakeholder classification'],
+                category: 'stakeholder-management'
+            },
+            'stakeholder-engagement-plan': {
+                required: ['engagement strategies', 'communication requirements', 'stakeholder expectations'],
+                category: 'stakeholder-management'
+            },
+            'scope-management-plan': {
+                required: ['scope definition', 'wbs development', 'scope verification', 'scope control'],
+                category: 'management-plans'
+            },
+            'work-breakdown-structure': {
+                required: ['work packages', 'deliverables', 'hierarchical decomposition'],
+                category: 'planning-artifacts'
+            }
+        };
+
+        // Check each document against PMBOK 7.0 standards
+        for (const [docKey, requirements] of Object.entries(pmbok7Requirements)) {
+            const config = DOCUMENT_CONFIG[docKey];
+            if (!config) continue;
+
+            const filePath = `generated-documents/${requirements.category}/${config.filename}`;
+            
+            try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                const quality = await this.assessDocumentQuality(docKey, content, requirements.required);
+                validation.documentQuality[docKey] = quality;
+
+                // Check for critical PMBOK elements
+                for (const element of requirements.required) {
+                    if (!this.contentContainsElement(content, element)) {
+                        validation.findings.critical.push(`${docKey}: Missing required PMBOK element '${element}'`);
+                        validation.compliance = false;
+                    }
+                }
+
+            } catch (error) {
+                validation.findings.critical.push(`${docKey}: Document not found or unreadable`);
+                validation.compliance = false;
+            }
+        }
+
+        // Cross-document consistency checks
+        await this.validateCrossDocumentConsistency(validation);
+
+        // Calculate overall consistency score
+        validation.consistencyScore = this.calculateConsistencyScore(validation);
+
+        // Generate PMBOK 7.0 specific recommendations
+        this.generatePMBOKRecommendations(validation);
+
+        this.printPMBOKValidationReport(validation);
+        
+        return validation;
+    }
+
+    private async assessDocumentQuality(
+        docKey: string, 
+        content: string, 
+        requiredElements: string[]
+    ): Promise<{ score: number; issues: string[]; strengths: string[] }> {
+        const assessment = {
+            score: 0,
+            issues: [] as string[],
+            strengths: [] as string[]
+        };
+
+        // Content length check
+        if (content.length < 500) {
+            assessment.issues.push('Document appears too brief for comprehensive coverage');
+        } else if (content.length > 2000) {
+            assessment.strengths.push('Comprehensive content coverage');
+            assessment.score += 20;
+        }
+
+        // Structure check (headers, sections)
+        const headerCount = (content.match(/^#+\s/gm) || []).length;
+        if (headerCount >= 3) {
+            assessment.strengths.push('Well-structured with multiple sections');
+            assessment.score += 15;
+        } else {
+            assessment.issues.push('Limited document structure - consider adding more sections');
+        }
+
+        // PMBOK terminology usage
+        const pmbokTerms = [
+            'deliverable', 'milestone', 'work package', 'baseline', 'change control',
+            'risk register', 'stakeholder', 'requirements', 'assumptions', 'constraints'
+        ];
+        
+        const foundTerms = pmbokTerms.filter(term => 
+            content.toLowerCase().includes(term.toLowerCase())
+        );
+        
+        if (foundTerms.length >= 3) {
+            assessment.strengths.push(`Uses appropriate PMBOK terminology (${foundTerms.length} terms found)`);
+            assessment.score += 15;
+        }
+
+        // Required elements coverage
+        const coveredElements = requiredElements.filter(element => 
+            this.contentContainsElement(content, element)
+        );
+        
+        const coveragePercentage = (coveredElements.length / requiredElements.length) * 100;
+        assessment.score += Math.round(coveragePercentage * 0.5); // Up to 50 points for full coverage
+
+        if (coveragePercentage === 100) {
+            assessment.strengths.push('All required PMBOK elements covered');
+        } else {
+            assessment.issues.push(`Missing ${requiredElements.length - coveredElements.length} required elements`);
+        }
+
+        return assessment;
+    }
+
+    private contentContainsElement(content: string, element: string): boolean {
+        const contentLower = content.toLowerCase();
+        const elementLower = element.toLowerCase();
+        
+        // Check for exact phrase or key words from the element
+        const keywords = elementLower.split(' ');
+        return keywords.every(keyword => contentLower.includes(keyword)) ||
+               contentLower.includes(elementLower);
+    }
+
+    private async validateCrossDocumentConsistency(validation: any): Promise<void> {
+        console.log('🔍 Checking cross-document consistency...');
+        
+        try {
+            // Check project name consistency
+            const projectCharterPath = 'generated-documents/project-charter/project-charter.md';
+            const scopePlanPath = 'generated-documents/management-plans/scope-management-plan.md';
+            
+            const charterContent = await fs.readFile(projectCharterPath, 'utf-8').catch(() => '');
+            const scopeContent = await fs.readFile(scopePlanPath, 'utf-8').catch(() => '');
+            
+            if (charterContent && scopeContent) {
+                // Extract project names (simplified check)
+                const charterProjectMatch = charterContent.match(/project\s+name[:\s]+([^\n\r]+)/i);
+                const scopeProjectMatch = scopeContent.match(/project[:\s]+([^\n\r]+)/i);
+                
+                if (charterProjectMatch && scopeProjectMatch) {
+                    const charterProject = charterProjectMatch[1].trim();
+                    const scopeProject = scopeProjectMatch[1].trim();
+                    
+                    if (charterProject !== scopeProject) {
+                        validation.findings.warnings.push('Project name inconsistency between charter and scope plan');
+                    }
+                }
+            }
+
+            // Check stakeholder consistency
+            const stakeholderRegisterPath = 'generated-documents/stakeholder-management/stakeholder-register.md';
+            const stakeholderPlanPath = 'generated-documents/stakeholder-management/stakeholder-engagement-plan.md';
+            
+            const registerContent = await fs.readFile(stakeholderRegisterPath, 'utf-8').catch(() => '');
+            const planContent = await fs.readFile(stakeholderPlanPath, 'utf-8').catch(() => '');
+            
+            if (registerContent && planContent) {
+                // Check if stakeholders mentioned in plan are in register
+                const stakeholderMatches = planContent.match(/stakeholder[s]?\s*[:\-]?\s*([^\n\r]+)/gi);
+                if (stakeholderMatches && !registerContent.includes('stakeholder')) {
+                    validation.findings.warnings.push('Stakeholder engagement plan references stakeholders not clearly defined in register');
+                }
+            }
+
+        } catch (error) {
+            validation.findings.warnings.push('Could not perform all consistency checks due to file access issues');
+        }
+    }
+
+    private calculateConsistencyScore(validation: any): number {
+        let score = 100;
+        
+        // Deduct points for issues
+        score -= validation.findings.critical.length * 20;
+        score -= validation.findings.warnings.length * 10;
+        
+        // Add points for document quality
+        const qualityScores = Object.values(validation.documentQuality).map((doc: any) => doc.score);
+        const avgQuality = qualityScores.length > 0 ? qualityScores.reduce((a: number, b: number) => a + b, 0) / qualityScores.length : 0;
+        score = Math.min(100, score + (avgQuality * 0.3));
+        
+        return Math.max(0, Math.round(score));
+    }
+
+    private generatePMBOKRecommendations(validation: any): void {
+        // Standard PMBOK 7.0 recommendations
+        validation.findings.recommendations.push('Ensure all documents follow PMBOK 7.0 performance domains: Stakeholders, Team, Development Approach, Planning, Project Work, Delivery, Measurement, Uncertainty');
+        validation.findings.recommendations.push('Include clear traceability between project objectives and deliverables');
+        validation.findings.recommendations.push('Maintain consistent terminology across all project documents');
+        
+        // Specific recommendations based on findings
+        if (validation.findings.critical.some((f: string) => f.includes('stakeholder'))) {
+            validation.findings.recommendations.push('Strengthen stakeholder management documentation with detailed analysis and engagement strategies');
+        }
+        
+        if (validation.consistencyScore < 80) {
+            validation.findings.recommendations.push('Review all documents for consistency in project scope, objectives, and terminology');
+        }
+    }
+
+    private printPMBOKValidationReport(validation: any): void {
+        console.log('\n📊 PMBOK 7.0 Compliance Validation Report');
+        console.log('==========================================');
+        
+        console.log(`\n🎯 Overall Compliance: ${validation.compliance ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}`);
+        console.log(`📈 Consistency Score: ${validation.consistencyScore}/100`);
+        
+        if (validation.findings.critical.length > 0) {
+            console.log(`\n🚨 Critical Issues (${validation.findings.critical.length}):`);
+            validation.findings.critical.forEach((issue: string) => console.log(`   • ${issue}`));
+        }
+        
+        if (validation.findings.warnings.length > 0) {
+            console.log(`\n⚠️ Warnings (${validation.findings.warnings.length}):`);
+            validation.findings.warnings.forEach((warning: string) => console.log(`   • ${warning}`));
+        }
+        
+        console.log(`\n💡 Recommendations (${validation.findings.recommendations.length}):`);
+        validation.findings.recommendations.forEach((rec: string) => console.log(`   • ${rec}`));
+        
+        console.log('\n📋 Document Quality Scores:');
+        Object.entries(validation.documentQuality).forEach(([doc, quality]: [string, any]) => {
+            console.log(`   • ${doc}: ${quality.score}/100`);
+            if (quality.strengths.length > 0) {
+                quality.strengths.forEach((strength: string) => console.log(`     ✅ ${strength}`));
+            }
+            if (quality.issues.length > 0) {
+                quality.issues.forEach((issue: string) => console.log(`     ⚠️ ${issue}`));
+            }
+        });
+    }
+
+    // Enhanced generateAllWithValidation method
+    public static async generateAllWithPMBOKValidation(context: string): Promise<{
+        result: GenerationResult;
+        validation: any;
+        pmbokCompliance: any;
+    }> {
+        // Generate all documents
+        const generator = new DocumentGenerator(context, {
+            maxConcurrent: 1,
+            delayBetweenCalls: 500,
+            continueOnError: true,
+            generateIndex: true,
+            cleanup: true
+        });
+        
+        const result = await generator.generateAll();
+        
+        // Basic validation
+        console.log('\n🔍 Validating document generation...');
+        const validation = await generator.validateGeneration();
+        
+        // PMBOK 7.0 compliance validation
+        const pmbokCompliance = await generator.validatePMBOKCompliance();
+        
+        // Summary report
+        console.log('\n📋 Final Validation Summary:');
+        console.log(`📁 Generated: ${result.successCount}/${result.successCount + result.failureCount} documents`);
+        console.log(`✅ Files Present: ${validation.isComplete ? 'All' : 'Some missing'}`);
+        console.log(`📊 PMBOK Compliance: ${pmbokCompliance.compliance ? 'Compliant' : 'Non-compliant'}`);
+        console.log(`🎯 Consistency Score: ${pmbokCompliance.consistencyScore}/100`);
+        
+        return { result, validation, pmbokCompliance };
+    }
 }
+
+/**
+ * Requirements Gathering Agent Document Generator
+ * Version: 2.1.2
+ */
 
 // Backward compatibility function
 export async function generateAllDocuments(context: string): Promise<void> {
@@ -378,7 +752,7 @@ export async function generateMarkdownFile(
     const fileContent = `# ${title}
 
 **Generated:** ${timestamp}  
-**Generated by:** Requirements Gathering Agent v2.1.1
+**Generated by:** Requirements Gathering Agent v2.1.2
 
 ---
 
@@ -387,6 +761,9 @@ ${content}`;
     await fs.writeFile(filePath, fileContent, 'utf-8');
     console.log(`✅ Generated: ${filePath}`);
 }
+
+// Version export for tracking
+export const documentGeneratorVersion = '2.1.2';
 
 // Utility functions for selective generation
 export function getAvailableCategories(): string[] {
