@@ -218,26 +218,64 @@ A comprehensive software project requiring PMBOK documentation.
         // Track generation results
         const results: {
             successful: GeneratedDocument[];
-            failed: Array<{ name: string; error: Error }>;
+            failed: Array<{ name: string; error: Error; task: { name: string; displayName: string; generator: DocumentGenerator } }>;
         } = {
             successful: [],
             failed: []
         };
 
-        // Generate documents with individual error handling
-        for (const task of documentTasks) {
-            try {
-                const content = await generateWithProgress(task.displayName, task.generator);
-                results.successful.push({
-                    name: task.name,
-                    content
-                });
-            } catch (error) {
-                results.failed.push({
-                    name: task.name,
-                    error: error instanceof Error ? error : new Error(String(error))
-                });
+        // Initial generation attempt
+        let tasksToProcess = documentTasks;
+        let currentAttempt = 0;
+
+        while (currentAttempt <= options.retries) {
+            if (currentAttempt > 0 && !options.quiet) {
+                console.log(`\n🔄 Retry attempt ${currentAttempt}/${options.retries} for failed documents...`);
             }
+
+            // Process only failed or new tasks
+            for (const task of tasksToProcess) {
+                try {
+                    if (!options.quiet) {
+                        console.log(`${currentAttempt === 0 ? '🤖' : '🔄'} Generating ${task.displayName}...`);
+                    }
+                    const content = await generateWithProgress(task.displayName, task.generator);
+                    results.successful.push({
+                        name: task.name,
+                        content
+                    });
+                } catch (error) {
+                    results.failed.push({
+                        name: task.name,
+                        error: error instanceof Error ? error : new Error(String(error)),
+                        task: task
+                    });
+                }
+            }
+
+            // If no failures or no more retries, break
+            if (results.failed.length === 0 || currentAttempt >= options.retries) {
+                break;
+            }
+
+            // Prepare for next retry
+            const delay = getRetryDelay(currentAttempt);
+            if (!options.quiet) {
+                console.log(`\n⚠️ ${results.failed.length} document(s) failed to generate`);
+                if (currentAttempt === 2) {
+                    console.log(`⏳ Third retry - Extended wait of 2 minutes to allow AI more processing time...`);
+                } else {
+                    console.log(`⏳ Waiting ${delay/1000} seconds before retrying failed documents...`);
+                }
+            }
+            
+            await sleep(delay);
+            
+            // Update tasks to process - only retry failed ones
+            tasksToProcess = results.failed.map(f => f.task);
+            results.failed = []; // Clear failed array for next attempt
+            
+            currentAttempt++;
         }
 
         // Report generation summary
