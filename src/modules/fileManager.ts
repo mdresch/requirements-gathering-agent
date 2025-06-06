@@ -21,7 +21,8 @@ export const DOCUMENT_CATEGORIES = {
     MANAGEMENT_PLANS: 'management-plans', 
     PLANNING_ARTIFACTS: 'planning-artifacts',
     STAKEHOLDER: 'stakeholder-management',
-    TECHNICAL: 'technical-analysis'
+    TECHNICAL: 'technical-analysis',
+    UNKNOWN: 'unknown',
 } as const;
 
 // Document configuration with proper categorization
@@ -327,7 +328,7 @@ export function saveDocument(documentKey: string, content: string): void {
         const fallbackConfig = {
             title: documentKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
             filename: `${documentKey}.md`,
-            category: 'unknown',
+            category: DOCUMENT_CATEGORIES.UNKNOWN, // Use the new UNKNOWN key
             description: 'Auto-generated document',
             generatedAt: ''
         };
