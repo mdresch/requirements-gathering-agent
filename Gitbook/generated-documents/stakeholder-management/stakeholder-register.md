@@ -9,7 +9,45 @@
 
 ## Stakeholder Register: Requirements Gathering Agent Project
 
-This register documents key stakeholders, their involvement, and engagement strategies for the Requirements Gathering Agent project.  It aligns with PMBOK 7th Edition best practices for stakeholder management.
+This register documents key stakeholders, their involvement, and engagement strategies for the Requirements Gathering Agent project. It aligns with PMBOK 7th Edition best practices for stakeholder management.
+
+## Identification Information
+
+This section provides detailed identification information for each stakeholder:
+
+| Stakeholder Name | Position/Role | Organization | Contact Information | Location/Project Site |
+|-----------------|---------------|--------------|---------------------|---------------------|
+| Project Sponsor | VP of Product Management | Enterprise PMO | sponsor@enterprise.com | HQ - Main Office |
+| Product Owner | Product Manager | Product Management | product.owner@enterprise.com | HQ - Product Wing |
+| Project Manager | Project Manager | Project Management Office | pm@enterprise.com | HQ - PMO Office |
+| Development Team Lead | Technical Lead | Engineering | tech.lead@enterprise.com | Tech Center |
+| AI Research Scientist | AI Specialist | R&D | ai.scientist@enterprise.com | R&D Lab |
+| Security Officer | Information Security Manager | IT Security | security@enterprise.com | Security Operations |
+| Azure Cloud Administrator | Cloud Infrastructure Manager | IT Operations | cloud.admin@enterprise.com | Data Center |
+| QA Manager | Quality Assurance Lead | Quality Assurance | qa.manager@enterprise.com | QA Department |
+| End Users (Project Managers) | Project Managers | Project Management Office | end.users@enterprise.com | Various Locations |
+| Procurement Manager | Vendor Management Lead | Procurement | procurement@enterprise.com | Procurement Office |
+| Compliance Officer | Regulatory Compliance Specialist | Compliance | compliance@enterprise.com | Compliance Department |
+
+## Assessment Information
+
+This section provides detailed assessment of each stakeholder's influence, interest, and engagement:
+
+| Stakeholder Name | Power/Influence Level | Interest Level | Impact Assessment | Current Engagement | Desired Engagement | Engagement Gap |
+|-----------------|---------------------|---------------|------------------|-------------------|-------------------|----------------|
+| Project Sponsor | High | High | Critical decision-maker for budget and scope | Leading | Leading | None |
+| Product Owner | High | High | Key decision-maker for features and priorities | Leading | Leading | None |
+| Project Manager | High | High | Day-to-day project execution and control | Leading | Leading | None |
+| Development Team Lead | High | High | Technical implementation and architecture | Supportive | Leading | Minor |
+| AI Research Scientist | Medium | High | AI model selection and implementation | Supportive | Supportive | None |
+| Security Officer | High | High | Security and compliance oversight | Supportive | Leading | Moderate |
+| Azure Cloud Administrator | Medium | Medium | Infrastructure and deployment | Neutral | Supportive | Significant |
+| QA Manager | Medium | High | Quality assurance and testing | Supportive | Supportive | None |
+| End Users (Project Managers) | High | High | Primary system users | Supportive | Leading | Moderate |
+| Procurement Manager | Low | Medium | Vendor and contract management | Neutral | Supportive | Moderate |
+| Compliance Officer | Medium | High | Regulatory compliance oversight | Supportive | Supportive | None |
+
+## Engagement Strategy
 
 **Key:**
 
