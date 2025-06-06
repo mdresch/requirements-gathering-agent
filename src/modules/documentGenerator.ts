@@ -131,11 +131,6 @@ export class DocumentGenerator {
         return tasks.sort((a, b) => a.priority - b.priority);
     }
 
-    constructor(context: string, options: GenerationOptions = {}) {
-        this.context = context;
-        this.options = options;
-    }
-
     private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
         try {
             console.log(`${task.emoji} Generating ${task.name}...`);
