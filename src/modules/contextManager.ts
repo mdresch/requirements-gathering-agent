@@ -7,25 +7,9 @@ export class ContextManager {
     private maxContextTokens: number;
     private coreContext: string = '';
     private enrichedContext: Map<string, string> = new Map();
-    private generatedDocuments: Set<string> = new Set();
-    private lastContextUpdate: number = 0;
 
     constructor(maxTokens: number = 3000) {
         this.maxContextTokens = maxTokens;
-    }
-
-    // Track newly generated documents
-    async trackGeneratedDocument(documentPath: string, content: string): Promise<void> {
-        const documentKey = this.getDocumentKey(documentPath);
-        this.generatedDocuments.add(documentKey);
-        this.addEnrichedContext(documentKey, content);
-        this.lastContextUpdate = Date.now();
-    }
-
-    // Extract document key from path
-    private getDocumentKey(path: string): string {
-        const filename = path.split('/').pop() || '';
-        return filename.replace('.md', '').toLowerCase();
     }
 
     // Estimate token count (rough approximation: 4 chars = 1 token)
@@ -50,15 +34,10 @@ export class ContextManager {
         this.enrichedContext.set(key, content);
     }
 
-    // Build context for specific document type with smart truncation and dynamic updates
+    // Build context for specific document type with smart truncation
     buildContextForDocument(documentType: string, additionalContext?: string[]): string {
-        // Start with core context
         let context = this.coreContext;
         let remainingTokens = this.maxContextTokens - this.estimateTokens(context);
-        
-        // Add metadata about context freshness
-        context += `\n\nContext last updated: ${new Date(this.lastContextUpdate).toISOString()}`;
-        context += `\nAvailable generated documents: ${Array.from(this.generatedDocuments).join(', ')}`;
 
         // Add relevant enriched context based on document type
         const relevantContext = this.getRelevantContext(documentType);
@@ -83,48 +62,17 @@ export class ContextManager {
 
     // Map document types to relevant context keys
     private getRelevantContext(documentType: string): string[] {
-        // Dynamic context mapping based on document relationships and available content
-        const baseContextMap: { [key: string]: string[] } = {
-            'user-stories': ['personas', 'summary', 'requirements', 'project-summary'],
-            'risk-management': ['project-charter', 'scope-plan', 'tech-stack', 'stakeholder-register'],
-            'quality-plan': ['requirements', 'tech-stack', 'user-stories', 'project-charter'],
-            'stakeholder-register': ['project-charter', 'communication-plan', 'project-summary'],
-            'project-charter': ['stakeholder-register', 'project-summary', 'requirements'],
-            'scope-management': ['project-charter', 'requirements', 'user-stories'],
-            'communication-plan': ['stakeholder-register', 'project-charter'],
-            'requirements': ['user-stories', 'project-summary', 'tech-stack'],
+        const contextMap: { [key: string]: string[] } = {
+            'user-stories': ['personas', 'summary'],
+            'risk-management': ['project-charter', 'scope-plan', 'tech-stack'],
+            'quality-plan': ['requirements', 'tech-stack', 'user-stories'],
+            'stakeholder-register': ['project-charter', 'communication-plan'],
+            // Add more mappings based on document relationships
         };
 
-        // Get base context keys
-        let contextKeys = baseContextMap[documentType] || ['summary'];
-        
-        // Add relevant generated documents that might provide additional context
-        this.generatedDocuments.forEach(docKey => {
-            if (this.isRelevantForContext(documentType, docKey)) {
-                contextKeys.push(docKey);
-            }
-        });
-
-        // Deduplicate and get content
-        return [...new Set(contextKeys)]
+        return (contextMap[documentType] || ['summary'])
             .map(key => this.enrichedContext.get(key))
             .filter(Boolean) as string[];
-    }
-
-    private isRelevantForContext(targetDoc: string, sourceDoc: string): boolean {
-        // Define relationships between documents
-        const relationships: { [key: string]: string[] } = {
-            'project-charter': ['stakeholder-register', 'project-summary', 'requirements'],
-            'user-stories': ['requirements', 'personas', 'project-summary'],
-            'risk-management': ['project-charter', 'tech-stack', 'requirements'],
-            'quality-plan': ['requirements', 'user-stories', 'tech-stack'],
-            'scope-management': ['project-charter', 'requirements', 'user-stories'],
-            'communication-plan': ['stakeholder-register', 'project-charter'],
-            'stakeholder-register': ['project-charter', 'communication-plan'],
-        };
-
-        // Check if source document is relevant for target document
-        return relationships[targetDoc]?.includes(sourceDoc) || false;
     }
 
     // Summarize text if too large (fallback: truncation)

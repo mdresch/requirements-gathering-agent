@@ -100,13 +100,8 @@ export class DocumentGenerator {
             generateIndex: options.generateIndex ?? true,
             cleanup: options.cleanup ?? true,
             outputDir: options.outputDir || 'generated-documents', // Default output directory
-            format: options.format || 'markdown', // Default format
-            maxTokens: options.maxTokens || 3000 // Maximum tokens for context
+            format: options.format || 'markdown' // Default format
         };
-        
-        // Initialize context manager with core context
-        this.contextManager = new ContextManager(this.options.maxTokens);
-        this.contextManager.createCoreContext(context);
         
         this.results = {
             success: false,
@@ -136,12 +131,9 @@ export class DocumentGenerator {
         return tasks.sort((a, b) => a.priority - b.priority);
     }
 
-    private contextManager: ContextManager;
-
     constructor(context: string, options: GenerationOptions = {}) {
         this.context = context;
         this.options = options;
-        this.contextManager = new ContextManager(options.maxTokens || 3000);
     }
 
     private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
@@ -160,18 +152,11 @@ export class DocumentGenerator {
                 return false;
             }
             
-            // Get updated context for this document type
-            const documentContext = this.contextManager.buildContextForDocument(task.key);
-            
-            // Generate content using updated context
-            const content = await aiFunction(documentContext);
+            const content = await aiFunction(this.context);
             
             if (content && content.trim().length > 0) {
                 const documentKey = task.key;
                 const config = DOCUMENT_CONFIG[documentKey];
-                
-                // Track the generated document in context manager
-                await this.contextManager.trackGeneratedDocument(task.outputPath, content);
                 
                 if (!config) {
                     console.error(`❌ Unknown document key: ${documentKey}`);
