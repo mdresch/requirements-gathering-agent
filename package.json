@@ -1,6 +1,6 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "AI-powered PMBOK documentation generator using Azure OpenAI - generates comprehensive project management documents from README context",
   "main": "dist/cli.js",
   "type": "module",
