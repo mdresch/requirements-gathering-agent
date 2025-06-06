@@ -61,7 +61,8 @@
     "@google/generative-ai": "^0.21.0",
     "dotenv": "^16.4.7",
     "openai": "^5.0.2",
-    "requirements-gathering-agent": "^2.1.2"
+    "requirements-gathering-agent": "^2.1.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
