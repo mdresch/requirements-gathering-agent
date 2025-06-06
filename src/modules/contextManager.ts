@@ -1,3 +1,8 @@
+/**
+ * Enhanced Context Manager for Requirements Gathering Agent
+ * Version: 2.1.2
+ */
+
 export class ContextManager {
     private maxContextTokens: number;
     private coreContext: string = '';
@@ -24,6 +29,11 @@ export class ContextManager {
         return this.coreContext;
     }
 
+    // Add enriched context (e.g., from additional markdown files)
+    addEnrichedContext(key: string, content: string): void {
+        this.enrichedContext.set(key, content);
+    }
+
     // Build context for specific document type with smart truncation
     buildContextForDocument(documentType: string, additionalContext?: string[]): string {
         let context = this.coreContext;
@@ -31,7 +41,7 @@ export class ContextManager {
 
         // Add relevant enriched context based on document type
         const relevantContext = this.getRelevantContext(documentType);
-        
+
         for (const contextPart of relevantContext) {
             const tokens = this.estimateTokens(contextPart);
             if (tokens <= remainingTokens) {
@@ -50,6 +60,7 @@ export class ContextManager {
         return context;
     }
 
+    // Map document types to relevant context keys
     private getRelevantContext(documentType: string): string[] {
         const contextMap: { [key: string]: string[] } = {
             'user-stories': ['personas', 'summary'],
@@ -64,8 +75,12 @@ export class ContextManager {
             .filter(Boolean) as string[];
     }
 
+    // Summarize text if too large (fallback: truncation)
     async summarizeText(text: string, maxTokens: number): Promise<string> {
         // Use AI to create intelligent summaries when context is too large
         return text.substring(0, maxTokens * 4); // Fallback truncation
     }
 }
+
+// Version export for tracking
+export const contextManagerVersion = '2.1.2';

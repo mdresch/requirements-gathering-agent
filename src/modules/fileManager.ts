@@ -1,3 +1,8 @@
+/**
+ * File management and context utilities for Requirements Gathering Agent
+ * Version: 2.1.2
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -105,11 +110,26 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'PMBOK Procurement Management Plan',
         generatedAt: ''
     },
+    // Stakeholder Management - Fix missing properties
     'stakeholder-engagement-plan': {
         title: 'Stakeholder Engagement Plan',
         filename: 'stakeholder-engagement-plan.md',
         category: DOCUMENT_CATEGORIES.STAKEHOLDER,
         description: 'PMBOK Stakeholder Engagement Plan',
+        generatedAt: ''
+    },
+    'stakeholder-register': {
+        title: 'Stakeholder Register',
+        filename: 'stakeholder-register.md',
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
+        description: 'PMBOK Stakeholder Register',
+        generatedAt: ''
+    },
+    'stakeholder-analysis': {
+        title: 'Stakeholder Analysis',
+        filename: 'stakeholder-analysis.md',
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
+        description: 'PMBOK Stakeholder Analysis',
         generatedAt: ''
     },
     'work-breakdown-structure': {
@@ -166,13 +186,6 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         filename: 'schedule-development-input.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Schedule Development Input',
-        generatedAt: ''
-    },
-    'stakeholder-register': {
-        title: 'Stakeholder Register',
-        filename: 'stakeholder-register.md',
-        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
-        description: 'PMBOK Stakeholder Register',
         generatedAt: ''
     },
     'data-model-suggestions': {
@@ -255,6 +268,52 @@ export function readProjectContext(filename: string = 'README.md'): string {
     }
 }
 
+/**
+ * Enhanced project context reader that analyzes all relevant markdown files
+ * @param projectPath - The root directory of the project (defaults to current directory)
+ * @returns Comprehensive project context including all relevant documentation
+ */
+export async function readEnhancedProjectContext(projectPath: string = process.cwd()): Promise<string> {
+    try {
+        console.log('🔍 Performing comprehensive project analysis...');
+        
+        // Import the analyzer dynamically to avoid circular imports
+        const { analyzeProjectComprehensively } = await import('./projectAnalyzer.js');
+        const { populateEnhancedContextFromAnalysis } = await import('./llmProcessor.js');
+        
+        // Perform comprehensive analysis
+        const analysis = await analyzeProjectComprehensively(projectPath);
+        
+        // Log findings for transparency
+        if (analysis.additionalMarkdownFiles.length > 0) {
+            console.log(`📋 Found ${analysis.additionalMarkdownFiles.length} additional relevant files:`);
+            analysis.additionalMarkdownFiles
+                .slice(0, 5) // Show top 5
+                .forEach(file => {
+                    console.log(`   • ${file.fileName} (${file.category}, score: ${file.relevanceScore})`);
+                });
+            
+            if (analysis.additionalMarkdownFiles.length > 5) {
+                console.log(`   • ... and ${analysis.additionalMarkdownFiles.length - 5} more files`);
+            }
+        }
+        
+        if (analysis.suggestedSources.length > 0) {
+            console.log(`💡 High-value sources identified: ${analysis.suggestedSources.join(', ')}`);
+        }
+        
+        // Populate Enhanced Context Manager with discovered files
+        await populateEnhancedContextFromAnalysis(analysis);
+        
+        // Return the comprehensive context
+        return analysis.projectContext;
+        
+    } catch (error) {
+        console.warn('⚠️ Enhanced analysis failed, falling back to basic README analysis:', error);
+        return readProjectContext();
+    }
+}
+
 export function saveDocument(documentKey: string, content: string): void {
     if (!content || content.trim().length === 0) {
         console.log(`⚠️ Skipped: ${documentKey} (no content generated)`);
@@ -264,10 +323,48 @@ export function saveDocument(documentKey: string, content: string): void {
     const config = DOCUMENT_CONFIG[documentKey];
     if (!config) {
         console.error(`❌ Unknown document key: ${documentKey}`);
+        // Create a fallback config for unknown keys
+        const fallbackConfig = {
+            title: documentKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            filename: `${documentKey}.md`,
+            category: 'unknown',
+            description: 'Auto-generated document',
+            generatedAt: ''
+        };
+        
+        const baseDir = 'generated-documents';
+        const categoryDir = path.join(baseDir, fallbackConfig.category);
+        const filePath = path.join(categoryDir, fallbackConfig.filename);
+        
+        // Ensure directory exists
+        if (!fs.existsSync(categoryDir)) {
+            fs.mkdirSync(categoryDir, { recursive: true });
+        }
+        
+        const timestamp = new Date().toISOString();
+        const documentHeader = `# ${fallbackConfig.title}
+
+**Generated by Requirements Gathering Agent v2.1.2**  
+**Category:** ${fallbackConfig.category}  
+**Generated:** ${timestamp}  
+**Description:** ${fallbackConfig.description}
+
+---
+
+`;
+        
+        const fullContent = documentHeader + content;
+        
+        try {
+            fs.writeFileSync(filePath, fullContent, 'utf-8');
+            console.log(`✅ Saved: ${fallbackConfig.title} → ${filePath}`);
+        } catch (error) {
+            console.error(`❌ Error saving ${documentKey}:`, error);
+        }
         return;
     }
     
-    // Create the full file path with category subdirectory
+    // Continue with normal processing...
     const baseDir = 'generated-documents';
     const categoryDir = path.join(baseDir, config.category);
     const filePath = path.join(categoryDir, config.filename);
@@ -281,7 +378,7 @@ export function saveDocument(documentKey: string, content: string): void {
     const timestamp = new Date().toISOString();
     const documentHeader = `# ${config.title}
 
-**Generated by Requirements Gathering Agent v2.1.1**  
+**Generated by Requirements Gathering Agent v2.1.2**  
 **Category:** ${config.category}  
 **Generated:** ${timestamp}  
 **Description:** ${config.description}
@@ -308,7 +405,7 @@ export function generateIndexFile(): void {
     
     let indexContent = `# Generated PMBOK Documentation
 
-**Generated by Requirements Gathering Agent v2.1.1**  
+**Generated by Requirements Gathering Agent v2.1.2**  
 **Timestamp:** ${timestamp}  
 **Total Documents:** ${Object.keys(DOCUMENT_CONFIG).length}
 
@@ -362,6 +459,9 @@ Each document is AI-generated based on your project's README.md context and foll
         console.error(`❌ Error generating index file:`, error);
     }
 }
+
+// Version export for tracking
+export const fileManagerVersion = '2.1.2';
 
 export function cleanupOldFiles(): void {
     // Remove any .md files from root directory (except README.md)
