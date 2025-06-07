@@ -18,6 +18,8 @@ import { RequirementsProcessor } from "./RequirementsProcessor";
 import { PlanningProcessor } from "./PlanningProcessor";
 import { WBSProcessor } from "./WBSProcessor";
 import { ActivityProcessor } from "./ActivityProcessor";
+import { BaseAIProcessor } from "./BaseAIProcessor";
+import { AIProvider } from "../types";
 
 // Create processor instances
 const projectManagementProcessor = new ProjectManagementProcessor();
@@ -85,13 +87,45 @@ export class ProcessorFactory {
      */
     static getWBSProcessor(): WBSProcessor {
         return wbsProcessor;
-    }
-
-    /**
+    }    /**
      * Get Activity Processor instance
      */
     static getActivityProcessor(): ActivityProcessor {
         return activityProcessor;
+    }
+
+    /**
+     * Get processor based on provided configuration
+     * @param config Configuration for processor initialization
+     * @returns Appropriate processor instance
+     */
+    static getProcessor(config: { provider?: AIProvider; type?: string }): BaseAIProcessor {
+        // For now, return the requirements processor as the default
+        // This can be extended in the future to return different processors based on config
+        if (config.type) {
+            switch (config.type.toLowerCase()) {
+                case 'project-management':
+                    return projectManagementProcessor;
+                case 'pmbok':
+                    return pmbokProcessor;
+                case 'scope':
+                    return scopeProcessor;
+                case 'stakeholder':
+                    return stakeholderProcessor;
+                case 'technical':
+                    return technicalProcessor;
+                case 'planning':
+                    return planningProcessor;
+                case 'wbs':
+                    return wbsProcessor;
+                case 'activity':
+                    return activityProcessor;
+                case 'requirements':
+                default:
+                    return requirementsProcessor;
+            }
+        }
+        return requirementsProcessor;
     }
 }
 

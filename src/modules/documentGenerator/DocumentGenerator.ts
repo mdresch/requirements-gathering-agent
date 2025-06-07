@@ -18,7 +18,7 @@ import {
     GenerationTask,
     ValidationResult
 } from './types';
-import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory } from './generationTasks';
+import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks';
 
 /**
  * Class responsible for generating project documentation
@@ -143,11 +143,10 @@ export class DocumentGenerator {
      * @param task Task to generate document for
      * @returns Whether generation was successful
      */
-    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
-        try {
+    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {        try {
             console.log(`${task.emoji} Generating ${task.name}...`);
               // Get the AI function using the correct method
-            const methodName = `getAi${task.func}` as keyof DocumentGenerator;
+            const methodName = task.func as keyof DocumentGenerator;
             const aiFunction = this[methodName] as ((context: string) => Promise<string>) | undefined;
             
             if (typeof aiFunction !== 'function') {
@@ -257,10 +256,53 @@ export class DocumentGenerator {
         this.results.success = this.results.successCount > 0;
         this.results.message = this.results.success
             ? `Successfully generated ${this.results.successCount} documents`
-            : `Failed to generate any documents`;
-
-        this.printSummary();
+            : `Failed to generate any documents`;        this.printSummary();
         return this.results;
+    }
+
+    /**
+     * Generate a single document by key
+     * @param documentKey The key of the document to generate (e.g., 'summary', 'user-stories', 'project-charter')
+     * @returns Whether generation was successful
+     */
+    public async generateOne(documentKey: string): Promise<boolean> {
+        // Map common document keys to actual task keys
+        const keyMapping: Record<string, string> = {
+            'summary': 'project-summary',
+            'user-stories': 'user-stories',
+            'project-charter': 'project-charter'
+        };
+
+        // Use mapped key or original key if no mapping exists
+        const taskKey = keyMapping[documentKey] || documentKey;
+        
+        // Find the task by key
+        const task = getTaskByKey(taskKey);
+        
+        if (!task) {
+            console.error(`❌ Unknown document key: ${documentKey} (mapped to: ${taskKey})`);
+            return false;
+        }
+
+        // Setup directory structure if needed
+        createDirectoryStructure();
+
+        console.log(`🚀 Generating single document: ${task.name}...`);
+        
+        try {
+            const success = await this.generateSingleDocument(task);
+            
+            if (success) {
+                console.log(`✅ Successfully generated: ${task.name}`);
+            } else {
+                console.log(`❌ Failed to generate: ${task.name}`);
+            }
+            
+            return success;
+        } catch (error: any) {
+            console.error(`❌ Error generating ${task.name}: ${error.message}`);
+            return false;
+        }
     }
 
     /**
