@@ -68,7 +68,25 @@ Based on the provided project context, five user personas are developed below, f
 * **Design/Development Implications:**  Prioritize generation of architecture-related reports, integration with enterprise architecture tools, and clear visualization of technical aspects.
 
 
-**Persona 4: Emily Chen - Product Owner**
+**Persona 4: Kevin O'Neill - Independent Agile Coach**
+
+* **Image:** A professional headshot of a man in his mid-40s, dressed in smart casual attire.
+* **Demographics:** 45 years old, Dublin, Ireland, Certified Scrum Master (CSM), SAFe Program Consultant (SPC), 15 years experience in Agile coaching and transformation.
+* **Goals:** Generate comprehensive project documentation that bridges Agile and traditional methodologies, support organizations in Agile transformation, ensure compliance with both PMBOK and Agile frameworks, facilitate effective knowledge transfer.
+* **Needs:** Tools for generating hybrid Agile-PMBOK documentation, templates that support both methodologies, ability to customize outputs based on client needs, integration with popular Agile tools (Jira, Azure DevOps, Rally), collaboration features for team coaching.
+* **Pain Points:** Time spent reconciling Agile and traditional documentation, difficulty maintaining consistency across different client environments, manual effort in adapting templates for different organizational contexts, challenge of demonstrating compliance while maintaining agility.
+* **Technology Proficiency:** Advanced user of Agile management tools, comfortable with collaboration platforms, moderate understanding of APIs and integrations, experienced with various project management software.
+* **Behavioral Patterns:** Adaptable to different organizational cultures, emphasizes practical over theoretical approaches, values flexibility and customization, focuses on knowledge transfer and sustainable practices.
+* **Decision-Making Process:** Experience-driven, considers both Agile values and traditional governance needs, collaborative approach, emphasizes empirical evidence.
+* **Communication Preferences:** Face-to-face coaching sessions, virtual collaboration tools, visual aids and dashboards, regular feedback loops.
+* **Success Criteria:** Reduced documentation overhead, improved team adoption of practices, successful audit outcomes, positive client feedback, effective balance of agility and governance.
+* **Accessibility Needs:** Mobile-friendly interfaces, offline access capabilities, support for different time zones and remote work.
+* **Context of Use:** Client sites, remote coaching sessions, transformation workshops, documentation review sessions.
+* **Quote:** "I need a tool that helps me bridge the gap between Agile practices and traditional project management, making it easier for organizations to maintain compliance while embracing agility."
+* **Key Metrics:** Client satisfaction scores, successful audit outcomes, team velocity improvements, documentation completion rates.
+* **Design/Development Implications:** Prioritize flexibility in documentation templates, support for hybrid methodologies, easy customization options, and integration with popular Agile tools.
+
+**Persona 5: Emily Chen - Product Owner**
 
 * **Image:** A professional headshot of a woman in her early 30s, dressed in business casual attire.
 * **Demographics:** 32 years old, San Francisco, CSPO certified, Bachelor's in Computer Science, 8 years experience in product management.
