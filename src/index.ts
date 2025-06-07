@@ -15,32 +15,33 @@ export {
   getAiAcceptanceCriteria,
   getAiComplianceConsiderations,
   getAiUiUxConsiderations
-} from './modules/llmProcessor.js';
+} from './modules/ai/processors/index.js';
 
-// PMBOK document generators - Fixed export names
+// PMBOK document generators
 export {
   getAiProjectCharter,
   getAiStakeholderRegister,
   getAiScopeManagementPlan,
-  // Note: Commented out missing exports, add them when they exist in llmProcessor.ts
-  // getAiRequirementsManagementPlan,
-  // getAiScheduleManagementPlan,
+  getAiRequirementsManagementPlan,
+  getAiScheduleManagementPlan,
   getAiCostManagementPlan,
   getAiQualityManagementPlan,
   getAiResourceManagementPlan,
-  getAiCommunicationManagementPlan, // Fixed name - no 's' in Communication
+  getAiCommunicationManagementPlan,
   getAiRiskManagementPlan,
   getAiProcurementManagementPlan,
   getAiStakeholderEngagementPlan,
   getAiWbs,
   getAiWbsDictionary,
+  getAiScopeBaseline,               // New function
   getAiActivityList,
-  getAiActivityDurationEstimates,
-  getAiActivityResourceEstimates,
+  getAiActivityAttributes,          // New function
+  getAiActivitySequencing,          // New function
+  getAiResourceRequirements,        // New function
   getAiScheduleNetworkDiagram,
   getAiMilestoneList,
   getAiDevelopScheduleInput
-} from './modules/llmProcessor.js';
+} from './modules/llmProcessor-migration.js';
 
 // Utility functions
 export { generateMarkdownFile, generateMarkdownFiles, generateProjectDocumentation } from './modules/fileUtils.js';

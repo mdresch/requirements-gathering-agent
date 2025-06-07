@@ -3,7 +3,20 @@
  * Version: 2.1.2
  */
 
-import { getModel, createAISummary } from './llmProcessor';
+import { AIProcessor } from './ai/AIProcessor.js';
+import { findRelevantMarkdownFiles } from './projectAnalyzer.js';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { getModel as llmGetModel } from './llmProcessor.js';
+
+// Define the ProjectMarkdownFile type locally to avoid circular dependencies
+interface ProjectMarkdownFile {
+    fileName: string;
+    filePath: string;
+    content: string;
+    relevanceScore: number;
+    category: 'primary' | 'documentation' | 'planning' | 'development' | 'other';
+}
 
 function createMessages(systemPrompt: string, userPrompt: string) {
     return [
@@ -29,6 +42,7 @@ export class ContextManager {
     private contextCache: Map<string, string> = new Map();
     private documentRelationships: Map<string, string[]> = new Map();
     private modelTokenLimits: Map<string, number> = new Map();
+    private autoConfigDone: boolean = false;
 
     constructor(maxTokens: number = 4000) {
         this.maxContextTokens = maxTokens;
@@ -60,7 +74,7 @@ export class ContextManager {
 
     private autoAdjustTokenLimits() {
         try {
-            const currentModel = typeof getModel === 'function' ? getModel().toLowerCase() : '';
+            const currentModel = typeof llmGetModel === 'function' ? llmGetModel().toLowerCase() : '';
             // Find the best match for the current model
             let modelLimit = 4000; // Default fallback
             for (const [modelName, limit] of this.modelTokenLimits) {
@@ -365,8 +379,7 @@ export class ContextManager {
             if (potentialContexts.length > 0) {
                 recommendations.push(`${potentialContexts.length} additional context sources available for inclusion`);
             }
-        }
-        return {
+        }        return {
             totalTokens,
             utilizationPercentage,
             includedContexts,
@@ -374,7 +387,243 @@ export class ContextManager {
             recommendations
         };
     }
+
+    /**
+     * Direct Context Injection - Automatically discovers and injects high-relevance markdown files
+     * @param projectPath - The root directory of the project to analyze
+     * @param minRelevanceScore - Minimum relevance score for injection (default: 75)
+     * @param maxFiles - Maximum number of files to inject (default: 10)
+     * @returns Promise<number> - Number of files successfully injected
+     */
+    async injectHighRelevanceMarkdownFiles(
+        projectPath: string, 
+        minRelevanceScore: number = 75, 
+        maxFiles: number = 10
+    ): Promise<number> {
+        try {
+            console.log(`🔍 Discovering high-relevance markdown files (score >= ${minRelevanceScore})...`);
+            
+            // Discover markdown files using projectAnalyzer
+            const markdownFiles = await findRelevantMarkdownFiles(projectPath);
+            
+            // Filter by relevance score and limit count
+            const highRelevanceFiles = markdownFiles
+                .filter(file => file.relevanceScore >= minRelevanceScore)
+                .slice(0, maxFiles);
+            
+            if (highRelevanceFiles.length === 0) {
+                console.log('ℹ️ No high-relevance markdown files found for injection');
+                return 0;
+            }
+            
+            console.log(`📄 Found ${highRelevanceFiles.length} high-relevance files for injection:`);
+            
+            let injectedCount = 0;
+            const enrichedTokenLimit = this.getEffectiveTokenLimit('enriched');
+            let currentTokens = this.estimateTokens(this.coreContext);
+            
+            for (const file of highRelevanceFiles) {
+                const contextKey = `injected-${file.category}-${path.basename(file.fileName, '.md')}`;
+                const fileTokens = this.estimateTokens(file.content);
+                
+                // Check if we have enough token budget remaining
+                if (currentTokens + fileTokens > enrichedTokenLimit) {
+                    console.log(`⚠️ Token limit reached, stopping injection at ${injectedCount} files`);
+                    break;
+                }
+                
+                // Create enriched context entry with metadata
+                const enrichedContent = this.formatInjectedContent(file);
+                this.enrichedContext.set(contextKey, enrichedContent);
+                
+                console.log(`✅ Injected: ${file.fileName} (score: ${file.relevanceScore}, tokens: ~${fileTokens})`);
+                injectedCount++;
+                currentTokens += fileTokens;
+            }
+            
+            console.log(`🎯 Successfully injected ${injectedCount} high-relevance markdown files`);
+            return injectedCount;
+            
+        } catch (error) {
+            console.error('❌ Error during direct context injection:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Inject specific markdown files by file paths
+     * @param filePaths - Array of absolute file paths to inject
+     * @param projectRoot - Project root directory for relative path calculation
+     * @returns Promise<number> - Number of files successfully injected
+     */
+    async injectSpecificMarkdownFiles(filePaths: string[], projectRoot: string): Promise<number> {
+        try {
+            console.log(`🎯 Injecting ${filePaths.length} specific markdown files...`);
+            
+            let injectedCount = 0;
+            const enrichedTokenLimit = this.getEffectiveTokenLimit('enriched');
+            let currentTokens = this.estimateTokens(this.coreContext);
+            
+            for (const filePath of filePaths) {
+                try {
+                    const content = await fs.readFile(filePath, 'utf-8');
+                    const fileName = path.basename(filePath);
+                    const relativePath = path.relative(projectRoot, filePath);
+                    
+                    // Skip if file is too small or is README
+                    if (content.length < 50 || fileName.toLowerCase() === 'readme.md') {
+                        continue;
+                    }
+                    
+                    const fileTokens = this.estimateTokens(content);
+                    
+                    // Check token budget
+                    if (currentTokens + fileTokens > enrichedTokenLimit) {
+                        console.log(`⚠️ Token limit reached, stopping injection at ${injectedCount} files`);
+                        break;
+                    }
+                    
+                    const contextKey = `injected-specific-${path.basename(fileName, '.md')}`;
+                    const enrichedContent = `## Injected File: ${relativePath}\n\n${content}`;
+                    
+                    this.enrichedContext.set(contextKey, enrichedContent);
+                    
+                    console.log(`✅ Injected: ${fileName} (tokens: ~${fileTokens})`);
+                    injectedCount++;
+                    currentTokens += fileTokens;
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Could not inject file ${filePath}:`, error);
+                }
+            }
+            
+            console.log(`🎯 Successfully injected ${injectedCount} specific markdown files`);
+            return injectedCount;
+            
+        } catch (error) {
+            console.error('❌ Error during specific file injection:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Format injected markdown content with metadata
+     * @param file - ProjectMarkdownFile to format
+     * @returns Formatted content string
+     */
+    private formatInjectedContent(file: ProjectMarkdownFile): string {
+        return `## Injected Document: ${file.fileName}
+**Source**: ${file.filePath}
+**Category**: ${file.category}
+**Relevance Score**: ${file.relevanceScore}/100
+
+${file.content}`;
+    }
+
+    /**
+     * Get statistics about injected content
+     * @returns Object with injection statistics
+     */
+    getInjectionStatistics(): {
+        totalInjected: number;
+        injectedKeys: string[];
+        totalTokensInjected: number;
+        remainingTokenBudget: number;
+    } {
+        const injectedKeys = Array.from(this.enrichedContext.keys())
+            .filter(key => key.startsWith('injected-'));
+        
+        const totalTokensInjected = injectedKeys.reduce((total, key) => {
+            const content = this.enrichedContext.get(key) || '';
+            return total + this.estimateTokens(content);
+        }, 0);
+        
+        const enrichedTokenLimit = this.getEffectiveTokenLimit('enriched');
+        const currentTokens = this.estimateTokens(this.coreContext);
+        const remainingTokenBudget = enrichedTokenLimit - currentTokens - totalTokensInjected;
+        
+        return {
+            totalInjected: injectedKeys.length,
+            injectedKeys,
+            totalTokensInjected,
+            remainingTokenBudget: Math.max(0, remainingTokenBudget)
+        };
+    }
+
+    /**
+     * Clear all injected context
+     */
+    clearInjectedContext(): void {
+        const injectedKeys = Array.from(this.enrichedContext.keys())
+            .filter(key => key.startsWith('injected-'));
+        
+        for (const key of injectedKeys) {
+            this.enrichedContext.delete(key);
+        }
+        
+        console.log(`🧹 Cleared ${injectedKeys.length} injected context entries`);
+    }
+
+    private autoAdjustConfig() {
+        // Use current model name to adjust config
+        if (!this.autoConfigDone) {
+            const currentModel = typeof llmGetModel === 'function' ? llmGetModel().toLowerCase() : '';
+
+            // Set base token limits
+            let tokenLimit = 4000;
+            let documentTokensMax = 800;
+
+            // Adjust for different model capabilities
+            if (currentModel.includes('gemini')) {
+                tokenLimit = currentModel.includes('pro') ? 2000000 : 1000000; // 2M or 1M tokens
+                documentTokensMax = Math.floor(tokenLimit * 0.4);
+            } else if (currentModel.includes('gpt-4')) {
+                tokenLimit = currentModel.includes('32k') ? 32000 : 8000;
+                documentTokensMax = Math.floor(tokenLimit * 0.3);
+            }
+
+            // Set adjusted values (values returned by autoAdjustConfig)
+            return {
+                tokenLimit,
+                documentTokensMax
+            };
+        }
+
+        this.autoConfigDone = true;
+        return null; // Config already done
+    }
 }
 
 // Version export for tracking
 export const contextManagerVersion = '2.1.2';
+
+// Export missing functions required by llmProcessor.ts
+export async function createAISummary(text: string, maxTokens: number): Promise<string | null> {
+    try {
+        const messages = createMessages(
+            "You are an expert technical writer. Create a comprehensive but concise summary of the following project information, preserving all key technical details, requirements, and business context.",
+            `Please summarize this project information in approximately ${maxTokens} tokens while preserving all essential details:\n\n${text}`
+        );
+        
+        const response = await makeAICall(messages, maxTokens);
+        return extractContent(response);
+    } catch (error) {
+        console.error('Error creating AI summary:', error);
+        return null;
+    }
+}
+
+export function analyzeDocumentContextUtilization(documentType: string): any {
+    // Create a default context manager instance for analysis
+    const contextManager = new ContextManager();
+    return contextManager.analyzeDocumentContext(documentType);
+}
+
+export function addProjectContext(key: string, content: string): void {
+    // This is a utility function that would normally add to a global context manager
+    // For now, just log the addition
+    console.log(`Adding project context: ${key}`);
+}
+
+// Enhanced Context Manager type for compatibility
+export type EnhancedContextManager = ContextManager;

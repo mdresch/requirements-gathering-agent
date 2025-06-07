@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-interface ProjectMarkdownFile {
+export interface ProjectMarkdownFile {
   fileName: string;
   filePath: string;
   content: string;
@@ -9,7 +9,7 @@ interface ProjectMarkdownFile {
   category: 'primary' | 'documentation' | 'planning' | 'development' | 'other';
 }
 
-interface ProjectAnalysis {
+export interface ProjectAnalysis {
   readme: string | null;
   additionalMarkdownFiles: ProjectMarkdownFile[];
   packageJson: Record<string, any> | null;

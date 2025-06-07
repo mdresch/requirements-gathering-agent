@@ -17,7 +17,7 @@
     "start": "node dist/cli.js",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "prepare": "npm run build",
     "prepublishOnly": "npm run clean && npm run build"
   },
@@ -43,7 +43,7 @@
   "author": {
     "name": "Menno Drescher",
     "email": "menno.drescher@gmail.com",
-    "url": ""
+    "url": "https://exceptional-cba-project.webflow.io/"
   },
   "repository": {
     "type": "git",
@@ -59,14 +59,20 @@
     "@azure/identity": "^4.4.1",
     "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.21.0",
+    "@types/node-fetch": "^2.6.12",
     "dotenv": "^16.4.7",
+    "node-fetch": "^2.7.0",
     "openai": "^5.0.2",
     "requirements-gathering-agent": "^2.1.2",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@jest/globals": "^30.0.0-beta.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.10.1",
+    "jest": "^29.7.0",
     "rimraf": "^6.0.1",
+    "ts-jest": "^29.3.4",
     "typescript": "^5.7.2"
   },
   "files": [
