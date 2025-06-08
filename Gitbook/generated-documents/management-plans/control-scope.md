@@ -63,7 +63,7 @@ This Control Scope process outlines the procedures for monitoring the project sc
 * **Tools & Techniques:**
     * *Inspection:* Formal inspection of deliverables to verify that they meet the requirements.
     * *Meetings:* Meetings with stakeholders to review and accept the deliverables.
-    * *Acceptance Criteria:** The Requirements Gathering Agent can automatically generate acceptance criteria based on the project requirements.
+    * **Acceptance Criteria:** The Requirements Gathering Agent can automatically generate acceptance criteria based on the project requirements.
 
 * **Outputs:**
     * Accepted Deliverables: Formal acceptance of deliverables by stakeholders.
