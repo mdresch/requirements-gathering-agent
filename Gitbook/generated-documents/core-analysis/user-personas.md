@@ -112,25 +112,8 @@ Based on the provided project context, five user personas are developed below, f
 * **Key Metrics:** Documentation standardization rate, review cycle time reduction, project compliance scores, resource efficiency improvements.
 * **Design/Development Implications:** Focus on enterprise-scale standardization features, automated quality checks, portfolio-level reporting, and integration with enterprise PM tools.
 
-**Persona 7: Sarah Mitchell - Senior Project Manager**
 
-* **Image:** A professional headshot of a woman in her mid-40s, dressed in executive business attire.
-* **Demographics:** 42 years old, Seattle, PMP certified with Advanced PMBOK Certification, Masters in Project Management, 15 years experience in enterprise project management.
-* **Goals:** Streamline PMBOK-compliant documentation generation, enhance project governance, improve team efficiency, maintain audit compliance, accelerate project initiation phases.
-* **Needs:** Automated PMBOK documentation tools, intelligent templates with built-in compliance checks, seamless integration with enterprise PM tools, real-time collaboration features, version control capabilities.
-* **Pain Points:** Time-intensive PMBOK documentation creation, challenges in maintaining documentation consistency, difficulty tracking multiple project dependencies, manual compliance verification processes, complex stakeholder management documentation.
-* **Technology Proficiency:** High comfort with digital tools, experienced with enterprise PM platforms, proficient in documentation management systems, embraces AI-powered solutions, advocates for digital transformation.
-* **Behavioral Patterns:** Detail-oriented, process-driven, values automation and efficiency, emphasizes quality and compliance, promotes collaborative approaches.
-* **Decision-Making Process:** Methodical, evidence-based, considers organizational impact, balances efficiency with compliance requirements, values team input.
-* **Communication Preferences:** Structured digital communications, automated reports, collaborative platforms, regular status updates, virtual team meetings.
-* **Success Criteria:** Reduced documentation time, improved PMBOK compliance rates, faster project initialization, enhanced team collaboration, successful audits.
-* **Accessibility Needs:** Multi-device access, intuitive interface, integration with existing enterprise tools, robust search capabilities.
-* **Context of Use:** Corporate environment, virtual team meetings, stakeholder presentations, audit preparations.
-* **Quote:** "I need a sophisticated tool that automates PMBOK documentation while ensuring compliance and accuracy, allowing me to focus on strategic project management rather than administrative tasks."
-* **Key Metrics:** Documentation time reduction, compliance accuracy rates, project initiation efficiency, stakeholder satisfaction scores.
-* **Design/Development Implications:** Prioritize PMBOK compliance automation, intelligent templates, integration capabilities with enterprise tools, and collaborative features for team documentation.
-
-**Persona 8: David Chen - Software Development Team Lead**
+**Persona 7: David Chen - Software Development Team Lead**
 
 * **Image:** A professional headshot of a man in his mid-30s, dressed in smart casual attire.
 * **Demographics:** 35 years old, San Francisco Bay Area, Masters in Computer Science, 10+ years experience in software development, 4 years in team leadership.
