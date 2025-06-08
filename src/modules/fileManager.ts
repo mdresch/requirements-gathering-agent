@@ -5,6 +5,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import type { ProjectAnalysis, ProjectMarkdownFile } from './projectAnalyzer.js';
+import { analyzeProjectComprehensively } from './projectAnalyzer.js';
+import { populateEnhancedContextFromAnalysis } from './llmProcessor.js';
 
 export interface DocumentMetadata {
     title: string;
@@ -18,10 +21,11 @@ export interface DocumentMetadata {
 export const DOCUMENT_CATEGORIES = {
     CORE: 'core-analysis',
     CHARTER: 'project-charter',
-    MANAGEMENT_PLANS: 'management-plans', 
+    MANAGEMENT_PLANS: 'management-plans',
     PLANNING_ARTIFACTS: 'planning-artifacts',
     STAKEHOLDER: 'stakeholder-management',
-    TECHNICAL: 'technical-analysis'
+    TECHNICAL: 'technical-analysis',
+    UNKNOWN: 'unknown',
 } as const;
 
 // Document configuration with proper categorization
@@ -235,12 +239,12 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
 // Create organized directory structure
 export function createDirectoryStructure(): void {
     const baseDir = 'generated-documents';
-    
+
     // Create base directory
     if (!fs.existsSync(baseDir)) {
         fs.mkdirSync(baseDir, { recursive: true });
     }
-    
+
     // Create category subdirectories
     Object.values(DOCUMENT_CATEGORIES).forEach(category => {
         const categoryDir = path.join(baseDir, category);
@@ -248,7 +252,7 @@ export function createDirectoryStructure(): void {
             fs.mkdirSync(categoryDir, { recursive: true });
         }
     });
-    
+
     console.log(`📁 Created organized directory structure in ${baseDir}/`);
 }
 
@@ -258,7 +262,7 @@ export function readProjectContext(filename: string = 'README.md'): string {
             console.warn(`⚠️  ${filename} not found. Using generic project context.`);
             return 'Generic project requiring comprehensive requirements analysis and PMBOK documentation.';
         }
-        
+
         const content = fs.readFileSync(filename, 'utf-8');
         console.log(`✅ Found ${filename} - using as project context`);
         return content;
@@ -276,38 +280,38 @@ export function readProjectContext(filename: string = 'README.md'): string {
 export async function readEnhancedProjectContext(projectPath: string = process.cwd()): Promise<string> {
     try {
         console.log('🔍 Performing comprehensive project analysis...');
-        
-        // Import the analyzer dynamically to avoid circular imports
+
+        // Import the analyzer and processor dynamically to avoid circular imports
         const { analyzeProjectComprehensively } = await import('./projectAnalyzer.js');
         const { populateEnhancedContextFromAnalysis } = await import('./llmProcessor.js');
-        
+
         // Perform comprehensive analysis
         const analysis = await analyzeProjectComprehensively(projectPath);
-        
+
         // Log findings for transparency
-        if (analysis.additionalMarkdownFiles.length > 0) {
+        if (analysis.additionalMarkdownFiles?.length > 0) {
             console.log(`📋 Found ${analysis.additionalMarkdownFiles.length} additional relevant files:`);
             analysis.additionalMarkdownFiles
                 .slice(0, 5) // Show top 5
-                .forEach(file => {
+                .forEach((file: ProjectMarkdownFile) => {
                     console.log(`   • ${file.fileName} (${file.category}, score: ${file.relevanceScore})`);
                 });
-            
+
             if (analysis.additionalMarkdownFiles.length > 5) {
                 console.log(`   • ... and ${analysis.additionalMarkdownFiles.length - 5} more files`);
             }
         }
-        
-        if (analysis.suggestedSources.length > 0) {
+
+        if (analysis.suggestedSources?.length > 0) {
             console.log(`💡 High-value sources identified: ${analysis.suggestedSources.join(', ')}`);
         }
-        
+
         // Populate Enhanced Context Manager with discovered files
         await populateEnhancedContextFromAnalysis(analysis);
-        
+
         // Return the comprehensive context
         return analysis.projectContext;
-        
+
     } catch (error) {
         console.warn('⚠️ Enhanced analysis failed, falling back to basic README analysis:', error);
         return readProjectContext();
@@ -319,7 +323,7 @@ export function saveDocument(documentKey: string, content: string): void {
         console.log(`⚠️ Skipped: ${documentKey} (no content generated)`);
         return;
     }
-    
+
     const config = DOCUMENT_CONFIG[documentKey];
     if (!config) {
         console.error(`❌ Unknown document key: ${documentKey}`);
@@ -327,20 +331,20 @@ export function saveDocument(documentKey: string, content: string): void {
         const fallbackConfig = {
             title: documentKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
             filename: `${documentKey}.md`,
-            category: 'unknown',
+            category: DOCUMENT_CATEGORIES.UNKNOWN, // Use the new UNKNOWN key
             description: 'Auto-generated document',
             generatedAt: ''
         };
-        
+
         const baseDir = 'generated-documents';
         const categoryDir = path.join(baseDir, fallbackConfig.category);
         const filePath = path.join(categoryDir, fallbackConfig.filename);
-        
+
         // Ensure directory exists
         if (!fs.existsSync(categoryDir)) {
             fs.mkdirSync(categoryDir, { recursive: true });
         }
-        
+
         const timestamp = new Date().toISOString();
         const documentHeader = `# ${fallbackConfig.title}
 
@@ -352,9 +356,9 @@ export function saveDocument(documentKey: string, content: string): void {
 ---
 
 `;
-        
+
         const fullContent = documentHeader + content;
-        
+
         try {
             fs.writeFileSync(filePath, fullContent, 'utf-8');
             console.log(`✅ Saved: ${fallbackConfig.title} → ${filePath}`);
@@ -363,17 +367,17 @@ export function saveDocument(documentKey: string, content: string): void {
         }
         return;
     }
-    
+
     // Continue with normal processing...
     const baseDir = 'generated-documents';
     const categoryDir = path.join(baseDir, config.category);
     const filePath = path.join(categoryDir, config.filename);
-    
+
     // Ensure directory exists
     if (!fs.existsSync(categoryDir)) {
         fs.mkdirSync(categoryDir, { recursive: true });
     }
-    
+
     // Add document header with metadata
     const timestamp = new Date().toISOString();
     const documentHeader = `# ${config.title}
@@ -386,9 +390,9 @@ export function saveDocument(documentKey: string, content: string): void {
 ---
 
 `;
-    
+
     const fullContent = documentHeader + content;
-    
+
     try {
         fs.writeFileSync(filePath, fullContent, 'utf-8');
         console.log(`✅ Saved: ${config.title} → ${filePath}`);
@@ -400,9 +404,9 @@ export function saveDocument(documentKey: string, content: string): void {
 export function generateIndexFile(): void {
     const baseDir = 'generated-documents';
     const indexPath = path.join(baseDir, 'README.md');
-    
+
     const timestamp = new Date().toISOString();
-    
+
     let indexContent = `# Generated PMBOK Documentation
 
 **Generated by Requirements Gathering Agent v2.1.2**  
@@ -428,7 +432,7 @@ This directory contains comprehensive PMBOK (Project Management Body of Knowledg
     Object.entries(categorizedDocs).forEach(([category, docs]) => {
         const categoryTitle = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         indexContent += `\n### ${categoryTitle}\n\n`;
-        
+
         docs.forEach(doc => {
             const filePath = path.join(category, doc.filename);
             indexContent += `- [${doc.title}](${filePath}) - ${doc.description}\n`;
@@ -471,7 +475,7 @@ export function cleanupOldFiles(): void {
             try {
                 // Check if this looks like a generated document
                 const content = fs.readFileSync(file, 'utf-8');
-                if (content.includes('Generated by Requirements Gathering Agent') || 
+                if (content.includes('Generated by Requirements Gathering Agent') ||
                     content.includes('PMBOK') ||
                     Object.values(DOCUMENT_CONFIG).some(config => file === config.filename)) {
                     fs.unlinkSync(file);

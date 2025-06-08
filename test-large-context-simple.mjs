@@ -15,7 +15,7 @@ try {
     // Import the CommonJS module using createRequire
     const { createRequire } = await import('module');
     const require = createRequire(import.meta.url);
-    const llmModule = require('./dist/modules/llmProcessor.cjs');
+    const { ProcessorFactory } = require('./dist/modules/ai/processors/index.js');
     
     // Read README content
     const readmeContent = readFileSync('./README.md', 'utf-8');

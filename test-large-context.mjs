@@ -47,7 +47,7 @@ function readAllMarkdownFiles(dir, basePath = '') {
 
 // Import the LLM processor module using require for CommonJS
 (async () => {
-    const llmModule = require('./dist/modules/llmProcessor.js');
+    const { ProcessorFactory } = require('./dist/modules/ai/processors/index.js');
     console.log('🧪 Testing Enhanced Context Manager with Comprehensive Project Data...\n');
 
     try {

@@ -5,9 +5,8 @@ const path = require('path');
 async function validateImplementation() {
     console.log('=== Enhanced Context Manager Implementation Validation ===\n');
     
-    try {
-        const llmProcessorPath = path.join(__dirname, 'src/modules/llmProcessor.ts');
-        const content = fs.readFileSync(llmProcessorPath, 'utf8');
+    try {        const aiProcessorPath = path.join(__dirname, 'src/modules/ai/AIProcessor.ts');
+        const content = fs.readFileSync(aiProcessorPath, 'utf8');
         
         console.log('✅ PHASE 1 - Core Context Strategy:');
         if (content.includes('Phase 1: Include all directly related context')) {

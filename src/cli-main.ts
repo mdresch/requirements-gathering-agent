@@ -235,9 +235,11 @@ async function handleGenerationWithValidation(context: string, options: Generati
         console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
     } else {
         console.error(`❌ Generation completed with ${result.result.failureCount} failures`);
-        result.result.errors.forEach((error: { task: string; error: string }) => {
-            console.error(`   • ${error.task}: ${error.error}`);
-        });
+        if (result.result.errors && result.result.errors.length > 0) {
+            result.result.errors.forEach((error: any) => {
+                console.error(`   • ${error.task || 'Unknown'}: ${error.error || error.message || error}`);
+            });
+        }
     }
     
     return result.result.success;
