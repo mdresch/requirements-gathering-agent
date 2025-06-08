@@ -81,6 +81,8 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'user-stories': { filename: 'user-stories.md', title: 'User Stories' },
     'user-personas': { filename: 'user-personas.md', title: 'User Personas' },
     'key-roles-and-needs': { filename: 'key-roles-and-needs.md', title: 'Key Roles and Needs' },
+    'project-statement-of-work': { filename: 'project-statement-of-work.md', title: 'Project Statement of Work' },
+    'business-case': { filename: 'business-case.md', title: 'Business Case' },
     
     // Strategic Documents
     'mission-vision-core-values': { filename: 'mission-vision-core-values.md', title: 'Mission, Vision, and Core Values' },
@@ -90,7 +92,52 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'project-charter': { filename: 'project-charter.md', title: 'Project Charter' },
     'project-management-plan': { filename: 'project-management-plan.md', title: 'Project Management Plan' },
     
-    // ... and so on for all document types
+    // Management Plans and Processes
+    'direct-and-manage-project-work': { filename: 'direct-and-manage-project-work.md', title: 'Direct and Manage Project Work Process' },
+    'perform-integrated-change-control': { filename: 'perform-integrated-change-control.md', title: 'Perform Integrated Change Control Process' },
+    'close-project-or-phase': { filename: 'close-project-or-phase.md', title: 'Close Project or Phase Process' },
+    'plan-scope-management': { filename: 'plan-scope-management.md', title: 'Plan Scope Management' },
+    'requirements-management-plan': { filename: 'requirements-management-plan.md', title: 'Requirements Management Plan' },
+    'collect-requirements': { filename: 'collect-requirements.md', title: 'Collect Requirements Process' },
+    'requirements-documentation': { filename: 'requirements-documentation.md', title: 'Requirements Documentation' },
+    'requirements-traceability-matrix': { filename: 'requirements-traceability-matrix.md', title: 'Requirements Traceability Matrix' },
+    'define-scope': { filename: 'define-scope.md', title: 'Define Scope Process' },
+    'project-scope-statement': { filename: 'project-scope-statement.md', title: 'Project Scope Statement' },
+    'create-wbs': { filename: 'create-wbs.md', title: 'Create WBS Process' },
+    'scope-baseline': { filename: 'scope-baseline.md', title: 'Scope Baseline' },
+    'validate-scope': { filename: 'validate-scope.md', title: 'Validate Scope Process' },
+    'control-scope': { filename: 'control-scope.md', title: 'Control Scope Process' },
+    'work-performance-information-scope': { filename: 'work-performance-information-scope.md', title: 'Work Performance Information (Scope)' },
+    'scope-management-plan': { filename: 'scope-management-plan.md', title: 'Scope Management Plan' },
+    'risk-management-plan': { filename: 'risk-management-plan.md', title: 'Risk Management Plan' },
+    'cost-management-plan': { filename: 'cost-management-plan.md', title: 'Cost Management Plan' },
+    'quality-management-plan': { filename: 'quality-management-plan.md', title: 'Quality Management Plan' },
+    'resource-management-plan': { filename: 'resource-management-plan.md', title: 'Resource Management Plan' },
+    'communication-management-plan': { filename: 'communication-management-plan.md', title: 'Communication Management Plan' },
+    'procurement-management-plan': { filename: 'procurement-management-plan.md', title: 'Procurement Management Plan' },
+    
+    // Stakeholder Management
+    'stakeholder-engagement-plan': { filename: 'stakeholder-engagement-plan.md', title: 'Stakeholder Engagement Plan' },
+    'stakeholder-register': { filename: 'stakeholder-register.md', title: 'Stakeholder Register' },
+    'stakeholder-analysis': { filename: 'stakeholder-analysis.md', title: 'Stakeholder Analysis' },
+    
+    // Planning Artifacts
+    'work-breakdown-structure': { filename: 'work-breakdown-structure.md', title: 'Work Breakdown Structure' },
+    'wbs-dictionary': { filename: 'wbs-dictionary.md', title: 'WBS Dictionary' },
+    'activity-list': { filename: 'activity-list.md', title: 'Activity List' },
+    'activity-duration-estimates': { filename: 'activity-duration-estimates.md', title: 'Activity Duration Estimates' },
+    'activity-resource-estimates': { filename: 'activity-resource-estimates.md', title: 'Activity Resource Estimates' },
+    'schedule-network-diagram': { filename: 'schedule-network-diagram.md', title: 'Schedule Network Diagram' },
+    'milestone-list': { filename: 'milestone-list.md', title: 'Milestone List' },
+    'schedule-development-input': { filename: 'schedule-development-input.md', title: 'Schedule Development Input' },
+    
+    // Technical Analysis
+    'data-model-suggestions': { filename: 'data-model-suggestions.md', title: 'Data Model Suggestions' },
+    'tech-stack-analysis': { filename: 'tech-stack-analysis.md', title: 'Tech Stack Analysis' },
+    'risk-analysis': { filename: 'risk-analysis.md', title: 'Risk Analysis' },
+    'acceptance-criteria': { filename: 'acceptance-criteria.md', title: 'Acceptance Criteria' },
+    'compliance-considerations': { filename: 'compliance-considerations.md', title: 'Compliance Considerations' },
+    'ui-ux-considerations': { filename: 'ui-ux-considerations.md', title: 'UI/UX Considerations' }
 };
 
 /**

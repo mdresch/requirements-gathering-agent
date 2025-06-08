@@ -31,4 +31,20 @@ export async function getAiKeyRolesAndNeeds(context) {
     const { getAiKeyRolesAndNeeds: newFunc } = await import('./llmProcessor-migration.js');
     return newFunc(context);
 }
+/**
+ * Create messages array (legacy compatibility)
+ */
+export function createMessages(systemPrompt, userPrompt) {
+    return [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+    ];
+}
+/**
+ * Get AI user stories (legacy compatibility)
+ */
+export async function getAiUserStories(context) {
+    const { getAiUserStories: newFunc } = await import('./llmProcessor-migration.js');
+    return newFunc(context);
+}
 //# sourceMappingURL=llmProcessor.js.map

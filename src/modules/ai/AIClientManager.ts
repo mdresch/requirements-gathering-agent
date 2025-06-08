@@ -55,6 +55,22 @@ class AIClientManager {
         }
     }
 
+    async initializeSpecificProvider(provider: AIProvider): Promise<void> {
+        if (this.clients.has(provider)) {
+            return; // Already initialized
+        }
+
+        console.log(`🔧 Initializing specific provider: ${provider}`);
+
+        try {
+            await this.initializeProvider(provider);
+            console.log(`✅ ${provider} initialized successfully`);
+        } catch (error: any) {
+            console.error(`❌ Failed to initialize ${provider}:`, error.message);
+            throw error;
+        }
+    }
+
     private async initializeProvider(provider: AIProvider): Promise<void> {
         const initMethods: Record<AIProvider, () => Promise<void>> = {
             'google-ai': () => this.initializeGoogleAI(),
@@ -119,29 +135,34 @@ class AIClientManager {
         const client = ModelClient(endpoint!, new AzureKeyCredential(apiKey!));
         this.setClient('azure-ai-studio', client);
         await this.validateConnection('azure-ai-studio');
-    }
-
-    private async initializeGitHubAI(): Promise<void> {
+    }    private async initializeGitHubAI(): Promise<void> {
         const token = this.config.get<string>('github_token');
         if (!token) {
             throw new Error('GITHUB_TOKEN is required for GitHub AI');
         }
         
-        const endpoint = "https://models.github.ai/inference";
+        // Check for GitHub-specific endpoint, fallback to general Azure AI endpoint, then default
+        const endpoint = this.config.get<string>('github_ai_endpoint') || 
+                        this.config.get<string>('azure_ai_endpoint') ||
+                        "https://models.inference.ai.azure.com";
+        
         const client = ModelClient(endpoint, new AzureKeyCredential(token));
         this.setClient('github-ai', client);
-    }
-
-    private async initializeOllama(): Promise<void> {
+    }    private async initializeOllama(): Promise<void> {
         try {
-            const response = await fetch('http://127.0.0.1:11434/api/tags');
+            // Check for Ollama-specific endpoint, fallback to general Azure AI endpoint, then default
+            const endpoint = this.config.get<string>('ollama_endpoint') || 
+                           this.config.get<string>('azure_ai_endpoint') ||
+                           'http://127.0.0.1:11434';
+            
+            const response = await fetch(`${endpoint}/api/tags`);
             if (!response.ok) {
                 throw new Error('Failed to connect to Ollama');
             }
             const models = await response.json();
             
             this.setClient('ollama', {
-                endpoint: 'http://127.0.0.1:11434',
+                endpoint,
                 available: true,
                 models
             });

@@ -4,6 +4,7 @@
  */
 
 import type { ProjectAnalysis } from './projectAnalyzer.js';
+import { ChatMessage } from './ai/types.js';
 
 /**
  * Populates enhanced context from project analysis
@@ -35,5 +36,23 @@ export async function getAiSummaryAndGoals(context: string): Promise<string | nu
  */
 export async function getAiKeyRolesAndNeeds(context: string): Promise<string | null> {
     const { getAiKeyRolesAndNeeds: newFunc } = await import('./llmProcessor-migration.js');
+    return newFunc(context);
+}
+
+/**
+ * Create messages array (legacy compatibility)
+ */
+export function createMessages(systemPrompt: string, userPrompt: string): ChatMessage[] {
+    return [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+    ];
+}
+
+/**
+ * Get AI user stories (legacy compatibility)
+ */
+export async function getAiUserStories(context: string): Promise<string | null> {
+    const { getAiUserStories: newFunc } = await import('./llmProcessor-migration.js');
     return newFunc(context);
 }

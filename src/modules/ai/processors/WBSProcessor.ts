@@ -20,10 +20,10 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 
 // Lazy initialization function for contextManager
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -38,7 +38,7 @@ export class WBSProcessor extends BaseAIProcessor {
      */
     async getWorkBreakdownStructure(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('work-breakdown-structure', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('work-breakdown-structure', [
                 'project-charter',
                 'scope-management-plan',
                 'user-stories',
@@ -77,7 +77,7 @@ Format as a well-structured markdown document with proper indentation for each l
      */
     async getWBSDictionary(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('wbs-dictionary', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('wbs-dictionary', [
                 'work-breakdown-structure',
                 'scope-management-plan',
                 'project-charter'
@@ -118,7 +118,7 @@ Format as a well-structured markdown document, organized by WBS code, with prope
      */
     async getScopeBaseline(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('scope-baseline', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('scope-baseline', [
                 'project-scope-statement',
                 'work-breakdown-structure',
                 'wbs-dictionary',
@@ -148,3 +148,4 @@ Format as a well-structured markdown document with proper headers, sections, and
         }, 'Scope Baseline Generation', 'scope-baseline');
     }
 }
+

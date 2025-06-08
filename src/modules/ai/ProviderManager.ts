@@ -52,11 +52,10 @@ export class ProviderManager {
   constructor() {
     this.initializeProviders();
   }
-
   private initializeProviders(): void {
     // Google AI Studio
     const googleAI: ProviderConfig = {
-      name: 'Google AI Studio',
+      name: 'google-ai',
       check: async () => {
         if (!process.env.GOOGLE_AI_API_KEY) return false;
         try {
@@ -80,7 +79,7 @@ export class ProviderManager {
 
     // Azure OpenAI with Entra ID
     const azureOpenAI: ProviderConfig = {
-      name: 'Azure OpenAI (Entra ID)',
+      name: 'azure-openai',
       check: async () => {
         if (!(process.env.AZURE_OPENAI_ENDPOINT && process.env.USE_ENTRA_ID === 'true')) return false;
         try {
@@ -100,12 +99,39 @@ export class ProviderManager {
       endpoint: process.env.AZURE_OPENAI_ENDPOINT,
       tokenLimit: process.env.DEPLOYMENT_NAME?.includes('32k') ? 32000 : 8000,
       costPerToken: 0.00002
+    };    this.addProvider(azureOpenAI);
+
+    // Azure AI Studio (with API key)
+    const azureAIStudio: ProviderConfig = {
+      name: 'azure-ai-studio',
+      check: async () => {
+        if (!(process.env.AZURE_AI_ENDPOINT?.includes('openai.azure.com') && process.env.AZURE_AI_API_KEY)) {
+          return false;
+        }
+        try {
+          const response = await fetch(`${process.env.AZURE_AI_ENDPOINT}/openai/deployments`, {
+            headers: { 
+              'api-key': process.env.AZURE_AI_API_KEY,
+              'Content-Type': 'application/json'
+            }
+          });
+          return response.ok;
+        } catch (error) {
+          console.warn('Azure AI Studio check failed:', error instanceof Error ? error.message : String(error));
+          return false;
+        }
+      },
+      priority: 2,
+      description: 'Azure OpenAI with API key authentication',
+      endpoint: process.env.AZURE_AI_ENDPOINT,
+      tokenLimit: process.env.REQUIREMENTS_AGENT_MODEL?.includes('32k') ? 32000 : 8000,
+      costPerToken: 0.00002
     };
-    this.addProvider(azureOpenAI);
+    this.addProvider(azureAIStudio);
 
     // GitHub AI
     const githubAI: ProviderConfig = {
-      name: 'GitHub AI',
+      name: 'github-ai',
       check: async () => {
         if (!process.env.GITHUB_TOKEN || 
             !process.env.AZURE_AI_ENDPOINT?.includes('models.inference.ai.azure.com')) {
@@ -131,7 +157,7 @@ export class ProviderManager {
 
     // Ollama (Local)
     const ollama: ProviderConfig = {
-      name: 'Ollama (Local)',
+      name: 'ollama',
       check: async () => {
         const endpoint = process.env.AZURE_AI_ENDPOINT || 'http://localhost:11434';
         if (!endpoint.includes('localhost:11434') && !endpoint.includes('127.0.0.1:11434')) {
@@ -155,23 +181,26 @@ export class ProviderManager {
     // Initialize default quotas
     this.setDefaultQuotas();
   }
-
   private setDefaultQuotas(): void {
     const quotaConfigs: [string, QuotaConfig][] = [
-      ['Google AI Studio', {
+      ['google-ai', {
         dailyTokenLimit: 100000000,  // 100M tokens
         requestsPerMinute: 60
-      }],
-      ['Azure OpenAI (Entra ID)', {
+      }],      ['azure-openai', {
         dailyTokenLimit: 300000000,  // 300M tokens
         costLimit: 500,  // $500 per day
         requestsPerMinute: 150
       }],
-      ['GitHub AI', {
+      ['azure-ai-studio', {
+        dailyTokenLimit: 300000000,  // 300M tokens
+        costLimit: 500,  // $500 per day
+        requestsPerMinute: 150
+      }],
+      ['github-ai', {
         dailyTokenLimit: 50000000,  // 50M tokens
         requestsPerMinute: 30
       }],
-      ['Ollama (Local)', {
+      ['ollama', {
         dailyTokenLimit: Infinity,
         requestsPerMinute: 20
       }]

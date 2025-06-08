@@ -21,7 +21,7 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 const getContextManager = async () => {
     if (!_contextManager) {
-        const { ContextManager } = await import("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;

@@ -26,10 +26,10 @@ const getAIProcessor = () => {
 
 // Lazy initialization function for contextManager
 let _contextManager: any = null;
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -44,7 +44,7 @@ export class ActivityProcessor extends BaseAIProcessor {
      */
     async getActivityList(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-list', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-list', [
                 'work-breakdown-structure',
                 'scope-management-plan',
                 'schedule-management-plan'
@@ -82,7 +82,7 @@ Format as a well-structured markdown table with columns for Activity ID, Activit
      */
     async getActivityAttributes(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-attributes', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-attributes', [
                 'activity-list',
                 'work-breakdown-structure',
                 'schedule-management-plan'
@@ -127,7 +127,7 @@ Format as a well-structured markdown document with sections for each activity, i
      */
     async getActivitySequencing(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-sequencing', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-sequencing', [
                 'activity-list',
                 'activity-attributes',
                 'schedule-management-plan'
@@ -166,7 +166,7 @@ Format as a well-structured markdown document with tables showing the dependency
      */
     async getResourceRequirements(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('resource-requirements', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('resource-requirements', [
                 'activity-list',
                 'activity-attributes',
                 'resource-management-plan'
@@ -208,7 +208,7 @@ Format as a well-structured markdown document with tables organizing resources b
      */
     async getScheduleNetworkDiagram(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('schedule-network-diagram', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('schedule-network-diagram', [
                 'activity-list',
                 'activity-sequencing',
                 'activity-attributes'
@@ -248,7 +248,7 @@ Format as a well-structured markdown document with clear descriptions of the net
      */
     async getMilestoneList(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('milestone-list', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('milestone-list', [
                 'project-scope-statement',
                 'work-breakdown-structure',
                 'schedule-management-plan'
@@ -288,7 +288,7 @@ Format as a well-structured markdown document with tables organizing milestones 
      */
     async getDevelopScheduleInput(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('develop-schedule-input', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('develop-schedule-input', [
                 'activity-list',
                 'activity-attributes',
                 'activity-sequencing',
@@ -324,3 +324,4 @@ Format as a well-structured markdown document with clear sections for each input
         }, 'Develop Schedule Input Generation', 'develop-schedule-input');
     }
 }
+

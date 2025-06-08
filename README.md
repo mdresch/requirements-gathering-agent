@@ -4,6 +4,10 @@
 [![npm downloads](https://img.shields.io/npm/dm/requirements-gathering-agent.svg)](https://www.npmjs.com/package/requirements-gathering-agent)
 [![license](https://img.shields.io/npm/l/requirements-gathering-agent.svg)](https://github.com/your-username/requirements-gathering-agent/blob/main/LICENSE)
 
+## 🎉 Milestone Achievement: 175 Weekly Downloads! 🎉
+
+**We're celebrating a major milestone!** The Requirements Gathering Agent has reached **175 weekly downloads** on NPM, proving strong market adoption of our PMBOK-aligned AI-powered documentation approach. Thank you to our growing community of project managers, business analysts, and development teams who are using this tool to streamline their project documentation workflows!
+
 🚀 **AI-powered PMBOK documentation generator using Azure OpenAI**
 
 Transform your project's README into comprehensive project management documentation following PMBOK (Project Management Body of Knowledge) standards.

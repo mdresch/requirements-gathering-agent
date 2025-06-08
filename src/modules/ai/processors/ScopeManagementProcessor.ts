@@ -19,18 +19,18 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 
 // Lazy initialization function for contextManager
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
 }
 
-export class ScopeManagementProcessor extends BaseAIProcessor {
-    protected async generateScopeOutput(documentType: string, context: string, additionalContext: string[] = []): Promise<string | null> {
-        const enhancedContext = getContextManager().buildContextForDocument(documentType, additionalContext);
+export class ScopeManagementProcessor extends BaseAIProcessor {    protected async generateScopeOutput(documentType: string, context: string, additionalContext: string[] = []): Promise<string | null> {
+        const contextManager = await getContextManager();
+        const enhancedContext = contextManager.buildContextForDocument(documentType, additionalContext);
         const fullContext = enhancedContext || context;
 
         return await this.handleAICall(async () => {
