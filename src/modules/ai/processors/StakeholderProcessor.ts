@@ -11,10 +11,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor, getAIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 const aiProcessor = AIProcessor.getInstance();
 
@@ -37,7 +37,8 @@ export class StakeholderProcessor extends BaseAIProcessor {
      */
     async getStakeholderRegister(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {            // Use enhanced context management for better results
-            const enhancedContext = getContextManager().buildContextForDocument('stakeholder-register', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('stakeholder-register', [
                 'project-charter',
                 'user-stories',
                 'user-personas',
@@ -65,7 +66,7 @@ Create a Stakeholder Register that includes:
 Follow PMBOK 7th Edition standards and best practices. Format as a well-structured markdown document with proper headers, tables, and organization.`
             );
             const response = await aiProcessor.makeAICall(messages, 1800);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Stakeholder Register Generation', 'stakeholder-register');
     }    /**
      * Generates a detailed stakeholder analysis document with power/interest grid
@@ -124,13 +125,14 @@ Please create a detailed stakeholder analysis that includes:
 Follow PMBOK 7th Edition standards and best practices. Be specific and actionable.`
             );
             const response = await aiProcessor.makeAICall(messages, 1800);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Stakeholder Analysis Generation', 'stakeholder-analysis');
     }
 
     async getStakeholderEngagementPlan(context: string): Promise<string | null> {        return await this.handleAICall(async () => {
             // Use enhanced context management for stakeholder engagement plan
-            const enhancedContext = getContextManager().buildContextForDocument('stakeholder-engagement-plan', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('stakeholder-engagement-plan', [
                 'stakeholder-register',
                 'stakeholder-analysis',
                 'project-charter',
@@ -158,7 +160,7 @@ Create a Stakeholder Engagement Plan that includes:
 Follow PMBOK 7th Edition standards and best practices. Format as a well-structured markdown document with proper headers, tables, and organization.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Stakeholder Engagement Plan Generation', 'stakeholder-engagement-plan');
     }
 }

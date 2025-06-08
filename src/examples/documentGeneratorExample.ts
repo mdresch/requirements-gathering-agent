@@ -5,12 +5,12 @@
  */
 
 // New modular imports
-import { DocumentGenerator } from '../modules/documentGenerator/index';
-import { PMBOKValidator } from '../modules/pmbokValidation/index';
-import { generateAllWithPMBOKValidation } from '../modules/documentGeneratorWithValidation';
+import { DocumentGenerator } from '../modules/documentGenerator/index.js';
+import { PMBOKValidator } from '../modules/pmbokValidation/index.js';
+import { generateAllWithPMBOKValidation } from '../modules/documentGeneratorWithValidation.js';
 
 // Legacy compatibility imports
-import * as legacyDocGen from '../modules/documentGenerator';
+import * as legacyDocGen from '../modules/documentGenerator.js';
 
 async function demonstrateDocumentGeneration() {
     const projectContext = "This is a sample project context...";

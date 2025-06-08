@@ -4,8 +4,8 @@
  * for automatically discovering and injecting high-relevance markdown files
  */
 
-import { ContextManager } from '../modules/contextManager';
-import { getReadmeContent } from '../modules/projectAnalyzer';
+import { ContextManager } from '../modules/contextManager.js';
+import { getReadmeContent } from '../modules/projectAnalyzer.js';
 import * as path from 'path';
 
 /**

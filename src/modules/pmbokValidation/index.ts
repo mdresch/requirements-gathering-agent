@@ -2,19 +2,19 @@
  * PMBOK Validation Module
  * Exports functionality for validating PMBOK compliance
  */
-import { PMBOKValidator } from './PMBOKValidator';
+import { PMBOKValidator } from './PMBOKValidator.js';
 import { 
     PMBOK_DOCUMENT_REQUIREMENTS,
     PMBOK_TERMINOLOGY,
     QUALITY_THRESHOLDS,
     QUALITY_SCORING 
-} from './validationRules';
+} from './validationRules.js';
 import type { 
     PMBOKComplianceResult, 
     DocumentQualityAssessment, 
     PMBOKDocumentRequirements, 
-    ComprehensiveValidationResult 
-} from './types';
+    ComprehensiveValidationResult
+} from './types.js';
 
 // Integration with document generator
 export async function validateWithPMBOK(

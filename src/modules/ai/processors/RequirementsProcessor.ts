@@ -11,10 +11,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor, getAIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 const aiProcessor = AIProcessor.getInstance();
 
@@ -65,7 +65,7 @@ Group stories by user role or feature area. Ensure stories are:
 Include stories covering core functionality, edge cases, and non-functional requirements.`
             );
             const response = await aiProcessor.makeAICall(messages, 2000);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'User Stories Generation', 'user-stories');
     }    async getUserPersonas(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
@@ -97,14 +97,15 @@ Ensure personas:
 Format as a well-structured markdown document with proper headers and organization.`
             );
             const response = await aiProcessor.makeAICall(messages, 1800);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'User Personas Generation', 'user-personas');
     }
     
     async getAcceptanceCriteria(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             // Use enhanced context with user stories
-            const enhancedContext = getContextManager().buildContextForDocument('acceptance-criteria', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('acceptance-criteria', [
                 'user-stories', 
                 'project-charter',
                 'requirements-documentation'
@@ -140,7 +141,7 @@ Group criteria by feature, user story, or requirement. Ensure criteria are:
 Consider both functional and non-functional requirements in your criteria.`
             );
             const response = await aiProcessor.makeAICall(messages, 1800);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Acceptance Criteria Generation', 'acceptance-criteria');
     }    async getKeyRolesAndNeeds(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
@@ -179,7 +180,7 @@ For each role, clearly articulate:
 Format as a well-structured markdown document with clear headers and organization.`
             );
             const response = await aiProcessor.makeAICall(messages, 2000);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Key Roles and Needs Analysis', 'key-roles-and-needs');
     }    async getSummaryAndGoals(readmeContent: string): Promise<string | null> {
         return await this.handleAICall(async () => {
@@ -214,14 +215,15 @@ Your analysis should include:
 Format as a well-structured markdown document with clear sections.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Project Summary and Goals Generation', 'summary-and-goals');
     }
 
     async getRequirementsDocumentation(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             // Use enhanced context management for requirements documentation
-            const enhancedContext = getContextManager().buildContextForDocument('requirements-documentation', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('requirements-documentation', [
                 'project-charter', 
                 'user-stories', 
                 'stakeholder-register', 
@@ -251,14 +253,15 @@ Your documentation should include (as sections):
 Ensure the output is actionable, clear, and tailored to the Requirements Gathering Agent project. Use PMBOK terminology and structure.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Requirements Documentation Generation', 'requirements-documentation');
     }
 
     async getRequirementsTraceabilityMatrix(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             // Use enhanced context management for RTM
-            const enhancedContext = getContextManager().buildContextForDocument('requirements-traceability-matrix', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('requirements-traceability-matrix', [
                 'requirements-documentation',
                 'user-stories',
                 'acceptance-criteria',
@@ -292,7 +295,7 @@ Ensure traceability from source to verification is clear and comprehensive.
 Follow PMBOK standards and best practices for requirements traceability.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Requirements Traceability Matrix Generation', 'requirements-traceability-matrix');
     }
 }

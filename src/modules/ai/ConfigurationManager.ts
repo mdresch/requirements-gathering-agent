@@ -3,7 +3,7 @@
  */
 
 import dotenv from "dotenv";
-import { AIProvider } from "./types";
+import { AIProvider } from "./types.js";
 
 // Load environment variables once
 dotenv.config();

@@ -10,10 +10,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor, getAIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 // Use lazy initialization to resolve circular dependency
 const aiProcessor = AIProcessor.getInstance();
@@ -65,7 +65,7 @@ Your Work Breakdown Structure should:
 Format as a well-structured markdown document with proper indentation for each level. Include a brief introduction explaining the purpose of the WBS and how it will be used.`
             );
             const response = await aiProcessor.makeAICall(messages, 1800);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Work Breakdown Structure Generation', 'work-breakdown-structure');
     }
 
@@ -106,7 +106,7 @@ Your WBS Dictionary should include these elements for each work package:
 Format as a well-structured markdown document, organized by WBS code, with proper headers, tables for each work package, and clear descriptions.`
             );
             const response = await aiProcessor.makeAICall(messages, 2000);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'WBS Dictionary Generation', 'wbs-dictionary');
     }
 
@@ -144,7 +144,7 @@ Your Scope Baseline document should:
 Format as a well-structured markdown document with proper headers, sections, and clear explanations. This document should serve as the foundation for scope control throughout the project.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Scope Baseline Generation', 'scope-baseline');
     }
 }

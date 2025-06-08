@@ -10,10 +10,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor, getAIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 const aiProcessor = AIProcessor.getInstance();
 
@@ -60,7 +60,7 @@ Include the following sections:
 - Key differentiators`
                 );
                 const response = await aiProcessor.makeAICall(messages, 1500);
-                return aiProcessor.extractContent(response);
+                return getAIProcessor().extractContent(response);
             }, 
             "Project Summary and Goals Generation", 
             "project-summary"
@@ -96,6 +96,60 @@ Include the following sections:
                 return ""; // Implement actual AI call
             },
             "Risk Analysis Generation"
+        );
+    }
+
+    /**
+     * Gets core values for the project
+     */
+    async getCoreValues(context: string): Promise<string | null> {
+        return this.handleAICall(
+            async () => {
+                const messages = this.createStandardMessages(
+                    "Generate core values for the project following organizational development best practices.",
+                    `Based on the following context, generate comprehensive core values: ${context}`
+                );
+                const response = await getAIProcessor().makeAICall(messages, 1200);
+                return getAIProcessor().extractContent(response);
+            },
+            "Core Values Generation",
+            "core-values"
+        );
+    }
+
+    /**
+     * Gets project purpose statement
+     */
+    async getProjectPurpose(context: string): Promise<string | null> {
+        return this.handleAICall(
+            async () => {
+                const messages = this.createStandardMessages(
+                    "Generate a project purpose statement following PMBOK standards.",
+                    `Based on the following context, generate a comprehensive project purpose: ${context}`
+                );
+                const response = await getAIProcessor().makeAICall(messages, 1200);
+                return getAIProcessor().extractContent(response);
+            },
+            "Project Purpose Generation",
+            "project-purpose"
+        );
+    }
+
+    /**
+     * Gets mission, vision and core values
+     */
+    async getMissionVisionAndCoreValues(context: string): Promise<string | null> {
+        return this.handleAICall(
+            async () => {
+                const messages = this.createStandardMessages(
+                    "Generate mission, vision, and core values following organizational development best practices.",
+                    `Based on the following context, generate comprehensive mission, vision, and core values: ${context}`
+                );
+                const response = await getAIProcessor().makeAICall(messages, 1500);
+                return getAIProcessor().extractContent(response);
+            },
+            "Mission Vision Core Values Generation",
+            "mission-vision-core-values"
         );
     }
 

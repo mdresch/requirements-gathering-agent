@@ -24,7 +24,6 @@
     "test:ollama": "jest --testPathPattern=ollama",
     "test:failover": "jest --testPathPattern=failover",
     "test:unit": "jest --testPathPattern=\"test/(?!providers).*\\.test\\.ts$\"",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [

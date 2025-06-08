@@ -9,17 +9,17 @@
  * @since 3.1.0
  */
 
-import { ProjectManagementProcessor } from "./ProjectManagementProcessor";
-import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor";
-import { ScopeManagementProcessor } from "./ScopeManagementProcessor";
-import { StakeholderProcessor } from "./StakeholderProcessor";
-import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor";
-import { RequirementsProcessor } from "./RequirementsProcessor";
-import { PlanningProcessor } from "./PlanningProcessor";
-import { WBSProcessor } from "./WBSProcessor";
-import { ActivityProcessor } from "./ActivityProcessor";
-import { BaseAIProcessor } from "./BaseAIProcessor";
-import { AIProvider } from "../types";
+import { ProjectManagementProcessor } from "./ProjectManagementProcessor.js";
+import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor.js";
+import { ScopeManagementProcessor } from "./ScopeManagementProcessor.js";
+import { StakeholderProcessor } from "./StakeholderProcessor.js";
+import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor.js";
+import { RequirementsProcessor } from "./RequirementsProcessor.js";
+import { PlanningProcessor } from "./PlanningProcessor.js";
+import { WBSProcessor } from "./WBSProcessor.js";
+import { ActivityProcessor } from "./ActivityProcessor.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
+import { AIProvider } from "../types.js";
 
 // Create processor instances
 const projectManagementProcessor = new ProjectManagementProcessor();

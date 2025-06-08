@@ -7,13 +7,13 @@ import {
     PMBOKComplianceResult, 
     DocumentQualityAssessment, 
     ComprehensiveValidationResult 
-} from './types';
+} from './types.js';
 import { 
     PMBOK_DOCUMENT_REQUIREMENTS, 
     PMBOK_TERMINOLOGY, 
     QUALITY_THRESHOLDS, 
     QUALITY_SCORING 
-} from './validationRules';
+} from './validationRules.js';
 
 /**
  * Class responsible for validating document compliance with PMBOK 7.0 standards

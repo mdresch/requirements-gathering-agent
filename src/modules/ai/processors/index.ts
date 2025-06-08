@@ -2,24 +2,24 @@
  * AI Function Processors - Separated by domain for better organization
  */
 
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
+import { AIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
 
 // Import domain-specific processors
-import { StakeholderProcessor } from "./StakeholderProcessor";
-import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor";
-import { RequirementsProcessor } from "./RequirementsProcessor";
-import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor";
-import { PlanningProcessor } from "./PlanningProcessor";
-import { WBSProcessor } from "./WBSProcessor";
-import { ActivityProcessor } from "./ActivityProcessor";
-import { ScopeManagementProcessor } from "./ScopeManagementProcessor";
-import { ProjectManagementProcessor } from "./ProjectManagementProcessor";
+import { StakeholderProcessor } from "./StakeholderProcessor.js";
+import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor.js";
+import { RequirementsProcessor } from "./RequirementsProcessor.js";
+import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor.js";
+import { PlanningProcessor } from "./PlanningProcessor.js";
+import { WBSProcessor } from "./WBSProcessor.js";
+import { ActivityProcessor } from "./ActivityProcessor.js";
+import { ScopeManagementProcessor } from "./ScopeManagementProcessor.js";
+import { ProjectManagementProcessor } from "./ProjectManagementProcessor.js";
 
-export { BaseAIProcessor } from "./BaseAIProcessor";
+export { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 // Export the ProcessorFactory
-export { ProcessorFactory } from "./ProcessorFactory";
+export { ProcessorFactory } from "./ProcessorFactory.js";
 
 const aiProcessor = AIProcessor.getInstance();
 // Use lazy initialization to resolve circular dependency

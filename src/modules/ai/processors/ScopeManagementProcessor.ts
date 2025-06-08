@@ -9,10 +9,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor, getAIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 // Use lazy initialization to resolve circular dependency
 const aiProcessor = AIProcessor.getInstance();
@@ -44,7 +44,7 @@ ${fullContext}
 Follow PMBOK standards and ensure the document is clear, comprehensive, and tailored to the project's needs.`
             );
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, `${documentType} Generation`, documentType);
     }
 

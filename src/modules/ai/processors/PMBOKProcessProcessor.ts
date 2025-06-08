@@ -11,10 +11,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 // Lazy initialization function for AIProcessor 
 let _aiProcessor: any = null;
@@ -74,7 +74,7 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             );
             const aiProcessor = getAIProcessor();
             const response = await aiProcessor.makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, `${pmbokSection} Generation`, pmbokSection);
     }
 
@@ -98,6 +98,28 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             'project-charter',
             context,
             ['user-stories', 'stakeholder-register']
+        );
+    }
+
+    /**
+     * Generates a Validate Scope Process document following PMBOK standards
+     */
+    async getValidateScopeProcess(context: string): Promise<string | null> {
+        return this.generatePMBOKOutput(
+            'validate-scope-process',
+            context,
+            ['project-scope-statement', 'work-breakdown-structure', 'requirements-documentation']
+        );
+    }
+
+    /**
+     * Generates a Control Scope Process document following PMBOK standards
+     */
+    async getControlScopeProcess(context: string): Promise<string | null> {
+        return this.generatePMBOKOutput(
+            'control-scope-process',
+            context,
+            ['scope-management-plan', 'scope-baseline', 'project-management-plan']
         );
     }
 }

@@ -5,7 +5,7 @@
  * Please use the new modular structure instead:
  * - import { DocumentGenerator, ... } from './documentGenerator';
  * - import { PMBOKValidator, ... } from './pmbokValidation';
- * - import { generateAllWithPMBOKValidation } from './documentGeneratorWithValidation';
+ * - import { generateAllWithPMBOKValidation } from './documentGeneratorWithValidation.js';
  * 
  * @deprecated Use the new modular structure instead
  * @version 2.2.0
@@ -21,19 +21,19 @@ import {
     DOCUMENT_CONFIG,
     generateDocumentsWithRetry,
     generateAllDocuments as generateAll
-} from './documentGenerator/index';
+} from './documentGenerator/index.js';
 
 import {
     PMBOKValidator,
     PMBOKComplianceResult,
     ComprehensiveValidationResult,
     PMBOK_DOCUMENT_REQUIREMENTS
-} from './pmbokValidation/index';
+} from './pmbokValidation/index.js';
 
 import {
     generateAllWithPMBOKValidation,
     integratedVersion
-} from './documentGeneratorWithValidation';
+} from './documentGeneratorWithValidation.js';
 
 /**
  * Export all functionality from new modules for backward compatibility

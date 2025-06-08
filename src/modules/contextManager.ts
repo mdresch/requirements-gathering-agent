@@ -7,7 +7,6 @@ import { AIProcessor } from './ai/AIProcessor.js';
 import { findRelevantMarkdownFiles } from './projectAnalyzer.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { getModel as llmGetModel } from './llmProcessor.js';
 
 // Define the ProjectMarkdownFile type locally to avoid circular dependencies
 interface ProjectMarkdownFile {
@@ -74,7 +73,7 @@ export class ContextManager {
 
     private autoAdjustTokenLimits() {
         try {
-            const currentModel = typeof llmGetModel === 'function' ? llmGetModel().toLowerCase() : '';
+            const currentModel = ''; // Legacy function no longer available
             // Find the best match for the current model
             let modelLimit = 4000; // Default fallback
             for (const [modelName, limit] of this.modelTokenLimits) {
@@ -567,7 +566,7 @@ ${file.content}`;
     private autoAdjustConfig() {
         // Use current model name to adjust config
         if (!this.autoConfigDone) {
-            const currentModel = typeof llmGetModel === 'function' ? llmGetModel().toLowerCase() : '';
+            const currentModel = ''; // Legacy function no longer available
 
             // Set base token limits
             let tokenLimit = 4000;

@@ -2,12 +2,12 @@
  * Enhanced AI Processor with improved error handling and response processing
  */
 
-import { ChatMessage, AIProvider, AIResponse } from "./types";
-import { AIClientManager } from "./AIClientManager";
-import { MetricsManager } from "./MetricsManager";
-import { RetryManager } from "./RetryManager";
-import { ConfigurationManager } from "./ConfigurationManager";
-import { ProviderManager } from "./ProviderManager";
+import { ChatMessage, AIProvider, AIResponse } from "./types.js";
+import { AIClientManager } from "./AIClientManager.js";
+import { MetricsManager } from "./MetricsManager.js";
+import { RetryManager } from "./RetryManager.js";
+import { ConfigurationManager } from "./ConfigurationManager.js";
+import { ProviderManager } from "./ProviderManager.js";
 
 class AIProcessor {
     private static instance: AIProcessor;
@@ -364,6 +364,11 @@ class AIProcessor {
         this.metricsManager.resetMetrics();
         this.retryManager.resetCircuitBreaker();
     }
+}
+
+// Export singleton getter function
+export function getAIProcessor(): AIProcessor {
+    return AIProcessor.getInstance();
 }
 
 // Export for module usage

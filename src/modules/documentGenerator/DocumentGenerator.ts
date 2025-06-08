@@ -18,7 +18,7 @@ import {
     GenerationTask,
     ValidationResult
 } from './types';
-import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks';
+import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
 
 /**
  * Class responsible for generating project documentation
@@ -516,7 +516,7 @@ ${content}`;
      * @returns Generation and compliance result
      */
     public static async generateAllWithPMBOKValidation(context: string): Promise<{ 
-        result: { success: boolean; message: string };
+        result: GenerationResult;
         compliance: { score: number; details: string[] };
     }> {
         const generator = new DocumentGenerator(context);

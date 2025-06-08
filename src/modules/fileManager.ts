@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { ProjectAnalysis, ProjectMarkdownFile } from './projectAnalyzer';
+import type { ProjectAnalysis, ProjectMarkdownFile } from './projectAnalyzer.js';
 import { analyzeProjectComprehensively } from './projectAnalyzer.js';
 import { populateEnhancedContextFromAnalysis } from './llmProcessor.js';
 

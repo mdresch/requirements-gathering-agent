@@ -3,8 +3,8 @@
  * Utility class to handle common AI operations in the migration layer
  */
 
-import { ChatMessage } from "./types";
-import { AIProcessor } from "./AIProcessor";
+import { ChatMessage } from "./types.js";
+import { AIProcessor } from "./AIProcessor.js";
 
 export class MigrationHelperProcessor {
     /**

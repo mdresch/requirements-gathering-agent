@@ -4,9 +4,9 @@
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { DocumentGenerator } from './documentGenerator';
-import { PMBOKValidator } from './pmbokValidation';
-import { generateAllWithPMBOKValidation } from './documentGeneratorWithValidation';
+import { DocumentGenerator } from './documentGenerator/index.js';
+import { PMBOKValidator } from './pmbokValidation/index.js';
+import { generateAllWithPMBOKValidation } from './documentGeneratorWithValidation.js';
 
 /**
  * Verify that the refactoring did not break functionality

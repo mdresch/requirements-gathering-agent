@@ -3,8 +3,8 @@
  * This script tests the new Enhanced Context Manager capabilities
  */
 
-import { ContextManager } from './src/modules/contextManager';
-import { runAllDirectContextInjectionExamples } from './src/examples/directContextInjectionExample';
+import { ContextManager } from './src/modules/contextManager.js';
+import { runAllDirectContextInjectionExamples } from './src/examples/directContextInjectionExample.js';
 import * as path from 'path';
 
 async function testDirectContextInjection() {

@@ -2,7 +2,7 @@
  * Enhanced Metrics Manager with performance optimization
  */
 
-import { ProviderMetrics } from "./types";
+import { ProviderMetrics } from "./types.js";
 
 export class MetricsManager {
     private static instance: MetricsManager;

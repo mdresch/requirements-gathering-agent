@@ -2,9 +2,9 @@
  * Document Generator with PMBOK Validation
  * Integration module for document generation and PMBOK validation
  */
-import { DocumentGenerator, GenerationResult, GenerationOptions } from './documentGenerator';
-import { PMBOKValidator, ComprehensiveValidationResult } from './pmbokValidation';
-import { GENERATION_TASKS } from './documentGenerator/generationTasks';
+import { DocumentGenerator, GenerationResult, GenerationOptions } from './documentGenerator/index.js';
+import { PMBOKValidator, ComprehensiveValidationResult } from './pmbokValidation/index.js';
+import { GENERATION_TASKS } from './documentGenerator/generationTasks.js';
 
 /**
  * Generate documents and validate against PMBOK standards

@@ -52,7 +52,7 @@ export async function generateStrategicSections(input: {
   technologyStack: string[];
   contextBundle: string;
 }) {
-  const { getAiSummaryAndGoals } = await import('./modules/llmProcessor.js');
+  const { getAiSummaryAndGoals } = await import('./modules/llmProcessor-migration.js');
   
   const context = `
 Business Problem: ${input.businessProblem}
@@ -75,7 +75,7 @@ export async function generateRequirements(input: {
   technologyStack: string[];
   contextBundle: string;
 }) {
-  const { getAiKeyRolesAndNeeds } = await import('./modules/llmProcessor.js');
+  const { getAiKeyRolesAndNeeds } = await import('./modules/llmProcessor-migration.js');
   
   const context = `
 Business Problem: ${input.businessProblem}

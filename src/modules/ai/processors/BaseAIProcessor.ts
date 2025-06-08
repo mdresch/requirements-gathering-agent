@@ -2,8 +2,8 @@
  * Base processor for common functionality across AI processors
  */
 
-import { AIProcessor } from "../AIProcessor";
-import { ChatMessage } from "../types";
+import { AIProcessor } from "../AIProcessor.js";
+import { ChatMessage } from "../types.js";
 
 const aiProcessor = AIProcessor.getInstance();
 

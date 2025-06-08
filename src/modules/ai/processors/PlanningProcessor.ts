@@ -11,10 +11,10 @@
  * @since 3.1.0
  */
 
-import { ChatMessage } from "../types";
-import { AIProcessor } from "../AIProcessor";
-import type { ContextManager } from "../../contextManager";
-import { BaseAIProcessor } from "./BaseAIProcessor";
+import { ChatMessage } from "../types.js";
+import { AIProcessor } from "../AIProcessor.js";
+import type { ContextManager } from "../../contextManager.js";
+import { BaseAIProcessor } from "./BaseAIProcessor.js";
 
 // Lazy initialization function for AIProcessor
 let _aiProcessor: any = null;
@@ -75,7 +75,7 @@ Your Schedule Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Schedule Management Plan Generation', 'schedule-management-plan');
     }
 
@@ -119,7 +119,7 @@ Your Cost Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Cost Management Plan Generation', 'cost-management-plan');
     }
 
@@ -164,7 +164,7 @@ Your Quality Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Quality Management Plan Generation', 'quality-management-plan');
     }
 
@@ -210,7 +210,7 @@ Your Resource Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Resource Management Plan Generation', 'resource-management-plan');
     }
 
@@ -256,7 +256,7 @@ Your Communication Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Communication Management Plan Generation', 'communication-management-plan');
     }
 
@@ -301,7 +301,7 @@ Your Risk Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Risk Management Plan Generation', 'risk-management-plan');
     }
 
@@ -347,7 +347,53 @@ Your Procurement Management Plan should include:
 Format as a well-structured markdown document with proper headers, lists, and organization. Ensure the plan is actionable, clear, and tailored to the Requirements Gathering Agent project.`
             );
             const response = await getAIProcessor().makeAICall(messages, 1500);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Procurement Management Plan Generation', 'procurement-management-plan');
+    }
+
+    /**
+     * Generates a Stakeholder Engagement Plan following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Stakeholder Engagement Plan or null if generation fails
+     */
+    async getStakeholderEngagementPlan(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const enhancedContext = getContextManager().buildContextForDocument('stakeholder-engagement-plan', [
+                'project-charter',
+                'stakeholder-register',
+                'communication-management-plan'
+            ]);
+            const fullContext = enhancedContext || context;
+            
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager. Create a comprehensive Stakeholder Engagement Plan following PMBOK 7th Edition standards for a software project.",
+                `Based on the comprehensive project context below, create a detailed Stakeholder Engagement Plan:
+
+Project Context:
+${fullContext}
+
+Your Stakeholder Engagement Plan should include:
+- Introduction and purpose of the plan
+- Stakeholder engagement strategy and approach
+- Stakeholder analysis and categorization
+- Engagement levels (unaware, resistant, neutral, supportive, leading)
+- Current and desired engagement levels
+- Engagement methods and techniques
+- Communication requirements and preferences
+- Escalation procedures and protocols
+- Change management considerations
+- Cultural and organizational considerations
+- Resource requirements for engagement
+- Timing and frequency of engagement activities
+- Monitoring and controlling approach
+- Risk management for stakeholder engagement
+- Success metrics and measurement
+
+Format as a well-structured markdown document with proper headers, tables, and organization. Include stakeholder matrices and engagement strategies that are actionable and tailored to the Requirements Gathering Agent project.`
+            );
+            const response = await getAIProcessor().makeAICall(messages, 1600);
+            return getAIProcessor().extractContent(response);
+        }, 'Stakeholder Engagement Plan Generation', 'stakeholder-engagement-plan');
     }
 }

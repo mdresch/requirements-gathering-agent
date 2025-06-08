@@ -3,10 +3,10 @@
  * This file provides backward compatibility while using the new optimized architecture
  */
 
-import { ProcessorFactory } from './ai/processors';
-import { AIProcessor } from './ai/AIProcessor';
-import type { ContextManager } from './contextManager';
-import { ChatMessage } from './ai/types';
+import { ProcessorFactory } from './ai/processors/index.js';
+import { AIProcessor, getAIProcessor } from './ai/AIProcessor.js';
+import type { ContextManager } from './contextManager.js';
+import { ChatMessage } from './ai/types.js';
 
 /**
  * Migration Helper Processor
@@ -104,7 +104,7 @@ export async function getAiDirectAndManageProjectWorkProcess(context: string): P
 
 // Scope Management
 export async function getAiPlanScopeManagement(context: string): Promise<string | null> {
-    return await scopeProcessor.getPlanScopeManagement(context);
+    return await scopeProcessor.getScopeManagementPlan(context);
 }
 
 // Enhanced context management functions using new architecture
@@ -130,7 +130,7 @@ export async function getAiPerformIntegratedChangeControlProcess(context: string
             `Based on the comprehensive project context below, provide a detailed process description for Perform Integrated Change Control as a markdown section.\n\nProject Context:\n${fullContext}\n\nYour description should include:\n- Purpose and objectives of the process\n- Key activities and deliverables (including Change Control Board)\n- Inputs, tools & techniques, and outputs (ITTOs)\n- Roles and responsibilities\n- Change request evaluation and approval workflow\n- Integration with other project management processes\n- Best practices and common challenges\n\nEnsure the output is actionable, clear, and tailored to the Requirements Gathering Agent project. Use PMBOK terminology and structure.`
         );
         const response = await aiProcessor.makeAICall(messages, 1200);
-        return aiProcessor.extractContent(response);
+        return getAIProcessor().extractContent(response);
     }, 'Perform Integrated Change Control Process Generation');
 }
 
@@ -154,7 +154,7 @@ export async function getAiCloseProjectOrPhaseProcess(context: string): Promise<
             `Based on the comprehensive project context below, provide a detailed process description for Close Project or Phase as a markdown section.\n\nProject Context:\n${fullContext}\n\nYour description should include:\n- Purpose and objectives of the process\n- Key activities and deliverables (including final product/service/result transition)\n- Inputs, tools & techniques, and outputs (ITTOs)\n- Roles and responsibilities\n- Documentation and knowledge transfer\n- Lessons learned and project evaluation\n- Integration with other project management processes\n- Best practices and common challenges\n\nEnsure the output is actionable, clear, and tailored to the Requirements Gathering Agent project. Use PMBOK terminology and structure.`
         );
         const response = await aiProcessor.makeAICall(messages, 1200);
-        return aiProcessor.extractContent(response);
+        return getAIProcessor().extractContent(response);
     }, 'Close Project or Phase Process Generation');
 }
 
@@ -174,7 +174,7 @@ export async function getAiRequirementsManagementPlan(context: string): Promise<
                 `Based on the comprehensive project context below, create a detailed Requirements Management Plan as a markdown section.\n\nProject Context:\n${fullContext}\n\nYour Requirements Management Plan should include:\n- Requirements planning approach\n- Requirements traceability process\n- Requirements configuration management\n- Requirements prioritization and approval process\n- Change control for requirements\n- Requirements validation and verification\n- Roles and responsibilities for requirements management\n- Tools and techniques for requirements management\n- Metrics and reporting for requirements\n\nEnsure the plan is actionable, comprehensive, and tailored to the Requirements Gathering Agent project. Use PMBOK terminology and structure.`
             );
             const response = await aiProcessor.makeAICall(messages, 1400);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, 'Requirements Management Plan Generation');
     } catch (error: any) {
         console.error('AI operation failed: Requirements Management Plan Generation', error.message);
@@ -215,7 +215,7 @@ async function migrateExistingFunction(
             const userPrompt = userPromptTemplate.replace('${context}', fullContext);
             const messages = MigrationHelperProcessor.createMessages(systemPrompt, userPrompt);
             const response = await aiProcessor.makeAICall(messages, maxTokens);
-            return aiProcessor.extractContent(response);
+            return getAIProcessor().extractContent(response);
         }, `${functionName} Generation`);
     } catch (error: any) {
         console.error(`AI operation failed: ${functionName} Generation`, error.message);
@@ -365,7 +365,7 @@ export async function getAiMonitorAndControlProjectWorkProcess(context: string):
     return await pmbokProcessor.getMonitorAndControlProjectWork(context);
 }
 
-export { AIProcessor, ProcessorFactory } from './ai';
+export { AIProcessor, ProcessorFactory } from './ai/index.js';
 
 // Backward compatibility for global variables
 let providerMetrics: Map<string, any> = new Map();
@@ -384,6 +384,19 @@ export async function getAiScopeManagementPlan(context: string): Promise<string 
 
 export async function getAiProjectScopeStatement(context: string): Promise<string | null> {
     return await scopeProcessor.getProjectScopeStatement(context);
+}
+
+// Missing Activity/Schedule Management Functions
+export async function getAiScheduleNetworkDiagram(context: string): Promise<string | null> {
+    return await activityProcessor.getScheduleNetworkDiagram(context);
+}
+
+export async function getAiMilestoneList(context: string): Promise<string | null> {
+    return await activityProcessor.getMilestoneList(context);
+}
+
+export async function getAiDevelopScheduleInput(context: string): Promise<string | null> {
+    return await activityProcessor.getDevelopScheduleInput(context);
 }
 
 // Note: These functions are already defined above - no need to redefine

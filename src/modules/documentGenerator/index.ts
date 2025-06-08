@@ -2,9 +2,9 @@
  * Document Generator Module
  * Exports functionality for generating project documentation
  */
-import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator';
-import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks';
-import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types';
+import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator.js';
+import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
+import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types.js';
 
 // Enhanced batch generation with smart retry
 export async function generateDocumentsWithRetry(

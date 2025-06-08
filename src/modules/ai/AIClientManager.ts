@@ -8,8 +8,8 @@ import { AzureOpenAI } from "openai";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-import { AIProvider } from "./types";
-import { ConfigurationManager } from "./ConfigurationManager";
+import { AIProvider } from "./types.js";
+import { ConfigurationManager } from "./ConfigurationManager.js";
 
 interface ClientInfo {
     client: any;

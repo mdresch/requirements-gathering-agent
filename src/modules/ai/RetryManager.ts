@@ -2,7 +2,7 @@
  * Enhanced Retry Manager with intelligent backoff and circuit breaker
  */
 
-import { RetryConfig } from "./types";
+import { RetryConfig } from "./types.js";
 
 interface CircuitBreakerState {
     failures: number;

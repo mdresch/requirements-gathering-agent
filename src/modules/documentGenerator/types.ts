@@ -2,7 +2,7 @@
  * Document Generator Types
  * Type definitions for document generation functionality
  */
-import { ChatMessage } from "../ai/types";
+import { ChatMessage } from "../ai/types.js";
 
 /**
  * Interface for a document generation task

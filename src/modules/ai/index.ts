@@ -3,12 +3,12 @@
  * Provides clean exports for all AI-related functionality
  */
 
-export { ConfigurationManager } from './ConfigurationManager';
-export { MetricsManager } from './MetricsManager';
-export { AIClientManager } from './AIClientManager';
-export { AIProcessor } from './AIProcessor';
-export { RetryManager } from './RetryManager';
+export { ConfigurationManager } from './ConfigurationManager.js';
+export { MetricsManager } from './MetricsManager.js';
+export { AIClientManager } from './AIClientManager.js';
+export { AIProcessor } from './AIProcessor.js';
+export { RetryManager } from './RetryManager.js';
 
 // Main processor exports
-export * from './processors';
-export * from './types';
+export * from './processors/index.js';
+export * from './types.js';
