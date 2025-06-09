@@ -10,18 +10,23 @@
 - **Document Generation Engine**: Automated generation of project documentation and artifacts
 - **Strategic Planning Tools**: Mission, vision, and strategic statement generation
 - **PMBOK Compliance**: Project management artifacts following industry standards
+- **Prerelease Version**: Published version `2.1.3-prerelease` to npm for testing and feedback.
 
 #### Improvements
 - **CLI Interface**: Enhanced command-line tools for better user experience
 - **Error Handling**: Improved error management and recovery mechanisms
 - **Performance Optimization**: Better resource utilization and API efficiency
 - **Code Quality**: Enhanced TypeScript typing and ESLint configuration
+- **Documentation**: Updated the `STEPS-TO-IMPLEMENT-NEW-DOCS.md` guide with recommendations for clarity, testing, validation, and best practices.
+- **Testing**: Expanded test coverage for new document types and improved integration tests.
+- **CLI**: Enhanced CLI support for new document categories and improved user experience.
 
 #### Bug Fixes
 - **Provider Synchronization**: Fixed issues with AI provider coordination
 - **Context Validation**: Resolved context processing edge cases
 - **File Generation**: Corrected document output formatting issues
 - **Configuration Handling**: Fixed environment variable processing
+- **Document Validation**: Resolved issues related to document validation and file access.
 
 ### Recent Development Milestones
 
