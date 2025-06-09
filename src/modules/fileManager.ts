@@ -1,6 +1,22 @@
 /**
- * File management and context utilities for Requirements Gathering Agent
- * Version: 2.1.2
+ * File Management and Context Utilities Module for Requirements Gathering Agent
+ * 
+ * Provides comprehensive file management capabilities, project context reading,
+ * and document metadata handling for the requirements gathering system.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Enhanced project context reading from multiple sources
+ * - Document metadata management and validation
+ * - Integration with project analyzer for comprehensive analysis
+ * - File system utilities for document organization
+ * - Context population and enhancement workflows
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\fileManager.ts
  */
 
 import * as fs from 'fs';
@@ -20,6 +36,7 @@ export interface DocumentMetadata {
 // Define document categories for better organization
 export const DOCUMENT_CATEGORIES = {
     CORE: 'core-analysis',
+    STRATEGIC: 'strategic-statements',
     CHARTER: 'project-charter',
     MANAGEMENT_PLANS: 'management-plans',
     PLANNING_ARTIFACTS: 'planning-artifacts',
@@ -50,19 +67,38 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Detailed user personas and demographics',
         generatedAt: ''
-    },
-    'key-roles-and-needs': {
+    },    'key-roles-and-needs': {
         title: 'Key Roles and Needs Analysis',
         filename: 'key-roles-and-needs.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Analysis of user roles and their specific needs',
         generatedAt: ''
     },
-    'project-charter': {
+    'project-statement-of-work': {
+        title: 'Project Statement of Work',
+        filename: 'project-statement-of-work.md',
+        category: DOCUMENT_CATEGORIES.CORE,
+        description: 'Project Statement of Work detailing scope, deliverables, and acceptance criteria',
+        generatedAt: ''
+    },
+    'business-case': {
+        title: 'Business Case',
+        filename: 'business-case.md',
+        category: DOCUMENT_CATEGORIES.CORE,
+        description: 'Comprehensive business case and justification',
+        generatedAt: ''
+    },'project-charter': {
         title: 'Project Charter',
         filename: 'project-charter.md',
         category: DOCUMENT_CATEGORIES.CHARTER,
         description: 'PMBOK Project Charter formally authorizing the project',
+        generatedAt: ''
+    },
+    'project-management-plan': {
+        title: 'Project Management Plan',
+        filename: 'project-management-plan.md',
+        category: DOCUMENT_CATEGORIES.CHARTER,
+        description: 'PMBOK Project Management Plan',
         generatedAt: ''
     },
     'scope-management-plan': {
@@ -226,12 +262,131 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Regulatory and compliance requirements analysis',
         generatedAt: ''
-    },
-    'ui-ux-considerations': {
+    },    'ui-ux-considerations': {
         title: 'UI/UX Considerations',
         filename: 'ui-ux-considerations.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'User experience and interface design recommendations',
+        generatedAt: ''
+    },
+    // Missing documents that were incorrectly categorized as "unknown"
+    'control-scope': {
+        title: 'Control Scope Process',
+        filename: 'control-scope.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Control Scope Process',
+        generatedAt: ''
+    },
+    'direct-and-manage-project-work': {
+        title: 'Direct and Manage Project Work Process',
+        filename: 'direct-and-manage-project-work.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Direct and Manage Project Work Process',
+        generatedAt: ''
+    },
+    'project-scope-statement': {
+        title: 'Project Scope Statement',
+        filename: 'project-scope-statement.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Project Scope Statement',
+        generatedAt: ''
+    },
+    'requirements-documentation': {
+        title: 'Requirements Documentation',
+        filename: 'requirements-documentation.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Requirements Documentation',
+        generatedAt: ''
+    },
+    'requirements-traceability-matrix': {
+        title: 'Requirements Traceability Matrix',
+        filename: 'requirements-traceability-matrix.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Requirements Traceability Matrix',
+        generatedAt: ''
+    },
+    'scope-baseline': {
+        title: 'Scope Baseline',
+        filename: 'scope-baseline.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Scope Baseline',
+        generatedAt: ''
+    },    'validate-scope': {
+        title: 'Validate Scope Process',
+        filename: 'validate-scope.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Validate Scope Process',
+        generatedAt: ''
+    },
+    // Additional missing PMBOK documents
+    'perform-integrated-change-control': {
+        title: 'Perform Integrated Change Control Process',
+        filename: 'perform-integrated-change-control.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Perform Integrated Change Control Process',
+        generatedAt: ''
+    },
+    'close-project-or-phase': {
+        title: 'Close Project or Phase Process',
+        filename: 'close-project-or-phase.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Close Project or Phase Process',
+        generatedAt: ''
+    },
+    'plan-scope-management': {
+        title: 'Plan Scope Management',
+        filename: 'plan-scope-management.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Plan Scope Management',
+        generatedAt: ''
+    },
+    'requirements-management-plan': {
+        title: 'Requirements Management Plan',
+        filename: 'requirements-management-plan.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Requirements Management Plan',
+        generatedAt: ''
+    },
+    'collect-requirements': {
+        title: 'Collect Requirements Process',
+        filename: 'collect-requirements.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Collect Requirements Process',
+        generatedAt: ''
+    },
+    'define-scope': {
+        title: 'Define Scope Process',
+        filename: 'define-scope.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Define Scope Process',
+        generatedAt: ''
+    },
+    'create-wbs': {
+        title: 'Create WBS Process',
+        filename: 'create-wbs.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Create WBS Process',
+        generatedAt: ''
+    },
+    'work-performance-information-scope': {
+        title: 'Work Performance Information (Scope)',
+        filename: 'work-performance-information-scope.md',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        description: 'PMBOK Work Performance Information (Scope)',
+        generatedAt: ''
+    },    // Strategic documents that might be missing
+    'mission-vision-core-values': {
+        title: 'Mission, Vision, and Core Values',
+        filename: 'mission-vision-core-values.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC,
+        description: 'Strategic mission, vision, and core values documentation',
+        generatedAt: ''
+    },
+    'project-purpose': {
+        title: 'Project Purpose',
+        filename: 'project-purpose.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC,
+        description: 'Project purpose and objectives documentation',
         generatedAt: ''
     }
 };

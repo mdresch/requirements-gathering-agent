@@ -1,6 +1,22 @@
 /**
- * Document Generator
- * Core class for generating project documentation based on context
+ * Document Generator Module for Requirements Gathering Agent
+ * 
+ * Core document generation engine that creates comprehensive PMBOK-compliant
+ * project documentation based on project context and AI analysis.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Comprehensive PMBOK 7.0 compliant document generation
+ * - AI-powered content creation and analysis
+ * - Organized file structure and directory management
+ * - Validation and quality assessment integration
+ * - Batch processing and error handling
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\documentGenerator\DocumentGenerator.ts
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -12,6 +28,8 @@ import {
 } from '../fileManager.js';
 import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
+// Import all processor functions
+import * as processors from '../ai/processors/index.js';
 import { 
     GenerationOptions, 
     GenerationResult, 
@@ -65,56 +83,194 @@ export class DocumentGenerator {
             errors: [],
             duration: 0
         };
-    }
-
-    async getAiSummaryAndGoals(context: string): Promise<string> {
-        const messages = this.aiProcessor.createMessages(
-            "You are a skilled project manager and business analyst. Generate a clear project summary and goals based on the provided context.",
-            `Please analyze this project context and generate a comprehensive summary and goals section:\n\n${context}`
-        );
-        
-        const response = await this.aiProcessor.makeAICall(messages);
-        return this.aiProcessor.extractContent(response);
+    }    /**
+     * Delegate to appropriate processor functions instead of hardcoded AI calls
+     */    async getAiSummaryAndGoals(context: string): Promise<string> {
+        return await processors.getAiSummaryAndGoals(context) ?? '';
     }
 
     async getAiUserStories(context: string): Promise<string> {
-        const messages = this.aiProcessor.createMessages(
-            "You are an experienced product owner and agile practitioner. Create detailed user stories based on the project context.",
-            `Please analyze this project context and generate comprehensive user stories:\n\n${context}`
-        );
-        
-        const response = await this.aiProcessor.makeAICall(messages);
-        return this.aiProcessor.extractContent(response);
+        return await processors.getAiUserStories(context) ?? '';
     }
 
     async getAiUserPersonas(context: string): Promise<string> {
-        const messages = this.aiProcessor.createMessages(
-            "You are a UX researcher and user experience expert. Create detailed user personas based on the project context.",
-            `Please analyze this project context and generate comprehensive user personas:\n\n${context}`
-        );
-        
-        const response = await this.aiProcessor.makeAICall(messages);
-        return this.aiProcessor.extractContent(response);
+        return await processors.getAiUserPersonas(context) ?? '';
     }
 
     async getAiKeyRolesAndNeeds(context: string): Promise<string> {
-        const messages = this.aiProcessor.createMessages(
-            "You are a skilled organizational analyst and stakeholder manager. Identify key roles and their needs based on the project context.",
-            `Please analyze this project context and identify key roles and their needs:\n\n${context}`
-        );
-        
-        const response = await this.aiProcessor.makeAICall(messages);
-        return this.aiProcessor.extractContent(response);
+        return await processors.getAiKeyRolesAndNeeds(context) ?? '';
+    }    async getAiProjectCharter(context: string): Promise<string> {
+        return await processors.getAiProjectCharter(context) ?? '';
     }
 
-    async getAiProjectCharter(context: string): Promise<string> {
-        const messages = this.aiProcessor.createMessages(
-            "You are a certified project manager with expertise in creating project charters. Create a comprehensive project charter based on the provided context.",
-            `Please analyze this project context and generate a detailed project charter:\n\n${context}`
-        );
-        
-        const response = await this.aiProcessor.makeAICall(messages);
-        return this.aiProcessor.extractContent(response);
+    // Core Analysis Documents
+    async getAiProjectStatementOfWork(context: string): Promise<string> {
+        return await processors.getAiProjectStatementOfWork(context) ?? '';
+    }
+
+    async getAiBusinessCase(context: string): Promise<string> {
+        return await processors.getAiBusinessCase(context) ?? '';
+    }
+
+    // Strategic Statements
+    async getAiMissionVisionAndCoreValues(context: string): Promise<string> {
+        return await processors.getAiMissionVisionAndCoreValues(context) ?? '';
+    }
+
+    async getAiProjectPurpose(context: string): Promise<string> {
+        return await processors.getAiProjectPurpose(context) ?? '';
+    }
+
+    // Project Management Plans
+    async getAiProjectManagementPlan(context: string): Promise<string> {
+        return await processors.getAiProjectManagementPlan(context) ?? '';
+    }    // PMBOK Process Functions
+    async getAiDirectAndManageProjectWorkProcess(context: string): Promise<string> {
+        return await processors.getAiDirectAndManageProjectWorkProcess(context) ?? '';
+    }
+
+    async getAiPerformIntegratedChangeControlProcess(context: string): Promise<string> {
+        return await processors.getAiPerformIntegratedChangeControlProcess(context) ?? '';
+    }
+
+    async getAiCloseProjectOrPhaseProcess(context: string): Promise<string> {
+        return await processors.getAiCloseProjectOrPhaseProcess(context) ?? '';
+    }
+
+    async getAiPlanScopeManagement(context: string): Promise<string> {
+        return await processors.getAiPlanScopeManagement(context) ?? '';
+    }
+
+    async getAiRequirementsManagementPlan(context: string): Promise<string> {
+        return await processors.getAiRequirementsManagementPlan(context) ?? '';
+    }
+
+    async getAiCollectRequirementsProcess(context: string): Promise<string> {
+        return await processors.getAiCollectRequirementsProcess(context) ?? '';
+    }
+
+    async getAiRequirementsDocumentation(context: string): Promise<string> {
+        return await processors.getAiRequirementsDocumentation(context) ?? '';
+    }
+
+    async getAiRequirementsTraceabilityMatrix(context: string): Promise<string> {
+        return await processors.getAiRequirementsTraceabilityMatrix(context) ?? '';
+    }
+
+    async getAiDefineScopeProcess(context: string): Promise<string> {
+        return await processors.getAiDefineScopeProcess(context) ?? '';
+    }
+
+    async getAiProjectScopeStatement(context: string): Promise<string> {
+        return await processors.getAiProjectScopeStatement(context) ?? '';
+    }
+
+    async getAiCreateWbsProcess(context: string): Promise<string> {
+        return await processors.getAiCreateWbsProcess(context) ?? '';
+    }
+
+    async getAiScopeBaseline(context: string): Promise<string> {
+        return await processors.getAiScopeBaseline(context) ?? '';
+    }
+
+    async getAiValidateScopeProcess(context: string): Promise<string> {
+        return await processors.getAiValidateScopeProcess(context) ?? '';
+    }
+
+    async getAiControlScopeProcess(context: string): Promise<string> {
+        return await processors.getAiControlScopeProcess(context) ?? '';
+    }    async getAiWorkPerformanceInformationScope(context: string): Promise<string> {
+        return await processors.getAiWorkPerformanceInformationScope(context) ?? '';
+    }    // Management Plans
+    async getAiScopeManagementPlan(context: string): Promise<string> {
+        return await processors.getAiScopeManagementPlan(context) ?? '';
+    }
+
+    async getAiRiskManagementPlan(context: string): Promise<string> {
+        return await processors.getAiRiskManagementPlan(context) ?? '';
+    }
+
+    async getAiCostManagementPlan(context: string): Promise<string> {
+        return await processors.getAiCostManagementPlan(context) ?? '';
+    }
+
+    async getAiQualityManagementPlan(context: string): Promise<string> {
+        return await processors.getAiQualityManagementPlan(context) ?? '';
+    }
+
+    async getAiResourceManagementPlan(context: string): Promise<string> {
+        return await processors.getAiResourceManagementPlan(context) ?? '';
+    }
+
+    async getAiCommunicationManagementPlan(context: string): Promise<string> {
+        return await processors.getAiCommunicationManagementPlan(context) ?? '';
+    }
+
+    async getAiProcurementManagementPlan(context: string): Promise<string> {
+        return await processors.getAiProcurementManagementPlan(context) ?? '';
+    }    // Stakeholder Management
+    async getAiStakeholderEngagementPlan(context: string): Promise<string> {
+        return await processors.getAiStakeholderEngagementPlan(context) ?? '';
+    }
+
+    async getAiStakeholderRegister(context: string): Promise<string> {
+        return await processors.getAiStakeholderRegister(context) ?? '';
+    }
+
+    async getAiStakeholderAnalysis(context: string): Promise<string> {
+        return await processors.getAiStakeholderAnalysis(context) ?? '';
+    }    // Planning Artifacts
+    async getAiWbs(context: string): Promise<string> {
+        return await processors.getAiWbs(context) ?? '';
+    }
+
+    async getAiWbsDictionary(context: string): Promise<string> {
+        return await processors.getAiWbsDictionary(context) ?? '';
+    }
+
+    async getAiActivityList(context: string): Promise<string> {
+        return await processors.getAiActivityList(context) ?? '';
+    }
+
+    async getAiActivityDurationEstimates(context: string): Promise<string> {
+        return await processors.getAiActivityDurationEstimates(context) ?? '';
+    }
+
+    async getAiActivityResourceEstimates(context: string): Promise<string> {
+        return await processors.getAiActivityResourceEstimates(context) ?? '';
+    }
+
+    async getAiScheduleNetworkDiagram(context: string): Promise<string> {
+        return await processors.getAiScheduleNetworkDiagram(context) ?? '';
+    }
+
+    async getAiMilestoneList(context: string): Promise<string> {
+        return await processors.getAiMilestoneList(context) ?? '';
+    }
+
+    async getAiDevelopScheduleInput(context: string): Promise<string> {
+        return await processors.getAiDevelopScheduleInput(context) ?? '';
+    }    // Technical Analysis
+    async getAiDataModelSuggestions(context: string): Promise<string> {
+        return await processors.getAiDataModelSuggestions(context) ?? '';
+    }
+
+    async getAiTechStackAnalysis(context: string): Promise<string> {
+        return await processors.getAiTechStackAnalysis(context) ?? '';
+    }
+
+    async getAiRiskAnalysis(context: string): Promise<string> {
+        return await processors.getAiRiskAnalysis(context) ?? '';
+    }
+
+    async getAiAcceptanceCriteria(context: string): Promise<string> {
+        return await processors.getAiAcceptanceCriteria(context) ?? '';
+    }    async getAiComplianceConsiderations(context: string): Promise<string> {
+        return await processors.getAiComplianceConsiderations(context) ?? '';
+    }
+
+    async getAiUiUxConsiderations(context: string): Promise<string> {
+        return await processors.getAiUiUxConsiderations(context) ?? '';
     }
 
     /**

@@ -1,6 +1,22 @@
 /**
- * File utility functions for Requirements Gathering Agent
- * Version: 2.1.2
+ * File Utilities Module for Requirements Gathering Agent
+ * 
+ * Provides comprehensive file management and document generation utilities
+ * for creating structured project documentation and PMBOK-compliant outputs.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Markdown file generation with automatic extension handling
+ * - Batch file operations with directory structure creation
+ * - Structured project documentation organization
+ * - PMBOK document categorization and placement
+ * - Error handling and logging for file operations
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\fileUtils.ts
  */
 
 import { writeFile, mkdir } from 'fs/promises';
@@ -98,4 +114,4 @@ export async function generateProjectDocumentation(
 }
 
 // Version export for tracking
-export const fileUtilsVersion = '2.1.2';
+export const fileUtilsVersion = '2.1.3';

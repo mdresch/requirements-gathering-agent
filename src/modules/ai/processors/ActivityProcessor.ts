@@ -26,10 +26,10 @@ const getAIProcessor = () => {
 
 // Lazy initialization function for contextManager
 let _contextManager: any = null;
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -44,7 +44,7 @@ export class ActivityProcessor extends BaseAIProcessor {
      */
     async getActivityList(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-list', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-list', [
                 'work-breakdown-structure',
                 'scope-management-plan',
                 'schedule-management-plan'
@@ -82,7 +82,7 @@ Format as a well-structured markdown table with columns for Activity ID, Activit
      */
     async getActivityAttributes(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-attributes', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-attributes', [
                 'activity-list',
                 'work-breakdown-structure',
                 'schedule-management-plan'
@@ -127,7 +127,7 @@ Format as a well-structured markdown document with sections for each activity, i
      */
     async getActivitySequencing(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('activity-sequencing', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('activity-sequencing', [
                 'activity-list',
                 'activity-attributes',
                 'schedule-management-plan'
@@ -166,7 +166,7 @@ Format as a well-structured markdown document with tables showing the dependency
      */
     async getResourceRequirements(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('resource-requirements', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('resource-requirements', [
                 'activity-list',
                 'activity-attributes',
                 'resource-management-plan'
@@ -208,7 +208,7 @@ Format as a well-structured markdown document with tables organizing resources b
      */
     async getScheduleNetworkDiagram(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('schedule-network-diagram', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('schedule-network-diagram', [
                 'activity-list',
                 'activity-sequencing',
                 'activity-attributes'
@@ -248,7 +248,7 @@ Format as a well-structured markdown document with clear descriptions of the net
      */
     async getMilestoneList(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('milestone-list', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('milestone-list', [
                 'project-scope-statement',
                 'work-breakdown-structure',
                 'schedule-management-plan'
@@ -288,7 +288,7 @@ Format as a well-structured markdown document with tables organizing milestones 
      */
     async getDevelopScheduleInput(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('develop-schedule-input', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('develop-schedule-input', [
                 'activity-list',
                 'activity-attributes',
                 'activity-sequencing',
@@ -323,4 +323,202 @@ Format as a well-structured markdown document with clear sections for each input
             return getAIProcessor().extractContent(response);
         }, 'Develop Schedule Input Generation', 'develop-schedule-input');
     }
+
+    /**
+     * Generates Activity Duration Estimates following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Activity Duration Estimates or null if generation fails
+     */
+    async getActivityDurationEstimates(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('activity-duration-estimates', [
+                'activity-list',
+                'activity-attributes',
+                'work-breakdown-structure',
+                'resource-requirements'
+            ]);
+            const fullContext = enhancedContext || context;
+            
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager with expertise in schedule estimation. Create comprehensive Activity Duration Estimates following PMBOK guidelines for a software project.",
+                `Based on the comprehensive project context below, create detailed Activity Duration Estimates:
+
+Project Context:
+${fullContext}
+
+Generate a comprehensive Activity Duration Estimates document with the following sections:
+
+## Activity Duration Estimates
+
+### Overview
+- Purpose and scope of duration estimation
+- Estimation methodology and approach
+- Assumptions and constraints
+- Review and approval process
+
+### Estimation Methodology
+- Estimation techniques used (expert judgment, analogous, parametric, three-point)
+- Historical data sources and benchmarks
+- Resource productivity factors
+- Quality and complexity considerations
+
+### Activity Duration Estimates Table
+Create a detailed table with the following columns:
+- Activity ID
+- Activity Name
+- WBS Reference
+- Estimation Method
+- Optimistic Duration (Best Case)
+- Most Likely Duration
+- Pessimistic Duration (Worst Case)
+- Expected Duration (PERT calculation)
+- Basis of Estimate
+- Resource Requirements
+- Assumptions
+- Risk Factors
+
+### Estimation Categories
+- Development activities (coding, testing, documentation)
+- Project management activities (planning, monitoring, reporting)
+- Quality assurance activities (reviews, audits, testing)
+- Infrastructure and environment setup
+- Training and knowledge transfer
+
+### Risk and Uncertainty
+- Risk factors affecting duration estimates
+- Contingency considerations
+- Schedule buffer recommendations
+- Sensitivity analysis results
+
+### Quality Considerations
+- Review and validation procedures
+- Expert judgment application
+- Historical data validation
+- Continuous improvement processes
+
+### Supporting Information
+- Resource skill level assumptions
+- Technology and tool considerations
+- Dependencies and constraints
+- Environmental factors
+
+Format as professional markdown with clear tables and sections. Include at least 15-20 representative activities covering all major project phases. Follow PMBOK duration estimation best practices.`
+            );
+            const response = await getAIProcessor().makeAICall(messages, 2500);
+            return getAIProcessor().extractContent(response);
+        }, 'Activity Duration Estimates Generation', 'activity-duration-estimates');
+    }
+
+    /**
+     * Generates Activity Resource Estimates following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Activity Resource Estimates or null if generation fails
+     */
+    async getActivityResourceEstimates(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('activity-resource-estimates', [
+                'activity-list',
+                'activity-duration-estimates',
+                'work-breakdown-structure',
+                'resource-management-plan'
+            ]);
+            const fullContext = enhancedContext || context;
+            
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager with expertise in resource estimation. Create comprehensive Activity Resource Estimates following PMBOK guidelines for a software project.",
+                `Based on the comprehensive project context below, create detailed Activity Resource Estimates:
+
+Project Context:
+${fullContext}
+
+Generate a comprehensive Activity Resource Estimates document with the following sections:
+
+## Activity Resource Estimates
+
+### Overview
+- Purpose and scope of resource estimation
+- Resource estimation methodology
+- Resource categories and types
+- Review and approval process
+
+### Resource Estimation Methodology
+- Estimation techniques and approaches
+- Historical data and benchmarks
+- Expert judgment application
+- Resource productivity assumptions
+
+### Human Resource Estimates
+Create detailed tables for:
+- Project Manager and Leadership roles
+- Software Developers (by skill level)
+- Quality Assurance Engineers
+- Business Analysts
+- Technical Writers
+- DevOps Engineers
+- UI/UX Designers
+- Database Administrators
+
+### Resource Estimates Table
+Create a comprehensive table with columns:
+- Activity ID
+- Activity Name
+- Resource Type
+- Resource Role/Skill Level
+- Quantity Required
+- Duration Needed
+- Total Effort (person-hours)
+- Peak Resource Requirement
+- Resource Availability Requirements
+- Cost Estimate
+- Assumptions
+- Risk Factors
+
+### Technology and Equipment Resources
+- Development hardware requirements
+- Software licenses and tools
+- Infrastructure and cloud resources
+- Testing environments and tools
+- Security and compliance tools
+
+### Facilities and Support Resources
+- Office space and facilities
+- Communication and collaboration tools
+- Training and development resources
+- Administrative and support services
+
+### Resource Optimization
+- Resource leveling considerations
+- Alternative resource options
+- Make vs. buy decisions
+- Outsourcing considerations
+
+### Risk and Contingency
+- Resource availability risks
+- Skill gap analysis
+- Contingency resource planning
+- Backup resource strategies
+
+### Cost Analysis
+- Resource cost estimates by category
+- Budget allocation recommendations
+- Cost optimization opportunities
+- Financial risk considerations
+
+### Quality Considerations
+- Resource qualification requirements
+- Training and certification needs
+- Performance standards and metrics
+- Quality assurance procedures
+
+Format as professional markdown with detailed tables and clear organization. Include comprehensive resource estimates for all major activity categories. Follow PMBOK resource estimation best practices.`
+            );
+            const response = await getAIProcessor().makeAICall(messages, 2800);
+            return getAIProcessor().extractContent(response);
+        }, 'Activity Resource Estimates Generation', 'activity-resource-estimates');
+    }
 }
+

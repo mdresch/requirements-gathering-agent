@@ -1,5 +1,22 @@
 /**
- * Enhanced Configuration Manager with validation and caching
+ * Enhanced Configuration Manager Module for Requirements Gathering Agent
+ * 
+ * Advanced configuration management system with validation, caching,
+ * and multi-provider environment setup for reliable AI service integration.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Environment variable validation and caching
+ * - Multi-provider configuration management
+ * - Runtime configuration validation
+ * - Secure credential handling
+ * - Configuration change detection
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\ConfigurationManager.ts
  */
 
 import dotenv from "dotenv";
@@ -64,13 +81,17 @@ export class ConfigurationManager {
             // Google AI Configuration
             'GOOGLE_AI_API_KEY': process.env.GOOGLE_AI_API_KEY,
             'GOOGLE_AI_MODEL': process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash',
-            'GOOGLE_AI_ENDPOINT': process.env.GOOGLE_AI_ENDPOINT || 'https://generativelanguage.googleapis.com',
-
-            // GitHub AI Configuration
-            'GITHUB_API_ENDPOINT': process.env.GITHUB_API_ENDPOINT || 'https://models.inference.ai.azure.com',
+            'GOOGLE_AI_ENDPOINT': process.env.GOOGLE_AI_ENDPOINT || 'https://generativelanguage.googleapis.com',        
+            'GITHUB_ENDPOINT': process.env.GITHUB_ENDPOINT || process.env.GITHUB_API_ENDPOINT || 'https://models.github.ai/inference',
             'GITHUB_COPILOT_ENDPOINT': process.env.GITHUB_COPILOT_ENDPOINT || 'https://copilot-proxy.githubusercontent.com',
             'GITHUB_TOKEN': process.env.GITHUB_TOKEN,
-            'GITHUB_MODEL': process.env.GITHUB_MODEL || 'copilot-chat',
+            'GITHUB_MODEL': process.env.GITHUB_MODEL || 'openai/gtp-4.1',
+            'AZURE_AI_ENDPOINT': process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT,
+            'AZURE_AI_API_KEY': process.env.AZURE_AI_API_KEY || process.env.AZURE_OPENAI_API_KEY,
+
+            // Additional mapping for deployment names
+            'deployment_name': process.env.AZURE_OPENAI_DEPLOYMENT_NAME || process.env.DEPLOYMENT_NAME || process.env.REQUIREMENTS_AGENT_MODEL,
+            'api_version': process.env.AZURE_OPENAI_API_VERSION || process.env.API_VERSION,
 
             // Ollama Configuration
             'OLLAMA_ENDPOINT': process.env.OLLAMA_ENDPOINT || 'http://localhost:11434/api',
@@ -80,11 +101,10 @@ export class ConfigurationManager {
             'max_retries': parseInt(process.env.AI_MAX_RETRIES || '3'),
             'timeout_ms': parseInt(process.env.AI_TIMEOUT || '60000'),
             'rate_limit_requests_per_minute': parseInt(process.env.RATE_LIMIT_RPM || '60')
-        };
-
-        // Set all configuration at once
+        };        // Set all configuration at once (including lowercase versions for compatibility)
         Object.entries(envVars).forEach(([key, value]) => {
             this.config.set(key, value);
+            this.config.set(key.toLowerCase(), value);
         });
     }
 
@@ -167,13 +187,21 @@ export class ConfigurationManager {
             missingVars.push('GOOGLE_AI_API_KEY');
         }
         return { isValid: missingVars.length === 0, missingVars };
-    }
-
-    private validateGitHubAIConfig(): ConfigValidationResult {
+    }    private validateGitHubAIConfig(): ConfigValidationResult {
         const missingVars: string[] = [];
         if (!this.get<string>('GITHUB_TOKEN')) {
             missingVars.push('GITHUB_TOKEN');
         }
+        
+        // Support both GitHub endpoints (new preview and legacy)
+        const endpoint = this.get<string>('GITHUB_ENDPOINT') || this.get<string>('AZURE_AI_ENDPOINT');
+        if (!endpoint || !(
+            endpoint.includes('models.inference.ai.azure.com') || 
+            endpoint.includes('models.github.ai')
+        )) {
+            missingVars.push('GITHUB_ENDPOINT or AZURE_AI_ENDPOINT (must contain models.github.ai or models.inference.ai.azure.com)');
+        }
+        
         return { isValid: missingVars.length === 0, missingVars };
     }
 
@@ -236,6 +264,13 @@ export class ConfigurationManager {
             timeoutMs: this.get('timeout_ms'),
             modelTokenLimit: this.getModelTokenLimit(deployment),
             maxResponseTokens: this.getMaxResponseTokens(deployment)
+        };
+    }
+
+    private getOllamaConfig(): Record<string, any> {
+        return {
+            endpoint: this.get<string>('OLLAMA_ENDPOINT') || 'http://localhost:11434',
+            model: this.get<string>('REQUIREMENTS_AGENT_MODEL') || 'llama3.1'
         };
     }
 }

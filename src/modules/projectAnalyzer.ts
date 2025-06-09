@@ -1,3 +1,24 @@
+/**
+ * Project Analyzer Module for Requirements Gathering Agent
+ * 
+ * Provides comprehensive project analysis capabilities including markdown file discovery,
+ * content categorization, relevance scoring, and project context building.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Enhanced markdown file discovery with recursive directory scanning
+ * - Intelligent relevance scoring based on content and file structure
+ * - Automatic categorization of project documentation
+ * - Comprehensive project context building from multiple sources
+ * - Support for package.json metadata integration
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\projectAnalyzer.ts
+ */
+
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

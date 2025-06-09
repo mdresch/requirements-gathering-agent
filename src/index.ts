@@ -1,6 +1,22 @@
 /**
- * Requirements Gathering Agent
- * AI-powered PMBOK documentation generator with multi-provider support
+ * Requirements Gathering Agent - Main Export Module
+ * 
+ * AI-powered PMBOK documentation generator with multi-provider support.
+ * This module serves as the main entry point for all core functionality.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Multi-provider AI integration (Google AI, Azure OpenAI, GitHub AI)
+ * - PMBOK 7.0 compliant document generation
+ * - Comprehensive project analysis and context building
+ * - Automated requirements gathering and documentation
+ * - Modern TypeScript architecture with ES modules
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\index.ts
  */
 
 // Core LLM functions
@@ -118,5 +134,5 @@ export interface UserRequirement {
 }
 
 // Version information
-export const version = '2.1.2';
+export const version = '2.1.3';
 export const name = 'requirements-gathering-agent';

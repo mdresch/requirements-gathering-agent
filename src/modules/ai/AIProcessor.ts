@@ -1,5 +1,22 @@
 /**
- * Enhanced AI Processor with improved error handling and response processing
+ * Enhanced AI Processor Module for Requirements Gathering Agent
+ * 
+ * Core AI processing engine with improved error handling, response processing,
+ * and multi-provider support for robust document generation.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Multi-provider AI integration (Google AI, Azure OpenAI, GitHub AI, Ollama)
+ * - Advanced error handling and retry mechanisms
+ * - Performance metrics and monitoring
+ * - Response validation and processing
+ * - Configuration management and provider switching
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\AIProcessor.ts
  */
 
 import { ChatMessage, AIProvider, AIResponse } from "./types.js";
@@ -16,6 +33,7 @@ class AIProcessor {
     private retryManager: RetryManager;
     private config: ConfigurationManager;
     private providerManager: ProviderManager;
+    private initializationPromise: Promise<void> | null = null;
 
     private constructor() {
         this.clientManager = AIClientManager.getInstance();
@@ -23,12 +41,23 @@ class AIProcessor {
         this.retryManager = RetryManager.getInstance();
         this.config = ConfigurationManager.getInstance();
         this.providerManager = new ProviderManager();
-        this.initializeProviderManager();
-    }
-
-    private async initializeProviderManager() {
+        this.initializationPromise = this.initializeProviderManager();
+    }    private async initializeProviderManager(): Promise<void> {
         const results = await this.providerManager.validateConfigurations();
         console.log('Provider validation results:', results);
+        
+        // Sync the active provider with ConfigurationManager
+        const activeProvider = this.providerManager.getActiveProvider();
+        if (activeProvider) {
+            this.config.setProvider(activeProvider as AIProvider);
+        }
+    }
+
+    private async ensureInitialized(): Promise<void> {
+        if (this.initializationPromise) {
+            await this.initializationPromise;
+            this.initializationPromise = null;
+        }
     }
 
     static getInstance(): AIProcessor {
@@ -36,19 +65,21 @@ class AIProcessor {
             AIProcessor.instance = new AIProcessor();
         }
         return AIProcessor.instance;
-    }
-
-    async processAIRequest<T>(
+    }    async processAIRequest<T>(
         operation: () => Promise<T>,
         operationName: string
     ): Promise<T> {
-        if (!this.clientManager.isInitialized()) {
-            await this.clientManager.initializeClients();
-        }
-
+        await this.ensureInitialized();
+        
         const activeProvider = this.providerManager.getActiveProvider();
         if (!activeProvider) {
             throw new Error('No active AI provider available');
+        }
+
+        // Ensure the client for the active provider is initialized
+        if (!this.clientManager.getClient(activeProvider as AIProvider)) {
+            console.log(`🔧 Initializing client for active provider: ${activeProvider}`);
+            await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
         }
 
         const status = this.providerManager.getProviderStatus(activeProvider);
@@ -68,9 +99,9 @@ class AIProcessor {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
         ];
-    }
-
-    async makeAICall(messages: ChatMessage[], maxTokens?: number): Promise<AIResponse> {
+    }    async makeAICall(messages: ChatMessage[], maxTokens?: number): Promise<AIResponse> {
+        await this.ensureInitialized();
+        
         const defaultTokens = this.config.getMaxResponseTokens();
         maxTokens = maxTokens ?? defaultTokens;
         const activeProvider = this.providerManager.getActiveProvider();
@@ -79,13 +110,23 @@ class AIProcessor {
             throw new Error('No active AI provider available');
         }
 
+        // Ensure the client for the active provider is initialized
+        if (!this.clientManager.getClient(activeProvider as AIProvider)) {
+            console.log(`🔧 Initializing client for active provider: ${activeProvider}`);
+            await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
+        }
+
         const status = this.providerManager.getProviderStatus(activeProvider);
         if (!status.withinRateLimit) {
             throw new Error(`Rate limit exceeded for provider ${activeProvider}`);
         }
-
         if (!status.withinQuota) {
             if (await this.providerManager.switchProvider()) {
+                // Sync the new active provider with ConfigurationManager
+                const newActiveProvider = this.providerManager.getActiveProvider();
+                if (newActiveProvider) {
+                    this.config.setProvider(newActiveProvider as AIProvider);
+                }
                 return this.makeAICall(messages, maxTokens); // Retry with new provider
             }
             throw new Error(`Quota exceeded for provider ${activeProvider}`);
@@ -121,9 +162,14 @@ class AIProcessor {
             
             // Update provider metrics on failure
             this.providerManager.updateMetrics(activeProvider, false, responseTime, 0, error);
-
+            
             // Try fallback provider
             if (await this.providerManager.switchProvider()) {
+                // Sync the new active provider with ConfigurationManager
+                const newActiveProvider = this.providerManager.getActiveProvider();
+                if (newActiveProvider) {
+                    this.config.setProvider(newActiveProvider as AIProvider);
+                }
                 return this.makeAICall(messages, maxTokens); // Retry with new provider
             }
             
@@ -136,10 +182,10 @@ class AIProcessor {
         client: any, 
         messages: ChatMessage[], 
         maxTokens: number
-    ): Promise<string> {
-        const callMethods: Record<AIProvider, () => Promise<string>> = {
+    ): Promise<string> {        const callMethods: Record<AIProvider, () => Promise<string>> = {
             'google-ai': () => this.makeGoogleAICall(client, messages, maxTokens),
             'azure-openai': () => this.makeAzureOpenAICall(client, messages, maxTokens),
+            'azure-openai-key': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-ai-studio': () => this.makeAzureAIStudioCall(client, messages, maxTokens),
             'github-ai': () => this.makeGitHubAICall(client, messages, maxTokens),
             'ollama': () => this.makeOllamaCall(client, messages, maxTokens)
@@ -299,12 +345,11 @@ class AIProcessor {
         } catch (error) {
             console.warn('Error populating enhanced context:', error);
             return {};
-        }
-    }
-
-    // Performance monitoring methods
+        }    }    // Performance monitoring methods
     async testConnection(provider?: AIProvider): Promise<boolean> {
         try {
+            await this.ensureInitialized();
+            
             if (provider) {
                 const isValid = await this.providerManager.validateProvider(provider);
                 if (!isValid) {
@@ -312,15 +357,16 @@ class AIProcessor {
                 }
             }
 
-            // Initialize if needed
-            if (!this.clientManager.isInitialized()) {
-                await this.clientManager.initializeClients();
-            }
-
             // Use active provider if none specified
             const activeProvider = provider || this.providerManager.getActiveProvider();
             if (!activeProvider) {
                 return false;
+            }
+
+            // Ensure the client for the active provider is initialized
+            if (!this.clientManager.getClient(activeProvider as AIProvider)) {
+                console.log(`🔧 Initializing client for test connection: ${activeProvider}`);
+                await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
             }
 
             const client = this.clientManager.getClient(activeProvider as AIProvider);

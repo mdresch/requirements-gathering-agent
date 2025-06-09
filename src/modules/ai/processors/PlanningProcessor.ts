@@ -27,10 +27,10 @@ const getAIProcessor = () => {
 
 // Lazy initialization function for contextManager
 let _contextManager: any = null;
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -42,10 +42,10 @@ export class PlanningProcessor extends BaseAIProcessor {
      * 
      * @param {string} context - Project context information
      * @returns {Promise<string|null>} Schedule Management Plan or null if generation fails
-     */
-    async getScheduleManagementPlan(context: string): Promise<string | null> {
+     */    async getScheduleManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('schedule-management-plan', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('schedule-management-plan', [
                 'project-charter',
                 'scope-management-plan',
                 'project-management-plan'
@@ -84,10 +84,10 @@ Format as a well-structured markdown document with proper headers, lists, and or
      * 
      * @param {string} context - Project context information
      * @returns {Promise<string|null>} Cost Management Plan or null if generation fails
-     */
-    async getCostManagementPlan(context: string): Promise<string | null> {
+     */    async getCostManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('cost-management-plan', [
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('cost-management-plan', [
                 'project-charter',
                 'scope-management-plan',
                 'project-management-plan',
@@ -131,7 +131,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getQualityManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('quality-management-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('quality-management-plan', [
                 'project-charter',
                 'scope-management-plan',
                 'project-management-plan'
@@ -176,7 +176,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getResourceManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('resource-management-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('resource-management-plan', [
                 'project-charter',
                 'project-management-plan',
                 'stakeholder-register',
@@ -222,7 +222,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getCommunicationManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('communication-management-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('communication-management-plan', [
                 'project-charter',
                 'stakeholder-register',
                 'stakeholder-engagement-plan',
@@ -268,7 +268,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getRiskManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('risk-management-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('risk-management-plan', [
                 'project-charter',
                 'project-management-plan',
                 'stakeholder-register'
@@ -313,7 +313,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getProcurementManagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('procurement-management-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('procurement-management-plan', [
                 'project-charter',
                 'project-management-plan',
                 'scope-management-plan'
@@ -359,7 +359,7 @@ Format as a well-structured markdown document with proper headers, lists, and or
      */
     async getStakeholderEngagementPlan(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('stakeholder-engagement-plan', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('stakeholder-engagement-plan', [
                 'project-charter',
                 'stakeholder-register',
                 'communication-management-plan'
@@ -397,3 +397,4 @@ Format as a well-structured markdown document with proper headers, tables, and o
         }, 'Stakeholder Engagement Plan Generation', 'stakeholder-engagement-plan');
     }
 }
+

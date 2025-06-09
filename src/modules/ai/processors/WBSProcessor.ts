@@ -6,7 +6,10 @@
  * @description Specialized processor for generating WBS, WBS Dictionary, and other
  * scope decomposition artifacts following PMBOK standards
  * 
- * @version 1.0.0
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
  * @since 3.1.0
  */
 
@@ -20,10 +23,10 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 
 // Lazy initialization function for contextManager
-function getContextManager(): any {
+async function getContextManager(): Promise<any> {
     if (!_contextManager) {
         // Import dynamically to avoid circular dependency
-        const { ContextManager } = require("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -38,7 +41,7 @@ export class WBSProcessor extends BaseAIProcessor {
      */
     async getWorkBreakdownStructure(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('work-breakdown-structure', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('work-breakdown-structure', [
                 'project-charter',
                 'scope-management-plan',
                 'user-stories',
@@ -77,7 +80,7 @@ Format as a well-structured markdown document with proper indentation for each l
      */
     async getWBSDictionary(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('wbs-dictionary', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('wbs-dictionary', [
                 'work-breakdown-structure',
                 'scope-management-plan',
                 'project-charter'
@@ -118,7 +121,7 @@ Format as a well-structured markdown document, organized by WBS code, with prope
      */
     async getScopeBaseline(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
-            const enhancedContext = getContextManager().buildContextForDocument('scope-baseline', [
+            const contextManager = await getContextManager(); const enhancedContext = contextManager.buildContextForDocument('scope-baseline', [
                 'project-scope-statement',
                 'work-breakdown-structure',
                 'wbs-dictionary',
@@ -147,4 +150,98 @@ Format as a well-structured markdown document with proper headers, sections, and
             return getAIProcessor().extractContent(response);
         }, 'Scope Baseline Generation', 'scope-baseline');
     }
+
+    /**
+     * Generates a Create WBS Process document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Create WBS Process or null if generation fails
+     */
+    async getCreateWbsProcess(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('create-wbs-process', [
+                'project-scope-statement',
+                'requirements-documentation',
+                'scope-management-plan'
+            ]);
+            const fullContext = enhancedContext || context;
+            
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager specializing in scope management. Create a comprehensive Create WBS Process document following PMBOK standards.",
+                `Based on the comprehensive project context below, create a detailed Create WBS Process document:
+
+Project Context:
+${fullContext}
+
+Generate a comprehensive Create WBS Process document with the following sections:
+
+## Create WBS Process
+
+### Process Overview
+- Purpose and objectives of WBS creation
+- Process scope and boundaries
+- Integration with scope management processes
+- PMBOK process group and knowledge area alignment
+
+### Process Inputs
+- Project scope statement
+- Requirements documentation
+- Enterprise environmental factors
+- Organizational process assets
+
+### Tools and Techniques
+- Decomposition techniques
+- Expert judgment
+- Templates and historical information
+- Rolling wave planning approaches
+
+### Process Outputs
+- Scope baseline (WBS, WBS Dictionary, Project Scope Statement)
+- Project documents updates
+- Lessons learned and process improvements
+
+### WBS Development Activities
+- Scope decomposition approach
+- Work package definition criteria
+- Hierarchical structure development
+- 100% rule application
+
+### Quality Considerations
+- WBS quality criteria and standards
+- Review and validation processes
+- Stakeholder approval procedures
+- Documentation requirements
+
+### Process Guidelines
+- WBS creation best practices
+- Common decomposition patterns
+- Work package sizing guidelines
+- Numbering and coding standards
+
+### Integration Points
+- Connection to schedule development
+- Resource planning integration
+- Cost estimation alignment
+- Risk identification support
+
+### Process Metrics
+- WBS quality measurements
+- Development efficiency metrics
+- Stakeholder satisfaction indicators
+- Process improvement measures
+
+### Risk Management
+- WBS-related risks and mitigation
+- Quality assurance procedures
+- Review and approval processes
+- Change control considerations
+
+Format as professional markdown suitable for process documentation and team guidance. Follow PMBOK process documentation standards.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 2200);
+            return getAIProcessor().extractContent(response);
+        }, 'Create WBS Process Generation', 'create-wbs-process');
+    }
 }
+

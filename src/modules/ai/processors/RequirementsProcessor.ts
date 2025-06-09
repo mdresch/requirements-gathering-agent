@@ -7,7 +7,10 @@
  * including user stories, acceptance criteria, requirements matrices,
  * and other requirements-related artifacts.
  * 
- * @version 1.0.0
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
  * @since 3.1.0
  */
 
@@ -21,7 +24,7 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 const getContextManager = async () => {
     if (!_contextManager) {
-        const { ContextManager } = await import("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;
@@ -297,5 +300,192 @@ Follow PMBOK standards and best practices for requirements traceability.`
             const response = await aiProcessor.makeAICall(messages, 1500);
             return getAIProcessor().extractContent(response);
         }, 'Requirements Traceability Matrix Generation', 'requirements-traceability-matrix');
+    }
+
+    /**
+     * Generates Requirements Management Plan based on project context
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Requirements Management Plan or null if generation fails
+     */
+    async getRequirementsManagementPlan(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('requirements-management-plan', [
+                'project-charter',
+                'scope-management-plan',
+                'stakeholder-register'
+            ]);
+            const fullContext = enhancedContext || context;
+
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager with expertise in requirements management. Create a comprehensive Requirements Management Plan following PMBOK standards.",
+                `Based on the comprehensive project context below, create a detailed Requirements Management Plan:
+
+Project Context:
+${fullContext}
+
+Generate a comprehensive Requirements Management Plan with the following sections:
+
+## Requirements Management Plan
+
+### Overview
+- Purpose and scope of requirements management
+- Alignment with project management plan
+- Integration with scope management processes
+
+### Requirements Planning
+- Requirements gathering approach and methodology
+- Stakeholder involvement strategy
+- Requirements categories and types
+- Requirements prioritization criteria
+
+### Requirements Analysis
+- Analysis techniques and tools
+- Requirements validation methods
+- Acceptance criteria definition
+- Requirements decomposition approach
+
+### Requirements Documentation
+- Documentation standards and templates
+- Requirements attributes and metadata
+- Traceability requirements
+- Version control and configuration management
+
+### Requirements Communication
+- Stakeholder communication plan
+- Requirements review and approval process
+- Change communication procedures
+- Status reporting and metrics
+
+### Requirements Change Management
+- Change request process
+- Impact analysis procedures
+- Change approval authority
+- Change implementation procedures
+
+### Requirements Verification and Validation
+- Verification methods and criteria
+- Validation approach and schedule
+- Acceptance testing strategy
+- Quality assurance procedures
+
+### Requirements Traceability
+- Traceability matrix development
+- Traceability maintenance procedures
+- Relationship mapping requirements
+- Coverage analysis methods
+
+### Tools and Techniques
+- Requirements management tools
+- Analysis and modeling techniques
+- Documentation and collaboration tools
+- Metrics and measurement tools
+
+### Roles and Responsibilities
+- Requirements team structure
+- Stakeholder roles and responsibilities
+- Approval and decision-making authority
+- Communication responsibilities
+
+Format as professional markdown suitable for project teams and stakeholders. Follow PMBOK requirements management best practices.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 2000);
+            return getAIProcessor().extractContent(response);
+        }, 'Requirements Management Plan Generation', 'requirements-management-plan');
+    }
+
+    /**
+     * Generates Collect Requirements Process document based on project context
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Collect Requirements Process or null if generation fails
+     */
+    async getCollectRequirementsProcess(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('collect-requirements', [
+                'requirements-management-plan',
+                'project-charter',
+                'stakeholder-register'
+            ]);
+            const fullContext = enhancedContext || context;
+
+            const messages = this.createStandardMessages(
+                "You are a PMBOK-certified project manager specializing in requirements gathering processes. Create a comprehensive Collect Requirements Process document following PMBOK standards.",
+                `Based on the comprehensive project context below, create a detailed Collect Requirements Process document:
+
+Project Context:
+${fullContext}
+
+Generate a comprehensive Collect Requirements Process document with the following sections:
+
+## Collect Requirements Process
+
+### Process Overview
+- Purpose and objectives of requirements collection
+- Process scope and boundaries
+- Integration with other project processes
+- PMBOK process group and knowledge area alignment
+
+### Process Inputs
+- Project charter and business case
+- Requirements management plan
+- Stakeholder register and analysis
+- Other relevant project documents
+
+### Tools and Techniques
+- Data gathering techniques (interviews, focus groups, surveys)
+- Data analysis techniques (document analysis, benchmarking)
+- Decision-making techniques (voting, prioritization)
+- Data representation techniques (prototyping, storyboarding)
+- Interpersonal and team skills (facilitation, negotiation)
+
+### Process Outputs
+- Requirements documentation
+- Requirements traceability matrix
+- Process updates and refinements
+
+### Requirements Collection Activities
+- Stakeholder identification and engagement
+- Requirements elicitation sessions
+- Requirements analysis and validation
+- Requirements documentation and approval
+
+### Quality Considerations
+- Requirements quality criteria
+- Validation and verification methods
+- Review and approval processes
+- Continuous improvement approaches
+
+### Process Metrics
+- Requirements collection metrics
+- Quality measurements
+- Progress tracking methods
+- Performance indicators
+
+### Risk Management
+- Requirements-related risks
+- Risk mitigation strategies
+- Contingency planning
+- Risk monitoring procedures
+
+### Communication Management
+- Stakeholder communication plan
+- Requirements communication methods
+- Feedback and collaboration processes
+- Status reporting procedures
+
+### Process Integration
+- Integration with scope management
+- Connection to design and development
+- Alignment with testing and validation
+- Relationship to change management
+
+Format as professional markdown suitable for project teams and process documentation. Follow PMBOK process documentation standards.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 2200);
+            return getAIProcessor().extractContent(response);
+        }, 'Collect Requirements Process Generation', 'collect-requirements');
     }
 }

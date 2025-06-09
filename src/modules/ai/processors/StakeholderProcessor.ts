@@ -1,14 +1,21 @@
 /**
- * Stakeholder Management Processor 
- * Handles AI functions related to stakeholder management and stakeholder analysis
+ * Stakeholder Management Processor for Requirements Gathering Agent
+ * 
+ * Specialized AI processor for stakeholder management and analysis, handling
+ * stakeholder registers, engagement plans, and communication requirements.
  * 
  * @class StakeholderProcessor
- * @description Specialized processor for generating stakeholder-related documentation 
+ * @description Handles AI functions related to stakeholder management and stakeholder analysis
  * including stakeholder registers, analysis, engagement plans and communication requirements.
  * Uses enhanced context management for improved document generation.
  * 
- * @version 1.0.0
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
  * @since 3.1.0
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\processors\StakeholderProcessor.ts
  */
 
 import { ChatMessage } from "../types.js";
@@ -21,7 +28,7 @@ const aiProcessor = AIProcessor.getInstance();
 let _contextManager: any = null;
 const getContextManager = async () => {
     if (!_contextManager) {
-        const { ContextManager } = await import("../../contextManager");
+        const { ContextManager } = await import("../../contextManager.js");
         _contextManager = new ContextManager();
     }
     return _contextManager;

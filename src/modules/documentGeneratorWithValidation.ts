@@ -1,6 +1,22 @@
 /**
- * Document Generator with PMBOK Validation
- * Integration module for document generation and PMBOK validation
+ * Document Generator with PMBOK Validation Module for Requirements Gathering Agent
+ * 
+ * Integration module that combines document generation with comprehensive PMBOK validation
+ * to ensure compliance with PMI standards and cross-document consistency.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Integrated document generation and PMBOK validation workflow
+ * - Comprehensive validation against PMI standards
+ * - Quality assessment scoring and reporting
+ * - Cross-document consistency checking
+ * - Professional compliance validation
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\documentGeneratorWithValidation.ts
  */
 import { DocumentGenerator, GenerationResult, GenerationOptions } from './documentGenerator/index.js';
 import { PMBOKValidator, ComprehensiveValidationResult } from './pmbokValidation/index.js';

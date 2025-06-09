@@ -1,11 +1,28 @@
 /**
- * Enhanced AI Client Manager with improved connection pooling and error handling
+ * Enhanced AI Client Manager Module for Requirements Gathering Agent
+ * 
+ * Advanced client management system with improved connection pooling, error handling,
+ * and multi-provider authentication for reliable AI service integration.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Multi-provider client management (Azure, Google, GitHub, Ollama)
+ * - Advanced connection pooling and resource management
+ * - Robust authentication handling (API keys, Entra ID, tokens)
+ * - Enhanced error handling and recovery mechanisms
+ * - Performance optimization and monitoring
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\AIClientManager.ts
  */
 
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 import { AzureOpenAI } from "openai";
-import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import { ClientSecretCredential } from "@azure/identity";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { AIProvider } from "./types.js";
@@ -55,10 +72,26 @@ class AIClientManager {
         }
     }
 
-    private async initializeProvider(provider: AIProvider): Promise<void> {
-        const initMethods: Record<AIProvider, () => Promise<void>> = {
+    async initializeSpecificProvider(provider: AIProvider): Promise<void> {
+        if (this.clients.has(provider)) {
+            return; // Already initialized
+        }
+
+        console.log(`🔧 Initializing specific provider: ${provider}`);
+
+        try {
+            await this.initializeProvider(provider);
+            console.log(`✅ ${provider} initialized successfully`);
+        } catch (error: any) {
+            console.error(`❌ Failed to initialize ${provider}:`, error.message);
+            throw error;
+        }
+    }
+
+    private async initializeProvider(provider: AIProvider): Promise<void> {        const initMethods: Record<AIProvider, () => Promise<void>> = {
             'google-ai': () => this.initializeGoogleAI(),
             'azure-openai': () => this.initializeAzureOpenAIWithEntra(),
+            'azure-openai-key': () => this.initializeAzureOpenAIWithKey(),
             'azure-ai-studio': () => this.initializeAzureAIStudio(),
             'github-ai': () => this.initializeGitHubAI(),
             'ollama': () => this.initializeOllama()
@@ -88,17 +121,20 @@ class AIClientManager {
         const deployment = this.config.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME');
         const apiVersion = this.config.get<string>('AZURE_OPENAI_API_VERSION');
         
-        const credential = new DefaultAzureCredential({
-            managedIdentityClientId: this.config.get<string>('azure_client_id'),
-            tenantId: this.config.get<string>('azure_tenant_id')
-        });
+        // Get Entra ID credentials
+        const clientId = this.config.get<string>('AZURE_CLIENT_ID');
+        const tenantId = this.config.get<string>('AZURE_TENANT_ID');
+        const clientSecret = this.config.get<string>('AZURE_CLIENT_SECRET');
+
+        if (!clientId || !tenantId || !clientSecret) {
+            throw new Error('AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET are required for Entra ID authentication');
+        }
         
-        const scope = "https://cognitiveservices.azure.com/.default";
-        const azureADTokenProvider = getBearerTokenProvider(credential, scope);
+        const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
         
         const client = new AzureOpenAI({ 
             endpoint: endpoint!, 
-            azureADTokenProvider, 
+            apiKey: await credential.getToken("https://cognitiveservices.azure.com/.default").then(token => token.token),
             apiVersion, 
             deployment 
         });
@@ -107,41 +143,71 @@ class AIClientManager {
         await this.validateConnection('azure-openai');
     }
 
+    private async initializeAzureOpenAIWithKey(): Promise<void> {
+        const validation = this.config.validateAzureOpenAIConfig();
+        if (!validation.isValid) {
+            throw new Error(`Azure OpenAI configuration error: Missing ${validation.missingVars.join(', ')}`);
+        }
+
+        const endpoint = this.config.get<string>('AZURE_OPENAI_ENDPOINT');
+        const apiKey = this.config.get<string>('AZURE_OPENAI_API_KEY');
+        const deployment = this.config.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME');
+        const apiVersion = this.config.get<string>('AZURE_OPENAI_API_VERSION');
+        
+        if (!apiKey) {
+            throw new Error('AZURE_OPENAI_API_KEY is required for azure-openai-key provider');
+        }
+        
+        const client = new AzureOpenAI({ 
+            endpoint: endpoint!, 
+            apiKey,
+            apiVersion, 
+            deployment 
+        });
+        
+        this.setClient('azure-openai-key', client);
+        await this.validateConnection('azure-openai-key');
+    }
+
     private async initializeAzureAIStudio(): Promise<void> {
         const validation = this.config.validateAzureOpenAIConfig();
         if (!validation.isValid) {
             throw new Error(`Azure AI Studio configuration error: Missing ${validation.missingVars.join(', ')}`);
         }
 
-        const endpoint = this.config.get<string>('azure_ai_endpoint');
-        const apiKey = this.config.get<string>('azure_ai_api_key');
+        // Try both AZURE_AI_ENDPOINT and AZURE_OPENAI_ENDPOINT
+        const endpoint = this.config.get<string>('AZURE_AI_ENDPOINT') || this.config.get<string>('AZURE_OPENAI_ENDPOINT');
+        const apiKey = this.config.get<string>('AZURE_AI_API_KEY') || this.config.get<string>('AZURE_OPENAI_API_KEY');
         
         const client = ModelClient(endpoint!, new AzureKeyCredential(apiKey!));
         this.setClient('azure-ai-studio', client);
         await this.validateConnection('azure-ai-studio');
-    }
-
-    private async initializeGitHubAI(): Promise<void> {
-        const token = this.config.get<string>('github_token');
+    }    private async initializeGitHubAI(): Promise<void> {
+        const token = this.config.get<string>('GITHUB_TOKEN');
         if (!token) {
             throw new Error('GITHUB_TOKEN is required for GitHub AI');
         }
         
-        const endpoint = "https://models.github.ai/inference";
+        const endpoint = this.config.get<string>('GITHUB_ENDPOINT');
+        if (!endpoint) {
+            throw new Error('GITHUB_ENDPOINT is required for GitHub AI');
+        }
+        
         const client = ModelClient(endpoint, new AzureKeyCredential(token));
         this.setClient('github-ai', client);
-    }
-
-    private async initializeOllama(): Promise<void> {
+        await this.validateConnection('github-ai');
+    }private async initializeOllama(): Promise<void> {
         try {
-            const response = await fetch('http://127.0.0.1:11434/api/tags');
+            const endpoint = this.config.get<string>('OLLAMA_ENDPOINT') || 'http://127.0.0.1:11434';
+            
+            const response = await fetch(`${endpoint}/api/tags`);
             if (!response.ok) {
                 throw new Error('Failed to connect to Ollama');
             }
             const models = await response.json();
             
             this.setClient('ollama', {
-                endpoint: 'http://127.0.0.1:11434',
+                endpoint,
                 available: true,
                 models
             });
@@ -183,14 +249,12 @@ class AIClientManager {
             clientInfo.connectionAttempts++;
             throw this.enhanceConnectionError(error, provider);
         }
-    }
-
-    private async performHealthCheck(provider: AIProvider, client: any): Promise<void> {
-        const healthCheckCalls: Record<AIProvider, () => Promise<void>> = {
+    }    private async performHealthCheck(provider: AIProvider, client: any): Promise<void> {        const healthCheckCalls: Record<AIProvider, () => Promise<void>> = {
             'azure-openai': () => this.healthCheckAzureOpenAI(client),
+            'azure-openai-key': () => this.healthCheckAzureOpenAI(client),
             'azure-ai-studio': () => this.healthCheckAzureAIStudio(client),
+            'github-ai': () => this.healthCheckGitHubAI(client),
             'google-ai': () => Promise.resolve(), // Google AI doesn't need health check
-            'github-ai': () => Promise.resolve(), // GitHub AI doesn't need health check  
             'ollama': () => Promise.resolve() // Ollama doesn't need health check
         };
 
@@ -207,9 +271,7 @@ class AIClientManager {
             messages: [{ role: 'system', content: 'ping' }, { role: 'user', content: 'ping' }],
             max_tokens: 1
         });
-    }
-
-    private async healthCheckAzureAIStudio(client: any): Promise<void> {
+    }    private async healthCheckAzureAIStudio(client: any): Promise<void> {
         const deployment = this.config.get<string>('deployment_name');
         const apiVersion = this.config.get<string>('api_version');
         const apiPath = `/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
@@ -224,6 +286,34 @@ class AIClientManager {
                 max_tokens: 1
             }
         });
+    }
+
+    private async healthCheckGitHubAI(client: any): Promise<void> {
+        const modelName = this.config.get<string>('REQUIREMENTS_AGENT_MODEL') || "gpt-4o-mini";
+        
+        try {
+            const result = await client.path("/chat/completions").post({
+                body: {
+                    messages: [
+                        { role: 'system', content: 'ping' },
+                        { role: 'user', content: 'ping' }
+                    ],
+                    model: modelName,
+                    max_tokens: 1
+                }
+            });
+
+            if (result.status !== "200") {
+                throw new Error(`GitHub AI health check failed: ${result.status}`);
+            }
+        } catch (error: any) {
+            if (error.status === 401) {
+                throw new Error('GitHub AI authentication failed. Please check your token.');
+            } else if (error.status === 404) {
+                throw new Error(`GitHub AI model ${modelName} not found. Please check your configuration.`);
+            }
+            throw error;
+        }
     }
 
     private createTimeoutPromise(timeoutMs: number): Promise<never> {
