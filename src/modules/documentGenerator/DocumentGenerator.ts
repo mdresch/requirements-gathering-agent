@@ -1,6 +1,22 @@
 /**
- * Document Generator
- * Core class for generating project documentation based on context
+ * Document Generator Module for Requirements Gathering Agent
+ * 
+ * Core document generation engine that creates comprehensive PMBOK-compliant
+ * project documentation based on project context and AI analysis.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Comprehensive PMBOK 7.0 compliant document generation
+ * - AI-powered content creation and analysis
+ * - Organized file structure and directory management
+ * - Validation and quality assessment integration
+ * - Batch processing and error handling
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\documentGenerator\DocumentGenerator.ts
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';

@@ -1,0 +1,16 @@
+
+=== PROMPT ADJUSTMENT REPORT ===
+
+Document: project-charter
+  - Missing required element: project purpose
+  - Missing required element: measurable objectives
+
+Document: scope-management-plan
+  - Missing required element: scope verification
+
+Document: requirements-documentation
+  - Missing required element: acceptance criteria
+
+Document: project-scope-statement
+  - Missing required element: product scope description
+  - Missing required element: exclusions

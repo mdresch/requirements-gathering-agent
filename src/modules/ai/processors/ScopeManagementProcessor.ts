@@ -103,4 +103,46 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             ['requirements-documentation', 'project-scope-statement', 'work-breakdown-structure']
         );
     }
+
+    /**
+     * Generates a Plan Scope Management process document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Plan Scope Management process or null if generation fails
+     */
+    async getPlanScopeManagement(context: string): Promise<string | null> {
+        return this.generateScopeOutput(
+            'plan-scope-management',
+            context,
+            ['project-charter', 'project-management-plan', 'stakeholder-register']
+        );
+    }
+
+    /**
+     * Generates a Define Scope Process document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Define Scope Process or null if generation fails
+     */
+    async getDefineScopeProcess(context: string): Promise<string | null> {
+        return this.generateScopeOutput(
+            'define-scope-process',
+            context,
+            ['requirements-documentation', 'scope-management-plan', 'project-charter']
+        );
+    }
+
+    /**
+     * Generates Work Performance Information (Scope) document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Work Performance Information (Scope) or null if generation fails
+     */
+    async getWorkPerformanceInformationScope(context: string): Promise<string | null> {
+        return this.generateScopeOutput(
+            'work-performance-information-scope',
+            context,
+            ['scope-baseline', 'project-management-plan', 'validate-scope', 'control-scope']
+        );
+    }
 }

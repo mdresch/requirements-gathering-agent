@@ -1,5 +1,22 @@
 /**
- * AI Function Processors - Separated by domain for better organization
+ * AI Function Processors Index for Requirements Gathering Agent
+ * 
+ * Central export hub for domain-specific AI processors organized by
+ * functional area for better maintainability and modularity.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Domain-separated AI processors for specialized functionality
+ * - Organized exports by functional area (stakeholder, technical, etc.)
+ * - Type-safe processor interfaces and implementations
+ * - Modular architecture for easy extension
+ * - Clean separation of concerns
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\processors\index.ts
  */
 
 import { AIProcessor } from "../AIProcessor.js";
@@ -64,8 +81,8 @@ export const getAiSummaryAndGoals = async (context: string): Promise<string> => 
 export const getAiUserStories = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getUserStories(context));
 export const getAiUserPersonas = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getUserPersonas(context));
 export const getAiKeyRolesAndNeeds = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getKeyRolesAndNeeds(context));
-export const getAiProjectStatementOfWork = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiBusinessCase = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiProjectStatementOfWork = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getProjectStatementOfWork(context));
+export const getAiBusinessCase = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getBusinessCase(context));
 
 // Strategic Statements  
 export const getAiMissionVisionAndCoreValues = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getMissionVisionAndCoreValues(context));
@@ -77,20 +94,20 @@ export const getAiProjectManagementPlan = async (context: string): Promise<strin
 
 // PMBOK Process Functions
 export const getAiDirectAndManageProjectWorkProcess = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getDirectAndManageProjectWork(context));
-export const getAiPerformIntegratedChangeControlProcess = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiCloseProjectOrPhaseProcess = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiPlanScopeManagement = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiRequirementsManagementPlan = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiCollectRequirementsProcess = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiPerformIntegratedChangeControlProcess = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getPerformIntegratedChangeControlProcess(context));
+export const getAiCloseProjectOrPhaseProcess = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getCloseProjectOrPhaseProcess(context));
+export const getAiPlanScopeManagement = async (context: string): Promise<string> => await safeProcessorCall(scopeProcessor.getPlanScopeManagement(context));
+export const getAiRequirementsManagementPlan = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getRequirementsManagementPlan(context));
+export const getAiCollectRequirementsProcess = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getCollectRequirementsProcess(context));
 export const getAiRequirementsDocumentation = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getRequirementsDocumentation(context));
 export const getAiRequirementsTraceabilityMatrix = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getRequirementsTraceabilityMatrix(context));
-export const getAiDefineScopeProcess = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiDefineScopeProcess = async (context: string): Promise<string> => await safeProcessorCall(scopeProcessor.getDefineScopeProcess(context));
 export const getAiProjectScopeStatement = async (context: string): Promise<string> => await safeProcessorCall(scopeProcessor.getProjectScopeStatement(context));
-export const getAiCreateWbsProcess = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiCreateWbsProcess = async (context: string): Promise<string> => await safeProcessorCall(wbsProcessor.getCreateWbsProcess(context));
 export const getAiScopeBaseline = async (context: string): Promise<string> => await safeProcessorCall(wbsProcessor.getScopeBaseline(context));
 export const getAiValidateScopeProcess = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getValidateScopeProcess(context));
 export const getAiControlScopeProcess = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getControlScopeProcess(context));
-export const getAiWorkPerformanceInformationScope = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiWorkPerformanceInformationScope = async (context: string): Promise<string> => await safeProcessorCall(scopeProcessor.getWorkPerformanceInformationScope(context));
 
 // Management Plans
 export const getAiScopeManagementPlan = async (context: string): Promise<string> => await safeProcessorCall(scopeProcessor.getScopeManagementPlan(context));
@@ -110,8 +127,8 @@ export const getAiStakeholderAnalysis = async (context: string): Promise<string>
 export const getAiWbs = async (context: string): Promise<string> => await safeProcessorCall(wbsProcessor.getWorkBreakdownStructure(context));
 export const getAiWbsDictionary = async (context: string): Promise<string> => await safeProcessorCall(wbsProcessor.getWBSDictionary(context));
 export const getAiActivityList = async (context: string): Promise<string> => await safeProcessorCall(activityProcessor.getActivityList(context));
-export const getAiActivityDurationEstimates = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
-export const getAiActivityResourceEstimates = async (context: string): Promise<string> => ""; // Placeholder - implement in processor
+export const getAiActivityDurationEstimates = async (context: string): Promise<string> => await safeProcessorCall(activityProcessor.getActivityDurationEstimates(context));
+export const getAiActivityResourceEstimates = async (context: string): Promise<string> => await safeProcessorCall(activityProcessor.getActivityResourceEstimates(context));
 export const getAiScheduleNetworkDiagram = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getScheduleNetworkDiagram(context));
 export const getAiMilestoneList = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getMilestoneList(context));
 export const getAiDevelopScheduleInput = async (context: string): Promise<string> => await safeProcessorCall(activityProcessor.getDevelopScheduleInput(context));

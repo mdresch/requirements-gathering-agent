@@ -6,7 +6,10 @@
  * @description Manages core project management document generation including
  * summaries, user stories, and risk analysis.
  * 
- * @version 1.0.0
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
  * @since 3.1.0
  */
 
@@ -704,6 +707,157 @@ Format as professional markdown suitable for schedulers, project managers, and r
             },
             "Schedule Development Input Generation",
             "schedule-dev-input"
+        );
+    }
+
+    /**
+     * Gets project statement of work
+     */
+    async getProjectStatementOfWork(context: string): Promise<string | null> {
+        return this.handleAICall(
+            async () => {
+                const messages = this.createStandardMessages(
+                    `You are a PMBOK-certified project manager with expertise in creating comprehensive Project Statements of Work. Generate a detailed Statement of Work that clearly defines the project scope, deliverables, and approach.`,
+                    `Based on the comprehensive project context below, generate a detailed Project Statement of Work:
+
+Project Context:
+${context}
+
+Generate the following sections:
+
+## Project Statement of Work
+
+### Project Description
+- Comprehensive overview of the project
+- Business context and background
+- Problem statement and opportunity
+- High-level solution approach
+
+### Project Scope
+- What is included in the project
+- What is explicitly excluded from the project
+- Key deliverables and outcomes
+- Performance requirements and constraints
+
+### Objectives and Success Criteria
+- Primary objectives (SMART goals)
+- Secondary objectives
+- Success metrics and KPIs
+- Acceptance criteria for project completion
+
+### Deliverables
+- Major deliverables with descriptions
+- Quality standards for each deliverable
+- Delivery schedule and milestones
+- Dependencies and assumptions
+
+### Approach and Methodology
+- Project management methodology
+- Development approach and standards
+- Quality assurance processes
+- Risk management approach
+
+### Assumptions and Constraints
+- Key project assumptions
+- Technical constraints
+- Resource constraints
+- Timeline constraints
+
+### Roles and Responsibilities
+- Project organization structure
+- Key roles and responsibilities
+- Decision-making authority
+- Communication protocols
+
+Format as professional markdown suitable for project initiation and stakeholder approval. Follow PMBOK Statement of Work best practices.`
+                );
+                const response = await getAIProcessor().makeAICall(messages, 2200);
+                return getAIProcessor().extractContent(response);
+            },
+            "Project Statement of Work Generation",
+            "project-statement-of-work"
+        );
+    }
+
+    /**
+     * Gets business case
+     */
+    async getBusinessCase(context: string): Promise<string | null> {
+        return this.handleAICall(
+            async () => {
+                const messages = this.createStandardMessages(
+                    `You are a senior business analyst and PMBOK-certified project manager with expertise in developing compelling business cases. Generate a comprehensive Business Case that justifies the project investment and demonstrates its business value.`,
+                    `Based on the comprehensive project context below, generate a detailed Business Case:
+
+Project Context:
+${context}
+
+Generate the following sections:
+
+## Business Case
+
+### Executive Summary
+- Project overview and purpose
+- Key business benefits and value proposition
+- Investment requirements and expected returns
+- Recommendation and next steps
+
+### Business Need and Opportunity
+- Current state analysis and pain points
+- Market opportunity and competitive landscape
+- Business problem statement
+- Urgency and timing considerations
+
+### Proposed Solution
+- Solution overview and approach
+- Key features and capabilities
+- Technical architecture summary
+- Implementation strategy
+
+### Financial Analysis
+- Cost-benefit analysis
+- Investment requirements (development, implementation, maintenance)
+- Expected financial returns and savings
+- ROI calculation and payback period
+- NPV and IRR analysis (if applicable)
+
+### Benefits Realization
+- Quantifiable benefits (financial)
+- Qualitative benefits (strategic, operational)
+- Risk mitigation benefits
+- Benefit realization timeline
+
+### Options Analysis
+- Alternative solutions considered
+- "Do nothing" option analysis
+- Preferred option justification
+- Implementation approach options
+
+### Risk Assessment
+- Key project risks and mitigation strategies
+- Business risks and dependencies
+- Technology risks and considerations
+- Market and competitive risks
+
+### Implementation Approach
+- High-level implementation plan
+- Resource requirements
+- Timeline and milestones
+- Success criteria and metrics
+
+### Conclusion and Recommendation
+- Business case summary
+- Recommended course of action
+- Key success factors
+- Next steps and approvals required
+
+Format as professional markdown suitable for executive review and project approval. Follow PMBOK business case best practices and include quantitative analysis where possible.`
+                );
+                const response = await getAIProcessor().makeAICall(messages, 2500);
+                return getAIProcessor().extractContent(response);
+            },
+            "Business Case Generation",
+            "business-case"
         );
     }
 }

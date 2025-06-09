@@ -1,6 +1,6 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "2.1.3-celebration.0",
+  "version": "2.1.3-prerelease",
   "description": "🎉 AI-powered PMBOK documentation generator - celebrating 175 weekly downloads milestone! Generates comprehensive project management documents from README context",
   "main": "dist/cli.js",
   "type": "module",

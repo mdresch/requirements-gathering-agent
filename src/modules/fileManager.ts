@@ -1,6 +1,22 @@
 /**
- * File management and context utilities for Requirements Gathering Agent
- * Version: 2.1.2
+ * File Management and Context Utilities Module for Requirements Gathering Agent
+ * 
+ * Provides comprehensive file management capabilities, project context reading,
+ * and document metadata handling for the requirements gathering system.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Enhanced project context reading from multiple sources
+ * - Document metadata management and validation
+ * - Integration with project analyzer for comprehensive analysis
+ * - File system utilities for document organization
+ * - Context population and enhancement workflows
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\fileManager.ts
  */
 
 import * as fs from 'fs';

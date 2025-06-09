@@ -1,6 +1,22 @@
 /**
- * Enhanced Context Manager for Requirements Gathering Agent
- * Version: 2.1.2
+ * Enhanced Context Manager Module for Requirements Gathering Agent
+ * 
+ * Provides advanced context management capabilities including project analysis integration,
+ * AI-powered content enhancement, and comprehensive document context building.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Enhanced project context creation with multi-source integration
+ * - AI-powered content analysis and enhancement
+ * - Intelligent content prioritization and relevance scoring
+ * - Context validation and consistency checking
+ * - Large context handling with token management
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\contextManager.ts
  */
 
 import { AIProcessor } from './ai/AIProcessor.js';

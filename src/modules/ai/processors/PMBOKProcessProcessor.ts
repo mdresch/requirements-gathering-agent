@@ -122,4 +122,26 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             ['scope-management-plan', 'scope-baseline', 'project-management-plan']
         );
     }
+
+    /**
+     * Generates a Perform Integrated Change Control Process document following PMBOK standards
+     */
+    async getPerformIntegratedChangeControlProcess(context: string): Promise<string | null> {
+        return this.generatePMBOKOutput(
+            'perform-integrated-change-control',
+            context,
+            ['project-management-plan', 'project-charter', 'scope-management-plan']
+        );
+    }
+
+    /**
+     * Generates a Close Project or Phase Process document following PMBOK standards
+     */
+    async getCloseProjectOrPhaseProcess(context: string): Promise<string | null> {
+        return this.generatePMBOKOutput(
+            'close-project-or-phase',
+            context,
+            ['project-management-plan', 'project-charter', 'scope-management-plan']
+        );
+    }
 }

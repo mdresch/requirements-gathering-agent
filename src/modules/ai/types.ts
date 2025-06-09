@@ -1,5 +1,22 @@
 /**
- * Core AI Types and Interfaces
+ * Core AI Types and Interfaces Module for Requirements Gathering Agent
+ * 
+ * Defines essential TypeScript interfaces and types for AI provider integration,
+ * message handling, and response processing across the system.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Comprehensive AI provider type definitions
+ * - Message and response interface specifications
+ * - Metrics and performance tracking types
+ * - Configuration and validation interfaces
+ * - Cross-module type consistency
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\types.ts
  */
 
 export interface ChatMessage {
@@ -26,7 +43,7 @@ export interface RetryConfig {
     retryableErrors: string[];
 }
 
-export type AIProvider = 'azure-openai' | 'github-ai' | 'ollama' | 'azure-ai-studio' | 'google-ai';
+export type AIProvider = 'azure-openai' | 'azure-openai-key' | 'github-ai' | 'ollama' | 'azure-ai-studio' | 'google-ai';
 
 export interface AIClientConfig {
     provider: AIProvider;

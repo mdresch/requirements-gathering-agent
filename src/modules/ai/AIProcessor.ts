@@ -1,5 +1,22 @@
 /**
- * Enhanced AI Processor with improved error handling and response processing
+ * Enhanced AI Processor Module for Requirements Gathering Agent
+ * 
+ * Core AI processing engine with improved error handling, response processing,
+ * and multi-provider support for robust document generation.
+ * 
+ * @version 2.1.3
+ * @author Requirements Gathering Agent Team
+ * @created 2024
+ * @updated June 2025
+ * 
+ * Key Features:
+ * - Multi-provider AI integration (Google AI, Azure OpenAI, GitHub AI, Ollama)
+ * - Advanced error handling and retry mechanisms
+ * - Performance metrics and monitoring
+ * - Response validation and processing
+ * - Configuration management and provider switching
+ * 
+ * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\ai\AIProcessor.ts
  */
 
 import { ChatMessage, AIProvider, AIResponse } from "./types.js";
@@ -165,10 +182,10 @@ class AIProcessor {
         client: any, 
         messages: ChatMessage[], 
         maxTokens: number
-    ): Promise<string> {
-        const callMethods: Record<AIProvider, () => Promise<string>> = {
+    ): Promise<string> {        const callMethods: Record<AIProvider, () => Promise<string>> = {
             'google-ai': () => this.makeGoogleAICall(client, messages, maxTokens),
             'azure-openai': () => this.makeAzureOpenAICall(client, messages, maxTokens),
+            'azure-openai-key': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-ai-studio': () => this.makeAzureAIStudioCall(client, messages, maxTokens),
             'github-ai': () => this.makeGitHubAICall(client, messages, maxTokens),
             'ollama': () => this.makeOllamaCall(client, messages, maxTokens)

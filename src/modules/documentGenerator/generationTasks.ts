@@ -17,8 +17,24 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'business-case', name: 'Business Case', func: 'getAiBusinessCase', emoji: '💼', category: 'core-analysis', priority: 5, pmbokRef: '1.1' },
     
     // Strategic Statements (New)
-    { key: 'mission-vision-core-values', name: 'Mission, Vision, and Core Values', func: 'getAiMissionVisionAndCoreValues', emoji: '🌟', category: 'strategic-statements', priority: 6, pmbokRef: '1.2' },
-    { key: 'project-purpose', name: 'Project Purpose', func: 'getAiProjectPurpose', emoji: '🎯', category: 'strategic-statements', priority: 7, pmbokRef: '1.3' },
+    {
+        key: 'mission-vision-core-values',
+        name: 'Mission, Vision & Core Values',
+        func: 'getAiMissionVisionAndCoreValues',
+        emoji: '🎯',
+        category: 'strategic-statements',
+        priority: 1,
+        pmbokRef: '1.2.3.1 Strategic Alignment'
+    },
+    {
+        key: 'project-purpose',
+        name: 'Project Purpose',
+        func: 'getAiProjectPurpose',
+        emoji: '🎯',
+        category: 'strategic-statements',
+        priority: 2,
+        pmbokRef: '1.2.3.1 Strategic Alignment'
+    },
     
     // Project Charter (Critical)
     { key: 'project-charter', name: 'Project Charter', func: 'getAiProjectCharter', emoji: '📜', category: 'project-charter', priority: 8, pmbokRef: '4.1' },
@@ -85,7 +101,7 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'business-case': { filename: 'business-case.md', title: 'Business Case' },
     
     // Strategic Documents
-    'mission-vision-core-values': { filename: 'mission-vision-core-values.md', title: 'Mission, Vision, and Core Values' },
+    'mission-vision-core-values': { filename: 'mission-vision-core-values.md', title: 'Mission, Vision & Core Values' },
     'project-purpose': { filename: 'project-purpose.md', title: 'Project Purpose' },
     
     // Project Charter

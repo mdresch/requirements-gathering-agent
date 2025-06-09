@@ -1,7 +1,7 @@
 /**
  * Main CLI logic for Requirements Gathering Agent
  * Rewritten to integrate with enhanced project analyzer and modern document generation
- * Version: 2.1.2
+ * Version: 2.1.3
  */
 
 import { 
@@ -80,7 +80,7 @@ async function validateEnvironment(): Promise<boolean> {
     }
 }
 
-export const VERSION = '2.1.2';
+export const VERSION = '2.1.3';
 
 export async function main(options: GenerationOptions = { 
     outputDir: 'generated-documents',
@@ -99,9 +99,7 @@ export async function main(options: GenerationOptions = {
         const isValidEnv = await validateEnvironment();
         if (!isValidEnv) {
             throw new Error('Environment validation failed');
-        }
-
-        if (!options.quiet) {
+        }        if (!options.quiet) {
             console.log(`📋 Starting PMBOK document generation with modern DocumentGenerator (v${VERSION})...`);
         }
 
