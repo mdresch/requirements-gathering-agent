@@ -106,15 +106,39 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
      * following PMBOK standards
      */
     async getAIProjectCharter(context: string): Promise<string | null> {
-        const contextManager = await getContextManager();
-        const enhancedContext = contextManager.buildContextForDocument('project-charter', 
-            ['user-stories', 'stakeholder-register', 'cost-management-plan']);
-        const fullContext = enhancedContext || context;
+        try {
+            // Validate input context
+            if (!context || typeof context !== 'string') {
+                throw new Error('Invalid context provided to getAIProjectCharter');
+            }
 
-        return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter with detailed budget summary following PMBOK 7th Edition standards.`,
-                `Based on the project context below, create a well-structured project charter with emphasis on the budget summary section:
+            // Get context manager with error handling
+            const contextManager = await getContextManager().catch(error => {
+                throw new Error(`Failed to initialize context manager: ${error.message}`);
+            });
+
+            // Build enhanced context with required documents
+            const enhancedContext = await Promise.resolve().then(() => {
+                try {
+                    return contextManager.buildContextForDocument('project-charter', 
+                        ['user-stories', 'stakeholder-register', 'cost-management-plan']);
+                } catch (error) {
+                    throw new Error(`Failed to build document context: ${error.message}`);
+                }
+            });
+
+            const fullContext = enhancedContext || context;
+
+            // Validate enhanced context
+            if (!fullContext || fullContext.trim().length === 0) {
+                throw new Error('Failed to generate valid context for project charter');
+            }
+
+            return await this.handleAICall(async () => {
+                try {
+                    const messages = this.createStandardMessages(
+                        `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter with detailed budget summary following PMBOK 7th Edition standards.`,
+                        `Based on the project context below, create a well-structured project charter with emphasis on the budget summary section:
 
 Project Context:
 ${fullContext}
@@ -128,11 +152,37 @@ The budget summary should include:
 6. Financial risks and contingencies
 
 Follow PMBOK standards and ensure the document is clear, comprehensive, and provides stakeholders with a thorough understanding of the project's financial requirements.`
-            );
-            const aiProcessor = getAIProcessor();
-            const response = await aiProcessor.makeAICall(messages, 2000);
-            return getAIProcessor().extractContent(response);
-        }, 'AI Project Charter Generation', 'project-charter');
+                    );
+
+                    const aiProcessor = getAIProcessor();
+                    if (!aiProcessor) {
+                        throw new Error('Failed to initialize AI processor');
+                    }
+
+                    const response = await aiProcessor.makeAICall(messages, 2000)
+                        .catch(error => {
+                            throw new Error(`AI call failed: ${error.message}`);
+                        });
+
+                    if (!response) {
+                        throw new Error('Received empty response from AI processor');
+                    }
+
+                    const content = getAIProcessor().extractContent(response);
+                    if (!content) {
+                        throw new Error('Failed to extract content from AI response');
+                    }
+
+                    return content;
+                } catch (error) {
+                    console.error('Error in AI project charter generation:', error);
+                    throw new Error(`Failed to generate project charter: ${error.message}`);
+                }
+            }, 'AI Project Charter Generation', 'project-charter');
+        } catch (error) {
+            console.error('Critical error in getAIProjectCharter:', error);
+            throw error;
+        }
     }
 
     /**
