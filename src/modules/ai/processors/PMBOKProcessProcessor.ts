@@ -179,10 +179,48 @@ ${fullContext}
    - Problem or opportunity being addressed
 
 2. Measurable Project Objectives
-   - Specific, Measurable, Achievable, Relevant, Time-bound (SMART) objectives
-   - Key performance indicators (KPIs)
-   - Success criteria
-   - Timeline-based milestones
+   Each objective must follow this structure:
+   
+   a) SMART Criteria Definition
+      - Specific: Clear, unambiguous statement of what is to be achieved
+      - Measurable: Quantifiable metrics with specific numbers/percentages
+      - Achievable: Realistic within project constraints
+      - Relevant: Aligned with business goals
+      - Time-bound: Specific completion dates
+   
+   b) Quantifiable Metrics (for each objective)
+      - Current baseline value
+      - Target value
+      - Measurement method
+      - Measurement frequency
+      - Data source
+   
+   c) Key Performance Indicators (KPIs)
+      - Primary KPI with specific numeric targets
+      - Secondary KPIs for tracking progress
+      - Leading indicators
+      - Lagging indicators
+   
+   d) Success Criteria
+      - Minimum acceptable values
+      - Target values
+      - Stretch goals
+      - Verification methods
+   
+   e) Timeline-based Milestones
+      - Interim targets with dates
+      - Progress checkpoints
+      - Review periods
+      - Final completion criteria
+   
+   f) Measurement Implementation
+      - Tools and methods for tracking
+      - Reporting frequency
+      - Responsible parties
+      - Data collection process
+   
+   Example Format for Each Objective:
+   "Increase system performance by 40% (from current 2.5s to 1.5s response time) by Q4 2024, measured through automated performance testing conducted weekly, reported monthly, with interim targets of 2.0s by Q2 2024 and 1.7s by Q3 2024."
 
 3. High-level Requirements
    - Business requirements
@@ -212,7 +250,35 @@ Follow PMBOK standards and ensure:
 - Each element contains specific, actionable information
 - Requirements are traceable to objectives
 - Budget aligns with scope and objectives
-- Clear relationships between all charter components`
+- Clear relationships between all charter components
+
+Specific Requirements for Measurable Objectives:
+1. Each objective MUST include:
+   - Numeric targets with specific values
+   - Current baseline measurements
+   - Clear timeline with dates
+   - Defined measurement method
+   - Specific data sources
+   - Responsible parties
+   - Reporting frequency
+
+2. Objectives must be written in this format:
+   "Action + Metric + Target + Timeline + Measurement + Reporting"
+   Example: "Reduce customer support tickets by 30% (from 1000 to 700 monthly) by Q3 2024, tracked through the support ticket system daily, reported bi-weekly to stakeholders"
+
+3. Every objective requires:
+   - Primary quantifiable metric
+   - At least one secondary tracking metric
+   - Minimum of 3 interim milestones
+   - Clear success criteria with specific values
+   - Defined measurement tools and methods
+
+4. Measurement validation:
+   - Each metric must have a defined data source
+   - Collection methods must be specified
+   - Frequency of measurement stated
+   - Quality control measures identified
+   - Verification process documented`
                     );
 
                     const aiProcessor = getAIProcessor();
