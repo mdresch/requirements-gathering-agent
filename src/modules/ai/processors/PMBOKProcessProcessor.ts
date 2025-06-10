@@ -105,7 +105,36 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
      * Generates an AI-enhanced Project Charter with detailed budget summary
      * following PMBOK standards
      */
-    async getAIProjectCharter(context: string): Promise<string | null> {
+    /**
+     * Calculate appropriate token limit based on context complexity
+     * @param context The project context
+     * @param additionalContexts Array of additional context documents
+     * @returns Calculated token limit
+     */
+    private calculateTokenLimit(context: string, additionalContexts: string[] = []): number {
+        // Base token limit for minimal project charter
+        const baseTokenLimit = 2000;
+        
+        // Calculate complexity factors
+        const contextLength = context.length;
+        const contextFactor = Math.ceil(contextLength / 1000) * 200; // Add 200 tokens per 1000 chars
+        const additionalContextFactor = additionalContexts.length * 300; // Add 300 tokens per additional context
+        
+        // Calculate total token limit with bounds
+        const calculatedLimit = baseTokenLimit + contextFactor + additionalContextFactor;
+        const minTokenLimit = 2000;
+        const maxTokenLimit = 8000;
+        
+        return Math.min(Math.max(calculatedLimit, minTokenLimit), maxTokenLimit);
+    }
+
+    async getAIProjectCharter(
+        context: string,
+        options: {
+            tokenLimit?: number,
+            additionalContexts?: string[]
+        } = {}
+    ): Promise<string | null> {
         try {
             // Validate input context
             if (!context || typeof context !== 'string') {
@@ -191,7 +220,19 @@ Follow PMBOK standards and ensure:
                         throw new Error('Failed to initialize AI processor');
                     }
 
-                    const response = await aiProcessor.makeAICall(messages, 2000)
+                    // Determine token limit
+                    const calculatedTokenLimit = this.calculateTokenLimit(
+                        fullContext,
+                        options.additionalContexts || []
+                    );
+                    const tokenLimit = options.tokenLimit || calculatedTokenLimit;
+
+                    // Validate token limit
+                    if (tokenLimit < 2000 || tokenLimit > 8000) {
+                        throw new Error('Token limit must be between 2000 and 8000');
+                    }
+
+                    const response = await aiProcessor.makeAICall(messages, tokenLimit)
                         .catch(error => {
                             throw new Error(`AI call failed: ${error.message}`);
                         });
