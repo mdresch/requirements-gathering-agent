@@ -137,21 +137,53 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             return await this.handleAICall(async () => {
                 try {
                     const messages = this.createStandardMessages(
-                        `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter with detailed budget summary following PMBOK 7th Edition standards.`,
-                        `Based on the project context below, create a well-structured project charter with emphasis on the budget summary section:
+                        `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter following PMBOK 7th Edition standards that includes all required core elements and a detailed budget summary.`,
+                        `Based on the project context below, create a well-structured project charter that must include all the following sections:
 
 Project Context:
 ${fullContext}
 
-The budget summary should include:
-1. Total project cost estimate
-2. Major cost categories and allocations
-3. Key financial assumptions
-4. Funding sources and constraints
-5. Budget milestones and phasing
-6. Financial risks and contingencies
+1. Project Purpose
+   - Clear statement of why the project exists
+   - Business case alignment
+   - Strategic value and expected benefits
+   - Problem or opportunity being addressed
 
-Follow PMBOK standards and ensure the document is clear, comprehensive, and provides stakeholders with a thorough understanding of the project's financial requirements.`
+2. Measurable Project Objectives
+   - Specific, Measurable, Achievable, Relevant, Time-bound (SMART) objectives
+   - Key performance indicators (KPIs)
+   - Success criteria
+   - Timeline-based milestones
+
+3. High-level Requirements
+   - Business requirements
+   - Stakeholder requirements
+   - Technical requirements
+   - Compliance and regulatory requirements
+   - Quality requirements
+   - Constraints and assumptions
+
+4. Budget Summary
+   - Total project cost estimate
+   - Major cost categories and allocations
+   - Key financial assumptions
+   - Funding sources and constraints
+   - Budget milestones and phasing
+   - Financial risks and contingencies
+   - Budget alignment with objectives
+
+5. Integration Elements
+   - Dependencies between objectives and requirements
+   - Resource allocation alignment
+   - Risk considerations across all areas
+   - Stakeholder impact analysis
+
+Follow PMBOK standards and ensure:
+- All sections are clearly structured and labeled
+- Each element contains specific, actionable information
+- Requirements are traceable to objectives
+- Budget aligns with scope and objectives
+- Clear relationships between all charter components`
                     );
 
                     const aiProcessor = getAIProcessor();
