@@ -15,6 +15,7 @@
  * - Organized file structure and directory management
  * - Validation and quality assessment integration
  * - Batch processing and error handling
+ * - Multiple export formats (Markdown, Word DOCX)
  * 
  * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\documentGenerator\DocumentGenerator.ts
  */
@@ -30,6 +31,8 @@ import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
 // Import all processor functions
 import * as processors from '../ai/processors/index.js';
+// Import format generators
+import { PandocGenerator } from '../formatGenerators/PandocGenerator.js';
 import { 
     GenerationOptions, 
     GenerationResult, 
@@ -57,11 +60,15 @@ export class DocumentGenerator {
         options: GenerationOptions = {},
         aiProcessor?: AIProcessor,
         configManager?: ConfigurationManager
-    ) {
-        this.context = context;
+    ) {        this.context = context;
         this.aiProcessor = aiProcessor || AIProcessor.getInstance();
         this.configManager = configManager || ConfigurationManager.getInstance();
-        this.options = {
+          // Configure strict provider mode if specified
+        if (options.provider && options.provider.trim()) {
+            console.log(`🔒 Configuring DocumentGenerator for strict provider mode: ${options.provider}`);
+            this.aiProcessor.setStrictProvider(options.provider);
+        }
+          this.options = {
             includeCategories: options.includeCategories || [],
             excludeCategories: options.excludeCategories || [],
             maxConcurrent: options.maxConcurrent || 1,
@@ -70,7 +77,8 @@ export class DocumentGenerator {
             generateIndex: options.generateIndex ?? true,
             cleanup: options.cleanup ?? true,
             outputDir: options.outputDir || 'generated-documents', // Default output directory
-            format: options.format || 'markdown' // Default format
+            format: options.format || 'markdown', // Default format
+            provider: options.provider || '' // Store the provider choice, empty string if not specified
         };
         
         this.results = {
@@ -299,9 +307,11 @@ export class DocumentGenerator {
      * @param task Task to generate document for
      * @returns Whether generation was successful
      */
-    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {        try {
+    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
+        try {
             console.log(`${task.emoji} Generating ${task.name}...`);
-              // Get the AI function using the correct method
+            
+            // Get the AI function using the correct method
             const methodName = task.func as keyof DocumentGenerator;
             const aiFunction = this[methodName] as ((context: string) => Promise<string>) | undefined;
             
@@ -311,24 +321,24 @@ export class DocumentGenerator {
                 this.results.errors.push({ task: task.name, error });
                 return false;
             }
-              const content = await aiFunction.call(this, this.context);
+            
+            const content = await aiFunction.call(this, this.context);
             
             if (content && content.trim().length > 0) {
                 const documentKey = task.key;
                 const config = DOCUMENT_CONFIG[documentKey];
                 
-                if (!config) {
-                    console.error(`❌ Unknown document key: ${documentKey}`);
-                    saveDocument(documentKey, content);
-                    this.results.generatedFiles.push(`${task.category}/${documentKey}.md`);
-                    console.log(`✅ Generated: ${task.name} (using default filename)`);
-                    return true;
-                }
+                // Save document in the specified format
+                const savedPath = await this.saveDocumentWithFormat(documentKey, content, task);
                 
-                saveDocument(documentKey, content);
-                this.results.generatedFiles.push(`${task.category}/${config.filename}`);
-                console.log(`✅ Generated: ${task.name}`);
-                return true;
+                if (savedPath) {
+                    this.results.generatedFiles.push(savedPath);
+                    console.log(`✅ Generated: ${task.name} (${this.options.format})`);
+                    return true;
+                } else {
+                    console.log(`❌ Failed to save: ${task.name}`);
+                    return false;
+                }
             } else {
                 console.log(`⚠️ No content generated for ${task.name}`);
                 return false;
@@ -339,6 +349,114 @@ export class DocumentGenerator {
             console.error(`❌ Error generating ${task.name}: ${errorMsg}`);
             this.results.errors.push({ task: task.name, error: errorMsg });
             return false;
+        }
+    }    /**
+     * Save document in the specified format
+     * @param documentKey Document key
+     * @param content Document content
+     * @param task Generation task
+     * @returns Relative path of saved file or null if failed
+     */
+    private async saveDocumentWithFormat(documentKey: string, content: string, task: GenerationTask): Promise<string | null> {
+        try {
+            const config = DOCUMENT_CONFIG[documentKey];
+            const baseDir = this.options.outputDir;
+            const categoryDir = path.join(baseDir, task.category);
+
+            if (this.options.format === 'markdown') {
+                // Ensure the directory exists before writing
+                await fs.mkdir(categoryDir, { recursive: true });
+                // Determine filename
+                const filename = config ? config.filename : `${documentKey}.md`;
+                const fullPath = path.join(categoryDir, filename);
+                // Add document header with metadata
+                const timestamp = new Date().toISOString();
+                const documentHeader = `# ${config ? config.title : documentKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+\n**Generated by Requirements Gathering Agent v2.1.3**  \n**Category:** ${task.category}  \n**Generated:** ${timestamp}  \n**Description:** ${(config ? config.description : 'Auto-generated document')}\n\n---\n\n`;
+                const fullContent = documentHeader + content;
+                await fs.writeFile(fullPath, fullContent, 'utf-8');
+                console.log(`✅ Saved: ${config ? config.title : documentKey} → ${fullPath}`);
+                return `${task.category}/${filename}`;
+            } else if (this.options.format === 'docx') {
+                console.log(`📄 Converting ${task.name} to Word format...`);
+                
+                // Generate Word document using Pandoc
+                const baseDir = this.options.outputDir;
+                const categoryDir = path.join(baseDir, task.category);
+                
+                // Determine filename
+                const baseFilename = config ? config.filename.replace('.md', '') : documentKey;
+                const filename = `${baseFilename}.docx`;
+                const fullPath = path.join(categoryDir, filename);
+                
+                // Ensure the directory exists before writing
+                await fs.mkdir(categoryDir, { recursive: true });
+                  // Create PandocGenerator instance and generate Word document
+                const pandocGenerator = new PandocGenerator({
+                    title: config ? config.title : task.name,
+                    author: 'Requirements Gathering Agent v2.1.3',
+                    description: config ? config.description : 'Generated project documentation',
+                    timestamp: new Date(),
+                    projectName: 'Requirements Gathering Agent Project',
+                    category: task.category
+                });
+                await pandocGenerator.generateWordDocument(content, fullPath);
+                // Check if file exists before stat
+                try {
+                    await fs.access(fullPath);
+                    const stats = await fs.stat(fullPath);
+                    const fileSizeKB = Math.round(stats.size / 1024);
+                    console.log(`✅ Generated Word document: ${filename} (${fileSizeKB} KB)`);
+                } catch (fileErr) {
+                    console.error(`❌ Word document was not created: ${fullPath}`);
+                    return null;
+                }
+                return `${task.category}/${filename}`;
+            } else if (this.options.format === 'pptx') {
+                console.log(`🎯 Converting ${task.name} to PowerPoint format...`);
+                
+                // Generate PowerPoint document using Pandoc - GAME CHANGER!
+                const baseDir = this.options.outputDir;
+                const categoryDir = path.join(baseDir, task.category);
+                
+                // Determine filename
+                const baseFilename = config ? config.filename.replace('.md', '') : documentKey;
+                const filename = `${baseFilename}.pptx`;
+                const fullPath = path.join(categoryDir, filename);
+                
+                // Ensure the directory exists before writing
+                await fs.mkdir(categoryDir, { recursive: true });
+                  // Create PandocGenerator instance and generate PowerPoint document
+                const pandocGenerator = new PandocGenerator({
+                    title: config ? config.title : task.name,
+                    author: 'Requirements Gathering Agent v2.1.3',
+                    description: config ? config.description : 'Generated project documentation',
+                    timestamp: new Date(),
+                    projectName: 'Requirements Gathering Agent Project',
+                    category: task.category
+                });
+                await pandocGenerator.generatePowerPointDocument(content, fullPath);
+                // Check if file exists before stat
+                try {
+                    await fs.access(fullPath);
+                    const stats = await fs.stat(fullPath);
+                    const fileSizeKB = Math.round(stats.size / 1024);
+                    console.log(`🚀 Generated PowerPoint presentation: ${filename} (${fileSizeKB} KB)`);
+                } catch (fileErr) {
+                    console.error(`❌ PowerPoint document was not created: ${fullPath}`);
+                    return null;
+                }
+                return `${task.category}/${filename}`;
+                  } else {
+                console.error(`❌ Unsupported format: ${this.options.format}`);
+                console.log(`💡 Supported formats: markdown, docx, pptx`);
+                return null;
+            }
+            
+        } catch (error: any) {
+            console.error(`❌ Error saving document ${documentKey} in format ${this.options.format}:`, error.message);
+            console.log(`💡 Tip: Try switching to markdown format if Word export continues to fail`);
+            return null;
         }
     }
 

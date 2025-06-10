@@ -67,7 +67,7 @@ export class ProviderManager {
           console.warn('Google AI check failed:', error instanceof Error ? error.message : String(error));
           return false;
         }
-      },      priority: 5, // Lower priority than Azure OpenAI
+      },      priority: 2, // Second priority - free tier
       description: 'Google AI with Gemini models - supports ultra-large context',
       setupGuide: 'Visit https://makersuite.google.com/app/apikey to get your API key',
       endpoint: 'https://generativelanguage.googleapis.com/v1beta',
@@ -91,9 +91,8 @@ export class ProviderManager {
         } catch (error) {
           console.warn('Azure Entra ID authentication failed:', error instanceof Error ? error.message : String(error));
           return false;
-        }
-      },
-      priority: 2,
+        }      },
+      priority: 4, // Lower priority to allow GitHub AI to be preferred
       description: 'Azure OpenAI with Entra ID authentication - enterprise-grade',
       endpoint: process.env.AZURE_OPENAI_ENDPOINT,
       tokenLimit: process.env.DEPLOYMENT_NAME?.includes('32k') ? 32000 : 8000,
@@ -143,7 +142,7 @@ export class ProviderManager {
         // Skip the network call for now to avoid validation issues
         return true;
       },
-      priority: 1, // Higher priority than Google AI
+      priority: 3, // Lower priority to allow GitHub AI to be preferred
       description: 'Azure OpenAI with API key authentication',
       endpoint: process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT,
       tokenLimit: (process.env.REQUIREMENTS_AGENT_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT_NAME)?.includes('32k') ? 32000 : 8000,
@@ -177,9 +176,8 @@ export class ProviderManager {
         } catch (error) {
           console.warn('GitHub AI check failed:', error instanceof Error ? error.message : String(error));
           return false;
-        }
-      },
-      priority: 3,
+        }      },
+      priority: 1, // Highest priority - GitHub AI preferred
       description: 'GitHub AI with GPT-4 - cost-effective',
       endpoint: process.env.GITHUB_ENDPOINT || process.env.AZURE_AI_ENDPOINT || 'https://models.inference.ai.azure.com',
       tokenLimit: 128000,
@@ -261,8 +259,7 @@ export class ProviderManager {
   private addProvider(config: ProviderConfig): void {
     this.providers.set(config.name, config);
     this.initializeMetrics(config.name);
-  }
-  public async validateConfigurations(): Promise<Map<string, boolean>> {
+  }  public async validateConfigurations(): Promise<Map<string, boolean>> {
     const results = new Map<string, boolean>();
     const validProviders: Array<{ name: string; priority: number }> = [];
     
@@ -282,11 +279,17 @@ export class ProviderManager {
     // Sort by priority (lower number = higher priority)
     validProviders.sort((a, b) => a.priority - b.priority);
 
-    // Set active provider to highest priority valid provider
-    if (validProviders.length > 0) {
+    // Only set active provider automatically if no provider is already explicitly set
+    if (validProviders.length > 0 && !this.activeProvider) {
       this.activeProvider = validProviders[0].name;
       // Set fallback queue to remaining providers in priority order
       this.fallbackQueue = validProviders.slice(1).map(p => p.name);
+    } else if (this.activeProvider) {
+      // If a provider is already set (e.g., strict mode), just update fallback queue
+      // excluding the active provider
+      this.fallbackQueue = validProviders
+        .filter(p => p.name !== this.activeProvider)
+        .map(p => p.name);
     }
 
     return results;
@@ -294,6 +297,19 @@ export class ProviderManager {
 
   public getActiveProvider(): string | null {
     return this.activeProvider;
+  }
+
+  /**
+   * Set the active provider explicitly (for strict provider mode)
+   * @param providerId Provider ID to set as active
+   */
+  public setActiveProvider(providerId: string): void {
+    if (!this.providers.has(providerId)) {
+      throw new Error(`Provider ${providerId} not found`);
+    }
+    
+    this.activeProvider = providerId;
+    console.log(`Active provider set to: ${providerId}`);
   }
 
   public async switchProvider(): Promise<boolean> {

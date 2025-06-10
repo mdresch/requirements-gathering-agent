@@ -68,8 +68,8 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'stakeholder-engagement-plan', name: 'Stakeholder Engagement Plan', func: 'getAiStakeholderEngagementPlan', emoji: '🤝', category: 'stakeholder-management', priority: 17, pmbokRef: '13.2.3.1' },
     { key: 'stakeholder-register', name: 'Stakeholder Register', func: 'getAiStakeholderRegister', emoji: '👥', category: 'stakeholder-management', priority: 18, pmbokRef: '13.1.3.1' },
     { key: 'stakeholder-analysis', name: 'Stakeholder Analysis', func: 'getAiStakeholderAnalysis', emoji: '📈', category: 'stakeholder-management', priority: 19, pmbokRef: '13.1.2.4' },
-    
-    // Planning Artifacts (Medium Priority - updated priorities)
+      // Planning Artifacts (Medium Priority - updated priorities)
+    { key: 'project-kickoff-checklist', name: 'AI Project Kickoff Checklist', func: 'getAiProjectKickoffChecklist', emoji: '🚀', category: 'planning-artifacts', priority: 19.5, pmbokRef: '4.1' },
     { key: 'work-breakdown-structure', name: 'Work Breakdown Structure', func: 'getAiWbs', emoji: '🏗️', category: 'planning-artifacts', priority: 20, pmbokRef: '5.4.3.1' },
     { key: 'wbs-dictionary', name: 'WBS Dictionary', func: 'getAiWbsDictionary', emoji: '📚', category: 'planning-artifacts', priority: 21, pmbokRef: '5.4.3.1' },
     { key: 'activity-list', name: 'Activity List', func: 'getAiActivityList', emoji: '📋', category: 'planning-artifacts', priority: 22, pmbokRef: '6.2.3.1' },
@@ -136,8 +136,8 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'stakeholder-engagement-plan': { filename: 'stakeholder-engagement-plan.md', title: 'Stakeholder Engagement Plan' },
     'stakeholder-register': { filename: 'stakeholder-register.md', title: 'Stakeholder Register' },
     'stakeholder-analysis': { filename: 'stakeholder-analysis.md', title: 'Stakeholder Analysis' },
-    
-    // Planning Artifacts
+      // Planning Artifacts
+    'project-kickoff-checklist': { filename: 'project-kickoff-checklist.md', title: 'AI Project Kickoff Checklist' },
     'work-breakdown-structure': { filename: 'work-breakdown-structure.md', title: 'Work Breakdown Structure' },
     'wbs-dictionary': { filename: 'wbs-dictionary.md', title: 'WBS Dictionary' },
     'activity-list': { filename: 'activity-list.md', title: 'Activity List' },

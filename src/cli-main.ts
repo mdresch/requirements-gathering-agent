@@ -38,6 +38,8 @@ interface GenerationOptions {
     validateConsistency?: boolean;
     /** Whether to provide quality assessment */
     qualityAssessment?: boolean;
+    /** Specific AI provider to use exclusively (disables fallback logic) */
+    provider?: string;
 }
 
 /**
@@ -181,7 +183,9 @@ async function handleValidationOnly(context: string, options: GenerationOptions)
         console.log('🔍 Validating existing documents...');
     }
     
-    const generator = new DocumentGenerator(context);
+    const generator = new DocumentGenerator(context, {
+        provider: options.provider // Use selected provider for validation
+    });
     const validation = await generator.validateGeneration();
     
     console.log('\n📋 Validation Results:');
@@ -208,7 +212,9 @@ async function handleConsistencyValidation(context: string, options: GenerationO
         console.log('🔍 Checking cross-document consistency...');
     }
     
-    const generator = new DocumentGenerator(context);
+    const generator = new DocumentGenerator(context, {
+        provider: options.provider // Use selected provider for consistency validation
+    });
     const pmbokCompliance = await generator.validatePMBOKCompliance();
     
     console.log('\n📊 Consistency Results:');
@@ -250,12 +256,12 @@ async function handleCategoryGeneration(context: string, options: GenerationOpti
     if (!options.quiet) {
         console.log(`📂 Generating documents for categories: ${options.categories!.join(', ')}`);
     }
-    
-    const generator = new DocumentGenerator(context, {
+      const generator = new DocumentGenerator(context, {
         includeCategories: options.categories!,
         continueOnError: true,
         generateIndex: true,
-        cleanup: true
+        cleanup: true,
+        provider: options.provider // Use selected provider for category generation
     });
     
     const result = await generator.generateAll();
@@ -281,23 +287,23 @@ async function handleFullGeneration(context: string, options: GenerationOptions)
         console.log('📚 Generating all PMBOK documents...');
     }
     
-    if (options.retries > 0) {
-        // Use retry mechanism
+    if (options.retries > 0) {        // Use retry mechanism
         const result = await generateDocumentsWithRetry(context, {
             maxRetries: options.retries,
             continueOnError: true,
             generateIndex: true,
-            cleanup: true
+            cleanup: true,
+            provider: options.provider // Use selected provider for retry generation
         });
         
         console.log(`✅ Generation completed: ${result.successCount} successful, ${result.failureCount} failed`);
         return result.successCount > 0;
-    } else {
-        // Use standard generation
+    } else {        // Use standard generation
         const generator = new DocumentGenerator(context, {
             continueOnError: true,
             generateIndex: true,
-            cleanup: true
+            cleanup: true,
+            provider: options.provider // Use selected provider for full generation
         });
         
         const result = await generator.generateAll();

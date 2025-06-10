@@ -1,9 +1,9 @@
 # Steps to Implement New Document Types
 
-**Document Version:** 1.0  
+**Document Version:** 1.1  
 **Created:** June 2025  
-**Last Updated:** June 2025  
-**Target Audience:** Developers, Contributors, Technical Leads  
+**Last Updated:** June 9, 2025  
+**Target Audience:** Developers, Contributors, Technical Leads
 
 ---
 
@@ -27,14 +27,19 @@ The document generation system follows this structure:
 
 ```
 src/modules/
-├── documentGenerator.ts      # Main orchestrator
+├── documentGenerator/        # Main orchestrator (modular)
+│   ├── DocumentGenerator.ts # Core generation logic
+│   ├── generationTasks.ts   # Task definitions
+│   ├── types.ts            # Type definitions
+│   └── index.ts            # Module exports
 ├── documentTemplates/        # Document-specific logic
 │   ├── coreAnalysis/        # Core analysis documents
-│   ├── managementPlans/     # Management and planning docs
-│   ├── stakeholderMgmt/     # Stakeholder management
-│   └── technicalAnalysis/   # Technical documentation
+│   ├── managementPlans/     # Management plan documents
+│   └── planningArtifacts/   # Planning artifact documents
 ├── ai/                      # AI provider management
-└── processors/              # Document processors
+│   └── processors/          # Specialized AI processors by domain
+├── llmProcessor-migration.ts # Migration wrapper functions
+└── pmbokValidation/         # PMBOK compliance validation
 ```
 
 ---
@@ -66,7 +71,24 @@ interface NewDocumentSpec {
   dependencies: string[];         // Other documents it depends on
   estimatedTokens: number;        // AI token estimate
   priority: number;              // Generation priority (1-10)
+  processor: ProcessorType;       // Which AI processor to use
 }
+```
+
+### 1.3 Choose Appropriate Processor
+
+Select the right processor for your document type:
+
+- **PlanningProcessor**: Planning artifacts, schedules, resources, kickoff documents
+- **ScopeManagementProcessor**: Scope management, WBS, scope statements, scope processes
+- **TechnicalAnalysisProcessor**: Technical requirements, architecture documents
+- **StakeholderProcessor**: Stakeholder registers, communication plans
+- **ProjectMgmtProcessor**: Core project management plans, charters
+- **PMBOKProcessor**: PMBOK-specific processes and methodologies
+- **RequirementsProcessor**: Requirements documentation, traceability
+- **WBSProcessor**: Work breakdown structures
+- **ActivityProcessor**: Activity definitions, sequencing
+- **aiProcessor**: Direct AI calls for simple custom processing (use sparingly)
 ```
 
 ---
@@ -93,8 +115,9 @@ touch src/modules/documentTemplates/yourCategory/yourDocumentName.ts
 
 ```typescript
 // src/modules/documentTemplates/yourCategory/yourDocumentName.ts
-import { ProjectContext } from '../../types.js';
-import { validatePMBOKCompliance } from '../../validation/pmbokValidator.js';
+import { ProjectContext } from '../../types';
+// Import validation if needed
+// import { validatePMBOKCompliance } from '../../pmbokValidation/index';
 
 export interface YourDocumentConfig {
   includeRiskAssessment?: boolean;
@@ -220,96 +243,117 @@ This document provides [description of what the document covers].
 
 ---
 
-## 🔧 Step 3: Create Document Processor
+## 🔧 Step 3: Add Generation Task Definition and Processor Method
 
-### 3.1 Create Processor File
+### 3.1 Update Generation Tasks
 
-```bash
-touch src/modules/processors/yourDocumentNameProcessor.ts
-```
-
-### 3.2 Processor Implementation
+Add your new document to `src/modules/documentGenerator/generationTasks.ts`:
 
 ```typescript
-// src/modules/processors/yourDocumentNameProcessor.ts
-import { AIProcessor } from '../ai/AIProcessor.js';
-import { ProjectContext } from '../types.js';
-import { YourDocumentNameTemplate, YourDocumentConfig } from '../documentTemplates/yourCategory/yourDocumentName.js';
-
-export class YourDocumentNameProcessor {
-  constructor(
-    private aiProcessor: AIProcessor,
-    private context: ProjectContext
-  ) {}
-
-  /**
-   * Process and generate the document using AI
-   */
-  async processDocument(config: YourDocumentConfig = { detailLevel: 'detailed' }): Promise<string> {
-    try {
-      // Create template instance
-      const template = new YourDocumentNameTemplate(this.context, config);
-      
-      // Generate initial content
-      const initialContent = await template.generateContent();
-      
-      // AI enhancement prompt
-      const aiPrompt = this.createAIPrompt(initialContent);
-      
-      // Process with AI
-      const enhancedContent = await this.aiProcessor.generateContent(
-        aiPrompt,
-        'your-document-name-generation'
-      );
-
-      // Validate and return
-      await this.validateOutput(enhancedContent);
-      return enhancedContent;
-
-    } catch (error) {
-      console.error('Error processing your document:', error);
-      throw new Error(`Failed to generate your document: ${error.message}`);
-    }
+// Add to GENERATION_TASKS array
+export const GENERATION_TASKS: GenerationTask[] = [
+  // ...existing tasks...
+  {
+    key: 'your-document-name',
+    name: 'Your Document Name',
+    func: 'getYourDocumentName', // Function name in llmProcessor-migration.ts
+    emoji: '📋',
+    category: 'your-category',
+    priority: 10, // Set appropriate priority
+    pmbokRef: '4.1' // PMBOK reference if applicable
   }
+];
+```
 
-  /**
-   * Create AI enhancement prompt
-   */
-  private createAIPrompt(initialContent: string): string {
-    return `You are a professional project manager and PMBOK expert. Please enhance and expand the following document template with detailed, actionable content based on the project context.
+### 3.2 Add Method to Appropriate Processor
+
+**IMPORTANT**: Add the actual implementation to the correct processor class first, then create a wrapper in the migration file.
+
+#### Option A: Add to Existing Processor
+
+Add your method to the appropriate processor class (e.g., `PlanningProcessor.ts`, `ScopeManagementProcessor.ts`):
+
+```typescript
+// src/modules/ai/processors/YourProcessor.ts
+/**
+ * Generate Your Document Name
+ */
+async getYourDocumentName(context: string): Promise<string | null> {
+    const contextManager = await getContextManager();
+    const enhancedContext = contextManager.buildContextForDocument('your-document-name', [
+        'project-charter', 'stakeholder-register' // Add relevant dependencies
+    ]);
+    const fullContext = enhancedContext || context;
+
+    return await this.handleAICall(async () => {        // Import template without .js extension for compilation
+        const { YourDocumentNameTemplate } = await import('../../documentTemplates/yourCategory/yourDocumentName');
+        
+        const template = new YourDocumentNameTemplate(
+            { projectName: 'Context Project' },
+            { detailLevel: 'detailed' }
+        );
+        const baseContent = await template.generateContent();
+        
+        const messages = this.createStandardMessages(
+            `You are a professional project manager and PMBOK expert. Generate detailed, actionable project management documentation.`,
+            `Based on the following project context, enhance this document template:
 
 Project Context:
-- Name: ${this.context.projectName}
-- Type: ${this.context.projectType}
-- Description: ${this.context.description}
-
-Requirements:
-1. Ensure PMBOK 7.0 compliance
-2. Make content specific to this project
-3. Include actionable recommendations
-4. Use professional language and formatting
-5. Add relevant examples where appropriate
+${fullContext}
 
 Document Template:
-${initialContent}
+${baseContent}
 
-Please provide a comprehensive, enhanced version of this document.`;
-  }
+Please provide a comprehensive, enhanced version with:
+1. PMBOK 7.0 compliance
+2. Project-specific content
+3. Actionable recommendations
+4. Professional language
+5. Relevant examples`
+        );
+        
+        const response = await aiProcessor.makeAICall(messages, 1400);
+        return getAIProcessor().extractContent(response);
+    }, 'Your Document Name Generation', 'your-document-name');
+}
+```
 
-  /**
-   * Validate the generated output
-   */
-  private async validateOutput(content: string): Promise<void> {
-    if (!content || content.trim().length === 0) {
-      throw new Error('Generated content is empty');
-    }
+### 3.3 Add Migration Wrapper Function
 
-    if (content.length < 500) {
-      console.warn('Generated content seems unusually short');
-    }
+Add the wrapper function to `src/modules/llmProcessor-migration.ts`:
 
-    // Additional validation logic here
-  }
+```typescript
+/**
+ * Generate Your Document Name (Migration Wrapper)
+ */
+export async function getYourDocumentName(context: string): Promise<string | null> {
+    // Call the appropriate processor method
+    return await planningProcessor.getYourDocumentName(context);
+    // OR: return await scopeProcessor.getYourDocumentName(context);
+    // OR: return await technicalAnalysisProcessor.getYourDocumentName(context);
+}
+```
+
+#### Option B: Direct Implementation (for simple cases)
+
+For simple documents that don't fit existing processors, implement directly in migration file:
+
+```typescript
+export async function getYourDocumentName(context: string): Promise<string | null> {
+    return await MigrationHelperProcessor.handleAICall(async () => {
+        // Import without .js extension
+        const { YourDocumentNameTemplate } = await import('../documentTemplates/yourCategory/yourDocumentName');
+        
+        const template = new YourDocumentNameTemplate({ projectName: 'Context Project' });
+        const content = await template.generateContent();
+        
+        const systemPrompt = `You are a professional project manager and PMBOK expert.`;
+        const userPrompt = `Enhance this document: ${content}\n\nContext: ${context}`;
+
+        const messages = MigrationHelperProcessor.createMessages(systemPrompt, userPrompt);
+        const response = await aiProcessor.makeAICall(messages, 1400);
+        return getAIProcessor().extractContent(response);
+    }, 'your-document-name');
 }
 ```
 
@@ -317,93 +361,53 @@ Please provide a comprehensive, enhanced version of this document.`;
 
 ## 📋 Step 4: Register Document in Main Generator
 
-### 4.1 Update Document Categories
+### 4.1 Verify Task Registration
 
-Add your new document to the main categories in `src/modules/documentGenerator.ts`:
+Ensure your new task appears in the available generation tasks:
 
 ```typescript
-// Add to existing categories object
-export const DOCUMENT_CATEGORIES = {
-  // ...existing categories...
-  'your-category': {
-    name: 'Your Category',
-    description: 'Description of your category',
-    documents: [
-      'your-document-name'
-    ]
-  }
-};
+// The task should now be automatically available since it's in GENERATION_TASKS
+// No additional registration needed - the system discovers tasks automatically
 ```
 
-### 4.2 Update Document Definitions
+### 4.2 Update Available Categories (if new category)
+
+If you created a new category, ensure it's recognized by the CLI:
 
 ```typescript
-// Add to DOCUMENT_DEFINITIONS
-export const DOCUMENT_DEFINITIONS = {
-  // ...existing definitions...
-  'your-document-name': {
-    name: 'Your Document Name',
-    category: 'your-category',
-    fileName: 'your-document-name.md',
-    description: 'Description of your document',
-    processor: 'YourDocumentNameProcessor',
-    dependencies: [], // List any dependencies
-    estimatedTokens: 2000,
-    priority: 5
-  }
-};
-```
-
-### 4.3 Update Processor Registry
-
-```typescript
-// Add import
-import { YourDocumentNameProcessor } from './processors/yourDocumentNameProcessor.js';
-
-// Add to processor creation
-private createProcessor(type: string, context: ProjectContext): any {
-  switch (type) {
-    // ...existing cases...
-    case 'your-document-name':
-      return new YourDocumentNameProcessor(this.aiProcessor, context);
-    default:
-      throw new Error(`Unknown document type: ${type}`);
-  }
-}
+// The category is automatically detected from GENERATION_TASKS
+// But you may want to add it to category-specific CLI flags in cli.ts
 ```
 
 ---
 
-## 🧪 Step 5: Add CLI Support
+## 🧪 Step 5: Add CLI Support (Optional)
 
-### 5.1 Update CLI Flags
+### 5.1 Update CLI Flags (if adding category-specific generation)
 
-In `src/cli.ts`, add your new document category flag:
+In `src/cli.ts`, you can add category-specific flags:
 
 ```typescript
-// Add to help text
+// Add to help text in displayHelp function
 console.log('  --generate-your-category    Generate your category documents');
 
-// Add to argument parsing
+// Add to argument parsing in main function
 if (args.includes('--generate-your-category')) {
-  categories.push('your-category');
+  const categories = ['your-category'];
+  await generateByCategories(categories, outputDir, options);
+  return;
 }
 ```
 
 ### 5.2 Update Available Categories
 
+The system automatically detects categories from `GENERATION_TASKS`, but you can verify available categories:
+
 ```typescript
-// In getAvailableCategories function
-export function getAvailableCategories(): string[] {
-  return [
-    'core-analysis',
-    'management-plans',
-    'planning-artifacts',
-    'technical-analysis',
-    'stakeholder-management',
-    'your-category' // Add your new category
-  ];
-}
+// Categories are automatically extracted from GENERATION_TASKS
+// Use getAvailableCategories() to see all available categories
+import { getAvailableCategories } from './modules/documentGenerator.js';
+console.log('Available categories:', getAvailableCategories());
 ```
 
 ---
@@ -412,48 +416,68 @@ export function getAvailableCategories(): string[] {
 
 ### 6.1 Create Test File
 
-```bash
-touch test/yourDocumentName.test.ts
+```powershell
+# Create test file using PowerShell
+New-Item test/yourDocumentName.test.ts -ItemType File
 ```
 
 ### 6.2 Basic Test Implementation
 
 ```typescript
 // test/yourDocumentName.test.ts
-import { YourDocumentNameProcessor } from '../src/modules/processors/yourDocumentNameProcessor.js';
-import { YourDocumentNameTemplate } from '../src/modules/documentTemplates/yourCategory/yourDocumentName.js';
-import { ProjectContext } from '../src/modules/types.js';
+import { getYourDocumentName } from '../src/modules/llmProcessor-migration';
+import { YourDocumentNameTemplate } from '../src/modules/documentTemplates/yourCategory/yourDocumentName';
 
 describe('YourDocumentNameProcessor', () => {
-  const mockContext: ProjectContext = {
-    projectName: 'Test Project',
-    projectType: 'web-application',
-    description: 'A test project for validation'
-  };
+  const mockContext = `
+Project Name: Test Project
+Project Type: web-application
+Description: A test project for validation
+`;
 
-  test('should generate document content', async () => {
-    const template = new YourDocumentNameTemplate(mockContext);
+  test('should generate document content via template', async () => {
+    const template = new YourDocumentNameTemplate({
+      projectName: 'Test Project',
+      projectType: 'web-application',
+      description: 'A test project for validation'
+    });
     const content = await template.generateContent();
     
     expect(content).toBeDefined();
     expect(content.length).toBeGreaterThan(100);
     expect(content).toContain('Test Project');
+    expect(content).toContain('# Your Document Name');
   });
 
-  test('should validate PMBOK compliance', async () => {
-    const template = new YourDocumentNameTemplate(mockContext);
-    const isCompliant = await template.validateCompliance();
+  test('should generate enhanced content via AI processor', async () => {
+    const result = await getYourDocumentName(mockContext);
     
-    expect(isCompliant).toBe(true);
+    expect(result).toBeDefined();
+    if (result) {
+      expect(result.length).toBeGreaterThan(500);
+    }
+  }, 30000); // Allow 30s for AI processing
+
+  test('should handle empty context gracefully', async () => {
+    const result = await getYourDocumentName('');
+    
+    // Should either return valid content or null, but not throw
+    expect(result === null || typeof result === 'string').toBe(true);
   });
 });
 ```
 
 ### 6.3 Integration Test
 
-```bash
-# Test document generation
+```powershell
+# Test document generation using PowerShell
 node dist/cli.js --generate-your-category --output test-output
+
+# Test specific document generation
+node dist/cli.js --interactive
+
+# Run tests
+npm test
 ```
 
 ---
@@ -547,48 +571,352 @@ node dist/cli.js --help  # Verify new options appear
 ## 🎯 Best Practices
 
 ### Code Quality
-- ✅ Follow existing code patterns and conventions
-- ✅ Use TypeScript types consistently
-- ✅ Include proper error handling
-- ✅ Add meaningful comments and documentation
+- ✅ Follow existing code patterns in `documentTemplates/` subdirectories
+- ✅ Use TypeScript types consistently from `types`
+- ✅ Include proper error handling in templates and processors
+- ✅ Add meaningful JSDoc comments and documentation
+- ✅ Use correct import patterns (no `.js` extensions for dynamic imports)
 
 ### AI Integration
-- ✅ Design prompts that produce consistent results
-- ✅ Include context-specific information
-- ✅ Validate AI outputs appropriately
-- ✅ Handle AI failures gracefully
+- ✅ Always implement methods in appropriate processor classes first
+- ✅ Use migration file only as wrapper to call processor methods
+- ✅ Design prompts that produce consistent, professional results
+- ✅ Include context-specific information in templates
+- ✅ Use processor's `handleAICall()` for proper error handling
+- ✅ Test with different project contexts to ensure robustness
 
-### User Experience
-- ✅ Provide clear documentation
-- ✅ Use intuitive CLI flags
-- ✅ Include helpful error messages
-- ✅ Follow established patterns
+### Template Design
+- ✅ Create modular template sections that can be enabled/disabled
+- ✅ Include placeholder content that guides AI generation
+- ✅ Use consistent document header format with metadata
+- ✅ Support different detail levels (basic, detailed, comprehensive)
+- ✅ Make templates project-agnostic but context-aware
 
 ### Performance
-- ✅ Optimize token usage for AI calls
-- ✅ Cache results where appropriate
-- ✅ Handle large projects efficiently
-- ✅ Provide progress feedback
+- ✅ Optimize AI token usage by using concise but comprehensive prompts
+- ✅ Set appropriate priority levels in `GENERATION_TASKS`
+- ✅ Use existing processors rather than direct AI calls when possible
+- ✅ Consider document dependencies when setting generation order
+
+### User Experience
+- ✅ Provide clear, intuitive document names and descriptions
+- ✅ Use meaningful emojis in task definitions for better CLI experience
+- ✅ Include helpful error messages and fallback behaviors
+- ✅ Follow established CLI patterns and naming conventions
+
+### Testing Strategy
+- ✅ Test template generation independently of AI processing
+- ✅ Test AI integration with realistic project contexts
+- ✅ Verify error handling for edge cases (empty context, AI failures)
+- ✅ Test CLI integration end-to-end
+- ✅ Validate PMBOK compliance where applicable
 
 ---
 
 ## 🔧 Common Issues and Solutions
 
+### Issue: Function Not Found in Generation Tasks
+**Problem**: `Error: Function getYourDocumentName not found in llmProcessor-migration`
+**Solution**: 
+1. Ensure your function is exported from `llmProcessor-migration.ts`
+2. Check the `func` name in `GENERATION_TASKS` matches exactly
+3. Rebuild the project: `npm run build`
+
 ### Issue: AI Generated Content is Generic
-**Solution**: Enhance your AI prompts with more specific project context and examples.
+**Solution**: 
+1. Enhance your AI prompts with more specific project context
+2. Use appropriate processor (e.g., `pmbokProcessor` for PMBOK docs)
+3. Include more detailed template content as a foundation
 
 ### Issue: PMBOK Validation Fails
-**Solution**: Review PMBOK 7.0 guidelines and ensure your document structure aligns with standards.
+**Solution**: 
+1. Review PMBOK 7.0 guidelines for your document type
+2. Ensure your template includes required PMBOK elements
+3. Check the `pmbokRef` in your task definition
 
 ### Issue: TypeScript Compilation Errors
-**Solution**: Check import paths and ensure all types are properly defined.
+**Solution**: 
+1. Remove `.js` extensions from import paths for dynamic imports
+2. Ensure all types are properly imported from `types`
+3. Verify template class implements expected interface
+4. Check that processor methods exist before calling them
+
+### Issue: Missing Functions in Migration File
+**Problem**: `Error: Function getYourDocumentName not found in llmProcessor-migration`
+**Solution**: 
+1. Always implement the method in the appropriate processor class first
+2. Add the wrapper function to `llmProcessor-migration.ts`
+3. Ensure the function is exported from migration file
+4. Rebuild the project: `npm run build`
 
 ### Issue: CLI Integration Not Working
-**Solution**: Verify you've updated all necessary files in the CLI chain.
+**Solution**: 
+1. Verify your task is in `GENERATION_TASKS` array
+2. Check category name matches across all files
+3. Ensure function is exported from migration file
+4. Rebuild: `npm run build`
+
+### Issue: Template Directory Not Found
+**Solution**: 
+```powershell
+# Create missing directories using PowerShell
+New-Item src/modules/documentTemplates/yourCategory -ItemType Directory -Force
+```
+
+### Issue: AI Provider Not Configured
+**Solution**: 
+1. Check your `.env` file has proper AI provider configuration
+2. Test AI provider: `node dist/cli.js --test-ai`
+3. Verify API keys and endpoints are correct
 
 ---
 
-## 📞 Support
+## 🚀 Quick Start Checklist
+
+Use this checklist to ensure you've completed all steps:
+
+- [ ] 1. **Planning**: Document specification created
+- [ ] 2. **Template**: Document template class created in appropriate category
+- [ ] 3. **Function**: LLM processor function added to migration file
+- [ ] 4. **Task**: Generation task added to `GENERATION_TASKS`
+- [ ] 5. **Test**: Basic tests created and passing
+- [ ] 6. **Build**: Project builds without errors (`npm run build`)
+- [ ] 7. **CLI**: Document appears in CLI help (`node dist/cli.js --help`)
+- [ ] 8. **Generate**: Document generates successfully
+- [ ] 9. **Validate**: PMBOK validation passes (if applicable)
+- [ ] 10. **Documentation**: README updated with new document type
+
+---
+
+## 💡 Complete Example: Security Management Plan
+
+Here's a complete example of implementing a new document type:
+
+### Step 1: Create Template
+
+```typescript
+// src/modules/documentTemplates/managementPlans/securityManagementPlan.ts
+import { ProjectContext } from '../../types';
+
+export interface SecurityManagementPlanConfig {
+  includeComplianceSection?: boolean;
+  detailLevel: 'basic' | 'detailed' | 'comprehensive';
+  securityFramework?: 'ISO27001' | 'NIST' | 'SOC2' | 'custom';
+}
+
+export class SecurityManagementPlanTemplate {
+  constructor(
+    private context: ProjectContext,
+    private config: SecurityManagementPlanConfig = { 
+      detailLevel: 'detailed',
+      securityFramework: 'NIST'
+    }
+  ) {}
+
+  async generateContent(): Promise<string> {
+    const sections = [
+      this.generateHeader(),
+      this.generateExecutiveSummary(),
+      this.generateSecurityObjectives(),
+      this.generateRiskAssessment(),
+      this.generateSecurityControls(),
+      this.config.includeComplianceSection ? this.generateComplianceSection() : null,
+      this.generateConclusion()
+    ];
+
+    return sections.filter(Boolean).join('\n\n');
+  }
+
+  private generateHeader(): string {
+    return `# Security Management Plan
+
+**Document Version:** 1.0  
+**Created:** ${new Date().toLocaleDateString()}  
+**Project:** ${this.context.projectName || 'Unknown Project'}  
+**Category:** Management Plans  
+**Framework:** ${this.config.securityFramework}
+
+---`;
+  }
+
+  private generateExecutiveSummary(): string {
+    return `## Executive Summary
+
+This Security Management Plan outlines the security requirements, controls, and procedures for ${this.context.projectName}.
+
+### Key Objectives
+- Protect project assets and data from security threats
+- Ensure compliance with relevant security standards
+- Establish incident response procedures
+- Define security roles and responsibilities`;
+  }
+
+  private generateSecurityObjectives(): string {
+    return `## Security Objectives
+
+- **Confidentiality**: Ensure sensitive data is accessible only to authorized personnel
+- **Integrity**: Maintain accuracy and completeness of data and systems
+- **Availability**: Ensure systems and data are available when needed
+- **Accountability**: Maintain audit trails and access logs`;
+  }
+
+  private generateRiskAssessment(): string {
+    return `## Security Risk Assessment
+
+### Risk Categories
+- Data breaches and unauthorized access
+- System vulnerabilities and exploits
+- Insider threats and social engineering
+- Physical security threats
+- Third-party and supply chain risks`;
+  }
+
+  private generateSecurityControls(): string {
+    return `## Security Controls
+
+### Technical Controls
+- Access control and authentication systems
+- Encryption for data at rest and in transit
+- Network security and firewalls
+- Monitoring and logging systems
+
+### Administrative Controls
+- Security policies and procedures
+- Training and awareness programs
+- Incident response procedures
+- Regular security assessments`;
+  }
+
+  private generateComplianceSection(): string {
+    return `## Compliance Requirements
+
+### ${this.config.securityFramework} Framework Alignment
+- Control implementation mapping
+- Audit requirements and schedules
+- Documentation and reporting procedures
+- Continuous monitoring processes`;
+  }
+
+  private generateConclusion(): string {
+    return `## Implementation Timeline
+
+- **Phase 1**: Security infrastructure setup (Weeks 1-2)
+- **Phase 2**: Policy implementation and training (Weeks 3-4)
+- **Phase 3**: Monitoring and audit setup (Weeks 5-6)
+- **Phase 4**: Ongoing maintenance and review
+
+---
+
+*This document was generated using the Requirements Gathering Agent v2.1.3*`;
+  }
+}
+```
+
+### Step 2: Add Generation Task
+
+```typescript
+// Add to src/modules/documentGenerator/generationTasks.ts
+{
+  key: 'security-management-plan',
+  name: 'Security Management Plan',
+  func: 'getSecurityManagementPlan',
+  emoji: '🔒',
+  category: 'management-plans',
+  priority: 8.5,
+  pmbokRef: '11.1'
+}
+```
+
+### Step 3: Add LLM Function
+
+```typescript
+// Add to src/modules/llmProcessor-migration.ts
+export async function getSecurityManagementPlan(context: string): Promise<string | null> {
+  return await MigrationHelperProcessor.handleAICall(async () => {
+    const template = new SecurityManagementPlanTemplate(
+      { projectName: 'Security Project' },
+      { detailLevel: 'detailed', securityFramework: 'NIST' }
+    );
+    const content = await template.generateContent();
+      const messages = MigrationHelperProcessor.createMessages(
+      `You are a cybersecurity expert and project manager. Generate comprehensive security management documentation following PMBOK and NIST guidelines.`,
+      `Based on the following project context, enhance this security management plan:
+
+Project Context:
+${context}
+
+Security Management Plan Template:
+${content}
+
+Please provide a detailed, project-specific security management plan with:
+1. Risk assessment specific to this project type
+2. Appropriate security controls and measures
+3. Compliance requirements and frameworks
+4. Implementation timeline and milestones
+5. Roles and responsibilities
+6. Incident response procedures`
+    );
+    
+    const response = await aiProcessor.makeAICall(messages, 1400);
+    return getAIProcessor().extractContent(response);
+  }, 'security-management-plan');
+}
+```
+
+### Step 4: Test Implementation
+
+```typescript
+// test/securityManagementPlan.test.ts
+import { getSecurityManagementPlan } from '../src/modules/llmProcessor-migration';
+import { SecurityManagementPlanTemplate } from '../src/modules/documentTemplates/managementPlans/securityManagementPlan';
+
+describe('SecurityManagementPlan', () => {
+  const mockContext = `
+Project Name: E-commerce Platform
+Project Type: web-application
+Description: Online retail platform with payment processing
+`;
+
+  test('should generate security plan template', async () => {
+    const template = new SecurityManagementPlanTemplate(
+      { projectName: 'E-commerce Platform' },
+      { detailLevel: 'detailed', securityFramework: 'NIST' }
+    );
+    const content = await template.generateContent();
+    
+    expect(content).toContain('Security Management Plan');
+    expect(content).toContain('E-commerce Platform');
+    expect(content).toContain('NIST');
+    expect(content).toContain('Security Controls');
+  });
+
+  test('should enhance with AI processing', async () => {
+    const result = await getSecurityManagementPlan(mockContext);
+    
+    expect(result).toBeDefined();
+    if (result) {
+      expect(result).toContain('security');
+      expect(result.length).toBeGreaterThan(1000);
+    }
+  }, 30000);
+});
+```
+
+### Step 5: Verify Integration
+
+```powershell
+# Build and test
+npm run build
+npm test
+
+# Test CLI integration
+node dist/cli.js --help | Select-String "security"
+node dist/cli.js --generate-management-plans --output test-docs
+```
+
+This example demonstrates the complete workflow for adding a new document type to the system.
+
+---
 
 If you encounter issues while implementing new document types:
 

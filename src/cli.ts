@@ -90,11 +90,13 @@ async function main() {
       outputDir: getArgValue('--output', 'generated-documents'),
       quiet: args.includes('--quiet'),
       verbose: args.includes('--verbose'),
-      format: getArgValue('--format', 'markdown', ['markdown', 'json', 'yaml']),
+      format: getArgValue('--format', 'markdown', ['markdown', 'json', 'yaml', 'docx', 'pptx']) as 'markdown' | 'json' | 'yaml' | 'docx' | 'pptx',
       retries: getNumericValue('--retries', 0),
       showProgress: !args.includes('--quiet') && !args.includes('--no-progress'),
-      showMetrics: args.includes('--metrics') || args.includes('--verbose')
-    };    // Show version
+      showMetrics: args.includes('--metrics') || args.includes('--verbose'),
+      // NEW: Provider selection option
+      provider: getArgValue('--provider', '', ['', 'github-ai', 'google-ai', 'azure-openai', 'azure-openai-key', 'ollama']) as '' | 'github-ai' | 'google-ai' | 'azure-openai' | 'azure-openai-key' | 'ollama'
+    };// Show version
     if (args.includes('--version') || args.includes('-v')) {
       console.log('v2.1.3'); // Updated version
       return;
@@ -143,9 +145,8 @@ async function main() {
     if (!options.quiet) {
       console.log('🔧 Initializing...');
     }
-    
-    // Validate environment and AI provider
-    const isValid = await validateEnvironment();
+      // Validate environment and AI provider
+    const isValid = await validateEnvironment(options);
     if (!isValid) {
       return;
     }
@@ -257,22 +258,24 @@ A comprehensive software project requiring PMBOK documentation.
         process.exit(1);
       }
       return;
-    }
-
-    // Check for consistency validation only
+    }    // Check for consistency validation only
     if (args.includes('--validate-consistency')) {
       if (!options.quiet) console.log('🔍 Checking cross-document consistency...');
-      const generator = new DocumentGenerator(context);
+      const generator = new DocumentGenerator(context, { 
+        format: options.format,
+        provider: options.provider // Use selected provider for consistency validation
+      });
       const pmbokCompliance = await generator.validatePMBOKCompliance();
       
       console.log(`🎯 Consistency Score: ${pmbokCompliance.consistencyScore}/100`);
       return;
-    }
-
-    // Check for quality assessment only
+    }// Check for quality assessment only
     if (args.includes('--quality-assessment')) {
       if (!options.quiet) console.log('📊 Performing document quality assessment...');
-      const generator = new DocumentGenerator(context);
+      const generator = new DocumentGenerator(context, { 
+        format: options.format,
+        provider: options.provider // Use selected provider for quality assessment
+      });
       const pmbokCompliance = await generator.validatePMBOKCompliance();
       return;
     }
@@ -280,39 +283,84 @@ A comprehensive software project requiring PMBOK documentation.
     // Determine which documents to generate
     const generateTypes = new Set(args.filter(arg => arg.startsWith('--generate-')).map(arg => arg.replace('--generate-', '')));
     const generateAll = generateTypes.size === 0;
-
+    // Strategic statements flag support
+    const generateStrategic = args.includes('--generate-strategic') || args.includes('--generate-strategic-statements');
+    if (generateStrategic) generateTypes.add('strategic');
     try {
+      // Create common generation options
+      const generationOptions = {
+        outputDir: options.outputDir,
+        format: options.format,
+        maxConcurrent: 1,
+        delayBetweenCalls: 500,
+        continueOnError: true,
+        generateIndex: true,
+        cleanup: true,
+        provider: options.provider // Pass selected provider to enforce strict usage
+      };
+
       if (generateAll || generateTypes.has('core')) {
         if (!options.quiet) console.log('🎯 Generating core documents...');
-        await DocumentGenerator.generateCoreDocuments(context);
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['core-analysis', 'project-charter']
+        });
+        await generator.generateAll();
       }
       
       if (generateAll || generateTypes.has('management')) {
         if (!options.quiet) console.log('📋 Generating management plans...');
-        await DocumentGenerator.generateManagementPlans(context);
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['management-plans']
+        });
+        await generator.generateAll();
       }
       
       if (generateAll || generateTypes.has('planning')) {
         if (!options.quiet) console.log('🏗️ Generating planning artifacts...');
-        await DocumentGenerator.generatePlanningArtifacts(context);
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['planning-artifacts']
+        });
+        await generator.generateAll();
       }
       
       if (generateAll || generateTypes.has('technical')) {
         if (!options.quiet) console.log('⚙️ Generating technical analysis...');
-        await DocumentGenerator.generateTechnicalAnalysis(context);
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['technical-analysis']
+        });
+        await generator.generateAll();
       }
 
       if (generateAll || generateTypes.has('stakeholder')) {
         if (!options.quiet) console.log('👥 Generating stakeholder management...');
-        await DocumentGenerator.generateStakeholderDocuments(context);
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['stakeholder-management']
+        });
+        await generator.generateAll();
       }
 
-      // Fix the stakeholder generation section
+      if (generateAll || generateTypes.has('strategic')) {
+        if (!options.quiet) console.log('🎯 Generating strategic statements...');
+        const generator = new DocumentGenerator(context, {
+          ...generationOptions,
+          includeCategories: ['strategic-statements']
+        });
+        await generator.generateAll();
+      }
+
+      // Direct flag for stakeholder (legacy)
       if (args.includes('--generate-stakeholder')) {
         console.log('📊 Generating stakeholder management documents...');
         
         const results = await generateDocumentsWithRetry(context, {
             includeCategories: ['stakeholder-management'],
+            format: options.format,
+            outputDir: options.outputDir,
             maxRetries: options.retries
         });
 
@@ -325,11 +373,28 @@ A comprehensive software project requiring PMBOK documentation.
         }
         return;
       }
-
+      // Direct flag for strategic statements
+      if (generateStrategic) {
+        console.log('🎯 Generating strategic statements...');
+        const results = await generateDocumentsWithRetry(context, {
+            includeCategories: ['strategic-statements'],
+            format: options.format,
+            outputDir: options.outputDir,
+            maxRetries: options.retries
+        });
+        if (results?.success) {
+            console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} strategic statement documents`);
+            console.log(`📁 Check the ${options.outputDir}/strategic-statements/ directory`);
+        } else {
+            console.error('❌ Failed to generate strategic statement documents');
+            process.exit(1);
+        }
+        return;
+      }
       // Generate with validation if requested
       if (generateAll && !options.quiet) {
         console.log('\n🔍 Running document validation...');
-        const generator = new DocumentGenerator(context);
+        const generator = new DocumentGenerator(context, generationOptions);
         const validation = await generator.validateGeneration();
         
         if (validation.isComplete) {
@@ -360,7 +425,7 @@ A comprehensive software project requiring PMBOK documentation.
   }
 }
 
-async function validateEnvironment(): Promise<boolean> {
+async function validateEnvironment(options?: { provider?: string }): Promise<boolean> {
   // Check for help flag
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
     printHelp();
@@ -395,6 +460,11 @@ async function validateEnvironment(): Promise<boolean> {
     return false;
   } else {
     console.log('✅ Environment configuration loaded');
+  }
+
+  // If a specific provider is requested, validate only that provider
+  if (options?.provider) {
+    return await validateSpecificProvider(options.provider);
   }
 
   // Enhanced provider detection with better validation
@@ -865,7 +935,7 @@ async function analyzeWorkspace(): Promise<void> {
 }
 
 function printHelp(): void {
-    console.log(`
+  console.log(`
 🎉 Requirements Gathering Agent v2.1.3 - Celebrating 175 Weekly Downloads! 🎉
 AI-powered PMBOK documentation generator with validation
 
@@ -876,14 +946,14 @@ OPTIONS:
   -h, --help              Show this help message
   -v, --version           Show version information
   --output <dir>          Specify output directory (default: generated-documents)
-  --format <fmt>          Output format: markdown|json|yaml (default: markdown)
+  --format <fmt>          Output format: markdown|json|yaml|docx|pptx (default: markdown)
   --quiet                 Suppress progress messages (good for CI/CD)
   --verbose               Enable verbose output with detailed progress
   --retries <n>           Number of retry attempts for failed generations
   --metrics               Show performance metrics (timing, token usage)
   --no-progress           Disable progress indicators
-
-NEW V2.1.3 FEATURES:
+  --provider <id>         Explicitly select AI provider (overrides auto-detection)
+                         Valid values: github-ai, google-ai, azure-openai, azure-openai-key, ollama
   --milestone, --achievement    Show milestone celebration details
   --status, --info             Show system status and configuration
   --setup                      Enhanced interactive setup wizard for new users
@@ -898,6 +968,8 @@ DOCUMENT TYPES:
   --generate-planning     Generate planning artifacts
   --generate-technical    Generate technical analysis
   --generate-stakeholder  Generate stakeholder management documents
+  --generate-strategic    Generate strategic statements (mission, vision, purpose)
+  --generate-strategic-statements  Generate strategic statements (alias)
   (If no types specified, generates all document types)
 
 VALIDATION OPTIONS:
@@ -907,114 +979,29 @@ VALIDATION OPTIONS:
   --validate-consistency  Check cross-document consistency only
   --quality-assessment    Provide detailed quality scores for documents
 
+PROVIDER SELECTION:
+  --provider <id>         Use a specific AI provider for this run only.
+                         Valid values:
+                           github-ai         GitHub AI (free for GitHub users)
+                           google-ai         Google AI Studio (free tier)
+                           azure-openai      Azure OpenAI (Entra ID)
+                           azure-openai-key  Azure OpenAI (API Key)
+                           ollama            Ollama (local, offline)
+  Example:
+    requirements-gathering-agent --provider github-ai --generate-core
+    requirements-gathering-agent --provider azure-openai-key --format docx
+
 CONFIGURATION:
   Create a .env file with your AI provider configuration:
-  
-  Google AI Studio (Free tier available):
     GOOGLE_AI_API_KEY=your-google-ai-api-key
-    GOOGLE_AI_MODEL=gemini-1.5-flash
-  
-  Azure OpenAI with Entra ID (Recommended):
-    AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-    DEPLOYMENT_NAME=gpt-4
-    USE_ENTRA_ID=true
-  
-  Azure OpenAI with API Key:
-    AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
-    AZURE_AI_API_KEY=your-api-key
-    REQUIREMENTS_AGENT_MODEL=gpt-4
-  
-  GitHub AI (Free tier):
-    AZURE_AI_ENDPOINT=https://models.inference.ai.azure.com
     GITHUB_TOKEN=your-github-token
-    REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
-  
-  Ollama (Local):
+    GITHUB_ENDPOINT=https://models.github.ai/inference/
+    AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+    AZURE_OPENAI_API_KEY=your-api-key
     OLLAMA_ENDPOINT=http://localhost:11434
-    REQUIREMENTS_AGENT_MODEL=llama3.1
 
-AUTHENTICATION:
-  For Azure Entra ID: az login
-  For API keys: Set in .env file
-  For Ollama: Start ollama serve
-
-EXAMPLES:
-  # New in v2.1.3: Interactive setup and provider selection
-  requirements-gathering-agent --setup          # Enhanced setup wizard with provider selection
-  requirements-gathering-agent --select-provider # Interactive AI provider selection menu
-  requirements-gathering-agent --status         # Check system configuration
-  requirements-gathering-agent --analyze        # Analyze workspace context
-  requirements-gathering-agent --milestone      # View achievement details
-  
-  # Generate all documents
-  requirements-gathering-agent
-
-  # Generate all documents with PMBOK 7.0 validation
-  requirements-gathering-agent --validate-pmbok
-
-  # Generate with comprehensive validation and quality assessment
-  requirements-gathering-agent --generate-with-validation
-
-  # Generate specific document types with progress and metrics
-  requirements-gathering-agent --generate-core --generate-technical --verbose --metrics
-
-  # Generate stakeholder documents only
-  requirements-gathering-agent --generate-stakeholder
-
-  # Validate existing documents without regenerating
-  requirements-gathering-agent --validate-only
-
-  # Check document consistency only
-  requirements-gathering-agent --validate-consistency
-
-  # Get quality assessment of existing documents
-  requirements-gathering-agent --quality-assessment
-
-  # Specify output directory and format
-  requirements-gathering-agent --output ./docs --format yaml
-
-  # CI/CD pipeline usage with validation
-  requirements-gathering-agent --quiet --retries 3 --validate-pmbok --output ./artifacts
-
-  # Using npm
-  npm start -- --generate-core --output ./docs
-
-  # Direct execution
-  node dist/cli.js --generate-management --format json
-
-TROUBLESHOOTING:
-  • Build first: npm run build
-  • Check config: requirements-gathering-agent --status
-  • Interactive setup: requirements-gathering-agent --setup
-  • Test Azure auth: az account show
-  • Test Ollama: curl http://localhost:11434/api/tags
-  • Check deployment: az cognitiveservices account deployment list
-
-OUTPUT STRUCTURE:
-  <output-dir>/
-  ├── core-analysis/          # User stories, personas, requirements
-  ├── project-charter/        # Formal project authorization
-  ├── management-plans/       # PMBOK management plans
-  ├── planning-artifacts/     # WBS, schedules, estimates
-  ├── stakeholder-management/ # Stakeholder analysis and engagement
-  └── technical-analysis/     # Tech stack, data models, UX
-
-VALIDATION FEATURES:
-  ✅ PMBOK 7.0 compliance checking
-  ✅ Cross-document consistency validation
-  ✅ Document quality assessment (0-100 scoring)
-  ✅ Required element verification
-  ✅ Professional terminology validation
-  ✅ Comprehensive validation reports
-
-🎉 MILESTONE ACHIEVEMENT: 175 Weekly Downloads!
-   📈 Growing community of project managers and business analysts
-   🚀 Celebrating successful market validation and adoption
-   🙏 Thank you for being part of our journey!
-
-For more information, visit:
-https://github.com/mdresch/requirements-gathering-agent
-    `);
+For more details, see the documentation or run with --status for configuration help.
+`);
 }
 
 // Add missing function declarations
@@ -1027,9 +1014,114 @@ async function showProviderConfigurationGuidance(): Promise<void> {
     // ... existing implementation ...
 }
 
+/**
+ * Validate a specific AI provider selected by the user via --provider flag
+ */
+async function validateSpecificProvider(providerName: string): Promise<boolean> {
+  console.log(`🎯 Validating selected provider: ${providerName}`);
+  
+  // Map CLI provider names to check functions
+  const providerValidators: Record<string, () => boolean> = {
+    'github-ai': () => !!(
+      process.env.GITHUB_TOKEN && 
+      process.env.GITHUB_ENDPOINT?.includes('models.github.ai')
+    ),
+    'google-ai': () => !!process.env.GOOGLE_AI_API_KEY,
+    'azure-openai': () => !!(
+      process.env.AZURE_OPENAI_ENDPOINT && 
+      process.env.USE_ENTRA_ID === 'true'
+    ),
+    'azure-openai-key': () => !!(
+      (process.env.AZURE_AI_ENDPOINT?.includes('openai.azure.com') || 
+       process.env.AZURE_OPENAI_ENDPOINT?.includes('openai.azure.com')) && 
+      (process.env.AZURE_AI_API_KEY || process.env.AZURE_OPENAI_API_KEY)
+    ),
+    'ollama': () => !!(
+      process.env.OLLAMA_ENDPOINT?.includes('localhost:11434') || 
+      process.env.OLLAMA_ENDPOINT?.includes('127.0.0.1:11434')
+    )
+  };
+
+  const validator = providerValidators[providerName];
+  if (!validator) {
+    console.error(`❌ Unknown provider: ${providerName}`);
+    console.error('   Valid providers: github-ai, google-ai, azure-openai, azure-openai-key, ollama');
+    return false;
+  }
+
+  const isConfigured = validator();
+  if (!isConfigured) {
+    console.error(`❌ Provider ${providerName} is not properly configured`);
+    console.error('   Please check your .env file and ensure all required environment variables are set');
+    
+    // Provide specific guidance for the selected provider
+    await provideProviderSpecificGuidance(providerName);
+    return false;
+  }
+
+  console.log(`✅ Provider ${providerName} is properly configured`);
+  
+  // Special handling for Azure OpenAI with Entra ID
+  if (providerName === 'azure-openai' && process.env.USE_ENTRA_ID === 'true') {
+    await validateAzureAuthentication();
+  }
+
+  return true;
+}
+
+/**
+ * Provide specific configuration guidance for a provider
+ */
+async function provideProviderSpecificGuidance(providerName: string): Promise<void> {
+  const guidance: Record<string, string[]> = {
+    'github-ai': [
+      'Required environment variables:',
+      '  GITHUB_TOKEN=your-github-token',
+      '  GITHUB_ENDPOINT=https://models.github.ai/inference/',
+      '',
+      'Get your GitHub token at: https://github.com/settings/tokens'
+    ],
+    'google-ai': [
+      'Required environment variables:',
+      '  GOOGLE_AI_API_KEY=your-api-key',
+      '',
+      'Get your API key at: https://makersuite.google.com/app/apikey'
+    ],
+    'azure-openai': [
+      'Required environment variables:',
+      '  AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/',
+      '  USE_ENTRA_ID=true',
+      '  AZURE_CLIENT_ID=your-client-id',
+      '  AZURE_TENANT_ID=your-tenant-id',
+      '  AZURE_CLIENT_SECRET=your-client-secret',
+      '',
+      'Then run: az login'
+    ],
+    'azure-openai-key': [
+      'Required environment variables:',
+      '  AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/',
+      '  AZURE_OPENAI_API_KEY=your-api-key',
+      '  AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4',
+      '',
+      'Get these from your Azure OpenAI resource in the Azure Portal'
+    ],
+    'ollama': [
+      'Required environment variables:',
+      '  OLLAMA_ENDPOINT=http://localhost:11434',
+      '',
+      'Make sure Ollama is running locally with: ollama serve'
+    ]
+  };
+
+  const providerGuidance = guidance[providerName];
+  if (providerGuidance) {
+    console.log('\n💡 Configuration guidance:');
+    providerGuidance.forEach(line => console.log(`   ${line}`));
+  }
+}
+
 // Run main function
 main().catch(error => {
   console.error('❌ Unhandled error:', error);
   process.exit(1);
 });
-  

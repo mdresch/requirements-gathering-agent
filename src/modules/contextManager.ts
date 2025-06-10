@@ -85,9 +85,7 @@ export class ContextManager {
         this.modelTokenLimits.set('llama3.2', 131072); // 128k tokens (Ollama)
         this.modelTokenLimits.set('qwen2.5', 131072); // 128k tokens (Ollama)
         this.modelTokenLimits.set('phi3', 131072); // 128k tokens (Ollama)
-    }
-
-    private autoAdjustTokenLimits() {
+    }    private autoAdjustTokenLimits() {
         try {
             const currentModel = ''; // Legacy function no longer available
             // Find the best match for the current model
@@ -108,6 +106,57 @@ export class ContextManager {
             }
         } catch (error) {
             // Fallback: do nothing
+        }
+    }
+
+    /**
+     * Adjust token limits based on the current AI provider to be more conservative
+     * for providers that have practical limitations different from theoretical limits
+     */
+    public adjustTokenLimitsForProvider(providerName: string): void {
+        console.log(`🔧 Adjusting context limits for provider: ${providerName}`);
+        
+        switch (providerName) {
+            case 'google-ai':
+                // Google AI can be temperamental with very large contexts
+                // Use more conservative limits even for large models
+                const currentLimit = this.maxContextTokens;
+                if (currentLimit > 500000) {
+                    // For Gemini Pro (2M tokens), use 800k max for context
+                    this.maxContextTokens = Math.min(currentLimit, 800000);
+                    console.log(`📊 Google AI: Reduced context limit from ${currentLimit} to ${this.maxContextTokens} tokens for better reliability`);
+                } else if (currentLimit > 200000) {
+                    // For Gemini Flash (1M tokens), use 400k max for context  
+                    this.maxContextTokens = Math.min(currentLimit, 400000);
+                    console.log(`📊 Google AI: Reduced context limit from ${currentLimit} to ${this.maxContextTokens} tokens for better reliability`);
+                }
+                break;
+                
+            case 'azure-openai':
+            case 'azure-openai-key':
+            case 'azure-ai-studio':
+                // Azure OpenAI is generally reliable with its stated limits
+                console.log(`📊 Azure OpenAI: Using standard token limits (${this.maxContextTokens} tokens)`);
+                break;
+                
+            case 'github-ai':
+                // GitHub AI uses smaller models, keep conservative
+                if (this.maxContextTokens > 100000) {
+                    this.maxContextTokens = 100000;
+                    console.log(`📊 GitHub AI: Limited context to ${this.maxContextTokens} tokens for optimal performance`);
+                }
+                break;
+                
+            case 'ollama':
+                // Local models, keep reasonable limits
+                if (this.maxContextTokens > 100000) {
+                    this.maxContextTokens = 100000;
+                    console.log(`📊 Ollama: Limited context to ${this.maxContextTokens} tokens for local processing`);
+                }
+                break;
+                
+            default:
+                console.log(`📊 ${providerName}: Using default token limits (${this.maxContextTokens} tokens)`);
         }
     }
 

@@ -21,9 +21,10 @@
 
 import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
-import { AzureOpenAI } from "openai";
+import OpenAI, { AzureOpenAI } from "openai";
 import { ClientSecretCredential } from "@azure/identity";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import fetch from 'node-fetch';
 
 import { AIProvider } from "./types.js";
 import { ConfigurationManager } from "./ConfigurationManager.js";
@@ -187,16 +188,23 @@ class AIClientManager {
         if (!token) {
             throw new Error('GITHUB_TOKEN is required for GitHub AI');
         }
-        
-        const endpoint = this.config.get<string>('GITHUB_ENDPOINT');
-        if (!endpoint) {
-            throw new Error('GITHUB_ENDPOINT is required for GitHub AI');
-        }
-        
-        const client = ModelClient(endpoint, new AzureKeyCredential(token));
+
+        const endpoint = this.config.get<string>('GITHUB_ENDPOINT') ||
+            this.config.get<string>('AZURE_AI_ENDPOINT') ||
+            'https://models.github.ai/inference';
+
+        console.log(`🔧 GitHub AI: Using endpoint ${endpoint} with token length ${token.length}`);
+
+        // Use OpenAI client for GitHub AI with Bearer token
+        const client = new OpenAI({
+            apiKey: token,
+            baseURL: endpoint
+        });
         this.setClient('github-ai', client);
-        await this.validateConnection('github-ai');
-    }private async initializeOllama(): Promise<void> {
+        console.log(`✅ GitHub AI client configured for endpoint: ${endpoint}`);
+    }
+
+    private async initializeOllama(): Promise<void> {
         try {
             const endpoint = this.config.get<string>('OLLAMA_ENDPOINT') || 'http://127.0.0.1:11434';
             
@@ -289,30 +297,29 @@ class AIClientManager {
     }
 
     private async healthCheckGitHubAI(client: any): Promise<void> {
-        const modelName = this.config.get<string>('REQUIREMENTS_AGENT_MODEL') || "gpt-4o-mini";
-        
+        const modelName = this.config.get<string>('REQUIREMENTS_AGENT_MODEL') || 'gpt-4o-mini';
         try {
-            const result = await client.path("/chat/completions").post({
-                body: {
-                    messages: [
-                        { role: 'system', content: 'ping' },
-                        { role: 'user', content: 'ping' }
-                    ],
-                    model: modelName,
-                    max_tokens: 1
-                }
+            // Use standard OpenAI client for GitHub AI
+            const response = await client.chat.completions.create({
+                model: modelName,
+                messages: [
+                    { role: 'system', content: 'ping' },
+                    { role: 'user', content: 'ping' }
+                ],
+                max_tokens: 1
             });
-
-            if (result.status !== "200") {
-                throw new Error(`GitHub AI health check failed: ${result.status}`);
+            // Ensure we got a choice back
+            if (!response.choices || response.choices.length === 0) {
+                throw new Error('Empty response from GitHub AI health check');
             }
         } catch (error: any) {
-            if (error.status === 401) {
+            const msg = error.message || String(error);
+            if (/401/.test(msg) || /auth/i.test(msg)) {
                 throw new Error('GitHub AI authentication failed. Please check your token.');
-            } else if (error.status === 404) {
+            } else if (/404/.test(msg) || /not found/i.test(msg)) {
                 throw new Error(`GitHub AI model ${modelName} not found. Please check your configuration.`);
             }
-            throw error;
+            throw new Error(`GitHub AI health check error: ${msg}`);
         }
     }
 

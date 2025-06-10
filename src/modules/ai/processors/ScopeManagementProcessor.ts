@@ -145,4 +145,78 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
             ['scope-baseline', 'project-management-plan', 'validate-scope', 'control-scope']
         );
     }
+
+    /**
+     * Generates a Control Scope Process document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Control Scope Process or null if generation fails
+     */
+    async getControlScopeProcess(context: string): Promise<string | null> {
+        const contextManager = await getContextManager();
+        const enhancedContext = contextManager.buildContextForDocument('control-scope-process', [
+            'scope-baseline', 'project-management-plan', 'work-performance-data'
+        ]);
+        const fullContext = enhancedContext || context;
+
+        return await this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a PMBOK-certified project manager specializing in scope management. Create a comprehensive Control Scope Process document following PMBOK 7th Edition standards.`,
+                `Based on the following project context, create a detailed Control Scope Process document:
+
+Project Context:
+${fullContext}
+
+Include:
+- Process overview and objectives
+- Inputs, tools & techniques, and outputs (ITTOs)
+- Change control procedures
+- Variance analysis methods
+- Performance monitoring techniques
+- Corrective and preventive actions
+- Integration with other processes
+
+Follow PMBOK 7th Edition standards and ensure the document is actionable and comprehensive.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1200);
+            return getAIProcessor().extractContent(response);
+        }, 'Control Scope Process Generation', 'control-scope-process');
+    }
+
+    /**
+     * Generates a Validate Scope Process document following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Validate Scope Process or null if generation fails
+     */
+    async getValidateScopeProcess(context: string): Promise<string | null> {
+        const contextManager = await getContextManager();
+        const enhancedContext = contextManager.buildContextForDocument('validate-scope-process', [
+            'project-scope-statement', 'scope-baseline', 'verified-deliverables'
+        ]);
+        const fullContext = enhancedContext || context;
+
+        return await this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a PMBOK-certified project manager specializing in scope management. Create a comprehensive Validate Scope Process document following PMBOK 7th Edition standards.`,
+                `Based on the following project context, create a detailed Validate Scope Process document:
+
+Project Context:
+${fullContext}
+
+Include:
+- Process overview and objectives
+- Inputs, tools & techniques, and outputs (ITTOs)
+- Formal acceptance procedures
+- Inspection and review methods
+- Documentation requirements
+- Stakeholder involvement
+- Integration with quality control
+
+Follow PMBOK 7th Edition standards and ensure the document is actionable and comprehensive.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1200);
+            return getAIProcessor().extractContent(response);
+        }, 'Validate Scope Process Generation', 'validate-scope-process');
+    }
 }

@@ -396,5 +396,67 @@ Format as a well-structured markdown document with proper headers, tables, and o
             return getAIProcessor().extractContent(response);
         }, 'Stakeholder Engagement Plan Generation', 'stakeholder-engagement-plan');
     }
+
+    /**
+     * Generates a Project Kickoff Checklist following PMBOK standards
+     * 
+     * @param {string} context - Project context information
+     * @returns {Promise<string|null>} Project Kickoff Checklist or null if generation fails
+     */
+    async getProjectKickoffChecklist(context: string): Promise<string | null> {
+        return await this.handleAICall(async () => {
+            const contextManager = await getContextManager();
+            const enhancedContext = contextManager.buildContextForDocument('project-kickoff-checklist', [
+                'project-charter',
+                'stakeholder-register',
+                'project-management-plan',
+                'scope-management-plan'
+            ]);
+            const fullContext = enhancedContext || context;
+
+            // Import the template dynamically to avoid circular dependencies
+            const { ProjectKickoffChecklistTemplate } = await import('../../documentTemplates/planningArtifacts/projectKickoffChecklist');
+            
+            // Create template with AI integration enabled
+            const template = new ProjectKickoffChecklistTemplate(
+                { projectName: 'Context Project' },
+                { 
+                    detailLevel: 'detailed',
+                    projectType: 'software',
+                    aiIntegration: true,
+                    includeSecuritySection: true,
+                    includeComplianceSection: true
+                }
+            );
+            const baseContent = await template.generateContent();
+
+            const messages = this.createStandardMessages(
+                `You are a professional project manager and PMBOK expert specializing in project kickoffs and initiation. Generate comprehensive, actionable project kickoff checklists that ensure successful project launch.`,
+                `Based on the following project context, enhance this project kickoff checklist template:
+
+Project Context:
+${fullContext}
+
+Project Kickoff Checklist Template:
+${baseContent}
+
+Please provide a comprehensive, project-specific kickoff checklist with:
+1. PMBOK 7.0 compliance and best practices
+2. Project-specific tasks and considerations
+3. Stakeholder-specific requirements
+4. Technology and tool setup tasks
+5. Risk mitigation and contingency planning
+6. Clear timelines and responsible parties
+7. AI integration considerations where applicable
+8. Security and compliance requirements
+9. Communication and collaboration setup
+10. Success criteria and validation steps
+
+Make the checklist actionable, specific, and tailored to the project type and requirements. Include realistic timelines and dependencies.`
+            );
+            const response = await getAIProcessor().makeAICall(messages, 1400);
+            return getAIProcessor().extractContent(response);
+        }, 'Project Kickoff Checklist Generation', 'project-kickoff-checklist');
+    }
 }
 

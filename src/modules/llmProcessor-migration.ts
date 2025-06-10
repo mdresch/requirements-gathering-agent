@@ -7,6 +7,7 @@ import { ProcessorFactory } from './ai/processors/index.js';
 import { AIProcessor, getAIProcessor } from './ai/AIProcessor.js';
 import type { ContextManager } from './contextManager.js';
 import { ChatMessage } from './ai/types.js';
+import { StrategicStatementsProcessor } from './ai/processors/StrategicStatementsProcessor.js';
 
 /**
  * Migration Helper Processor
@@ -85,12 +86,14 @@ export async function getAiCoreValues(context: string): Promise<string | null> {
     return await projectMgmtProcessor.getCoreValues(context);
 }
 
+const strategicStatementsProcessor = new StrategicStatementsProcessor();
+
 export async function getAiProjectPurpose(context: string): Promise<string | null> {
-    return await projectMgmtProcessor.getProjectPurpose(context);
+    return await strategicStatementsProcessor.getAiProjectPurpose(context);
 }
 
 export async function getAiMissionVisionAndCoreValues(context: string): Promise<string | null> {
-    return await projectMgmtProcessor.getMissionVisionAndCoreValues(context);
+    return await strategicStatementsProcessor.getAiMissionVisionAndCoreValues(context);
 }
 
 // Project Management Plans
@@ -353,13 +356,14 @@ export async function getAiProjectCharter(context: string): Promise<string | nul
     return await pmbokProcessor.getProjectCharter(context);
 }
 
-export async function getAiValidateScope(context: string): Promise<string | null> {
-    return await pmbokProcessor.getValidateScopeProcess(context);
-}
+// DEPRECATED: Incorrectly named functions - replaced by correctly named versions below
+// export async function getAiValidateScope(context: string): Promise<string | null> {
+//     return await pmbokProcessor.getValidateScopeProcess(context);
+// }
 
-export async function getAiControlScope(context: string): Promise<string | null> {
-    return await pmbokProcessor.getControlScopeProcess(context);
-}
+// export async function getAiControlScope(context: string): Promise<string | null> {
+//     return await pmbokProcessor.getControlScopeProcess(context);
+// }
 
 export async function getAiMonitorAndControlProjectWorkProcess(context: string): Promise<string | null> {
     return await pmbokProcessor.getMonitorAndControlProjectWork(context);
@@ -397,6 +401,57 @@ export async function getAiMilestoneList(context: string): Promise<string | null
 
 export async function getAiDevelopScheduleInput(context: string): Promise<string | null> {
     return await activityProcessor.getDevelopScheduleInput(context);
+}
+
+// Missing Business Case and Project Statement Functions
+export async function getAiBusinessCase(context: string): Promise<string | null> {
+    return await projectMgmtProcessor.getBusinessCase(context);
+}
+
+export async function getAiProjectStatementOfWork(context: string): Promise<string | null> {
+    return await projectMgmtProcessor.getProjectStatementOfWork(context);
+}
+
+// Missing Requirements Process Functions
+export async function getAiCollectRequirementsProcess(context: string): Promise<string | null> {
+    return await requirementsProcessor.getCollectRequirementsProcess(context);
+}
+
+export async function getAiDefineScopeProcess(context: string): Promise<string | null> {
+    return await scopeProcessor.getDefineScopeProcess(context);
+}
+
+export async function getAiCreateWbsProcess(context: string): Promise<string | null> {
+    return await wbsProcessor.getCreateWbsProcess(context);
+}
+
+// Missing Activity Management Functions
+export async function getAiActivityDurationEstimates(context: string): Promise<string | null> {
+    return await activityProcessor.getActivityDurationEstimates(context);
+}
+
+export async function getAiActivityResourceEstimates(context: string): Promise<string | null> {
+    return await activityProcessor.getActivityResourceEstimates(context);
+}
+
+// Fix naming mismatches - now use proper processor methods
+export async function getAiControlScopeProcess(context: string): Promise<string | null> {
+    return await scopeProcessor.getControlScopeProcess(context);
+}
+
+export async function getAiValidateScopeProcess(context: string): Promise<string | null> {
+    return await scopeProcessor.getValidateScopeProcess(context);
+}
+
+export async function getAiWorkPerformanceInformationScope(context: string): Promise<string | null> {
+    return await scopeProcessor.getWorkPerformanceInformationScope(context);
+}
+
+/**
+ * Generate AI Project Kickoff Checklist
+ */
+export async function getAiProjectKickoffChecklist(context: string): Promise<string | null> {
+    return await planningProcessor.getProjectKickoffChecklist(context);
 }
 
 // Note: These functions are already defined above - no need to redefine

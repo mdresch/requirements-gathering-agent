@@ -43,9 +43,10 @@ export interface GenerationOptions {
     /** Whether to clean up old files before generation */
     cleanup?: boolean;
     /** Output directory for generated files */
-    outputDir?: string;
-    /** Output format for generated files */
-    format?: 'markdown' | 'json' | 'yaml';
+    outputDir?: string;    /** Output format for generated files */
+    format?: 'markdown' | 'json' | 'yaml' | 'docx' | 'pptx';
+    /** Specific AI provider to use exclusively (disables fallback logic) */
+    provider?: string;
 }
 
 /**

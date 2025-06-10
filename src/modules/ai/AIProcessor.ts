@@ -34,6 +34,9 @@ class AIProcessor {
     private config: ConfigurationManager;
     private providerManager: ProviderManager;
     private initializationPromise: Promise<void> | null = null;
+    // Add strict provider mode fields
+    private strictProvider: string | null = null;
+    private allowFallback: boolean = true;
 
     private constructor() {
         this.clientManager = AIClientManager.getInstance();
@@ -84,6 +87,11 @@ class AIProcessor {
 
         const status = this.providerManager.getProviderStatus(activeProvider);
         if (!status.available || !status.withinRateLimit || !status.withinQuota) {
+            // Check if we're in strict provider mode
+            if (!this.allowFallback) {
+                throw new Error(`Provider ${activeProvider} is not available and fallback is disabled (strict provider mode)`);
+            }
+            
             if (await this.providerManager.switchProvider()) {
                 console.log(`Switched to fallback provider: ${this.providerManager.getActiveProvider()}`);
             } else {
@@ -116,11 +124,18 @@ class AIProcessor {
             await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
         }
 
-        const status = this.providerManager.getProviderStatus(activeProvider);
-        if (!status.withinRateLimit) {
+        const status = this.providerManager.getProviderStatus(activeProvider);        if (!status.withinRateLimit) {
+            if (!this.allowFallback) {
+                throw new Error(`Rate limit exceeded for provider ${activeProvider} and fallback is disabled (strict provider mode)`);
+            }
             throw new Error(`Rate limit exceeded for provider ${activeProvider}`);
         }
         if (!status.withinQuota) {
+            // Check if we're in strict provider mode
+            if (!this.allowFallback) {
+                throw new Error(`Quota exceeded for provider ${activeProvider} and fallback is disabled (strict provider mode)`);
+            }
+            
             if (await this.providerManager.switchProvider()) {
                 // Sync the new active provider with ConfigurationManager
                 const newActiveProvider = this.providerManager.getActiveProvider();
@@ -159,9 +174,13 @@ class AIProcessor {
         } catch (error: any) {
             const endTime = Date.now();
             const responseTime = endTime - startTime;
-            
-            // Update provider metrics on failure
+              // Update provider metrics on failure
             this.providerManager.updateMetrics(activeProvider, false, responseTime, 0, error);
+            
+            // Check if we're in strict provider mode
+            if (!this.allowFallback) {
+                throw new Error(`Provider ${activeProvider} failed and fallback is disabled (strict provider mode): ${error.message}`);
+            }
             
             // Try fallback provider
             if (await this.providerManager.switchProvider()) {
@@ -197,26 +216,206 @@ class AIProcessor {
         }
 
         return await callMethod();
-    }
-
-    private async makeGoogleAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
-        const modelName = "gemini-1.5-flash";
+    }    private async makeGoogleAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
+        // Get the model name from configuration or default to flash
+        const modelName = process.env.GOOGLE_AI_MODEL || "gemini-1.5-flash";
         const model = client.getGenerativeModel({ model: modelName });
         const modelMaxTokens = this.config.getModelTokenLimit(modelName);
+        
+        // Calculate practical token limits with safety margins
+        const safetyMargin = 0.1; // 10% safety margin
+        const effectiveInputLimit = Math.floor(modelMaxTokens * (1 - safetyMargin));
+        const effectiveOutputLimit = Math.min(maxTokens, Math.floor(modelMaxTokens * 0.2)); // Max 20% for output
         
         // Convert messages to Google AI format
         const prompt = this.convertMessagesToGoogleFormat(messages);
         
-        const result = await model.generateContent({
-            contents: prompt,
-            generationConfig: {
-                maxOutputTokens: Math.min(maxTokens, modelMaxTokens),
-                temperature: 0.7,
-            },
-        });
+        // Estimate total input tokens
+        const totalInputText = JSON.stringify(prompt);
+        const estimatedInputTokens = this.estimateTokens(totalInputText);
+        
+        console.log(`🤖 Google AI: Model ${modelName}, Input tokens: ~${estimatedInputTokens}, Limit: ${effectiveInputLimit}`);
+        
+        // Check if we need to chunk the content
+        if (estimatedInputTokens > effectiveInputLimit) {
+            console.warn(`⚠️  Input tokens (${estimatedInputTokens}) exceed model limit (${effectiveInputLimit}). Implementing chunking strategy...`);
+            return await this.handleGoogleAIChunking(model, messages, effectiveOutputLimit, effectiveInputLimit);
+        }
+        
+        try {
+            const result = await model.generateContent({
+                contents: prompt,
+                generationConfig: {
+                    maxOutputTokens: effectiveOutputLimit,
+                    temperature: 0.7,
+                },
+            });
 
-        const response = await result.response;
-        return response.text();
+            const response = await result.response;
+            return response.text();
+        } catch (error: any) {
+            // Enhanced error handling for Google AI specific issues
+            if (error.message?.includes('quota') || error.message?.includes('limit')) {
+                throw new Error(`Google AI quota/limit exceeded: ${error.message}. Consider using a different provider or reducing context size.`);
+            } else if (error.message?.includes('token')) {
+                throw new Error(`Google AI token limit exceeded: ${error.message}. Input was ~${estimatedInputTokens} tokens.`);
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Handle large content by chunking when Google AI input exceeds limits
+     */
+    private async handleGoogleAIChunking(model: any, messages: ChatMessage[], maxOutputTokens: number, inputLimit: number): Promise<string> {
+        console.log('🔄 Implementing Google AI chunking strategy for large content...');
+        
+        // Extract the main content (usually the last user message contains the context)
+        const mainMessage = messages[messages.length - 1];
+        const systemMessage = messages.find(m => m.role === 'system');
+        
+        if (!mainMessage || mainMessage.role !== 'user') {
+            throw new Error('Unable to chunk: Expected user message with context not found');
+        }
+        
+        // Split the main content into manageable chunks
+        const chunks = this.splitContentIntoChunks(mainMessage.content, inputLimit * 0.7); // Use 70% of limit per chunk
+        
+        console.log(`📝 Split content into ${chunks.length} chunks for processing`);
+        
+        const chunkResults: string[] = [];
+        
+        for (let i = 0; i < chunks.length; i++) {
+            console.log(`🔍 Processing chunk ${i + 1}/${chunks.length}...`);
+            
+            // Create chunk-specific messages
+            const chunkMessages: ChatMessage[] = [];
+            
+            if (systemMessage) {
+                chunkMessages.push(systemMessage);
+            }
+            
+            // Add chunk-specific instruction
+            const chunkInstruction = chunks.length > 1 
+                ? `This is part ${i + 1} of ${chunks.length} of a larger document. Please provide analysis for this section that can be combined with other parts.`
+                : '';
+            
+            chunkMessages.push({
+                role: 'user',
+                content: `${chunkInstruction}\n\n${chunks[i]}`
+            });
+            
+            try {
+                const chunkPrompt = this.convertMessagesToGoogleFormat(chunkMessages);
+                const result = await model.generateContent({
+                    contents: chunkPrompt,
+                    generationConfig: {
+                        maxOutputTokens: Math.floor(maxOutputTokens / chunks.length) + 500, // Distribute output tokens
+                        temperature: 0.7,
+                    },
+                });
+                
+                const chunkResponse = await result.response;
+                chunkResults.push(chunkResponse.text());
+                
+                // Add delay between chunks to respect rate limits
+                if (i < chunks.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } catch (error: any) {
+                console.error(`❌ Error processing chunk ${i + 1}:`, error.message);
+                throw new Error(`Failed to process chunk ${i + 1}: ${error.message}`);
+            }
+        }
+        
+        // Combine results
+        if (chunks.length === 1) {
+            return chunkResults[0];
+        } else {
+            console.log('🔗 Combining chunk results...');
+            return this.combineChunkResults(chunkResults);
+        }
+    }
+
+    /**
+     * Split content into chunks that fit within token limits
+     */
+    private splitContentIntoChunks(content: string, maxTokensPerChunk: number): string[] {
+        const estimatedTokens = this.estimateTokens(content);
+        
+        if (estimatedTokens <= maxTokensPerChunk) {
+            return [content];
+        }
+        
+        // Split by sections first (look for markdown headers)
+        const sections = content.split(/(?=\n##?\s+)/);
+        const chunks: string[] = [];
+        let currentChunk = '';
+        
+        for (const section of sections) {
+            const sectionTokens = this.estimateTokens(section);
+            const currentChunkTokens = this.estimateTokens(currentChunk);
+            
+            if (currentChunkTokens + sectionTokens <= maxTokensPerChunk) {
+                currentChunk += section;
+            } else {
+                if (currentChunk) {
+                    chunks.push(currentChunk.trim());
+                    currentChunk = section;
+                } else if (sectionTokens > maxTokensPerChunk) {
+                    // Split large section by paragraphs
+                    const paragraphs = section.split('\n\n');
+                    for (const paragraph of paragraphs) {
+                        const paragraphTokens = this.estimateTokens(paragraph);
+                        const currentTokens = this.estimateTokens(currentChunk);
+                        
+                        if (currentTokens + paragraphTokens <= maxTokensPerChunk) {
+                            currentChunk += '\n\n' + paragraph;
+                        } else {
+                            if (currentChunk) {
+                                chunks.push(currentChunk.trim());
+                            }
+                            currentChunk = paragraph;
+                        }
+                    }
+                } else {
+                    currentChunk = section;
+                }
+            }
+        }
+        
+        if (currentChunk.trim()) {
+            chunks.push(currentChunk.trim());
+        }
+        
+        return chunks.length > 0 ? chunks : [content];
+    }
+
+    /**
+     * Combine results from multiple chunks
+     */
+    private combineChunkResults(chunkResults: string[]): string {
+        if (chunkResults.length === 1) {
+            return chunkResults[0];
+        }
+        
+        // Create a combined result with clear sections
+        let combined = '# Combined Analysis Results\n\n';
+        combined += `This document was generated by processing ${chunkResults.length} content sections due to size limitations.\n\n`;
+        
+        chunkResults.forEach((result, index) => {
+            combined += `## Section ${index + 1} Analysis\n\n`;
+            combined += result.trim();
+            combined += '\n\n---\n\n';
+        });
+        
+        // Add a summary note
+        combined += '## Integration Note\n\n';
+        combined += 'This analysis was created by processing the content in multiple sections. ';
+        combined += 'Each section above represents analysis of a portion of the complete project context. ';
+        combined += 'Please review all sections for comprehensive understanding.\n';
+        
+        return combined;
     }
 
     private async makeAzureOpenAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
@@ -253,29 +452,33 @@ class AIProcessor {
         }
 
         return result.body.choices[0]?.message?.content || '';
-    }
+    }    private async makeGitHubAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
+    // GitHub AI via OpenAI-compatible API supports multiple models
+    const possibleModels = ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo", "text-davinci-003"];
+    let modelName = process.env.GITHUB_AI_MODEL || possibleModels[0];
+    const modelMaxTokens = this.config.getModelTokenLimit(modelName);
+    console.log(`🤖 GitHub AI: Using model ${modelName}, max tokens: ${Math.min(maxTokens, modelMaxTokens)}`);
 
-    private async makeGitHubAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
-        const modelName = "gpt-4o-mini";
-        const modelMaxTokens = this.config.getModelTokenLimit(modelName);
-
-        const result = await client.path("/chat/completions").post({
-            body: {
-                messages: messages,
-                model: modelName,
-                max_tokens: Math.min(maxTokens, modelMaxTokens),
-                temperature: 0.7
-            }
+    try {
+        const completion = await client.chat.completions.create({
+            model: modelName,
+            messages,
+            max_tokens: Math.min(maxTokens, modelMaxTokens),
+            temperature: 0.7
         });
-
-        if (result.status !== "200") {
-            throw new Error(`GitHub AI call failed: ${result.status}`);
+        const content = completion.choices?.[0]?.message?.content;
+        if (!content) {
+            throw new Error('GitHub AI returned empty response');
         }
-
-        return result.body.choices[0]?.message?.content || '';
+        return content;
+    } catch (error: any) {
+        console.error(`❌ GitHub AI call error: ${error.message}`);
+        if (error.message?.includes('model') && modelName === possibleModels[0]) {
+            throw new Error(`GitHub AI model ${modelName} not available. Set GITHUB_AI_MODEL env var to supported model.`);
+        }
+        throw error;
     }
-
-    private async makeOllamaCall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
+}    private async makeOllamaCall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
         const { endpoint } = client;
         const modelName = 'llama2';
         const modelMaxTokens = this.config.getModelTokenLimit(modelName);
@@ -409,6 +612,59 @@ class AIProcessor {
         this.clientManager.cleanup();
         this.metricsManager.resetMetrics();
         this.retryManager.resetCircuitBreaker();
+    }    /**
+     * Configure strict provider mode - disables fallback logic
+     * @param providerId Specific provider to use exclusively, or null to allow fallbacks
+     */
+    setStrictProvider(providerId: string | null): void {
+        this.strictProvider = providerId;
+        this.allowFallback = providerId === null;
+        
+        if (providerId) {
+            console.log(`🔒 Strict provider mode enabled: ${providerId} (fallback disabled)`);
+            // Force the provider manager to use this specific provider
+            this.providerManager.setActiveProvider(providerId);
+            
+            // Adjust context manager token limits for the specific provider
+            this.adjustContextManagerForProvider(providerId);
+        } else {
+            console.log('🔓 Fallback mode enabled (all providers available)');
+        }
+    }
+
+    /**
+     * Adjust context manager settings for a specific provider
+     * @param providerId Provider to optimize context manager for
+     */
+    private async adjustContextManagerForProvider(providerId: string): Promise<void> {
+        try {
+            // Use dynamic import to avoid circular dependency
+            const { ContextManager } = await import('../contextManager.js');
+            
+            // Get or create a context manager instance
+            const contextManager = new ContextManager();
+            
+            // Apply provider-specific token limit adjustments
+            contextManager.adjustTokenLimitsForProvider(providerId);
+            
+            console.log(`🔧 Context manager optimized for provider: ${providerId}`);
+        } catch (error) {
+            console.warn(`Failed to adjust context manager for provider ${providerId}:`, error);
+        }
+    }
+
+    /**
+     * Get current strict provider setting
+     */
+    getStrictProvider(): string | null {
+        return this.strictProvider;
+    }
+
+    /**
+     * Check if fallback is allowed
+     */
+    isFallbackAllowed(): boolean {
+        return this.allowFallback;
     }
 }
 
