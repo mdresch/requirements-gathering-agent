@@ -152,7 +152,8 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
                     return contextManager.buildContextForDocument('project-charter', 
                         ['user-stories', 'stakeholder-register', 'cost-management-plan']);
                 } catch (error) {
-                    throw new Error(`Failed to build document context: ${error.message}`);
+                    const errorMsg = (error instanceof Error) ? error.message : String(error);
+                    throw new Error(`Failed to build document context: ${errorMsg}`);
                 }
             });
 
@@ -232,8 +233,8 @@ Follow PMBOK standards and ensure:
                         throw new Error('Token limit must be between 2000 and 8000');
                     }
 
-                    const response = await aiProcessor.makeAICall(messages, tokenLimit)
-                        .catch(error => {
+                    const response: Awaited<ReturnType<AIProcessor["makeAICall"]>> = await (aiProcessor as AIProcessor).makeAICall(messages, tokenLimit)
+                        .catch((error: Error) => {
                             throw new Error(`AI call failed: ${error.message}`);
                         });
 
@@ -249,7 +250,8 @@ Follow PMBOK standards and ensure:
                     return content;
                 } catch (error) {
                     console.error('Error in AI project charter generation:', error);
-                    throw new Error(`Failed to generate project charter: ${error.message}`);
+                    const errorMsg = (error instanceof Error) ? error.message : String(error);
+                    throw new Error(`Failed to generate project charter: ${errorMsg}`);
                 }
             }, 'AI Project Charter Generation', 'project-charter');
         } catch (error) {
