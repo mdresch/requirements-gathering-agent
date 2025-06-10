@@ -158,6 +158,8 @@ export class ContextManager {
         this.documentRelationships.set('ui-ux-considerations', ['user-stories', 'personas', 'tech-stack', 'acceptance-criteria']);
         this.documentRelationships.set('user-personas', ['summary', 'project-charter', 'key-roles']);
         this.documentRelationships.set('key-roles-and-needs', ['summary', 'project-charter', 'stakeholder-register', 'user-stories']);
+        this.documentRelationships.set('mission-vision-core-values', ['project-charter', 'summary', 'stakeholder-register']);
+        this.documentRelationships.set('project-purpose', ['project-charter', 'summary', 'business-case']);
     }
 
     private estimateTokens(text: string): number {

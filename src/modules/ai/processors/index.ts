@@ -32,6 +32,7 @@ import { WBSProcessor } from "./WBSProcessor.js";
 import { ActivityProcessor } from "./ActivityProcessor.js";
 import { ScopeManagementProcessor } from "./ScopeManagementProcessor.js";
 import { ProjectManagementProcessor } from "./ProjectManagementProcessor.js";
+import { StrategicStatementsProcessor } from './StrategicStatementsProcessor.js';
 
 export { BaseAIProcessor } from "./BaseAIProcessor.js";
 
@@ -62,6 +63,7 @@ const requirementsProcessor = new RequirementsProcessor();
 const planningProcessor = new PlanningProcessor();
 const wbsProcessor = new WBSProcessor();
 const activityProcessor = new ActivityProcessor();
+const strategicStatementsProcessor = new StrategicStatementsProcessor();
 
 // Helper function to safely handle null returns from processors
 const safeProcessorCall = async (processorPromise: Promise<string | null>): Promise<string> => {
@@ -85,8 +87,8 @@ export const getAiProjectStatementOfWork = async (context: string): Promise<stri
 export const getAiBusinessCase = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getBusinessCase(context));
 
 // Strategic Statements  
-export const getAiMissionVisionAndCoreValues = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getMissionVisionAndCoreValues(context));
-export const getAiProjectPurpose = async (context: string): Promise<string> => await safeProcessorCall(projectManagementProcessor.getProjectPurpose(context));
+export const getMissionVisionAndCoreValues = async (context: string): Promise<string> => await safeProcessorCall(strategicStatementsProcessor.getAiMissionVisionAndCoreValues(context));
+export const getProjectPurpose = async (context: string): Promise<string> => await safeProcessorCall(strategicStatementsProcessor.getAiProjectPurpose(context));
 
 // Project Charter
 export const getAiProjectCharter = async (context: string): Promise<string> => await safeProcessorCall(pmbokProcessor.getProjectCharter(context));

@@ -23,19 +23,30 @@ Before implementing new document types, ensure you have:
 
 ## 🏗️ Architecture Overview
 
-The document generation system follows this structure:
+The document generation system now separates AI processor logic and document template logic for better modularity and maintainability.
 
 ```
 src/modules/
 ├── documentGenerator.ts      # Main orchestrator
-├── documentTemplates/        # Document-specific logic
+├── documentTemplates/        # Document templates and (new) processors
 │   ├── coreAnalysis/        # Core analysis documents
 │   ├── managementPlans/     # Management and planning docs
 │   ├── stakeholderMgmt/     # Stakeholder management
-│   └── technicalAnalysis/   # Technical documentation
+│   ├── strategicStatements.ts  # Strategic statements templates (NEW)
+│   ├── strategicStatementsProcessor.js  # Strategic statements processors (NEW)
+│   └── ...
 ├── ai/                      # AI provider management
-└── processors/              # Document processors
+└── processors/              # (LEGACY) Document processors (being migrated)
 ```
+
+### ⚡️ Key Change: Processors Move to `documentTemplates`
+
+- **Previously:** All document processors (logic for generating and enhancing documents) were located in `src/modules/ai/processors/`.
+- **Now:** New and migrated processors are placed in `src/modules/documentTemplates/`, alongside their template definitions. For example:
+  - `strategicStatements.ts` contains the document template classes for Mission, Vision & Core Values and Project Purpose.
+  - `strategicStatementsProcessor.js` contains the processor classes for these documents, which handle AI enhancement and validation.
+
+This change improves modularity and makes it easier to maintain and extend document types.
 
 ---
 
@@ -43,18 +54,23 @@ src/modules/
 
 ### 1.1 Define Document Category
 
-First, determine which category your new document belongs to:
+First, determine which category your new document belongs to. The main categories are:
 
 - **Core Analysis**: Project summaries, context analysis, metadata
 - **Management Plans**: Risk, scope, quality, communication plans
 - **Planning Artifacts**: WBS, schedules, resource planning
 - **Technical Analysis**: Architecture, technical requirements, APIs
 - **Stakeholder Management**: Registers, communication matrices
-- **Strategic Statements**: Vision, mission, objectives
+- **Strategic Statements**: Vision, mission, objectives, project purpose, mission/vision/core values
+
+> **Tip:**
+> The list of categories is defined in the codebase (see `src/modules/documentGenerator/generationTasks.ts` and related config). If you add a new category, update the relevant configuration and documentation to ensure it is recognized by the generator and CLI.
+
+---
 
 ### 1.2 Document Specification
 
-Create a specification for your new document:
+Create a specification for your new document. Use the following interface as a guide:
 
 ```typescript
 interface NewDocumentSpec {
@@ -69,533 +85,103 @@ interface NewDocumentSpec {
 }
 ```
 
+- Add your new document's specification to the appropriate configuration (see `src/modules/documentGenerator/generationTasks.ts`).
+- Ensure the `category` matches one of the main categories above, or update the configuration and documentation if you introduce a new category.
+
+---
+
+## 🧠 Step 1b: Build Context for Prompts
+
+Before implementing a new document type, ensure you have a clear and rich project context. This context is used to generate high-quality, project-specific documents. The context typically includes:
+
+- Project name, type, and description
+- Stakeholder information
+- Business goals and objectives
+- Technical constraints and requirements
+- Any relevant background or history
+
+**How context is built:**
+- The agent gathers context from user input, project metadata, and previously generated documents.
+- The `src/modules/contextManager.ts` module is responsible for collecting, merging, and providing this context to the rest of the system.
+- This context is passed to both the template and processor classes, and is injected into AI prompts to ensure outputs are tailored to the specific project.
+- When designing a new processor, always include a section in your prompt for the full project context, and reference it in your template sections.
+- For advanced scenarios, see the `ContextManager` implementation for how context is loaded, updated, and made available to document generation routines.
+
+---
+
+## 🔗 Step 1c: Register Document Relationships in ContextManager
+
+**Important:** For new document types to participate in context enrichment and relationship management, you must register them in the context relationship logic.
+
+- Open `src/modules/contextManager.ts`.
+- Locate the `initializeDocumentRelationships` function.
+- Add your new document type(s) to the relationships map, ensuring they are linked to relevant context sources and dependencies.
+- This ensures that when your document is generated, it can access and contribute to the shared project context, and that downstream documents can reference it.
+- Example:
+  ```ts
+  relationships['mission-vision-core-values'] = ['project-purpose', 'project-summary'];
+  relationships['project-purpose'] = ['mission-vision-core-values', 'project-summary'];
+  ```
+- Update this step whenever you add new document types that should be context-aware or referenced by others.
+
 ---
 
 ## 📂 Step 2: Create Document Template Structure
 
 ### 2.1 Create Directory Structure
 
-If adding a new category:
+If adding a new category or document type:
 
 ```bash
 mkdir src/modules/documentTemplates/yourNewCategory
 ```
 
-### 2.2 Create Template File
+### 2.2 Create Template and Processor Files
 
-Create your document template file:
+- **Template:**
+  - Create a TypeScript file for your document template (e.g., `strategicStatements.ts`).
+  - Define the template class (e.g., `MissionVisionCoreValuesTemplate`).
+  - The template should have a `generateContent(context)` method that builds the document using the provided context.
+- **Processor:**
+  - Create a processor file (e.g., `strategicStatementsProcessor.js`).
+  - Define processor classes (e.g., `MissionVisionCoreValuesProcessor`) that handle:
+    - Building the AI prompt (injecting the project context)
+    - Calling the AI provider
+    - Validating and enhancing the output
+  - Export these processors for use in the main generator.
 
-```bash
-touch src/modules/documentTemplates/yourCategory/yourDocumentName.ts
+### 2.3 Example Structure
+
 ```
-
-### 2.3 Basic Template Structure
-
-```typescript
-// src/modules/documentTemplates/yourCategory/yourDocumentName.ts
-import { ProjectContext } from '../../types.js';
-import { validatePMBOKCompliance } from '../../validation/pmbokValidator.js';
-
-export interface YourDocumentConfig {
-  includeRiskAssessment?: boolean;
-  detailLevel: 'basic' | 'detailed' | 'comprehensive';
-  customSections?: string[];
-}
-
-export class YourDocumentNameTemplate {
-  constructor(
-    private context: ProjectContext,
-    private config: YourDocumentConfig = { detailLevel: 'detailed' }
-  ) {}
-
-  /**
-   * Generate the document content
-   */
-  async generateContent(): Promise<string> {
-    const sections = [
-      this.generateHeader(),
-      this.generateExecutiveSummary(),
-      await this.generateMainSections(),
-      this.generateConclusion()
-    ];
-
-    return sections.filter(Boolean).join('\n\n');
-  }
-
-  /**
-   * Generate document header with metadata
-   */
-  private generateHeader(): string {
-    return `# ${this.getDocumentTitle()}
-
-**Document Version:** 1.0  
-**Created:** ${new Date().toLocaleDateString()}  
-**Project:** ${this.context.projectName || 'Unknown Project'}  
-**Category:** ${this.getCategory()}  
-
----`;
-  }
-
-  /**
-   * Generate executive summary
-   */
-  private generateExecutiveSummary(): string {
-    return `## Executive Summary
-
-This document provides [description of what the document covers].
-
-### Key Objectives
-- [Objective 1]
-- [Objective 2]
-- [Objective 3]`;
-  }
-
-  /**
-   * Generate main document sections
-   */
-  private async generateMainSections(): Promise<string> {
-    const sections = [];
-
-    // Add your specific sections here
-    sections.push(this.generateSection1());
-    sections.push(this.generateSection2());
-    
-    if (this.config.includeRiskAssessment) {
-      sections.push(this.generateRiskAssessment());
-    }
-
-    return sections.join('\n\n');
-  }
-
-  /**
-   * Example section generator
-   */
-  private generateSection1(): string {
-    return `## Section 1: [Title]
-
-[Content based on project context]
-
-### Subsection 1.1
-[Detailed content]
-
-### Subsection 1.2
-[More content]`;
-  }
-
-  /**
-   * Generate conclusion
-   */
-  private generateConclusion(): string {
-    return `## Conclusion
-
-[Summary and next steps]
-
----
-
-*This document was generated using the Requirements Gathering Agent v2.1.3*`;
-  }
-
-  /**
-   * Get document title
-   */
-  private getDocumentTitle(): string {
-    return 'Your Document Name';
-  }
-
-  /**
-   * Get document category
-   */
-  private getCategory(): string {
-    return 'your-category';
-  }
-
-  /**
-   * Validate PMBOK compliance
-   */
-  async validateCompliance(): Promise<boolean> {
-    return validatePMBOKCompliance(await this.generateContent(), this.getCategory());
-  }
-}
+src/modules/documentTemplates/
+  strategic-statements/
+    strategicStatements.ts              # Template classes
+    strategicStatementsProcessor.js     # Processor classes (JS/TS)
+    strategicStatementsProcessor.d.ts   # Type declarations (if needed)
 ```
 
 ---
 
-## 🔧 Step 3: Create Document Processor
+## 🔧 Step 3: Register Document in Main Generator
 
-### 3.1 Create Processor File
-
-```bash
-touch src/modules/processors/yourDocumentNameProcessor.ts
-```
-
-### 3.2 Processor Implementation
-
-```typescript
-// src/modules/processors/yourDocumentNameProcessor.ts
-import { AIProcessor } from '../ai/AIProcessor.js';
-import { ProjectContext } from '../types.js';
-import { YourDocumentNameTemplate, YourDocumentConfig } from '../documentTemplates/yourCategory/yourDocumentName.js';
-
-export class YourDocumentNameProcessor {
-  constructor(
-    private aiProcessor: AIProcessor,
-    private context: ProjectContext
-  ) {}
-
-  /**
-   * Process and generate the document using AI
-   */
-  async processDocument(config: YourDocumentConfig = { detailLevel: 'detailed' }): Promise<string> {
-    try {
-      // Create template instance
-      const template = new YourDocumentNameTemplate(this.context, config);
-      
-      // Generate initial content
-      const initialContent = await template.generateContent();
-      
-      // AI enhancement prompt
-      const aiPrompt = this.createAIPrompt(initialContent);
-      
-      // Process with AI
-      const enhancedContent = await this.aiProcessor.generateContent(
-        aiPrompt,
-        'your-document-name-generation'
-      );
-
-      // Validate and return
-      await this.validateOutput(enhancedContent);
-      return enhancedContent;
-
-    } catch (error) {
-      console.error('Error processing your document:', error);
-      throw new Error(`Failed to generate your document: ${error.message}`);
-    }
-  }
-
-  /**
-   * Create AI enhancement prompt
-   */
-  private createAIPrompt(initialContent: string): string {
-    return `You are a professional project manager and PMBOK expert. Please enhance and expand the following document template with detailed, actionable content based on the project context.
-
-Project Context:
-- Name: ${this.context.projectName}
-- Type: ${this.context.projectType}
-- Description: ${this.context.description}
-
-Requirements:
-1. Ensure PMBOK 7.0 compliance
-2. Make content specific to this project
-3. Include actionable recommendations
-4. Use professional language and formatting
-5. Add relevant examples where appropriate
-
-Document Template:
-${initialContent}
-
-Please provide a comprehensive, enhanced version of this document.`;
-  }
-
-  /**
-   * Validate the generated output
-   */
-  private async validateOutput(content: string): Promise<void> {
-    if (!content || content.trim().length === 0) {
-      throw new Error('Generated content is empty');
-    }
-
-    if (content.length < 500) {
-      console.warn('Generated content seems unusually short');
-    }
-
-    // Additional validation logic here
-  }
-}
-```
+- Import your processor from `documentTemplates/yourProcessorFile.js` in the generator registry (not from `ai/processors`).
+- Update the processor registry to instantiate your new processor for the relevant document type.
+- Ensure the generator passes the full project context to your processor and template.
 
 ---
 
-## 📋 Step 4: Register Document in Main Generator
+## 🧪 Step 4: Testing and Validation
 
-### 4.1 Update Document Categories
-
-Add your new document to the main categories in `src/modules/documentGenerator.ts`:
-
-```typescript
-// Add to existing categories object
-export const DOCUMENT_CATEGORIES = {
-  // ...existing categories...
-  'your-category': {
-    name: 'Your Category',
-    description: 'Description of your category',
-    documents: [
-      'your-document-name'
-    ]
-  }
-};
-```
-
-### 4.2 Update Document Definitions
-
-```typescript
-// Add to DOCUMENT_DEFINITIONS
-export const DOCUMENT_DEFINITIONS = {
-  // ...existing definitions...
-  'your-document-name': {
-    name: 'Your Document Name',
-    category: 'your-category',
-    fileName: 'your-document-name.md',
-    description: 'Description of your document',
-    processor: 'YourDocumentNameProcessor',
-    dependencies: [], // List any dependencies
-    estimatedTokens: 2000,
-    priority: 5
-  }
-};
-```
-
-### 4.3 Update Processor Registry
-
-```typescript
-// Add import
-import { YourDocumentNameProcessor } from './processors/yourDocumentNameProcessor.js';
-
-// Add to processor creation
-private createProcessor(type: string, context: ProjectContext): any {
-  switch (type) {
-    // ...existing cases...
-    case 'your-document-name':
-      return new YourDocumentNameProcessor(this.aiProcessor, context);
-    default:
-      throw new Error(`Unknown document type: ${type}`);
-  }
-}
-```
+- Ensure your new processor and template are correctly registered and can be invoked by the document generator.
+- Run tests to validate integration.
+- Test with different project contexts to ensure prompts and outputs are context-aware and project-specific.
 
 ---
 
-## 🧪 Step 5: Add CLI Support
+## 📝 Migration Note
 
-### 5.1 Update CLI Flags
-
-In `src/cli.ts`, add your new document category flag:
-
-```typescript
-// Add to help text
-console.log('  --generate-your-category    Generate your category documents');
-
-// Add to argument parsing
-if (args.includes('--generate-your-category')) {
-  categories.push('your-category');
-}
-```
-
-### 5.2 Update Available Categories
-
-```typescript
-// In getAvailableCategories function
-export function getAvailableCategories(): string[] {
-  return [
-    'core-analysis',
-    'management-plans',
-    'planning-artifacts',
-    'technical-analysis',
-    'stakeholder-management',
-    'your-category' // Add your new category
-  ];
-}
-```
-
----
-
-## ✅ Step 6: Testing Your New Document
-
-### 6.1 Create Test File
-
-```bash
-touch test/yourDocumentName.test.ts
-```
-
-### 6.2 Basic Test Implementation
-
-```typescript
-// test/yourDocumentName.test.ts
-import { YourDocumentNameProcessor } from '../src/modules/processors/yourDocumentNameProcessor.js';
-import { YourDocumentNameTemplate } from '../src/modules/documentTemplates/yourCategory/yourDocumentName.js';
-import { ProjectContext } from '../src/modules/types.js';
-
-describe('YourDocumentNameProcessor', () => {
-  const mockContext: ProjectContext = {
-    projectName: 'Test Project',
-    projectType: 'web-application',
-    description: 'A test project for validation'
-  };
-
-  test('should generate document content', async () => {
-    const template = new YourDocumentNameTemplate(mockContext);
-    const content = await template.generateContent();
-    
-    expect(content).toBeDefined();
-    expect(content.length).toBeGreaterThan(100);
-    expect(content).toContain('Test Project');
-  });
-
-  test('should validate PMBOK compliance', async () => {
-    const template = new YourDocumentNameTemplate(mockContext);
-    const isCompliant = await template.validateCompliance();
-    
-    expect(isCompliant).toBe(true);
-  });
-});
-```
-
-### 6.3 Integration Test
-
-```bash
-# Test document generation
-node dist/cli.js --generate-your-category --output test-output
-```
-
----
-
-## 📊 Step 7: Validation and Quality Assurance
-
-### 7.1 PMBOK Compliance
-
-Ensure your document meets PMBOK 7.0 standards:
-
-- ✅ Follows project management principles
-- ✅ Uses standard terminology
-- ✅ Includes appropriate stakeholder considerations
-- ✅ Aligns with project lifecycle phases
-
-### 7.2 Content Quality
-
-- ✅ Professional language and tone
-- ✅ Actionable recommendations
-- ✅ Project-specific content
-- ✅ Proper markdown formatting
-- ✅ Consistent structure
-
-### 7.3 Technical Validation
-
-- ✅ No TypeScript compilation errors
-- ✅ Tests pass
-- ✅ Integrates with existing CLI
-- ✅ Handles errors gracefully
-
----
-
-## 📚 Step 8: Documentation
-
-### 8.1 Update README
-
-Add your new document type to the main README.md:
-
-```markdown
-### Your Category Documents
-- **Your Document Name**: Description of what it provides
-```
-
-### 8.2 Update Help Documentation
-
-Update CLI help text and documentation to include your new document type.
-
-### 8.3 Create Usage Examples
-
-Add examples of using your new document type:
-
-```bash
-# Generate your specific document
-requirements-gathering-agent --generate-your-category
-
-# Generate with custom configuration
-requirements-gathering-agent --generate-your-category --output my-docs
-```
-
----
-
-## 🚀 Step 9: Deployment
-
-### 9.1 Version Update
-
-Update the version in `package.json` and relevant files.
-
-### 9.2 Changelog
-
-Add entry to `docs/CHANGELOG.md`:
-
-```markdown
-## [2.1.4] - 2025-06-XX
-### Added
-- New document type: Your Document Name
-- Support for your-category document generation
-```
-
-### 9.3 Testing
-
-Run comprehensive tests:
-
-```bash
-npm test
-npm run build
-node dist/cli.js --help  # Verify new options appear
-```
-
----
-
-## 🎯 Best Practices
-
-### Code Quality
-- ✅ Follow existing code patterns and conventions
-- ✅ Use TypeScript types consistently
-- ✅ Include proper error handling
-- ✅ Add meaningful comments and documentation
-
-### AI Integration
-- ✅ Design prompts that produce consistent results
-- ✅ Include context-specific information
-- ✅ Validate AI outputs appropriately
-- ✅ Handle AI failures gracefully
-
-### User Experience
-- ✅ Provide clear documentation
-- ✅ Use intuitive CLI flags
-- ✅ Include helpful error messages
-- ✅ Follow established patterns
-
-### Performance
-- ✅ Optimize token usage for AI calls
-- ✅ Cache results where appropriate
-- ✅ Handle large projects efficiently
-- ✅ Provide progress feedback
-
----
-
-## 🔧 Common Issues and Solutions
-
-### Issue: AI Generated Content is Generic
-**Solution**: Enhance your AI prompts with more specific project context and examples.
-
-### Issue: PMBOK Validation Fails
-**Solution**: Review PMBOK 7.0 guidelines and ensure your document structure aligns with standards.
-
-### Issue: TypeScript Compilation Errors
-**Solution**: Check import paths and ensure all types are properly defined.
-
-### Issue: CLI Integration Not Working
-**Solution**: Verify you've updated all necessary files in the CLI chain.
-
----
-
-## 📞 Support
-
-If you encounter issues while implementing new document types:
-
-1. Check existing document implementations for reference
-2. Review the TypeScript compiler output for specific errors
-3. Test with a simple project context first
-4. Consult the PMBOK 7.0 guide for compliance requirements
+- **Legacy processors** in `src/modules/ai/processors/` are being phased out. New and updated document types should use the `documentTemplates` directory for both templates and processors.
+- This approach improves maintainability and aligns with the modular architecture goals.
 
 ---
 
@@ -608,10 +194,65 @@ Remember to:
 - Follow existing patterns
 - Test thoroughly
 - Document your changes
-- Consider PMBOK compliance
+- Consider PMBock compliance
 
 Happy coding! 🚀
 
 ---
 
 *This guide was created for Requirements Gathering Agent v2.1.3*
+
+---
+
+## 🛠️ Troubleshooting & Common Build Issues
+
+### TypeScript Import/Type Errors
+
+If you encounter errors like:
+- `Cannot find module '../../types.js' or its corresponding type declarations.`
+- `Cannot find module '../../validation/pmbokValidator.js' or its corresponding type declarations.`
+- Property errors such as `Property 'projectType' does not exist on type 'ProjectContext'.`
+- `Property 'generateContent' does not exist on type 'AIProcessor'.`
+
+#### How to Fix:
+
+1. **Check Import Paths:**
+   - Use `.ts` extensions for TypeScript imports (e.g., `import { ProjectContext } from '../../types';`).
+   - Only use `.js` if you are importing compiled JavaScript or using Node.js resolution.
+   - Make sure the referenced files exist and are included in your `tsconfig.json`.
+
+2. **Type Declarations:**
+   - Ensure all types (like `ProjectContext`) are exported from the correct file (e.g., `src/types.ts`).
+   - If you move or rename files, update all import paths accordingly.
+
+3. **Context Properties:**
+   - If you reference properties like `projectType` or `description` on `ProjectContext`, confirm they exist in `src/types.ts` and are populated by the `ContextManager`.
+   - If not, add them to the type and ensure they are set in the context-building logic.
+
+4. **AIProcessor Methods:**
+   - If you call `generateContent` on `AIProcessor`, ensure this method exists. If not, use the correct method (e.g., `makeAICall`).
+   - Review the implementation in `src/modules/ai/AIProcessor.ts` for available methods.
+
+5. **Error Handling:**
+   - When catching errors of type `unknown`, use `if (error instanceof Error)` to safely access `error.message`.
+
+#### Example Fixes:
+- Change `import { ProjectContext } from '../../types.js';` to `import { ProjectContext } from '../../types';`
+- Add missing properties to `ProjectContext` in `src/types.ts`:
+  ```ts
+  export interface ProjectContext {
+    projectName: string;
+    projectType?: string;
+    description?: string;
+    // ...other fields
+  }
+  ```
+- Replace `this.aiProcessor.generateContent(...)` with `this.aiProcessor.makeAICall(...)` if that's the correct method.
+- Use:
+  ```ts
+  if (error instanceof Error) {
+    throw new Error(`Failed: ${error.message}`);
+  } else {
+    throw error;
+  }
+  ```

@@ -114,11 +114,11 @@ export class DocumentGenerator {
 
     // Strategic Statements
     async getAiMissionVisionAndCoreValues(context: string): Promise<string> {
-        return await processors.getAiMissionVisionAndCoreValues(context) ?? '';
+        return await processors.getMissionVisionAndCoreValues(context) ?? '';
     }
 
     async getAiProjectPurpose(context: string): Promise<string> {
-        return await processors.getAiProjectPurpose(context) ?? '';
+        return await processors.getProjectPurpose(context) ?? '';
     }
 
     // Project Management Plans
