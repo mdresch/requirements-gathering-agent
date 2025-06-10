@@ -62,3 +62,10 @@ export interface AIResponse {
         tokensUsed?: number;
     };
 }
+
+export interface ProjectContext {
+    projectName: string;
+    projectType?: string;
+    description?: string;
+    // ...other fields...
+}

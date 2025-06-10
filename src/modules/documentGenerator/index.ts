@@ -4,8 +4,8 @@
  */
 import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator.js';
 import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
-import { MissionVisionCoreValuesProcessor, ProjectPurposeProcessor } from '../documentTemplates/strategic-statements/strategicStatementsProcessor.js';
-import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types.js';
+import { ProcessorFactory } from './ProcessorFactory.js';
+import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types';
 
 // Enhanced batch generation with smart retry
 export async function generateDocumentsWithRetry(

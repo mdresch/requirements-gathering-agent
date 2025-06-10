@@ -380,7 +380,52 @@ Context Management Options:
   --use-large-context           Force large context mode (auto-detected by default)
 ```
 
-### Enhanced Analysis in Action
+## 🧩 Modular Processor Architecture (2025 Update)
+
+The Requirements Gathering Agent now uses a modular, configuration-driven processor factory for all document generation. This makes it easy to add, update, or swap document processors without changing core code.
+
+- **Processors are registered in `processor-config.json`** using canonical keys.
+- **ProcessorFactory** loads and instantiates processors based on this config, supporting both static and dynamic imports.
+- **To add a new document type:**
+  1. Implement your processor in `src/modules/documentTemplates/<category>/<YourProcessor>.ts`.
+  2. Register it in `processor-config.json`.
+  3. Add it to `generationTasks.ts` and update context relationships if needed.
+  4. Add a Jest unit test for your processor (see below).
+  5. Update documentation and CLI help.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/STEPS-TO-IMPLEMENT-NEW-DOCS.md`](docs/STEPS-TO-IMPLEMENT-NEW-DOCS.md) for full details.
+
+---
+
+## 🆕 Project KickOff Preparations Checklist
+
+A new document type: **Project KickOff Preparations Checklist**
+
+- **Purpose:** Provides a detailed, PMBOK-aligned checklist for project initiation, planning, setup, risk, communication, and more.
+- **Canonical key:** `project-kickoff-preparations-checklist`
+- **Output:** `planning-artifacts/project-kickoff-preparations-checklist.md`
+- **How to generate:**
+  ```pwsh
+  requirements-gathering-agent --generate-planning
+  # or generate all documents (includes checklist)
+  requirements-gathering-agent
+  ```
+- **CLI listing:** Appears under planning artifacts in `--list-templates` and help output.
+
+---
+
+## 🛠️ How to Add New Document Types
+
+1. Follow the modular processor pattern (see above).
+2. Reference [`docs/STEPS-TO-IMPLEMENT-NEW-DOCS.md`](docs/STEPS-TO-IMPLEMENT-NEW-DOCS.md) for a step-by-step guide and worked example.
+3. Add a Jest unit test for your processor (see guide for example).
+4. Update CLI help and documentation.
+
+---
+
+(Sections above and below remain unchanged)
+
+## Enhanced Analysis in Action
 
 When you run the Requirements Gathering Agent, you'll see the comprehensive analysis and enhanced context management in action:
 

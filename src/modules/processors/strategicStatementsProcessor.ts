@@ -1,12 +1,17 @@
-import { AIProcessor } from '../ai/AIProcessor.js';
-import { ProjectContext } from '../types.js';
-import { MissionVisionCoreValuesTemplate, ProjectPurposeTemplate, StrategicStatementsConfig } from '../documentTemplates/strategic-statements/strategicStatements.js';
+import { AIProcessor } from '../ai/AIProcessor';
+import type { ProjectContext } from '../ai/types';
+import { MissionVisionCoreValuesTemplate, ProjectPurposeTemplate, StrategicStatementsConfig } from '../documentTemplates/strategic-statements/strategicStatements';
 
 export class MissionVisionCoreValuesProcessor {
   constructor(
     private aiProcessor: AIProcessor,
     private context: ProjectContext
   ) {}
+
+  async process(context: any) {
+    // Forward to processDocument, using context as config if provided
+    return this.processDocument(context);
+  }
 
   async processDocument(config: StrategicStatementsConfig = { detailLevel: 'detailed' }): Promise<string> {
     try {
@@ -44,6 +49,11 @@ export class ProjectPurposeProcessor {
     private aiProcessor: AIProcessor,
     private context: ProjectContext
   ) {}
+
+  async process(context: any) {
+    // Forward to processDocument, using context as config if provided
+    return this.processDocument(context);
+  }
 
   async processDocument(config: StrategicStatementsConfig = { detailLevel: 'detailed' }): Promise<string> {
     try {

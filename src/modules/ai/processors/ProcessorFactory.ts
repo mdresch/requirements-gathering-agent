@@ -9,6 +9,14 @@
  * @since 3.1.0
  */
 
+// Temporary local definition if ILogger is missing
+export interface ILogger {
+  error: (...args: any[]) => void;
+  info?: (...args: any[]) => void;
+  warn?: (...args: any[]) => void;
+  debug?: (...args: any[]) => void;
+}
+
 import { ProjectManagementProcessor } from "./ProjectManagementProcessor.js";
 import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor.js";
 import { ScopeManagementProcessor } from "./ScopeManagementProcessor.js";
@@ -141,3 +149,5 @@ export {
     wbsProcessor,
     activityProcessor
 };
+
+

@@ -273,6 +273,14 @@ export class DocumentGenerator {
         return await processors.getAiUiUxConsiderations(context) ?? '';
     }
 
+    async getProjectKickoffPreparationsChecklist(context: string): Promise<string> {
+        // Import the processor and run its process method
+        const { ProjectKickoffPreparationsChecklistProcessor } = await import('../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js');
+        const processor = new ProjectKickoffPreparationsChecklistProcessor();
+        const output = await processor.process({ projectName: context });
+        return output.content;
+    }
+
     /**
      * Filter and sort tasks based on options
      * @returns Filtered and sorted tasks

@@ -135,3 +135,49 @@ src/
 - **Streaming Support**: Real-time document generation
 - **Advanced Validation**: Enhanced quality assurance mechanisms
 - **Monitoring Tools**: System health and performance monitoring
+
+---
+
+## Modular Processor Architecture (2025 Update)
+
+The Requirements Gathering Agent now uses a modular, configuration-driven processor factory for all document generation. This architecture is designed for scalability, maintainability, and ease of extension. Below are the key architectural details and rationale:
+
+### 1. Processor Factory Pattern
+- All document processors are registered in a central factory, which loads processor classes dynamically based on a configuration file (`processor-config.json`).
+- The factory uses a registry/map pattern, allowing new processors to be added or swapped without modifying core orchestration code.
+- Processors are instantiated with dependency injection, supporting testability and future extensibility.
+
+### 2. Configuration-Driven Registration
+- The processor registry is populated at runtime from a JSON configuration file, mapping document task keys to module/class pairs.
+- This enables dynamic loading via `import()` and supports hot-swapping or extension of processors without code changes.
+- Example config entry: `"mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.ts#MissionVisionCoreValuesProcessor"`
+
+### 3. ESM/TypeScript Compatibility
+- All source imports are extensionless or use `.ts` in development, and `.js` in the built output, ensuring compatibility with Node ESM resolution.
+- This avoids runtime errors and supports modern JavaScript/TypeScript best practices.
+
+### 4. Error Handling and Logging
+- The factory and processors use custom error classes (e.g., `ProcessorNotFoundError`, `ProcessorInstantiationError`) for granular error reporting.
+- All errors are logged with context, and the system fails fast if a processor cannot be loaded or instantiated.
+
+### 5. Testing and Mocking
+- The architecture is designed for testability: all processors and the factory can be mocked in Jest or other test frameworks.
+- All async methods in processor mocks must return Promises to avoid teardown errors.
+- The test suite includes unit and integration tests for processor loading, error handling, and orchestration.
+
+### 6. Backward Compatibility and Migration
+- Adapter layers are provided for legacy import paths, ensuring a smooth transition for existing code.
+- Legacy processor files are marked as deprecated and will be removed after full migration.
+
+### 7. Extending the System
+- To add a new document type, create a processor class, register it in `processor-config.json`, and ensure it implements the required interface.
+- Update `generationTasks.ts` and context relationships as needed.
+- Follow the `strategic-statements` category as a reference implementation.
+
+### 8. Lessons Learned
+- Strict ESM/TypeScript import discipline is essential for runtime stability.
+- Clean builds and careful management of the `dist/` directory prevent missing module errors.
+- Dynamic imports and configuration-driven registration provide flexibility for future growth.
+- Comprehensive documentation and migration notes are critical for onboarding new contributors and maintaining architectural integrity.
+
+---

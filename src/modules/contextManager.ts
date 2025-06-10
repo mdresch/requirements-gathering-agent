@@ -160,6 +160,7 @@ export class ContextManager {
         this.documentRelationships.set('key-roles-and-needs', ['summary', 'project-charter', 'stakeholder-register', 'user-stories']);
         this.documentRelationships.set('mission-vision-core-values', ['project-charter', 'summary', 'stakeholder-register']);
         this.documentRelationships.set('project-purpose', ['project-charter', 'summary', 'business-case']);
+        this.documentRelationships.set('project-kickoff-preparations-checklist', ['project-charter', 'stakeholder-register', 'resource-management-plan']);
     }
 
     private estimateTokens(text: string): number {

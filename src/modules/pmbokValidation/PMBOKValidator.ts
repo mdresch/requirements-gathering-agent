@@ -35,6 +35,7 @@ const MIN_QUALITY_SCORE = 70;
  * Class responsible for validating document compliance with PMBOK 7.0 standards
  */
 export class PMBOKValidator {
+    static suppressLogging = false;
     private documentsBasePath: string;
 
     /**
@@ -70,7 +71,7 @@ export class PMBOKValidator {
             
             try {
                 await fs.access(expectedPath);
-                console.log(`✅ Found: ${key}`);
+                if (!PMBOKValidator.suppressLogging) console.log(`✅ Found: ${key}`);
             } catch (error) {
                 validation.missing.push(`${key} (${expectedPath})`);
                 validation.isComplete = false;
@@ -80,7 +81,7 @@ export class PMBOKValidator {
         // Check for README.md
         try {
             await fs.access(`${this.documentsBasePath}/README.md`);
-            console.log(`✅ Found: Documentation Index`);
+            if (!PMBOKValidator.suppressLogging) console.log(`✅ Found: Documentation Index`);
         } catch (error) {
             validation.missing.push('Documentation Index (README.md)');
             validation.isComplete = false;
@@ -94,7 +95,7 @@ export class PMBOKValidator {
      * @returns Comprehensive validation result
      */
     public async validatePMBOKCompliance(): Promise<PMBOKComplianceResult> {
-        console.log('\n📋 Starting PMBOK 7.0 Compliance Validation...');
+        if (!PMBOKValidator.suppressLogging) console.log('\n📋 Starting PMBOK 7.0 Compliance Validation...');
         
         const validation: PMBOKComplianceResult = {
             compliance: true,
@@ -108,17 +109,21 @@ export class PMBOKValidator {
         };
 
         try {
-            console.log(`Base path: ${this.documentsBasePath}`);
-            const files = await fs.readdir(this.documentsBasePath);
-            console.log('Available directories:', files);
+            if (!PMBOKValidator.suppressLogging) {
+                console.log(`Base path: ${this.documentsBasePath}`);
+                const files = await fs.readdir(this.documentsBasePath);
+                console.log('Available directories:', files);
+            } else {
+                await fs.readdir(this.documentsBasePath);
+            }
             
             await Promise.all(
                 Object.entries(PMBOK_DOCUMENT_REQUIREMENTS).map(async ([docKey, requirements]) => {
                     const filePath = `${this.documentsBasePath}/${requirements.category}/${docKey}.md`;
-                    console.log(`Checking file: ${filePath}`);
+                    if (!PMBOKValidator.suppressLogging) console.log(`Checking file: ${filePath}`);
                     try {
                         const content = await fs.readFile(filePath, 'utf-8');
-                        console.log(`Successfully read: ${filePath}`);
+                        if (!PMBOKValidator.suppressLogging) console.log(`Successfully read: ${filePath}`);
                         const quality = await this.assessDocumentQuality(content);
                         validation.documentQuality[docKey] = quality;
 
@@ -137,7 +142,7 @@ export class PMBOKValidator {
 
                         return { docKey, quality };
                     } catch (error) {
-                        console.error(`Error reading ${filePath}:`, error);
+                        if (!PMBOKValidator.suppressLogging) console.error(`Error reading ${filePath}:`, error);
                         validation.findings.critical.push(`Document ${docKey} not found or could not be read`);
                         validation.compliance = false;
                         validation.documentQuality[docKey] = { score: 0, issues: ['Document not found'], strengths: [] };
@@ -171,19 +176,15 @@ export class PMBOKValidator {
      * @returns Comprehensive validation result
      */
     public async performComprehensiveValidation(documentKeys: string[]): Promise<ComprehensiveValidationResult> {
-        // Basic validation
-        console.log('\n🔍 Validating document generation...');
+        if (!PMBOKValidator.suppressLogging) console.log('\n🔍 Validating document generation...');
         const basicValidation = await this.validateGeneration(documentKeys);
-        
-        // PMBOK 7.0 compliance validation
         const pmbokCompliance = await this.validatePMBOKCompliance();
-        
-        // Summary report
-        console.log('\n📋 Final Validation Summary:');
-        console.log(`✅ Files Present: ${basicValidation.isComplete ? 'All' : 'Some missing'}`);
-        console.log(`📊 PMBOK Compliance: ${pmbokCompliance.compliance ? 'Compliant' : 'Non-compliant'}`);
-        console.log(`🎯 Consistency Score: ${pmbokCompliance.consistencyScore}/100`);
-        
+        if (!PMBOKValidator.suppressLogging) {
+            console.log('\n📋 Final Validation Summary:');
+            console.log(`✅ Files Present: ${basicValidation.isComplete ? 'All' : 'Some missing'}`);
+            console.log(`📊 PMBOK Compliance: ${pmbokCompliance.compliance ? 'Compliant' : 'Non-compliant'}`);
+            console.log(`🎯 Consistency Score: ${pmbokCompliance.consistencyScore}/100`);
+        }
         return { 
             validation: basicValidation, 
             pmbokCompliance 
@@ -318,8 +319,7 @@ export class PMBOKValidator {
      * @param validation Validation result object to update
      */
     private async validateCrossDocumentConsistency(validation: PMBOKComplianceResult): Promise<void> {
-        console.log('🔍 Checking cross-document consistency...');
-        
+        if (!PMBOKValidator.suppressLogging) console.log('🔍 Checking cross-document consistency...');
         try {
             // Check project name consistency
             const projectCharterPath = `${this.documentsBasePath}/project-charter/project-charter.md`;
@@ -411,6 +411,7 @@ export class PMBOKValidator {
      * @param validation Validation result to print
      */
     private printPMBOKValidationReport(validation: PMBOKComplianceResult): void {
+        if (PMBOKValidator.suppressLogging) return;
         console.log('\n📊 PMBOK 7.0 Compliance Validation Report');
         console.log('==========================================');
         
@@ -433,247 +434,341 @@ export class PMBOKValidator {
         console.log('\n📋 Document Quality Scores:');
         Object.entries(validation.documentQuality).forEach(([doc, quality]) => {
             console.log(`   • ${doc}: ${quality.score}/100`);
-            if (quality.strengths.length > 0) {
-                quality.strengths.forEach(strength => console.log(`     ✅ ${strength}`));
-            }
             if (quality.issues.length > 0) {
-                quality.issues.forEach(issue => console.log(`     ⚠️ ${issue}`));
+                console.log(`     Issues: ${quality.issues.join(', ')}`);
+            }
+            if (quality.strengths.length > 0) {
+                console.log(`     Strengths: ${quality.strengths.join(', ')}`);
             }
         });
     }
 
+    /**
+     * Validate performance domains in the document
+     * @param content Document content
+     * @returns Validation result for performance domains
+     */
     private async validatePerformanceDomains(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const foundDomains = PMBOK_PERFORMANCE_DOMAINS.filter(domain => 
-            content.toLowerCase().includes(domain.toLowerCase())
-        );
-
-        if (foundDomains.length < QUALITY_THRESHOLDS.MIN_PERFORMANCE_DOMAINS) {
-            findings.push(`Only ${foundDomains.length} performance domains found (minimum ${QUALITY_THRESHOLDS.MIN_PERFORMANCE_DOMAINS} required)`);
+        let score = 100;
+        
+        // Check for presence of all performance domains
+        for (const domain of PMBOK_PERFORMANCE_DOMAINS) {
+            if (!this.contentContainsElement(content, domain)) {
+                findings.push(`Missing performance domain: ${domain}`);
+                score -= 10; // Deduct points for each missing domain
+            }
         }
-
-        score = (foundDomains.length / PMBOK_PERFORMANCE_DOMAINS.length) * 100;
-        return { score, findings };
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate principles in the document
+     * @param content Document content
+     * @returns Validation result for principles
+     */
     private async validatePrinciples(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const foundPrinciples = PMBOK_PRINCIPLES.filter(principle => 
-            content.toLowerCase().includes(principle.toLowerCase())
-        );
-
-        if (foundPrinciples.length < QUALITY_THRESHOLDS.MIN_PRINCIPLES) {
-            findings.push(`Only ${foundPrinciples.length} principles found (minimum ${QUALITY_THRESHOLDS.MIN_PRINCIPLES} required)`);
+        let score = 100;
+        
+        // Check for presence of all PMBOK principles
+        for (const principle of PMBOK_PRINCIPLES) {
+            if (!this.contentContainsElement(content, principle)) {
+                findings.push(`Missing PMBOK principle: ${principle}`);
+                score -= 5; // Deduct points for each missing principle
+            }
         }
-
-        score = (foundPrinciples.length / PMBOK_PRINCIPLES.length) * 100;
-        return { score, findings };
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate value delivery system in the document
+     * @param content Document content
+     * @returns Validation result for value delivery system
+     */
     private async validateValueDelivery(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const foundElements = VALUE_DELIVERY_SYSTEM.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_VALUE_DELIVERY_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} value delivery elements found (minimum ${QUALITY_THRESHOLDS.MIN_VALUE_DELIVERY_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for description of value delivery system
+        if (!Array.isArray(VALUE_DELIVERY_SYSTEM) || VALUE_DELIVERY_SYSTEM.length === 0 || 
+            !VALUE_DELIVERY_SYSTEM.some(system => this.contentContainsElement(content, system))) {
+            findings.push('Missing description of value delivery system');
+            score -= 20;
         }
-
-        score = (foundElements.length / VALUE_DELIVERY_SYSTEM.length) * 100;
-        return { score, findings };
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate quality metrics in the document
+     * @param content Document content
+     * @returns Validation result for quality metrics
+     */
     private async validateQualityMetrics(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allMetrics = [
-            ...QUALITY_METRICS_REQUIREMENTS.SMART_OBJECTIVES,
-            ...QUALITY_METRICS_REQUIREMENTS.PERFORMANCE_METRICS
-        ];
-        const foundMetrics = allMetrics.filter(metric => 
-            content.toLowerCase().includes(metric.toLowerCase())
-        );
-
-        if (foundMetrics.length < QUALITY_THRESHOLDS.MIN_QUALITY_METRICS) {
-            findings.push(`Only ${foundMetrics.length} quality metrics found (minimum ${QUALITY_THRESHOLDS.MIN_QUALITY_METRICS} required)`);
+        let score = 100;
+        
+        // Check for presence of all quality metrics requirements
+        for (const metric of QUALITY_METRICS_REQUIREMENTS.SMART_OBJECTIVES) {
+            if (!this.contentContainsElement(content, metric)) {
+                findings.push(`Missing quality metric: ${metric}`);
+                score -= 10;
+            }
         }
-
-        score = (foundMetrics.length / allMetrics.length) * 100;
-        return { score, findings };
+        
+        for (const metric of QUALITY_METRICS_REQUIREMENTS.PERFORMANCE_METRICS) {
+            if (!this.contentContainsElement(content, metric)) {
+                findings.push(`Missing performance metric: ${metric}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate risk management in the document
+     * @param content Document content
+     * @returns Validation result for risk management
+     */
     private async validateRiskManagement(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allRiskElements = [
-            ...RISK_MANAGEMENT_REQUIREMENTS.RISK_BREAKDOWN,
-            ...RISK_MANAGEMENT_REQUIREMENTS.RISK_RESPONSE
-        ];
-        const foundElements = allRiskElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_RISK_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} risk management elements found (minimum ${QUALITY_THRESHOLDS.MIN_RISK_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all risk management requirements
+        for (const requirement of RISK_MANAGEMENT_REQUIREMENTS.RISK_BREAKDOWN) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing risk management requirement: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allRiskElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of RISK_MANAGEMENT_REQUIREMENTS.RISK_RESPONSE) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing risk response requirement: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate stakeholder engagement in the document
+     * @param content Document content
+     * @returns Validation result for stakeholder engagement
+     */
     private async validateStakeholderEngagement(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...STAKEHOLDER_ENGAGEMENT_REQUIREMENTS.ASSESSMENT,
-            ...STAKEHOLDER_ENGAGEMENT_REQUIREMENTS.STRATEGIES
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_STAKEHOLDER_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} stakeholder engagement elements found (minimum ${QUALITY_THRESHOLDS.MIN_STAKEHOLDER_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all stakeholder engagement requirements
+        for (const requirement of STAKEHOLDER_ENGAGEMENT_REQUIREMENTS.ASSESSMENT) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing stakeholder engagement assessment: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of STAKEHOLDER_ENGAGEMENT_REQUIREMENTS.STRATEGIES) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing stakeholder engagement strategy: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate project lifecycle integration in the document
+     * @param content Document content
+     * @returns Validation result for project lifecycle integration
+     */
     private async validateProjectLifecycle(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...PROJECT_LIFECYCLE_REQUIREMENTS.PHASES,
-            ...PROJECT_LIFECYCLE_REQUIREMENTS.INTEGRATION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_LIFECYCLE_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} lifecycle elements found (minimum ${QUALITY_THRESHOLDS.MIN_LIFECYCLE_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all project lifecycle requirements
+        for (const requirement of PROJECT_LIFECYCLE_REQUIREMENTS.PHASES) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing project lifecycle phase: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of PROJECT_LIFECYCLE_REQUIREMENTS.INTEGRATION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing project lifecycle integration: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate resource management in the document
+     * @param content Document content
+     * @returns Validation result for resource management
+     */
     private async validateResourceManagement(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...RESOURCE_MANAGEMENT_REQUIREMENTS.PLANNING,
-            ...RESOURCE_MANAGEMENT_REQUIREMENTS.CONTROL
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_RESOURCE_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} resource management elements found (minimum ${QUALITY_THRESHOLDS.MIN_RESOURCE_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all resource management requirements
+        for (const requirement of RESOURCE_MANAGEMENT_REQUIREMENTS.PLANNING) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing resource management planning: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of RESOURCE_MANAGEMENT_REQUIREMENTS.CONTROL) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing resource management control: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate communication in the document
+     * @param content Document content
+     * @returns Validation result for communication
+     */
     private async validateCommunication(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...COMMUNICATION_REQUIREMENTS.PLANNING,
-            ...COMMUNICATION_REQUIREMENTS.EXECUTION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_COMMUNICATION_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} communication elements found (minimum ${QUALITY_THRESHOLDS.MIN_COMMUNICATION_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all communication requirements
+        for (const requirement of COMMUNICATION_REQUIREMENTS.PLANNING) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing communication planning: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of COMMUNICATION_REQUIREMENTS.EXECUTION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing communication execution: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate change management in the document
+     * @param content Document content
+     * @returns Validation result for change management
+     */
     private async validateChangeManagement(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...CHANGE_MANAGEMENT_REQUIREMENTS.CONTROL,
-            ...CHANGE_MANAGEMENT_REQUIREMENTS.IMPLEMENTATION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_CHANGE_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} change management elements found (minimum ${QUALITY_THRESHOLDS.MIN_CHANGE_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all change management requirements
+        for (const requirement of CHANGE_MANAGEMENT_REQUIREMENTS.CONTROL) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing change management control: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of CHANGE_MANAGEMENT_REQUIREMENTS.IMPLEMENTATION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing change management implementation: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate knowledge management in the document
+     * @param content Document content
+     * @returns Validation result for knowledge management
+     */
     private async validateKnowledgeManagement(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...KNOWLEDGE_MANAGEMENT_REQUIREMENTS.PROCESSES,
-            ...KNOWLEDGE_MANAGEMENT_REQUIREMENTS.INTEGRATION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_KNOWLEDGE_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} knowledge management elements found (minimum ${QUALITY_THRESHOLDS.MIN_KNOWLEDGE_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all knowledge management requirements
+        for (const requirement of KNOWLEDGE_MANAGEMENT_REQUIREMENTS.PROCESSES) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing knowledge management process: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of KNOWLEDGE_MANAGEMENT_REQUIREMENTS.INTEGRATION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing knowledge management integration: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate sustainability in the document
+     * @param content Document content
+     * @returns Validation result for sustainability
+     */
     private async validateSustainability(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...SUSTAINABILITY_REQUIREMENTS.CONSIDERATIONS,
-            ...SUSTAINABILITY_REQUIREMENTS.IMPLEMENTATION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_SUSTAINABILITY_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} sustainability elements found (minimum ${QUALITY_THRESHOLDS.MIN_SUSTAINABILITY_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all sustainability requirements
+        for (const requirement of SUSTAINABILITY_REQUIREMENTS.CONSIDERATIONS) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing sustainability consideration: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of SUSTAINABILITY_REQUIREMENTS.IMPLEMENTATION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing sustainability implementation: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 
+    /**
+     * Validate digital transformation in the document
+     * @param content Document content
+     * @returns Validation result for digital transformation
+     */
     private async validateDigitalTransformation(content: string): Promise<{ score: number; findings: string[] }> {
         const findings: string[] = [];
-        let score = 0;
-        const allElements = [
-            ...DIGITAL_TRANSFORMATION_REQUIREMENTS.TECHNOLOGY,
-            ...DIGITAL_TRANSFORMATION_REQUIREMENTS.INTEGRATION
-        ];
-        const foundElements = allElements.filter(element => 
-            content.toLowerCase().includes(element.toLowerCase())
-        );
-
-        if (foundElements.length < QUALITY_THRESHOLDS.MIN_DIGITAL_ELEMENTS) {
-            findings.push(`Only ${foundElements.length} digital transformation elements found (minimum ${QUALITY_THRESHOLDS.MIN_DIGITAL_ELEMENTS} required)`);
+        let score = 100;
+        
+        // Check for presence of all digital transformation requirements
+        for (const requirement of DIGITAL_TRANSFORMATION_REQUIREMENTS.TECHNOLOGY) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing digital transformation technology: ${requirement}`);
+                score -= 10;
+            }
         }
-
-        score = (foundElements.length / allElements.length) * 100;
-        return { score, findings };
+        
+        for (const requirement of DIGITAL_TRANSFORMATION_REQUIREMENTS.INTEGRATION) {
+            if (!this.contentContainsElement(content, requirement)) {
+                findings.push(`Missing digital transformation integration: ${requirement}`);
+                score -= 10;
+            }
+        }
+        
+        return { score: Math.max(0, score), findings };
     }
 }

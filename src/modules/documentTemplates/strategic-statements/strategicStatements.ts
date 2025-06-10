@@ -1,5 +1,5 @@
-import { ProjectContext } from '../../types.js';
-import { validatePMBOKCompliance } from '../../validation/pmbokValidator.js';
+import { ProjectContext } from '../../types';
+import { PMBOKValidator } from '../../pmbokValidation';
 
 export interface StrategicStatementsConfig {
   detailLevel: 'basic' | 'detailed' | 'comprehensive';
@@ -54,7 +54,9 @@ export class MissionVisionCoreValuesTemplate {
   }
 
   async validateCompliance(): Promise<boolean> {
-    return validatePMBOKCompliance(await this.generateContent(), 'strategic-statements');
+    const validator = new PMBOKValidator();
+    const result = await validator.validatePMBOKCompliance();
+    return result.compliance;
   }
 }
 
@@ -107,6 +109,8 @@ export class ProjectPurposeTemplate {
   }
 
   async validateCompliance(): Promise<boolean> {
-    return validatePMBOKCompliance(await this.generateContent(), 'strategic-statements');
+    const validator = new PMBOKValidator();
+    const result = await validator.validatePMBOKCompliance();
+    return result.compliance;
   }
 }

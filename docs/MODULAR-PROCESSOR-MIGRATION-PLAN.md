@@ -12,6 +12,36 @@ This document outlines the step-by-step plan for migrating from the legacy docum
 
 ---
 
+## Progress Update (as of June 10, 2025)
+
+### Migration Status
+- **ProcessorFactory**: Refactored to support registry-based, config-driven processor loading with robust error handling and logger support. Unit and integration tests are passing.
+- **Processor Classes**: All processor and template files have been migrated to TypeScript, and imports updated to extensionless or `.ts` as appropriate. Legacy `.js` files have been removed.
+- **Configuration**: `processor-config.json` is in use for dynamic processor registration.
+- **Testing**: Jest test suite for `ProcessorFactory` is complete and passing. Integration with the generator is validated.
+- **TypeScript**: All build errors related to the migration have been resolved. All relevant types and interfaces are up to date.
+- **Generator Registry**: `index.ts` and related files now use the factory for processor access. No direct processor imports remain.
+- **Document Configuration**: All new document types and categories are registered and available for generation.
+- **Context Relationships**: Updated to include new document types and dependencies.
+- **Documentation**: This plan, `ARCHITECTURE.md`, and `STEPS-TO-IMPLEMENT-NEW-DOCS.md` have been updated to reflect the new architecture.
+- **Legacy Code**: All legacy processor files have been marked as deprecated or removed where safe.
+
+### Findings & Lessons Learned
+- **ESM/TypeScript Compatibility**: All imports must be extensionless or use `.ts` in source, and `.js` in built output for Node ESM compatibility. This was a common source of runtime errors.
+- **Testing**: When mocking processor classes, all async methods must be present and return Promises to avoid Jest async teardown errors.
+- **Build Artifacts**: Ensuring all files are present in `dist/` is critical for runtime. Clean builds (`rm -rf dist && npm run build`) are recommended after major refactors.
+- **Pandoc PDF Generation**: For document conversion, a LaTeX distribution (e.g., MiKTeX) is required for PDF output. This is a common external dependency for users.
+- **Dynamic Imports**: Dynamic processor loading via config and `import()` is working well and provides flexibility for future extension.
+- **Backward Compatibility**: Adapter layers are in place for legacy import paths, but these will be removed after full migration.
+
+### Next Steps
+- Complete migration of any remaining document types not yet modularized.
+- Continue to monitor for runtime or test regressions as new processors are added.
+- Remove all deprecated legacy code after final validation.
+- Continue to update documentation as the architecture evolves.
+
+---
+
 ### Migration Steps
 
 #### 1. Establish Modular Directory Structure
@@ -21,7 +51,7 @@ This document outlines the step-by-step plan for migrating from the legacy docum
   ```
   src/modules/documentTemplates/strategic-statements/
     strategicStatements.ts
-    strategicStatementsProcessor.js
+    strategicStatementsProcessor.ts
     strategicStatementsProcessor.d.ts
   ```
 
@@ -49,7 +79,7 @@ This document outlines the step-by-step plan for migrating from the legacy docum
 - **Revised Factory Example:**
   ```typescript
   import { ILogger } from '../logging/ILogger';
-  import { MissionVisionCoreValuesProcessor, ProjectPurposeProcessor } from '../documentTemplates/strategic-statements/strategicStatementsProcessor.js';
+  import { MissionVisionCoreValuesProcessor, ProjectPurposeProcessor } from '../documentTemplates/strategic-statements/strategicStatementsProcessor.ts';
   // ... other imports ...
 
   export class ProcessorFactory {
@@ -90,8 +120,8 @@ This document outlines the step-by-step plan for migrating from the legacy docum
 - **Example JSON config:**
   ```json
   {
-    "mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#MissionVisionCoreValuesProcessor",
-    "project-purpose": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor"
+    "mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.ts#MissionVisionCoreValuesProcessor",
+    "project-purpose": "../documentTemplates/strategic-statements/strategicStatementsProcessor.ts#ProjectPurposeProcessor"
   }
   ```
 - **Example loader snippet:**

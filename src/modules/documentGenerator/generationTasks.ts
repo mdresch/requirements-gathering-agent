@@ -78,6 +78,15 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'schedule-network-diagram', name: 'Schedule Network Diagram', func: 'getAiScheduleNetworkDiagram', emoji: '🔗', category: 'planning-artifacts', priority: 25, pmbokRef: '6.3.3.1' },
     { key: 'milestone-list', name: 'Milestone List', func: 'getAiMilestoneList', emoji: '🎯', category: 'planning-artifacts', priority: 26, pmbokRef: '6.2.3.3' },
     { key: 'schedule-development-input', name: 'Schedule Development Input', func: 'getAiDevelopScheduleInput', emoji: '📅', category: 'planning-artifacts', priority: 27, pmbokRef: '6.5.1.2' },
+    {
+        key: 'project-kickoff-preparations-checklist',
+        name: 'Project KickOff Preparations Checklist',
+        func: 'getProjectKickoffPreparationsChecklist',
+        emoji: '✅',
+        category: 'planning-artifacts',
+        priority: 10,
+        pmbokRef: 'N/A'
+    },
     
     // Technical Analysis (Lower Priority but Important - updated priorities)
     { key: 'data-model-suggestions', name: 'Data Model Suggestions', func: 'getAiDataModelSuggestions', emoji: '🗄️', category: 'technical-analysis', priority: 28, pmbokRef: 'N/A' },
@@ -101,8 +110,16 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'business-case': { filename: 'business-case.md', title: 'Business Case' },
     
     // Strategic Documents
-    'mission-vision-core-values': { filename: 'mission-vision-core-values.md', title: 'Mission, Vision & Core Values' },
-    'project-purpose': { filename: 'project-purpose.md', title: 'Project Purpose' },
+    'mission-vision-core-values': {
+        filename: 'strategic-statements/mission-vision-core-values.md',
+        title: 'Mission, Vision & Core Values',
+        description: 'Defines the project mission, vision, and core values for strategic alignment.'
+    },
+    'project-purpose': {
+        filename: 'strategic-statements/project-purpose.md',
+        title: 'Project Purpose',
+        description: 'Describes the overall purpose and strategic intent of the project.'
+    },
     
     // Project Charter
     'project-charter': { filename: 'project-charter.md', title: 'Project Charter' },
@@ -146,6 +163,12 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'schedule-network-diagram': { filename: 'schedule-network-diagram.md', title: 'Schedule Network Diagram' },
     'milestone-list': { filename: 'milestone-list.md', title: 'Milestone List' },
     'schedule-development-input': { filename: 'schedule-development-input.md', title: 'Schedule Development Input' },
+    // Project Kickoff Preparations Checklist (single canonical doc)
+    'project-kickoff-preparations-checklist': {
+        filename: 'project-kickoff-preparations-checklist.md',
+        title: 'Project KickOff Preparations Checklist',
+        description: 'Checklist to ensure all preparations are complete before project kick-off'
+    },
     
     // Technical Analysis
     'data-model-suggestions': { filename: 'data-model-suggestions.md', title: 'Data Model Suggestions' },

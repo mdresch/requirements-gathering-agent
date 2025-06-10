@@ -1,0 +1,5 @@
+{
+  "mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#MissionVisionCoreValuesProcessor",
+  "project-purpose": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor",
+  "project-kickoff-preparations-checklist": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor"
+}

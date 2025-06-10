@@ -388,6 +388,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.STRATEGIC,
         description: 'Project purpose and objectives documentation',
         generatedAt: ''
+    },
+    'project-kickoff-preparations-checklist': {
+        title: 'Project KickOff Preparations Checklist',
+        filename: 'Project-KickOff-Preprations-CheckList.md',
+        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        description: 'Checklist for project kickoff preparations, including scope, stakeholders, resources, and readiness.',
+        generatedAt: ''
     }
 };
 

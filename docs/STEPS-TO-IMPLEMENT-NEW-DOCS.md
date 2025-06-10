@@ -33,7 +33,7 @@ src/modules/
 │   ├── managementPlans/     # Management and planning docs
 │   ├── stakeholderMgmt/     # Stakeholder management
 │   ├── strategicStatements.ts  # Strategic statements templates (NEW)
-│   ├── strategicStatementsProcessor.js  # Strategic statements processors (NEW)
+│   ├── strategicStatementsProcessor.ts  # Strategic statements processors (NEW)
 │   └── ...
 ├── ai/                      # AI provider management
 └── processors/              # (LEGACY) Document processors (being migrated)
@@ -44,7 +44,7 @@ src/modules/
 - **Previously:** All document processors (logic for generating and enhancing documents) were located in `src/modules/ai/processors/`.
 - **Now:** New and migrated processors are placed in `src/modules/documentTemplates/`, alongside their template definitions. For example:
   - `strategicStatements.ts` contains the document template classes for Mission, Vision & Core Values and Project Purpose.
-  - `strategicStatementsProcessor.js` contains the processor classes for these documents, which handle AI enhancement and validation.
+  - `strategicStatementsProcessor.ts` contains the processor classes for these documents, which handle AI enhancement and validation.
 
 This change improves modularity and makes it easier to maintain and extend document types.
 
@@ -143,7 +143,7 @@ mkdir src/modules/documentTemplates/yourNewCategory
   - Define the template class (e.g., `MissionVisionCoreValuesTemplate`).
   - The template should have a `generateContent(context)` method that builds the document using the provided context.
 - **Processor:**
-  - Create a processor file (e.g., `strategicStatementsProcessor.js`).
+  - Create a processor file (e.g., `strategicStatementsProcessor.ts`).
   - Define processor classes (e.g., `MissionVisionCoreValuesProcessor`) that handle:
     - Building the AI prompt (injecting the project context)
     - Calling the AI provider
@@ -156,7 +156,7 @@ mkdir src/modules/documentTemplates/yourNewCategory
 src/modules/documentTemplates/
   strategic-statements/
     strategicStatements.ts              # Template classes
-    strategicStatementsProcessor.js     # Processor classes (JS/TS)
+    strategicStatementsProcessor.ts     # Processor classes (TS)
     strategicStatementsProcessor.d.ts   # Type declarations (if needed)
 ```
 
@@ -175,6 +175,48 @@ src/modules/documentTemplates/
 - Ensure your new processor and template are correctly registered and can be invoked by the document generator.
 - Run tests to validate integration.
 - Test with different project contexts to ensure prompts and outputs are context-aware and project-specific.
+
+---
+
+# 🧪 Step 5b: Add a Jest Unit Test for Your Processor
+
+- Create a test file in `src/test/` (or the appropriate test directory):
+  - Example: `src/test/projectKickoffPreparationsChecklistProcessor.test.ts`
+- Your test should:
+  - Instantiate the processor.
+  - Call `process(context)` with a sample `ProjectContext`.
+  - Assert that the output includes the correct title and key checklist sections.
+  - For checklist-style documents, check that all major sections and checkboxes are present in the output.
+
+**Example Jest Test:**
+```typescript
+import { ProjectKickoffPreparationsChecklistProcessor } from '../modules/documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor';
+import type { ProjectContext } from '../modules/ai/types';
+import { describe, it, expect } from '@jest/globals';
+
+describe('ProjectKickoffPreparationsChecklistProcessor', () => {
+  const processor = new ProjectKickoffPreparationsChecklistProcessor();
+
+  it('should generate a checklist with the correct title and content', () => {
+    const context: ProjectContext = { projectName: 'Test Project' } as any;
+    const output = processor.process(context);
+    expect(output.title).toBe('Project KickOff Preparations Checklist');
+    expect(output.content).toContain('Define project scope');
+    expect(output.content).toContain('Generated for: Test Project');
+  });
+
+  it('should handle missing projectName gracefully', () => {
+    const context: ProjectContext = {} as any;
+    const output = processor.process(context);
+    expect(output.content).toContain('Generated for: Unknown Project');
+  });
+});
+```
+- Run your test with:
+  ```pwsh
+  npm run test
+  ```
+- Ensure all tests pass and the output matches the intended checklist structure.
 
 ---
 
@@ -256,3 +298,155 @@ If you encounter errors like:
     throw error;
   }
   ```
+
+---
+
+# Steps to Implement a New Document Type (2025 Modular Architecture)
+
+Follow these steps to add a new document type to the Requirements Gathering Agent using the modular, configuration-driven processor architecture:
+
+---
+
+## 1. Create the Processor and Template
+- Create a new subdirectory under `src/modules/documentTemplates/` for your document category if it does not exist.
+- Add your processor class (e.g., `myNewDocProcessor.ts`) and any template or type files needed.
+- Ensure your processor implements the `DocumentProcessor` interface:
+  ```typescript
+  interface DocumentProcessor {
+    process(context: ProjectContext): DocumentOutput;
+  }
+  ```
+
+## 2. Register the Processor in Configuration
+- Add an entry to `src/modules/documentGenerator/processor-config.json`:
+  ```json
+  {
+    "my-new-doc-key": "../documentTemplates/my-category/myNewDocProcessor.ts#MyNewDocProcessor"
+  }
+  ```
+- Use the format: `"task-key": "<module-path>#<ClassName>"`.
+
+## 3. Update Generation Tasks
+- Add your document type to `src/modules/documentGenerator/generationTasks.ts`.
+- Specify the task key, category, display name, and any other required metadata.
+
+## 4. Update Context Relationships (if needed)
+- If your document depends on or enriches context, update `src/modules/contextManager.ts` (e.g., `initializeDocumentRelationships`).
+
+## 5. Implement and Test the Processor
+- Implement the logic for your processor, using the project context as input.
+- Add unit tests for your processor class.
+- Add or update integration tests to ensure the new document is generated as expected.
+
+## 6. Validate and Document
+- Run the generator and validate that your new document is generated correctly.
+- Update documentation (e.g., `ARCHITECTURE.md`, this file) to describe the new document type and its processor.
+
+## 7. (Optional) Add to Reference Implementation
+- If your document type is a new category, consider updating the migration plan and reference implementation notes.
+
+---
+
+**Summary Table:**
+| Step | File/Location | Description |
+|------|---------------|-------------|
+| 1    | `documentTemplates/` | Create processor & template |
+| 2    | `processor-config.json` | Register processor |
+| 3    | `generationTasks.ts` | Add to generation tasks |
+| 4    | `contextManager.ts` | Update context relationships (if needed) |
+| 5    | `test/` | Add unit/integration tests |
+| 6    | Docs | Update documentation |
+
+---
+
+*For more details, see the `MODULAR-PROCESSOR-MIGRATION-PLAN.md` and `ARCHITECTURE.md` files.*
+
+---
+
+# Steps to Implement a New Document Type: Project-KickOff-Preprations-CheckList.md
+
+This guide demonstrates how to add a new document type, `Project-KickOff-Preprations-CheckList.md`, to the Requirements Gathering Agent using the modular processor architecture.
+
+---
+
+## 1. Create the Processor and Template
+- Create a new subdirectory if needed (e.g., `src/modules/documentTemplates/project-kickoff/`).
+- Add a processor class file, e.g., `projectKickoffPreparationsChecklistProcessor.ts`:
+  ```typescript
+  import { ProjectContext } from '../../ai/types';
+  import { DocumentOutput } from '../../documentGenerator/types';
+
+  export class ProjectKickoffPreparationsChecklistProcessor {
+    process(context: ProjectContext): DocumentOutput {
+      // Implement checklist generation logic here
+      return {
+        title: 'Project KickOff Preparations Checklist',
+        content: '...generated checklist content...'
+      };
+    }
+  }
+  ```
+- Add any template or type files as needed.
+
+## 2. Register the Processor in Configuration
+- Add to `src/modules/documentGenerator/processor-config.json`:
+  ```json
+  {
+    "project-kickoff-preparations-checklist": "../documentTemplates/project-kickoff/projectKickoffPreparationsChecklistProcessor.ts#ProjectKickoffPreparationsChecklistProcessor"
+  }
+  ```
+
+## 3. Update Generation Tasks
+- In `src/modules/documentGenerator/generationTasks.ts`, add:
+  ```typescript
+  {
+    key: 'project-kickoff-preparations-checklist',
+    category: 'project-kickoff',
+    name: 'Project KickOff Preparations Checklist',
+    fileName: 'Project-KickOff-Preprations-CheckList.md',
+    priority: 10,
+    emoji: '✅',
+    func: 'getProjectKickoffPreparationsChecklist'
+  }
+  ```
+
+## 4. Update Context Relationships (if needed)
+- If this checklist depends on or enriches context, update `initializeDocumentRelationships` in `src/modules/contextManager.ts`.
+
+## 5. Implement and Test the Processor
+- Complete the logic in your processor class.
+- Add unit tests for `ProjectKickoffPreparationsChecklistProcessor` in the appropriate test directory.
+- Add or update integration tests to ensure the document is generated as expected.
+
+## 6. Validate and Document
+- Run the generator and confirm that `Project-KickOff-Preprations-CheckList.md` is generated correctly.
+- Update documentation (e.g., `ARCHITECTURE.md`, `STEPS-TO-IMPLEMENT-NEW-DOCS.md`) to reference the new document type.
+
+## 7. (Optional) Add to Reference Implementation
+- If this is a new category, update the migration plan and reference implementation notes.
+
+---
+
+*For more details, see the `MODULAR-PROCESSOR-MIGRATION-PLAN.md` and `ARCHITECTURE.md` files.*
+
+---
+
+## 7. Checklist for Complex/Checklist-Style Documents (e.g., Project KickOff Preparations Checklist)
+- Use a detailed, sectioned structure for checklists, modeled after real-world or Gitbook examples.
+- Ensure all major project phases and PMBOK-aligned sections are included (Initiation, Planning, Setup, Risk, Communication, Milestones, Security, Training, Kickoff Agenda, Summary).
+- Implement the processor to output a rich Markdown document with headings, checkboxes, and explanatory text.
+- Use the project context (e.g., project name) to personalize the checklist.
+- Validate that the generated document matches the intended structure and content (compare to reference markdown if available).
+- Remove duplicate or alias keys from configuration—use a single canonical key for the checklist document in both `GENERATION_TASKS` and `DOCUMENT_CONFIG`.
+- Ensure the output path and filename match the intended folder structure (e.g., `planning-artifacts/project-kickoff-preparations-checklist.md`).
+- Add a test to verify that all major sections and checkboxes are present in the output.
+- Update documentation and CLI help to reference only the canonical checklist key.
+
+## 8. Additional Integration Steps for New Document Types
+- Add the document to `DOCUMENT_CONFIG` with the correct filename, title, and description.
+- If the document should appear in a subfolder (e.g., `strategic-statements/`), set the filename accordingly.
+- Register the processor in `processor-config.json` and ensure the class is imported and registered in the processor factory.
+- If the document is referenced by or provides context to other documents, update the relationships in `contextManager.ts`.
+- If the document is a checklist or has a complex structure, provide a reference markdown in `Gitbook/requirements/` for future maintainers.
+- Test end-to-end generation via the CLI and validate the output file is created and non-empty.
+- Update the README and any architecture or migration documentation to reflect the new document type and its integration points.

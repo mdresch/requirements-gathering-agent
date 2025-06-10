@@ -768,11 +768,12 @@ async function runEnhancedSetupWizard() {
 }
 function showAvailableTemplates() {
     console.log('\n📋 Requirements Gathering Agent - Available Templates\n');
-    // ... existing implementation ...
-}
-async function analyzeWorkspace() {
-    console.log('\n🔍 Requirements Gathering Agent - Workspace Analysis\n');
-    // ... existing implementation ...
+    // Modular architecture: templates are loaded from processor-config.json and generationTasks.ts
+    // Example (abbreviated):
+    console.log('Planning Artifacts:');
+    console.log('  • Project KickOff Preparations Checklist (key: project-kickoff-preparations-checklist)');
+    // ...list other templates by category...
+    // For full list, see documentation or run with --help
 }
 function printHelp() {
     console.log(`
@@ -935,6 +936,36 @@ async function showProviderConfigurationGuidance() {
     // ... existing implementation ...
 }
 // Run main function
+async function analyzeWorkspace() {
+    console.log('\n🔍 Requirements Gathering Agent - Workspace Analysis\n');
+    try {
+        const { analyzeProjectComprehensively } = await import('./modules/projectAnalyzer.js');
+        const projectPath = process.cwd();
+        const analysis = await analyzeProjectComprehensively(projectPath);
+        console.log('📁 Project Path:', projectPath);
+        console.log('📄 README.md:', analysis.readme ? 'Found' : 'Not found');
+        console.log('📦 package.json:', analysis.packageJson ? 'Found' : 'Not found');
+        console.log(`📝 Additional Markdown Files: ${analysis.additionalMarkdownFiles.length}`);
+        if (analysis.additionalMarkdownFiles.length > 0) {
+            analysis.additionalMarkdownFiles.forEach(file => {
+                console.log(`   - ${file.fileName} (${file.category}, relevance: ${file.relevanceScore})`);
+            });
+        }
+        console.log('\n🔗 Suggested Context Sources:');
+        if (analysis.suggestedSources && analysis.suggestedSources.length > 0) {
+            analysis.suggestedSources.forEach(src => console.log(`   - ${src}`));
+        }
+        else {
+            console.log('   (No additional sources suggested)');
+        }
+        console.log('\n🧠 Project Context Preview:\n');
+        console.log(analysis.projectContext.slice(0, 500) + (analysis.projectContext.length > 500 ? ' ...' : ''));
+        console.log('\n✅ Workspace analysis complete.\n');
+    }
+    catch (error) {
+        console.error('❌ Error analyzing workspace:', error.message);
+    }
+}
 main().catch(error => {
     console.error('❌ Unhandled error:', error);
     process.exit(1);
