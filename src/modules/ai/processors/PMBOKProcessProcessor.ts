@@ -97,8 +97,42 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
         return this.generatePMBOKOutput(
             'project-charter',
             context,
-            ['user-stories', 'stakeholder-register']
+            ['user-stories', 'stakeholder-register', 'cost-management-plan']
         );
+    }
+
+    /**
+     * Generates an AI-enhanced Project Charter with detailed budget summary
+     * following PMBOK standards
+     */
+    async getAIProjectCharter(context: string): Promise<string | null> {
+        const contextManager = await getContextManager();
+        const enhancedContext = contextManager.buildContextForDocument('project-charter', 
+            ['user-stories', 'stakeholder-register', 'cost-management-plan']);
+        const fullContext = enhancedContext || context;
+
+        return await this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter with detailed budget summary following PMBOK 7th Edition standards.`,
+                `Based on the project context below, create a well-structured project charter with emphasis on the budget summary section:
+
+Project Context:
+${fullContext}
+
+The budget summary should include:
+1. Total project cost estimate
+2. Major cost categories and allocations
+3. Key financial assumptions
+4. Funding sources and constraints
+5. Budget milestones and phasing
+6. Financial risks and contingencies
+
+Follow PMBOK standards and ensure the document is clear, comprehensive, and provides stakeholders with a thorough understanding of the project's financial requirements.`
+            );
+            const aiProcessor = getAIProcessor();
+            const response = await aiProcessor.makeAICall(messages, 2000);
+            return getAIProcessor().extractContent(response);
+        }, 'AI Project Charter Generation', 'project-charter');
     }
 
     /**
