@@ -1,5 +1,5 @@
 export default {
-    preset: 'ts-jest',
+    preset: 'ts-jest/presets/default-esm',
     testEnvironment: 'node',
     extensionsToTreatAsEsm: ['.ts'],
     moduleNameMapper: {
@@ -13,7 +13,14 @@ export default {
                 tsconfig: 'tsconfig.json'
             },
         ],
-    },    testMatch: [
+    },
+    globals: {
+        'ts-jest': {
+            useESM: true,
+            tsconfig: 'tsconfig.json',
+        },
+    },
+    testMatch: [
         "**/test/**/*.test.ts",
         "**/src/test/**/*.test.ts",
         "**/test/**/*.integration.test.ts",

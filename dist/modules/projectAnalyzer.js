@@ -79,6 +79,11 @@ export async function analyzeProjectComprehensively(projectPath) {
         suggestedSources
     };
 }
+// Project Analyzer: Add support for recognizing and categorizing the new checklist document
+const CHECKLIST_FILENAMES = [
+    'Project-KickOff-Preprations-CheckList.md',
+    'project-kickoff-preparations-checklist.md'
+];
 /**
  * Finds all relevant markdown files in the project directory.
  * @param projectPath - The root directory of the project.

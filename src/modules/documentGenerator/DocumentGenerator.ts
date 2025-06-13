@@ -114,11 +114,11 @@ export class DocumentGenerator {
 
     // Strategic Statements
     async getAiMissionVisionAndCoreValues(context: string): Promise<string> {
-        return await processors.getAiMissionVisionAndCoreValues(context) ?? '';
+        return await processors.getMissionVisionAndCoreValues(context) ?? '';
     }
 
     async getAiProjectPurpose(context: string): Promise<string> {
-        return await processors.getAiProjectPurpose(context) ?? '';
+        return await processors.getProjectPurpose(context) ?? '';
     }
 
     // Project Management Plans
@@ -271,6 +271,14 @@ export class DocumentGenerator {
 
     async getAiUiUxConsiderations(context: string): Promise<string> {
         return await processors.getAiUiUxConsiderations(context) ?? '';
+    }
+
+    async getProjectKickoffPreparationsChecklist(context: string): Promise<string> {
+        // Import the processor and run its process method
+        const { ProjectKickoffPreparationsChecklistProcessor } = await import('../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js');
+        const processor = new ProjectKickoffPreparationsChecklistProcessor();
+        const output = await processor.process({ projectName: context });
+        return output.content;
     }
 
     /**

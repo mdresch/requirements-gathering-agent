@@ -106,3 +106,12 @@ export interface ValidationResult {
     /** List of errors */
     errors: string[];
 }
+
+/**
+ * Output of a document processor
+ */
+export interface DocumentOutput {
+    title: string;
+    content: string;
+    // Optionally, add more fields as needed (e.g., metadata, summary, etc.)
+}
