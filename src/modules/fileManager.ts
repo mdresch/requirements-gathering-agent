@@ -42,7 +42,7 @@ export const DOCUMENT_CATEGORIES = {
     PLANNING_ARTIFACTS: 'planning-artifacts',
     STAKEHOLDER: 'stakeholder-management',
     TECHNICAL: 'technical-analysis',
-    UNKNOWN: 'unknown',
+    UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
 
 // Document configuration with proper categorization
@@ -488,7 +488,7 @@ export function saveDocument(documentKey: string, content: string): void {
 
     const config = DOCUMENT_CONFIG[documentKey];
     if (!config) {
-        console.error(`❌ Unknown document key: ${documentKey}`);
+        console.warn(`\u26a0\ufe0f WARNING: Unknown document key: ${documentKey}. This document type is not registered in DOCUMENT_CONFIG and will be saved as 'UNKNOWN'.\nTo enable full support and version control, add this document type to the registry in both generationTasks.ts and fileManager.ts.`);
         // Create a fallback config for unknown keys
         const fallbackConfig = {
             title: documentKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),

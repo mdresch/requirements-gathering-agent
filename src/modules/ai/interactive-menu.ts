@@ -337,14 +337,37 @@ export class InteractiveProviderMenu {
         updatedContent += envLine + '\n';
       }
     }
-
+    // Also persist CURRENT_PROVIDER to .env
+    const currentProviderLine = `CURRENT_PROVIDER=${providerId}`;
+    const currentProviderRegex = /^CURRENT_PROVIDER=.*$/m;
+    if (currentProviderRegex.test(updatedContent)) {
+      updatedContent = updatedContent.replace(currentProviderRegex, currentProviderLine);
+    } else {
+      if (updatedContent && !updatedContent.endsWith('\n')) {
+        updatedContent += '\n';
+      }
+      updatedContent += currentProviderLine + '\n';
+    }
     // Write updated content
     await fs.writeFile(envPath, updatedContent, 'utf8');
-    
     // Update process.env
     for (const [key, value] of Object.entries(config)) {
       process.env[key] = value;
     }
+    process.env.CURRENT_PROVIDER = providerId;
+
+    // Write to config-rga.json (create if missing, update if exists)
+    const configPath = join(process.cwd(), 'config-rga.json');
+    let userConfig: any = {};
+    try {
+      const raw = await fs.readFile(configPath, 'utf8');
+      userConfig = JSON.parse(raw);
+    } catch {
+      // File does not exist or is invalid, start fresh
+      userConfig = {};
+    }
+    userConfig.currentProvider = providerId;
+    await fs.writeFile(configPath, JSON.stringify(userConfig, null, 2), 'utf8');
   }
 
   /**

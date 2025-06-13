@@ -25,6 +25,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 import process from 'process';
+import { execSync } from 'child_process';
+import os from 'os';
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
 import { 
     DocumentGenerator, 
@@ -35,9 +37,74 @@ import {
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
 import { writeFile } from 'fs/promises';
+import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+function checkGitInstalled() {
+  try {
+    execSync('git --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function promptAndInstallGitWindows() {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question('Would you like to install Git automatically using winget? (y/n): ', async (answer) => {
+      rl.close();
+      if (answer.trim().toLowerCase().startsWith('y')) {
+        console.log('⚠️  This will require elevated (administrator) privileges.');
+        console.log('Attempting to install Git using winget...');
+        try {
+          const { execSync } = await import('child_process');
+          execSync('winget install --id Git.Git -e', { stdio: 'inherit' });
+          console.log('✅ Git installation complete. Please restart your terminal and re-run the command.');
+        } catch (e) {
+          console.error('❌ Automatic installation failed. Please install Git manually from https://git-scm.com/downloads');
+        }
+        process.exit(0);
+      } else {
+        console.log('Please install Git manually from https://git-scm.com/downloads');
+        process.exit(1);
+      }
+    });
+  });
+}
+
+function promptGitInstallIfMissing() {
+  if (!checkGitInstalled()) {
+    console.error('❌ Git is not installed or not in your PATH.');
+    console.log('Please install Git: https://git-scm.com/downloads');
+    if (os.platform() === 'win32') {
+      console.log('Or install automatically by running:');
+      console.log('  winget install --id Git.Git -e');
+      return promptAndInstallGitWindows();
+    }
+    process.exit(1);
+  }
+}
+
+// Call this function before any git VCS operation
+// promptGitInstallIfMissing();
+
+async function ensureGitRepoInitialized(documentsDir = 'generated-documents') {
+  const path = (await import('path')).default;
+  const gitDir = path.join(process.cwd(), documentsDir, '.git');
+  if (!existsSync(gitDir)) {
+    console.log(`Initializing git repository in ${documentsDir}/ ...`);
+    try {
+      execSync('git init', { cwd: path.join(process.cwd(), documentsDir), stdio: 'inherit' });
+      console.log('✅ Git repository initialized.');
+    } catch (e) {
+      console.error('❌ Failed to initialize git repository:', e);
+      process.exit(1);
+    }
+  }
+}
 
 async function main() {
   try {
@@ -113,6 +180,22 @@ async function main() {
     }    // Interactive provider selection
     if (args.includes('--select-provider') || args.includes('--choose-provider')) {
       await runProviderSelectionMenu();
+      // Reload .env and re-initialize configuration after provider selection
+      const { config } = await import('dotenv');
+      config();
+      try {
+        const { ConfigurationManager } = await import('./modules/ai/ConfigurationManager.js');
+        if (ConfigurationManager && ConfigurationManager.getInstance) {
+          // Clear validation cache to force re-validation with new env
+          const cm = ConfigurationManager.getInstance();
+          if (typeof cm.clearValidationCache === 'function') {
+            cm.clearValidationCache();
+          }
+        }
+      } catch (e) {
+        // If ConfigurationManager is not used, ignore
+      }
+      console.log('♻️  Environment reloaded. New provider configuration is now active.');
       return;
     }
 
@@ -140,6 +223,48 @@ async function main() {
       return;
     }
 
+    // --- VCS COMMANDS ---
+    if (args[0] === 'vcs') {
+      const vcsCmd = args[1];
+      const vcsFile = args[2];
+      const vcsCommit = args[3];
+      const vcsDir = options?.outputDir || 'generated-documents';
+      promptGitInstallIfMissing();
+      await ensureGitRepoInitialized(vcsDir);
+      const path = (await import('path')).default;
+      const cwd = path.join(process.cwd(), vcsDir);
+      try {
+        switch (vcsCmd) {
+          case 'log':
+            execSync(`git log --oneline --graph --decorate --all`, { cwd, stdio: 'inherit' });
+            break;
+          case 'diff':
+            if (!vcsFile) throw new Error('Specify a file for diff.');
+            execSync(`git diff ${vcsFile}`, { cwd, stdio: 'inherit' });
+            break;
+          case 'revert':
+            if (!vcsFile || !vcsCommit) throw new Error('Specify a file and commit hash for revert.');
+            execSync(`git checkout ${vcsCommit} -- ${vcsFile}`, { cwd, stdio: 'inherit' });
+            console.log(`Reverted ${vcsFile} to ${vcsCommit}`);
+            break;
+          case 'status':
+            execSync(`git status`, { cwd, stdio: 'inherit' });
+            break;
+          case 'push':
+            execSync(`git push`, { cwd, stdio: 'inherit' });
+            break;
+          case 'pull':
+            execSync(`git pull`, { cwd, stdio: 'inherit' });
+            break;
+          default:
+            console.log('VCS commands: log, diff <file>, revert <file> <commit>, status, push, pull');
+        }
+      } catch (e) {
+        const err = e as any;
+        console.error('❌ VCS command failed:', err.message);
+      }
+      return;
+    }
     if (!options.quiet) {
       console.log('🔧 Initializing...');
     }
@@ -351,6 +476,9 @@ A comprehensive software project requiring PMBOK documentation.
         throw genError;
       }
     }
+
+    // Auto-commit changes in generated-documents/ directory
+    autoCommitGeneratedDocuments(options.outputDir, process.env.CURRENT_PROVIDER, process.env.REQUIREMENTS_AGENT_MODEL);
   } catch (error: any) {
     console.error('❌ Error:', error.message);
     if (!error.message.includes('Configuration error')) {
@@ -358,6 +486,25 @@ A comprehensive software project requiring PMBOK documentation.
     }
     process.exit(1);
   }
+}
+
+function autoCommitGeneratedDocuments(documentsDir = 'generated-documents', provider = '', model = '') {
+  import('path').then(pathModule => {
+    const path = pathModule.default;
+    const commitMsg = `Generated/updated documents on ${new Date().toISOString()}${provider ? ` [by ${provider}${model ? '/' + model : ''}]` : ''}`;
+    try {
+      execSync('git add .', { cwd: path.join(process.cwd(), documentsDir), stdio: 'inherit' });
+      execSync(`git commit -m "${commitMsg}"`, { cwd: path.join(process.cwd(), documentsDir), stdio: 'inherit' });
+      console.log('✅ Auto-commit complete.');
+    } catch (e) {
+      const err = e as any;
+      if (err && err.message && err.message.includes('nothing to commit')) {
+        console.log('No changes to commit.');
+      } else {
+        console.error('❌ Auto-commit failed:', err);
+      }
+    }
+  });
 }
 
 async function validateEnvironment(): Promise<boolean> {
@@ -801,6 +948,27 @@ async function runProviderSelectionMenu(): Promise<void> {
       console.log('  requirements-gathering-agent           # Generate all documents');
       console.log('  requirements-gathering-agent --help    # See all options');
       console.log('  requirements-gathering-agent --status  # Check configuration');
+      
+      // After provider selection, ensure CURRENT_PROVIDER is written to .env
+      if (typeof selectedProvider === 'string' && selectedProvider.length > 0) {
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const envPath = path.join(process.cwd(), '.env');
+        let envContent = '';
+        try {
+          envContent = await fs.readFile(envPath, 'utf8');
+        } catch { /* file may not exist yet */ }
+        const currentProviderLine = `CURRENT_PROVIDER=${selectedProvider}`;
+        const currentProviderRegex = /^CURRENT_PROVIDER=.*$/m;
+        if (currentProviderRegex.test(envContent)) {
+          envContent = envContent.replace(currentProviderRegex, currentProviderLine);
+        } else {
+          if (envContent && !envContent.endsWith('\n')) envContent += '\n';
+          envContent += currentProviderLine + '\n';
+        }
+        await fs.writeFile(envPath, envContent, 'utf8');
+        process.env.CURRENT_PROVIDER = selectedProvider;
+      }
     } else {
       console.log('\n👋 Provider selection cancelled.');
       console.log('   You can run this again anytime with --select-provider');
@@ -866,7 +1034,7 @@ function showAvailableTemplates(): void {
 
 function printHelp(): void {
     console.log(`
-🎉 Requirements Gathering Agent v2.1.3 - Celebrating 175 Weekly Downloads! 🎉
+Requirements Gathering Agent v2.1.3 - Celebrating 175 Weekly Downloads!
 AI-powered PMBOK documentation generator with validation
 
 USAGE:
@@ -934,100 +1102,116 @@ CONFIGURATION:
     REQUIREMENTS_AGENT_MODEL=llama3.1
 
 AUTHENTICATION:
-  For Azure Entra ID: az login
-  For API keys: Set in .env file
-  For Ollama: Start ollama serve
+  For Azure Entra ID: Run "az login" to authenticate.
+  For API keys: Set in .env file.
+  For Ollama: Start "ollama serve".
 
-EXAMPLES:
-  # New in v2.1.3: Interactive setup and provider selection
-  requirements-gathering-agent --setup          # Enhanced setup wizard with provider selection
-  requirements-gathering-agent --select-provider # Interactive AI provider selection menu
-  requirements-gathering-agent --status         # Check system configuration
-  requirements-gathering-agent --analyze        # Analyze workspace context
-  requirements-gathering-agent --milestone      # View achievement details
-  
-  # Generate all documents
-  requirements-gathering-agent
+VCS (VERSION CONTROL) COMMANDS:
+  requirements-gathering-agent vcs log
+      Show commit history for generated documents.
+  requirements-gathering-agent vcs diff <file>
+      Show changes for a specific document.
+  requirements-gathering-agent vcs revert <file> <commit>
+      Revert a document to a previous version.
+  requirements-gathering-agent vcs status
+      Show uncommitted changes in generated docs.
+  requirements-gathering-agent vcs push
+      Push local changes to remote repository (if configured).
+  requirements-gathering-agent vcs pull
+      Pull latest changes from remote repository (if configured).
 
-  # Generate all documents with PMBOK 7.0 validation
-  requirements-gathering-agent --validate-pmbok
+Learn more:
+  See documentation: https://github.com/mdresch/requirements-gathering-agent
+  Run "requirements-gathering-agent --help" for command options.
 
-  # Generate with comprehensive validation and quality assessment
-  requirements-gathering-agent --generate-with-validation
-
-  # Generate specific document types with progress and metrics
-  requirements-gathering-agent --generate-core --generate-technical --verbose --metrics
-
-  # Generate stakeholder documents only
-  requirements-gathering-agent --generate-stakeholder
-
-  # Validate existing documents without regenerating
-  requirements-gathering-agent --validate-only
-
-  # Check document consistency only
-  requirements-gathering-agent --validate-consistency
-
-  # Get quality assessment of existing documents
-  requirements-gathering-agent --quality-assessment
-
-  # Specify output directory and format
-  requirements-gathering-agent --output ./docs --format yaml
-
-  # CI/CD pipeline usage with validation
-  requirements-gathering-agent --quiet --retries 3 --validate-pmbok --output ./artifacts
-
-  # Using npm
-  npm start -- --generate-core --output ./docs
-
-  # Direct execution
-  node dist/cli.js --generate-management --format json
-
-TROUBLESHOOTING:
-  • Build first: npm run build
-  • Check config: requirements-gathering-agent --status
-  • Interactive setup: requirements-gathering-agent --setup
-  • Test Azure auth: az account show
-  • Test Ollama: curl http://localhost:11434/api/tags
-  • Check deployment: az cognitiveservices account deployment list
-
-OUTPUT STRUCTURE:
-  <output-dir>/
-  ├── core-analysis/          # User stories, personas, requirements
-  ├── project-charter/        # Formal project authorization
-  ├── management-plans/       # PMBOK management plans
-  ├── planning-artifacts/     # WBS, schedules, estimates
-  ├── stakeholder-management/ # Stakeholder analysis and engagement
-  └── technical-analysis/     # Tech stack, data models, UX
-
-VALIDATION FEATURES:
-  ✅ PMBOK 7.0 compliance checking
-  ✅ Cross-document consistency validation
-  ✅ Document quality assessment (0-100 scoring)
-  ✅ Required element verification
-  ✅ Professional terminology validation
-  ✅ Comprehensive validation reports
-
-🎉 MILESTONE ACHIEVEMENT: 175 Weekly Downloads!
-   📈 Growing community of project managers and business analysts
-   🚀 Celebrating successful market validation and adoption
-   🙏 Thank you for being part of our journey!
-
-For more information, visit:
-https://github.com/mdresch/requirements-gathering-agent
-    `);
+Ready to configure your AI provider? Let's go!
+`);
 }
 
-// Add missing function declarations
+/**
+ * Interactive confirmation prompt
+ */
 async function getUserConfirmation(prompt: string): Promise<boolean> {
-    // ... existing implementation ...
-    return false; // Placeholder return value
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === 'y');
+    });
+  });
 }
 
+/**
+ * Show provider configuration guidance
+ */
 async function showProviderConfigurationGuidance(): Promise<void> {
-    // ... existing implementation ...
+  console.log(`
+📋 AI Provider Configuration Guidance
+
+To get started, you need to configure at least one AI provider in your .env file.
+
+🔧 Recommended Quick Setup:
+1. For Google AI Studio (Free tier):
+    - GOOGLE_AI_API_KEY=your-google-ai-api-key
+    - GOOGLE_AI_MODEL=gemini-1.5-flash
+    - Get API key: https://makersuite.google.com/app/apikey
+
+2. For Azure OpenAI with Entra ID (Enterprise):
+    - AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+    - DEPLOYMENT_NAME=gpt-4
+    - USE_ENTRA_ID=true
+    - Then run: az login
+
+3. For Azure OpenAI with API Key:
+    - AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
+    - AZURE_AI_API_KEY=your-api-key
+    - REQUIREMENTS_AGENT_MODEL=gpt-4
+
+4. For GitHub AI (Free tier):
+    - AZURE_AI_ENDPOINT=https://models.inference.ai.azure.com
+    - GITHUB_TOKEN=your-github-token
+    - REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
+
+5. For Ollama (Local, offline):
+    - OLLAMA_ENDPOINT=http://localhost:11434
+    - REQUIREMENTS_AGENT_MODEL=llama3.1
+    - Then run: ollama serve
+
+📄 Example .env file:
+GOOGLE_AI_API_KEY=your-google-ai-api-key
+GOOGLE_AI_MODEL=gemini-1.5-flash
+
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+DEPLOYMENT_NAME=gpt-4
+USE_ENTRA_ID=true
+
+AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_AI_API_KEY=your-api-key
+REQUIREMENTS_AGENT_MODEL=gpt-4
+
+GITHUB_ENDPOINT=https://models.github.ai/inference/
+GITHUB_TOKEN=your-github-token
+REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
+
+OLLAMA_ENDPOINT=http://localhost:11434
+REQUIREMENTS_AGENT_MODEL=llama3.1
+
+🔑 Authentication:
+  For Azure Entra ID: Run 'az login' to authenticate.
+  For API keys: Set in .env file.
+  For Ollama: Start 'ollama serve'.
+
+📚 Learn more:
+  See documentation: https://github.com/mdresch/requirements-gathering-agent
+  Run 'requirements-gathering-agent --help' for command options.
+
+Ready to configure your AI provider? Let's go!
+`);
 }
 
-// Run main function
+/**
+ * Analyze workspace for context and documentation
+ */
 async function analyzeWorkspace() {
   console.log('\n🔍 Requirements Gathering Agent - Workspace Analysis\n');
   try {
@@ -1051,6 +1235,7 @@ async function analyzeWorkspace() {
       console.log('   (No additional sources suggested)');
     }
     console.log('\n🧠 Project Context Preview:\n');
+    console.log(analysis.projectContext.slice(0, 500) + (analysis.projectContext.length > 500 ? ' ...' : ''));
     console.log(analysis.projectContext.slice(0, 500) + (analysis.projectContext.length > 500 ? ' ...' : ''));
     console.log('\n✅ Workspace analysis complete.\n');
   } catch (error: any) {

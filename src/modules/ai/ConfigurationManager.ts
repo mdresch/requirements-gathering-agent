@@ -21,6 +21,8 @@
 
 import dotenv from "dotenv";
 import { AIProvider } from "./types.js";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 // Load environment variables once
 dotenv.config();
@@ -34,6 +36,7 @@ interface ConfigValidationResult {
 export class ConfigurationManager {
     private static instance: ConfigurationManager;
     private config: Map<string, any> = new Map();
+    private userConfig: any = {};
     private validationCache: Map<string, ConfigValidationResult> = new Map();
     private modelTokenLimits: Map<string, number> = new Map([
         ['gemini-1.5-flash', 1048576], // 1M tokens
@@ -58,6 +61,7 @@ export class ConfigurationManager {
     private currentProvider: AIProvider = 'google-ai';
 
     private constructor() {
+        this.loadUserConfig();
         this.loadConfiguration();
     }
 
@@ -66,7 +70,24 @@ export class ConfigurationManager {
             ConfigurationManager.instance = new ConfigurationManager();
         }
         return ConfigurationManager.instance;
-    }    private loadConfiguration(): void {
+    }
+
+    private loadUserConfig(): void {
+        const configPath = join(process.cwd(), 'config-rga.json');
+        if (existsSync(configPath)) {
+            try {
+                const raw = readFileSync(configPath, 'utf-8');
+                this.userConfig = JSON.parse(raw);
+                if (this.userConfig.currentProvider) {
+                    this.currentProvider = this.userConfig.currentProvider as AIProvider;
+                }
+            } catch (e) {
+                console.warn('Could not read config-rga.json:', e);
+            }
+        }
+    }
+
+    private loadConfiguration(): void {
         // Consolidate all environment variable loading
         const envVars = {
             // Azure OpenAI Configuration
@@ -106,6 +127,24 @@ export class ConfigurationManager {
             this.config.set(key, value);
             this.config.set(key.toLowerCase(), value);
         });
+
+        // Override with user config if present
+        if (this.userConfig.AI_TIMEOUT) {
+            this.config.set('timeout_ms', this.userConfig.AI_TIMEOUT);
+        }
+        if (this.userConfig.EXPERIMENTAL_FEATURES !== undefined) {
+            this.config.set('experimental_features', this.userConfig.EXPERIMENTAL_FEATURES);
+        }
+        if (this.userConfig.showMetrics !== undefined) {
+            this.config.set('show_metrics', this.userConfig.showMetrics);
+        }
+        if (this.userConfig.defaultOutputDir) {
+            this.config.set('default_output_dir', this.userConfig.defaultOutputDir);
+        }
+        if (this.userConfig.preferredFormat) {
+            this.config.set('preferred_format', this.userConfig.preferredFormat);
+        }
+        // ...add more as needed...
     }
 
     get<T>(key: string, defaultValue?: T): T {

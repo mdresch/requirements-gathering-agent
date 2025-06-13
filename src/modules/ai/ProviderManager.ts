@@ -51,6 +51,13 @@ export class ProviderManager {
 
   constructor() {
     this.initializeProviders();
+    // If CURRENT_PROVIDER is set and valid, use it as the active provider
+    const explicit = process.env.CURRENT_PROVIDER;
+    if (explicit && this.providers.has(explicit)) {
+      this.activeProvider = explicit;
+      // Fallback queue: all other valid providers by priority except the explicit one
+      this.fallbackQueue = Array.from(this.providers.keys()).filter(p => p !== explicit);
+    }
   }
   private initializeProviders(): void {
     // Google AI Studio

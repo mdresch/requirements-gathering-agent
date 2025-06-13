@@ -348,6 +348,63 @@ generated-documents/
 - ✅ Cross-reference validation between documents
 - ✅ Comprehensive validation reports with recommendations
 
+---
+
+## 🆕 Version Control System for Generated Documents (v2.1.3+)
+
+The Requirements Gathering Agent now features a built-in version control system (VCS) for all generated documents!
+
+### Key Features
+
+- **Automatic Versioning:** Every time you generate or update documents, changes are automatically committed to a local git repository in the `generated-documents/` folder.
+- **History & Diffs:** View the full history of changes, see diffs, and revert to previous versions of any generated document.
+- **CLI VCS Commands:** Manage document version control directly from the CLI:
+
+  ```bash
+  requirements-gathering-agent vcs log
+      # Show commit history for generated documents
+  requirements-gathering-agent vcs diff <file>
+      # Show changes for a specific document
+  requirements-gathering-agent vcs revert <file> <commit>
+      # Revert a document to a previous version
+  requirements-gathering-agent vcs status
+      # Show uncommitted changes
+  requirements-gathering-agent vcs push
+      # Push local changes to remote repository (if configured)
+  requirements-gathering-agent vcs pull
+      # Pull latest changes from remote repository (if configured)
+  ```
+- **Remote Sync (Optional):** Configure a remote git repository for backup and collaboration.
+- **User Configurable:** Control VCS settings in `config-rga.json` (enable/disable, auto-commit, remote, branch, etc).
+- **Full Audit Trail:** Every document change is tracked for compliance and traceability.
+
+### How It Works
+
+- On first run, a git repository is initialized in `generated-documents/` (if not already present).
+- After each document generation, changes are auto-committed with a timestamp and provider/model info.
+- Use the CLI VCS commands to inspect history, view diffs, revert, or sync with a remote.
+
+### Example Workflow
+
+```bash
+# Generate documents (auto-commit runs after generation)
+requirements-gathering-agent
+
+# View history
+requirements-gathering-agent vcs log
+
+# See changes for a specific file
+requirements-gathering-agent vcs diff core-analysis/business-case.md
+
+# Revert a file to a previous version
+requirements-gathering-agent vcs revert core-analysis/business-case.md <commit-hash>
+
+# Push changes to remote (if configured)
+requirements-gathering-agent vcs push
+```
+
+---
+
 ## Command Line Options
 
 ```bash
@@ -378,6 +435,14 @@ Context Management Options:
   --analyze-context             Analyze document-specific context utilization
   --context-metrics             Display context performance metrics and recommendations
   --use-large-context           Force large context mode (auto-detected by default)
+
+VCS Options:
+  --vcs-log                     Show commit history for generated documents
+  --vcs-diff <file>            Show changes for a specific document
+  --vcs-revert <file> <commit>  Revert a document to a previous version
+  --vcs-status                  Show uncommitted changes
+  --vcs-push                    Push local changes to remote repository (if configured)
+  --vcs-pull                    Pull latest changes from remote repository (if configured)
 ```
 
 ## 🧩 Modular Processor Architecture (2025 Update)
