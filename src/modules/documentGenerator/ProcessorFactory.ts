@@ -27,6 +27,8 @@ import { MissionVisionCoreValuesProcessor, ProjectPurposeProcessor } from '../do
 import { ProjectKickoffPreparationsChecklistProcessor } from '../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor';
 // ... import other modular processors as needed ...
 import processorConfigDefault from './processor-config.json';
+import Ajv from 'ajv';
+import configSchema from '../../../docs/config-rga.schema.json';
 
 // Example interface for processors
 export interface DocumentProcessor {
@@ -51,24 +53,30 @@ export class ProcessorFactory {
     private dynamicImport: (path: string) => Promise<any> = (path) => import(path)
   ) {}
 
-  async loadProcessorsFromConfig() {
-    try {
-      for (const [taskKey, modulePathAndClass] of Object.entries(this.processorConfig)) {
-        const [modulePath, className] = modulePathAndClass.split('#');
-        try {
-          const module = await this.dynamicImport(modulePath);
-          const ProcessorClass = module[className];
-          if (ProcessorClass) {
-            this.registerProcessor(taskKey, ProcessorClass);
-          } else {
-            this.logger.error(`Processor class "${className}" not found in module "${modulePath}".`);
-          }
-        } catch (error) {
-          this.logger.error(`Error loading processor module "${modulePath}": ${error}`);
+  private validateConfig(): void {
+    const ajv = new Ajv();
+    const validate = ajv.compile(configSchema as object);
+    if (!validate(this.processorConfig)) {
+      this.logger.error('Processor config validation errors:', validate.errors);
+      throw new Error('Processor config validation failed');
+    }
+  }
+
+  public async loadProcessorsFromConfig(): Promise<void> {
+    this.validateConfig();
+    for (const [taskKey, modulePathAndClass] of Object.entries(this.processorConfig)) {
+      const [modulePath, className] = modulePathAndClass.split('#');
+      try {
+        const module = await this.dynamicImport(modulePath);
+        const ProcessorClass = module[className];
+        if (ProcessorClass) {
+          this.registerProcessor(taskKey, ProcessorClass);
+        } else {
+          this.logger.error(`Processor class "${className}" not found in module "${modulePath}".`);
         }
+      } catch (error) {
+        this.logger.error(`Error loading processor module "${modulePath}": ${error}`);
       }
-    } catch (error) {
-      this.logger.error(`Error loading processor configuration: ${error}`);
     }
   }
 
