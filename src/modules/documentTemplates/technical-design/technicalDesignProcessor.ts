@@ -31,8 +31,13 @@ export class ArchitectureDesignProcessor implements DocumentProcessor {
         content
       };
     } catch (error) {
-      console.error('Error processing Architecture Design Document:', error);
-      throw new Error(`Failed to generate Architecture Design Document: ${error instanceof Error ? error.message : String(error)}`);
+      if (error instanceof ExpectedError) {
+        console.warn('Expected error in Architecture Design Document processing:', error.message);
+        throw new Error(`Failed to generate Architecture Design Document: ${error.message}`);
+      } else {
+        console.error('Unexpected error in Architecture Design Document processing:', error);
+        throw new Error('An unexpected error occurred while generating Architecture Design Document');
+      }
     }
   }
 
@@ -66,7 +71,7 @@ Requirements:
 
   private async validateOutput(content: string): Promise<void> {
     if (!content || content.trim().length === 0) {
-      throw new Error('Generated content is empty');
+      throw new ExpectedError('Generated content is empty');
     }
     if (content.length < 500) {
       console.warn('Generated content seems unusually short for an architecture document');
@@ -96,8 +101,13 @@ export class SystemDesignProcessor implements DocumentProcessor {
         content
       };
     } catch (error) {
-      console.error('Error processing System Design Specification:', error);
-      throw new Error(`Failed to generate System Design Specification: ${error instanceof Error ? error.message : String(error)}`);
+      if (error instanceof ExpectedError) {
+        console.warn('Expected error in System Design Specification processing:', error.message);
+        throw new Error(`Failed to generate System Design Specification: ${error.message}`);
+      } else {
+        console.error('Unexpected error in System Design Specification processing:', error);
+        throw new Error('An unexpected error occurred while generating System Design Specification');
+      }
     }
   }
 
@@ -131,7 +141,7 @@ Requirements:
 
   private async validateOutput(content: string): Promise<void> {
     if (!content || content.trim().length === 0) {
-      throw new Error('Generated content is empty');
+      throw new ExpectedError('Generated content is empty');
     }
     if (content.length < 500) {
       console.warn('Generated content seems unusually short for a system design document');
