@@ -2,6 +2,13 @@ import { AIProcessor } from '../../ai/AIProcessor';
 import type { ProjectContext } from '../../ai/types';
 import type { DocumentOutput, DocumentProcessor } from '../../documentGenerator/types';
 
+class ExpectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExpectedError';
+  }
+}
+
 export class ArchitectureDesignProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
@@ -349,8 +356,13 @@ export class PerformanceRequirementsProcessor implements DocumentProcessor {
         content
       };
     } catch (error) {
-      console.error('Error processing Performance Requirements:', error);
-      throw new Error(`Failed to generate Performance Requirements: ${error instanceof Error ? error.message : String(error)}`);
+      if (error instanceof ExpectedError) {
+        console.warn('Expected error in Performance Requirements processing:', error.message);
+        throw new Error(`Failed to generate Performance Requirements: ${error.message}`);
+      } else {
+        console.error('Unexpected error in Performance Requirements processing:', error);
+        throw new Error('An unexpected error occurred while generating Performance Requirements');
+      }
     }
   }
 
@@ -384,7 +396,7 @@ Requirements:
 
   private async validateOutput(content: string): Promise<void> {
     if (!content || content.trim().length === 0) {
-      throw new Error('Generated content is empty');
+      throw new ExpectedError('Generated content is empty');
     }
     if (content.length < 500) {
       console.warn('Generated content seems unusually short for performance requirements');
