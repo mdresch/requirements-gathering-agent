@@ -1,6 +1,7 @@
 import { AIProcessor } from '../../ai/AIProcessor';
 import type { ProjectContext } from '../../ai/types';
-import type { DocumentOutput, DocumentProcessor } from '../../documentGenerator/types';
+import type { DocumentOutput } from '../../documentGenerator/types';
+import type { DocumentProcessor } from '../../documentGenerator/ProcessorFactory';
 
 class ExpectedError extends Error {
   constructor(message: string) {
@@ -13,7 +14,7 @@ export class ArchitectureDesignProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {

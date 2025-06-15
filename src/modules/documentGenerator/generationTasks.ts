@@ -13,7 +13,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'architecture-design',
     name: 'Architecture Design Document',
     category: 'technical-design',
-    fileName: 'architecture-design.md',
+    func: 'generateArchitectureDesign',
     priority: 1,
     emoji: '🏗️',
     description: 'Comprehensive architecture design document outlining system components and interactions.',
