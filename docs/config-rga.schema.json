@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Processor Config Schema",
+  "type": "object",
+  "patternProperties": {
+    "^.+$": {
+      "type": "string",
+      "pattern": "^\\\\.\\\\.\\\\/documentTemplates/.+\\\\.(ts|js)#\\\\w+$"
+    }
+  },
+  "additionalProperties": false
+}

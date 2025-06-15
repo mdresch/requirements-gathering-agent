@@ -36,7 +36,7 @@ import {
 } from './modules/documentGenerator.js';
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile, mkdir } from 'fs/promises';
 import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -117,6 +117,19 @@ async function main() {
     
     // Parse and validate command line arguments
     const args = process.argv.slice(2);
+    // CLI scaffolding: generate new processor
+    if (args[0] === 'generate:processor') {
+      const catIdx = args.indexOf('--category');
+      const category = catIdx > -1 && args.length > catIdx + 1 ? args[catIdx + 1] : '';
+      const nameIdx = args.indexOf('--name');
+      const name = nameIdx > -1 && args.length > nameIdx + 1 ? args[nameIdx + 1] : '';
+      if (!category || !name) {
+        console.error('Usage: rga generate:processor --category <category> --name <Name>');
+        process.exit(1);
+      }
+      await scaffoldNewProcessor(category, name);
+      return;
+    }
     
     // Helper function to safely get argument value
     const getArgValue = (flag: string, defaultValue: string, validValues?: string[]): string => {
@@ -750,7 +763,7 @@ async function showStatus(): Promise<void> {
       console.log('\n   🟣 Google AI Studio:');
       console.log(`      API Key: ${googleKey ? '✅ Set' : '❌ Missing'}`);
       if (googleKey) {
-        console.log(`      Model: ${process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash (default)'}`);
+        console.log(`      Model: ${process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash'}`);
       }
       
       // GitHub AI
@@ -771,7 +784,7 @@ async function showStatus(): Promise<void> {
       console.log(`      Entra ID: ${useEntraID ? '✅ Enabled' : '❌ Disabled'}`);
       if (azureOpenAIEndpoint) {
         console.log(`      URL: ${azureOpenAIEndpoint}`);
-        console.log(`      Model: ${process.env.DEPLOYMENT_NAME || 'gpt-4 (default)'}`);
+        console.log(`      Model: ${process.env.DEPLOYMENT_NAME || 'gpt-4'}`);
       }
       
       // Azure OpenAI (API Key)
@@ -782,7 +795,7 @@ async function showStatus(): Promise<void> {
       console.log(`      API Key: ${azureAIKey ? '✅ Set' : '❌ Missing'}`);
       if (azureAIEndpoint) {
         console.log(`      URL: ${azureAIEndpoint}`);
-        console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'gpt-4 (default)'}`);
+        console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'gpt-4'}`);
       }
       
       // Ollama
@@ -792,7 +805,7 @@ async function showStatus(): Promise<void> {
       console.log(`      Endpoint: ${isOllama ? '✅ Set' : '❌ Not configured'}`);
       if (isOllama) {
         console.log(`      URL: ${ollamaEndpoint}`);
-        console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'llama3.1 (default)'}`);
+        console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'llama3.1'}`);
       }
       
       // Overall configuration status
@@ -1218,16 +1231,7 @@ async function analyzeWorkspace() {
     const { analyzeProjectComprehensively } = await import('./modules/projectAnalyzer.js');
     const projectPath = process.cwd();
     const analysis = await analyzeProjectComprehensively(projectPath);
-
-    console.log('📁 Project Path:', projectPath);
-    console.log('📄 README.md:', analysis.readme ? 'Found' : 'Not found');
-    console.log('📦 package.json:', analysis.packageJson ? 'Found' : 'Not found');
-    console.log(`📝 Additional Markdown Files: ${analysis.additionalMarkdownFiles.length}`);
-    if (analysis.additionalMarkdownFiles.length > 0) {
-      analysis.additionalMarkdownFiles.forEach(file => {
-        console.log(`   - ${file.fileName} (${file.category}, relevance: ${file.relevanceScore})`);
-      });
-    }
+// (Moved CLI scaffolding block inside main())
     console.log('\n🔗 Suggested Context Sources:');
     if (analysis.suggestedSources && analysis.suggestedSources.length > 0) {
       analysis.suggestedSources.forEach(src => console.log(`   - ${src}`));
@@ -1241,6 +1245,88 @@ async function analyzeWorkspace() {
   } catch (error: any) {
     console.error('❌ Error analyzing workspace:', error.message);
   }
+}
+
+// (Removed duplicate CLI scaffolding block - handled inside main())
+
+async function scaffoldNewProcessor(category: string, name: string): Promise<void> {
+  const rootDir = process.cwd();
+  const key = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+  const templateDir = join(rootDir, 'src', 'modules', 'documentTemplates', category);
+  await mkdir(templateDir, { recursive: true });
+
+  const templateFile = join(templateDir, `${name}Template.ts`);
+  const processorFile = join(templateDir, `${name}Processor.ts`);
+
+  // Standard Template stub
+  const templateContent = `import type { ProjectContext } from '../../ai/types';
+
+/**
+ * ${name} Template generates the content for the ${name} document.
+ */
+export class ${name}Template {
+  constructor(private context: ProjectContext) {}
+
+  /**
+   * Build the markdown content for ${name}
+   */
+  generateContent(): string {
+    // TODO: Implement content generation logic using this.context
+    return \`# ${name}\\n\\n\` +
+      \`**Project:** \${this.context.projectName}\\n\\n\` +
+      \`- Replace this with your checklist items or sections\`;
+  }
+}`;
+
+  // Standard Processor stub
+  const processorContent = `import type { ProjectContext } from '../../ai/types';
+import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types';
+import { ${name}Template } from '../${category}/${name}Template';
+
+
+/**
+ * Processor for the ${name} document.
+ */
+export class ${name}Processor implements DocumentProcessor {
+  async process(context: ProjectContext): Promise<DocumentOutput> {
+    const template = new ${name}Template(context);
+    const content = template.generateContent();
+    return {
+      title: '${name}',
+      content
+    };
+  }
+}`;
+
+  await writeFile(templateFile, templateContent + '\n');
+  await writeFile(processorFile, processorContent + '\n');
+
+  const configPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'processor-config.json');
+  const configJson = JSON.parse(await readFile(configPath, 'utf-8'));
+  configJson[key] = `../documentTemplates/${category}/${name}Processor.ts#${name}Processor`;
+  await writeFile(configPath, JSON.stringify(configJson, null, 2) + '\n');
+
+  // Update generationTasks.ts to include the new document task
+  const tasksPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'generationTasks.ts');
+  let tasksContent = await readFile(tasksPath, 'utf-8');
+  const newTaskEntry = `  {
+    key: '${key}',
+    name: '${name}',
+    category: '${category}',
+    func: '${key}.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },\n`;
+  tasksContent = tasksContent.replace(/\n\];/, `\n${newTaskEntry}];`);
+  // After updating GENERATION_TASKS, also update DOCUMENT_CONFIG
+  const docConfigEntry = `    '${key}': { filename: '${category}/${key}.md', title: '${name}' },\n`;
+  tasksContent = tasksContent.replace(/export const DOCUMENT_CONFIG:[^\n]+{/, match => `${match}\n${docConfigEntry}`);
+  await writeFile(tasksPath, tasksContent);
+
+  console.log(`✅ Added generation task for: ${key}`);
+
+  console.log(`✅ Scaffolded new processor: ${name} under category ${category}`);
 }
 
 main().catch(error => {

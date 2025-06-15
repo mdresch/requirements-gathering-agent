@@ -26,7 +26,7 @@ import { RetryManager } from "./RetryManager.js";
 import { ConfigurationManager } from "./ConfigurationManager.js";
 import { ProviderManager } from "./ProviderManager.js";
 
-class AIProcessor {
+export class AIProcessor {
     private static instance: AIProcessor;
     private clientManager: AIClientManager;
     private metricsManager: MetricsManager;
@@ -417,5 +417,4 @@ export function getAIProcessor(): AIProcessor {
     return AIProcessor.getInstance();
 }
 
-// Export for module usage
-export { AIProcessor };
+// (Removed duplicate export to avoid redeclaration error)

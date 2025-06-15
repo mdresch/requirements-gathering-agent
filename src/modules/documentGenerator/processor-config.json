@@ -31,5 +31,7 @@
   "deployment-guide": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DeploymentGuideProcessor",
   "mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#MissionVisionCoreValuesProcessor",
   "project-purpose": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor",
-  "project-kickoff-preparations-checklist": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor"
+  "project-kickoff-preparations-checklist": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor",
+  "sample-checklist": "../documentTemplates/planningArtifacts/SampleChecklistProcessor.ts#SampleChecklistProcessor",
+  "babokintroduction": "../documentTemplates/BABOK/BABOKIntroductionProcessor.ts#BABOKIntroductionProcessor"
 }

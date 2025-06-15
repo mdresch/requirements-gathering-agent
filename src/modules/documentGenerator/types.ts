@@ -115,3 +115,8 @@ export interface DocumentOutput {
     content: string;
     // Optionally, add more fields as needed (e.g., metadata, summary, etc.)
 }
+
+// Interface for document processors
+export interface DocumentProcessor {
+  process(context: any): any;
+}

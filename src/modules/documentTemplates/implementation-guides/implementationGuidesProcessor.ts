@@ -6,7 +6,7 @@ export class CodingStandardsProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -71,7 +71,7 @@ export class DevelopmentSetupProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -136,7 +136,7 @@ export class VersionControlProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -201,7 +201,7 @@ export class CIPipelineProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -266,7 +266,7 @@ export class ReleaseProcessProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -331,7 +331,7 @@ export class CodeDocumentationProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -396,7 +396,7 @@ export class TroubleshootingProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -461,7 +461,7 @@ export class DevelopmentWorkflowProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -526,7 +526,7 @@ export class APIIntegrationProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
@@ -591,7 +591,7 @@ export class DeploymentGuideProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
-    this.aiProcessor = new AIProcessor();
+    this.aiProcessor = AIProcessor.getInstance();
   }
 
   public async process(context: ProjectContext): Promise<DocumentOutput> {
