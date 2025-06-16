@@ -385,8 +385,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 999,
     emoji: '📝',
     pmbokRef: ''
-  },
-  {
+  },  {
     key: 'company-values',
     name: 'CompanyValues',
     category: 'strategic-statements',
@@ -403,6 +402,14 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 999,
     emoji: '📝',
     pmbokRef: ''
+  },  {
+    key: 'strategic-business-case',
+    name: 'Strategic Business Case',
+    category: 'strategic-statements',
+    func: 'strategic-business-case.md',
+    priority: 999,
+    emoji: '💼',
+    pmbokRef: ''
   },
 ];
 
@@ -410,9 +417,11 @@ export const GENERATION_TASKS: GenerationTask[] = [
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
-    'purpose-statement': { filename: 'strategic-statements/purpose-statement.md', title: 'Purpose-Statement' },
+    'purpose-statement': { filename: 'strategic-statements/purpose-statement.md', title: 'PurposeStatement' },
 
     'company-values': { filename: 'strategic-statements/company-values.md', title: 'CompanyValues' },
+
+    'strategic-business-case': { filename: 'strategic-statements/strategic-business-case.md', title: 'Strategic Business Case' },
 
 
 

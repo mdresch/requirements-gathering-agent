@@ -30,7 +30,7 @@ import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
 import { DocumentGenerator, generateDocumentsWithRetry } from './modules/documentGenerator.js';
 import { readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
-import { writeFile, readFile, mkdir } from 'fs/promises';
+import { writeFile, readFile, mkdir, access } from 'fs/promises';
 import readline from 'readline';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1178,26 +1178,47 @@ async function analyzeWorkspace() {
 // (Removed duplicate CLI scaffolding block - handled inside main())
 async function scaffoldNewProcessor(category, name) {
     const rootDir = process.cwd();
+    // Sanitize name to proper PascalCase (remove hyphens, capitalize words)
+    const sanitizedName = name
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join('');
     const key = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
     const templateDir = join(rootDir, 'src', 'modules', 'documentTemplates', category);
     await mkdir(templateDir, { recursive: true });
-    const templateFile = join(templateDir, `${name}Template.ts`);
-    const processorFile = join(templateDir, `${name}Processor.ts`);
+    const templateFile = join(templateDir, `${sanitizedName}Template.ts`);
+    const processorFile = join(templateDir, `${sanitizedName}Processor.ts`);
+    // Check for existing files to prevent overwriting
+    const templateExists = await access(templateFile).then(() => true).catch(() => false);
+    const processorExists = await access(processorFile).then(() => true).catch(() => false);
+    if (templateExists) {
+        console.log(`⚠️  Template file already exists: ${templateFile}`);
+        console.log('   Skipping template creation...');
+    }
+    if (processorExists) {
+        console.log(`⚠️  Processor file already exists: ${processorFile}`);
+        console.log('   Skipping processor creation...');
+    }
+    if (templateExists || processorExists) {
+        console.log('❌ Cannot proceed with scaffolding - files already exist');
+        console.log('   Please choose a different name or manually remove existing files');
+        return;
+    }
     // Standard Template stub
     const templateContent = `import type { ProjectContext } from '../../ai/types';
 
 /**
- * ${name} Template generates the content for the ${name} document.
+ * ${sanitizedName} Template generates the content for the ${sanitizedName} document.
  */
-export class ${name}Template {
+export class ${sanitizedName}Template {
   constructor(private context: ProjectContext) {}
 
   /**
-   * Build the markdown content for ${name}
+   * Build the markdown content for ${sanitizedName}
    */
   generateContent(): string {
     // TODO: Implement content generation logic using this.context
-    return \`# ${name}\\n\\n\` +
+    return \`# ${sanitizedName}\\n\\n\` +
       \`**Project:** \${this.context.projectName}\\n\\n\` +
       \`- Replace this with your checklist items or sections\`;
   }
@@ -1205,7 +1226,7 @@ export class ${name}Template {
     const processorContent = `import { AIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
-import { ${name}Template } from '../${category}/${name}Template.js';
+import { ${sanitizedName}Template } from '../${category}/${sanitizedName}Template.js';
 
 class ExpectedError extends Error {
   constructor(message: string) {
@@ -1215,15 +1236,14 @@ class ExpectedError extends Error {
 }
 
 /**
- * Processor for the ${name} document.
+ * Processor for the ${sanitizedName} document.
  */
-export class ${name}Processor implements DocumentProcessor {
+export class ${sanitizedName}Processor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
     this.aiProcessor = AIProcessor.getInstance();
   }
-
   async process(context: ProjectContext): Promise<DocumentOutput> {
     try {
       const prompt = this.createPrompt(context);
@@ -1235,26 +1255,26 @@ export class ${name}Processor implements DocumentProcessor {
       await this.validateOutput(content);
       
       return {
-        title: '${name}',
+        title: '${sanitizedName}',
         content
       };
     } catch (error) {
       if (error instanceof ExpectedError) {
-        console.warn('Expected error in ${name} processing:', error.message);
-        throw new Error(\`Failed to generate ${name}: \${error.message}\`);
+        console.warn('Expected error in ${sanitizedName} processing:', error.message);
+        throw new Error(\`Failed to generate ${sanitizedName}: \${error.message}\`);
       } else {
-        console.error('Unexpected error in ${name} processing:', error);
-        throw new Error('An unexpected error occurred while generating ${name}');
+        console.error('Unexpected error in ${sanitizedName} processing:', error);
+        throw new Error('An unexpected error occurred while generating ${sanitizedName}');
       }
     }
   }
 
   private createPrompt(context: ProjectContext): string {
     // Get the template as an example structure
-    const template = new ${name}Template(context);
+    const template = new ${sanitizedName}Template(context);
     const exampleStructure = template.generateContent();
 
-    return \`Based on the following project context, generate a comprehensive ${name} document.
+    return \`Based on the following project context, generate a comprehensive ${sanitizedName} document.
 
 Project Context:
 - Name: \${context.projectName || 'Untitled Project'}
@@ -1287,23 +1307,35 @@ Important Instructions:
 }`;
     await writeFile(templateFile, templateContent + '\n');
     await writeFile(processorFile, processorContent + '\n');
+    // Check and update processor-config.json
     const configPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'processor-config.json');
     const configJson = JSON.parse(await readFile(configPath, 'utf-8'));
-    // Add processor entry with module path, empty dependencies, and default priority
-    configJson[key] = {
-        module: `../documentTemplates/${category}/${name}Processor.ts#${name}Processor`,
-        dependencies: [],
-        priority: 999
-    };
-    await writeFile(configPath, JSON.stringify(configJson, null, 2) + '\n');
+    if (configJson[key]) {
+        console.log(`⚠️  Entry already exists in processor-config.json: ${key}`);
+        console.log('   Skipping processor-config.json update...');
+    }
+    else {
+        configJson[key] = {
+            module: `../documentTemplates/${category}/${sanitizedName}Processor.ts#${sanitizedName}Processor`,
+            dependencies: [],
+            priority: 999
+        };
+        await writeFile(configPath, JSON.stringify(configJson, null, 2) + '\n');
+        console.log(`✅ Added processor config entry: ${key}`);
+    }
     // Backup ProcessorFactory.ts before updating
     // const backupPath = join(rootDir, 'src', 'modules', 'documentGenerator', `ProcessorFactory.${Date.now()}.bak.ts`);
     // await copyFile(factoryPath, backupPath);
-    // console.log(`✅ Archived ProcessorFactory.ts to ${backupPath}`);
-    // Update generationTasks.ts to include the new document task
+    // console.log(`✅ Archived ProcessorFactory.ts to ${backupPath}`);   // Update generationTasks.ts to include the new document task
     const tasksPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'generationTasks.ts');
     let tasksContent = await readFile(tasksPath, 'utf-8');
-    const newTaskEntry = `  {
+    // Check for duplicate entries in GENERATION_TASKS and DOCUMENT_CONFIG
+    if (tasksContent.includes(`key: '${key}'`)) {
+        console.log(`⚠️  Entry already exists in GENERATION_TASKS: ${key}`);
+        console.log('   Skipping generationTasks.ts update...');
+    }
+    else {
+        const newTaskEntry = `  {
     key: '${key}',
     name: '${name}',
     category: '${category}',
@@ -1312,19 +1344,28 @@ Important Instructions:
     emoji: '📝',
     pmbokRef: ''
   },\n`;
-    tasksContent = tasksContent.replace(/\n\];/, `\n${newTaskEntry}];`);
-    // After updating GENERATION_TASKS, also update DOCUMENT_CONFIG
-    const docConfigEntry = `    '${key}': { filename: '${category}/${key}.md', title: '${name}' },\n`;
-    tasksContent = tasksContent.replace(/export const DOCUMENT_CONFIG:[^\n]+{/, match => `${match}\n${docConfigEntry}`);
-    await writeFile(tasksPath, tasksContent);
+        tasksContent = tasksContent.replace(/\n\];/, `\n${newTaskEntry}];`);
+        // After updating GENERATION_TASKS, also update DOCUMENT_CONFIG
+        const docConfigEntry = `    '${key}': { filename: '${category}/${key}.md', title: '${name}' },\n`;
+        tasksContent = tasksContent.replace(/export const DOCUMENT_CONFIG:[^\n]+{/, match => `${match}\n${docConfigEntry}`);
+        await writeFile(tasksPath, tasksContent);
+        console.log(`✅ Added generation task entry: ${key}`);
+    }
     // Update fileManager.ts to register this document for version control
     const fmPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
     let fmContent = await readFile(fmPath, 'utf-8');
-    const newFmEntry = `    '${key}': { title: '${name}', filename: '${category}/${key}.md', category: DOCUMENT_CATEGORIES.${category.replace(/-/g, '_').toUpperCase()}, description: '', generatedAt: '' },\n`;
-    // Insert after DOCUMENT_CONFIG opening brace
-    fmContent = fmContent.replace(/(export const DOCUMENT_CONFIG:[^=]+=\s*{\s*\n)/, `$1${newFmEntry}`);
-    await writeFile(fmPath, fmContent);
-    console.log(`✅ Registered new document in fileManager.ts: ${key}`); // Add new category to DOCUMENT_CATEGORIES if it doesn't exist
+    // Check for duplicate entry in fileManager DOCUMENT_CONFIG
+    if (fmContent.includes(`'${key}': {`)) {
+        console.log(`⚠️  Entry already exists in fileManager DOCUMENT_CONFIG: ${key}`);
+        console.log('   Skipping fileManager.ts update...');
+    }
+    else {
+        const newFmEntry = `    '${key}': { title: '${name}', filename: '${category}/${key}.md', category: DOCUMENT_CATEGORIES.${category.replace(/-/g, '_').toUpperCase()}, description: '', generatedAt: '' },\n`;
+        // Insert after DOCUMENT_CONFIG opening brace
+        fmContent = fmContent.replace(/(export const DOCUMENT_CONFIG:[^=]+=\s*{\s*\n)/, `$1${newFmEntry}`);
+        await writeFile(fmPath, fmContent);
+        console.log(`✅ Registered new document in fileManager.ts: ${key}`);
+    } // Add new category to DOCUMENT_CATEGORIES if it doesn't exist
     const fmCatPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
     let fmCatContent = await readFile(fmCatPath, 'utf-8');
     const categoryConst = category.replace(/-/g, '_').toUpperCase();

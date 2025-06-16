@@ -184,7 +184,12 @@
     "priority": 999
   },
   "purpose-statement": {
-    "module": "../documentTemplates/strategic-statements/Purpose-StatementProcessor.ts#Purpose-StatementProcessor",
+    "module": "../documentTemplates/strategic-statements/PurposestatementProcessor.ts#PurposestatementProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "business-case": {
+    "module": "../documentTemplates/strategic-statements/BusinesscaseProcessor.ts#BusinesscaseProcessor",
     "dependencies": [],
     "priority": 999
   }

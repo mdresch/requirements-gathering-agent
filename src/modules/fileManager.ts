@@ -50,7 +50,7 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
-    'purpose-statement': { title: 'Purpose-Statement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
