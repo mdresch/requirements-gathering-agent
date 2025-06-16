@@ -126,6 +126,31 @@ Before implementing a new document type, ensure you have a clear and rich projec
 
 ---
 
+### 📝 Step 1d: Update Configuration Schema & Entries
+
+- Modify `docs/config-rga.schema.json` so each processor entry is an object with:
+  ```json
+  {
+    "module": "<path>#<ClassName>",
+    "dependencies": ["string"],
+    "priority": <number>
+  }
+  ```
+- Migrate the JSON in `src/modules/documentGenerator/processor-config.json` to this new shape, assigning appropriate `dependencies` (document keys) and `priority` values.
+- Confirm that `ProcessorFactory` and `DocumentGenerator.filterTasks()` have been updated to load this schema, validate dependencies, and perform DAG-based ordering.
+
+### 🔍 Step 1e: Verify DAG Ordering
+
+1. Rebuild and run the generator:
+   ```bash
+   npm run build
+   node dist/src/cli.js --output generated-documents
+   ```
+2. Check console logs to ensure documents appear in the correct dependency order (e.g. A before B if B depends on A).
+3. Inspect `generated-documents` to confirm files exist in their categorized folders.
+
+---
+
 ## 📂 Step 2: Create Document Template Structure
 
 ### 2.1 Create Directory Structure
@@ -155,24 +180,60 @@ mkdir src/modules/documentTemplates/yourNewCategory
 ```
 src/modules/documentTemplates/
   strategic-statements/
-    strategicStatements.ts              # Template classes
+    strategicStatementsTemplate.ts              # Template classes
     strategicStatementsProcessor.ts     # Processor classes (TS)
-    strategicStatementsProcessor.d.ts   # Type declarations (if needed)
 ```
 
 ---
 
 ## 🔧 Step 3: Register Document in Main Generator
 
-- Import your processor from `documentTemplates/yourProcessorFile.js` in the generator registry (not from `ai/processors`).
-- Update the processor registry to instantiate your new processor for the relevant document type.
-- Ensure the generator passes the full project context to your processor and template.
+> **Tip:** You can automate this entire step by running:
+> ```bash
+> rga generate:processor --category <your-category> --name <YourDocName>
+> ```
+> This command will:
+> - Create both `Template.ts` and `Processor.ts` stubs
+> - Append your entry to `processor-config.json`
+> - Add a new task in `GENERATION_TASKS` and corresponding `DOCUMENT_CONFIG` mapping in `generationTasks.ts`
+> - Backup the existing `ProcessorFactory.ts` to a timestamped `.bak.ts`
+> - Insert a new entry into `fileManager.ts`’s `DOCUMENT_CONFIG` for version control
+> - Append the new category to `DOCUMENT_CATEGORIES` in `fileManager.ts` if it doesn’t already exist
+
+- Add a `GenerationTask` entry in `src/modules/documentGenerator/generationTasks.ts` under `GENERATION_TASKS` with:
+  - `key`, `name`, `category`, `func`, `emoji`, `priority`, and `pmbokRef`
+- In the same file, update `DOCUMENT_CONFIG` to map your `key` to:
+  ```ts
+  { filename: '<category>/<key>.md', title: '<Display Name>' }
+  ```
+- Register your new processor in `src/modules/documentGenerator/processor-config.json` using:
+  ```json
+  "<key>": {
+    "module": "../documentTemplates/<category>/<YourProcessorFile>.ts#<ClassName>",
+    "dependencies": [/* other keys */],
+    "priority": <number>
+  }
+  ```
+- Verify `ProcessorFactory` can dynamically import and register your new processor:
+  - Run `rga --list-templates` or start a generation with `--verbose` to observe dynamic import logs.
+  - Check console output for `Error loading processor module` messages and resolve any path or class-name mismatches.
+- Confirm `DocumentGenerator` has a method matching the `func` name so `generateSingleDocument` invokes your processor correctly.
 
 ---
 
 ## 🧪 Step 4: Testing and Validation
 
-- Ensure your new processor and template are correctly registered and can be invoked by the document generator.
+- Ensure your new processor and template are correctly registered and can be invoked by the document generator:
+  - Run the generator in verbose mode:
+    ```bash
+    rga --output generated-documents --verbose
+    ```
+    Watch for lines like `Loading processor for <key>` and no `Processor class not found` errors.
+  - List available tasks to confirm inclusion:
+    ```bash
+    rga --list-templates
+    ```
+    Your new document key should appear in the list.
 - Run tests to validate integration.
 - Test with different project contexts to ensure prompts and outputs are context-aware and project-specific.
 
@@ -424,10 +485,6 @@ This guide demonstrates how to add a new document type, `Project-KickOff-Preprat
 
 ## 7. (Optional) Add to Reference Implementation
 - If this is a new category, update the migration plan and reference implementation notes.
-
----
-
-*For more details, see the `MODULAR-PROCESSOR-MIGRATION-PLAN.md` and `ARCHITECTURE.md` files.*
 
 ---
 

@@ -4,7 +4,7 @@
  */
 import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator.js';
 import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
-import { ProcessorFactory } from './ProcessorFactory.js';
+// ProcessorFactory is internal—no public export needed
 import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types';
 
 // Enhanced batch generation with smart retry

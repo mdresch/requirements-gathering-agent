@@ -30,6 +30,11 @@ import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
 // Import all processor functions
 import * as processors from '../ai/processors/index.js';
+import { readFileSync } from 'fs';
+// Load processor-config.json at runtime to avoid import assertions under ESM
+const processorConfig: Record<string, any> = JSON.parse(
+  readFileSync(new URL('./processor-config.json', import.meta.url), 'utf8')
+);
 import { 
     GenerationOptions, 
     GenerationResult, 
@@ -37,6 +42,7 @@ import {
     ValidationResult
 } from './types';
 import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
+import { createProcessor } from './ProcessorFactory.js';
 
 /**
  * Class responsible for generating project documentation
@@ -282,8 +288,7 @@ export class DocumentGenerator {
     }
 
     /**
-     * Filter and sort tasks based on options
-     * @returns Filtered and sorted tasks
+     * Filter and sort tasks based on options and dependencies
      */
     private filterTasks(): GenerationTask[] {
         let tasks = [...GENERATION_TASKS];
@@ -298,8 +303,49 @@ export class DocumentGenerator {
             tasks = tasks.filter(task => !this.options.excludeCategories.includes(task.category));
         }
 
-        // Sort by priority
-        return tasks.sort((a, b) => a.priority - b.priority);
+        // Build map for quick lookup
+        const taskMap = new Map(tasks.map(t => [t.key, t]));
+
+        // Initialize in-degree and adjacency lists
+        const inDegree = new Map<string, number>();
+        const adj = new Map<string, string[]>();
+        tasks.forEach(t => { inDegree.set(t.key, 0); adj.set(t.key, []); });
+
+        // Populate graph edges from dependencies
+        tasks.forEach(t => {
+            const deps: string[] = processorConfig[t.key]?.dependencies || [];
+            deps.forEach(dep => {
+                if (!taskMap.has(dep)) {
+                    throw new Error(`Processor dependency not found: ${dep} for task ${t.key}`);
+                }
+                adj.get(dep)!.push(t.key);
+                inDegree.set(t.key, (inDegree.get(t.key) || 0) + 1);
+            });
+        });
+
+        // Kahn's algorithm for topological sort, using priority to order zero-degree tasks
+        const sorted: GenerationTask[] = [];
+        let zeroDeg = tasks.filter(t => (inDegree.get(t.key) || 0) === 0);
+        zeroDeg.sort((a, b) => a.priority - b.priority);
+
+        while (zeroDeg.length > 0) {
+            const current = zeroDeg.shift()!;
+            sorted.push(current);
+
+            adj.get(current.key)!.forEach(nextKey => {
+                inDegree.set(nextKey, (inDegree.get(nextKey) || 1) - 1);
+                if (inDegree.get(nextKey) === 0) {
+                    zeroDeg.push(taskMap.get(nextKey)!);
+                }
+            });
+            zeroDeg.sort((a, b) => a.priority - b.priority);
+        }
+
+        if (sorted.length !== tasks.length) {
+            throw new Error('Cycle detected in document processor dependencies');
+        }
+
+        return sorted;
     }
 
     /**
@@ -307,20 +353,14 @@ export class DocumentGenerator {
      * @param task Task to generate document for
      * @returns Whether generation was successful
      */
-    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {        try {
-            console.log(`${task.emoji} Generating ${task.name}...`);
-              // Get the AI function using the correct method
-            const methodName = task.func as keyof DocumentGenerator;
-            const aiFunction = this[methodName] as ((context: string) => Promise<string>) | undefined;
-            
-            if (typeof aiFunction !== 'function') {
-                const error = `AI function ${task.func} not found in DocumentGenerator`;
-                console.error(`❌ ${error}`);
-                this.results.errors.push({ task: task.name, error });
-                return false;
-            }
-              const content = await aiFunction.call(this, this.context);
-            
+    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
+         try {
+             console.log(`${task.emoji} Generating ${task.name}...`);
+            // Use generic ProcessorFactory to create and run the processor
+            const processor = await createProcessor(task.key);
+            const output = await processor.process({ projectName: this.context });
+            const content = output.content;
+             
             if (content && content.trim().length > 0) {
                 const documentKey = task.key;
                 const config = DOCUMENT_CONFIG[documentKey];

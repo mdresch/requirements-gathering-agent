@@ -106,14 +106,14 @@ async function main() {
         console.log('🚀 Requirements Gathering Agent v2.1.3'); // Updated version
         // Parse and validate command line arguments
         const args = process.argv.slice(2);
-        // CLI scaffolding: generate new processor
-        if (args[0] === 'generate:processor') {
+        // CLI scaffolding: generate new processor via flag
+        if (args.includes('--generate:processor')) {
             const catIdx = args.indexOf('--category');
             const category = catIdx > -1 && args.length > catIdx + 1 ? args[catIdx + 1] : '';
             const nameIdx = args.indexOf('--name');
             const name = nameIdx > -1 && args.length > nameIdx + 1 ? args[nameIdx + 1] : '';
             if (!category || !name) {
-                console.error('Usage: rga generate:processor --category <category> --name <Name>');
+                console.error('Usage: rga --generate:processor --category <category> --name <Name>');
                 process.exit(1);
             }
             await scaffoldNewProcessor(category, name);
@@ -388,6 +388,20 @@ A comprehensive software project requiring PMBOK documentation.
                 console.log('📊 Performing document quality assessment...');
             const generator = new DocumentGenerator(context);
             const pmbokCompliance = await generator.validatePMBOKCompliance();
+            return;
+        }
+        // Handle single-document generation via --generate <key>
+        if (args.includes('--generate')) {
+            const idx = args.indexOf('--generate');
+            const docKey = args[idx + 1];
+            if (!docKey) {
+                console.error('❌ Missing document key for --generate');
+                return;
+            }
+            if (!options.quiet)
+                console.log(`🚀 Generating single document: ${docKey}...`);
+            const generator = new DocumentGenerator(context);
+            await generator.generateOne(docKey);
             return;
         }
         // Determine which documents to generate
@@ -1187,32 +1201,105 @@ export class ${name}Template {
       \`**Project:** \${this.context.projectName}\\n\\n\` +
       \`- Replace this with your checklist items or sections\`;
   }
-}`;
-    // Standard Processor stub
-    const processorContent = `import type { ProjectContext } from '../../ai/types';
-import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types';
-import { ${name}Template } from '../${category}/${name}Template';
+}`; // Standard Processor stub
+    const processorContent = `import { AIProcessor } from '../../ai/AIProcessor.js';
+import type { ProjectContext } from '../../ai/types.js';
+import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
+import { ${name}Template } from '../${category}/${name}Template.js';
 
+class ExpectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExpectedError';
+  }
+}
 
 /**
  * Processor for the ${name} document.
  */
 export class ${name}Processor implements DocumentProcessor {
+  private aiProcessor: AIProcessor;
+
+  constructor() {
+    this.aiProcessor = AIProcessor.getInstance();
+  }
+
   async process(context: ProjectContext): Promise<DocumentOutput> {
+    try {
+      const prompt = this.createPrompt(context);
+      const content = await this.aiProcessor.makeAICall([
+        { role: 'system', content: 'You are an expert consultant specializing in ${category.replace('-', ' ')} documentation. Generate comprehensive, professional content based on the project context.' },
+        { role: 'user', content: prompt }
+      ]).then(res => typeof res === 'string' ? res : res.content);
+
+      await this.validateOutput(content);
+      
+      return {
+        title: '${name}',
+        content
+      };
+    } catch (error) {
+      if (error instanceof ExpectedError) {
+        console.warn('Expected error in ${name} processing:', error.message);
+        throw new Error(\`Failed to generate ${name}: \${error.message}\`);
+      } else {
+        console.error('Unexpected error in ${name} processing:', error);
+        throw new Error('An unexpected error occurred while generating ${name}');
+      }
+    }
+  }
+
+  private createPrompt(context: ProjectContext): string {
+    // Get the template as an example structure
     const template = new ${name}Template(context);
-    const content = template.generateContent();
-    return {
-      title: '${name}',
-      content
-    };
+    const exampleStructure = template.generateContent();
+
+    return \`Based on the following project context, generate a comprehensive ${name} document.
+
+Project Context:
+- Name: \${context.projectName || 'Untitled Project'}
+- Type: \${context.projectType || 'Not specified'}
+- Description: \${context.description || 'No description provided'}
+
+Use this structure as a reference (but customize the content for the specific project):
+
+\${exampleStructure}
+
+Important Instructions:
+- Make the content specific to the project context provided
+- Ensure the language is professional and appropriate for the document type
+- Include practical guidance where applicable
+- Focus on what makes this project unique
+- Use markdown formatting for proper structure
+- Keep content concise but comprehensive\`;
+  }
+
+  private async validateOutput(content: string): Promise<void> {
+    if (!content || content.trim().length === 0) {
+      throw new ExpectedError('Generated content is empty');
+    }
+
+    // Basic validation - ensure content has some structure
+    if (!content.includes('#')) {
+      throw new ExpectedError('Generated content lacks proper markdown structure');
+    }
   }
 }`;
     await writeFile(templateFile, templateContent + '\n');
     await writeFile(processorFile, processorContent + '\n');
     const configPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'processor-config.json');
     const configJson = JSON.parse(await readFile(configPath, 'utf-8'));
-    configJson[key] = `../documentTemplates/${category}/${name}Processor.ts#${name}Processor`;
+    // Add processor entry with module path, empty dependencies, and default priority
+    configJson[key] = {
+        module: `../documentTemplates/${category}/${name}Processor.ts#${name}Processor`,
+        dependencies: [],
+        priority: 999
+    };
     await writeFile(configPath, JSON.stringify(configJson, null, 2) + '\n');
+    // Backup ProcessorFactory.ts before updating
+    // const backupPath = join(rootDir, 'src', 'modules', 'documentGenerator', `ProcessorFactory.${Date.now()}.bak.ts`);
+    // await copyFile(factoryPath, backupPath);
+    // console.log(`✅ Archived ProcessorFactory.ts to ${backupPath}`);
     // Update generationTasks.ts to include the new document task
     const tasksPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'generationTasks.ts');
     let tasksContent = await readFile(tasksPath, 'utf-8');
@@ -1230,7 +1317,27 @@ export class ${name}Processor implements DocumentProcessor {
     const docConfigEntry = `    '${key}': { filename: '${category}/${key}.md', title: '${name}' },\n`;
     tasksContent = tasksContent.replace(/export const DOCUMENT_CONFIG:[^\n]+{/, match => `${match}\n${docConfigEntry}`);
     await writeFile(tasksPath, tasksContent);
-    console.log(`✅ Added generation task for: ${key}`);
+    // Update fileManager.ts to register this document for version control
+    const fmPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
+    let fmContent = await readFile(fmPath, 'utf-8');
+    const newFmEntry = `    '${key}': { title: '${name}', filename: '${category}/${key}.md', category: DOCUMENT_CATEGORIES.${category.replace(/-/g, '_').toUpperCase()}, description: '', generatedAt: '' },\n`;
+    // Insert after DOCUMENT_CONFIG opening brace
+    fmContent = fmContent.replace(/(export const DOCUMENT_CONFIG:[^=]+=\s*{\s*\n)/, `$1${newFmEntry}`);
+    await writeFile(fmPath, fmContent);
+    console.log(`✅ Registered new document in fileManager.ts: ${key}`); // Add new category to DOCUMENT_CATEGORIES if it doesn't exist
+    const fmCatPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
+    let fmCatContent = await readFile(fmCatPath, 'utf-8');
+    const categoryConst = category.replace(/-/g, '_').toUpperCase();
+    // More precise regex to check for existing category constant
+    const categoryRegex = new RegExp(`^\\s*${categoryConst}:\\s*'[^']*',?\\s*$`, 'm');
+    if (!categoryRegex.test(fmCatContent)) {
+        fmCatContent = fmCatContent.replace(/(export const DOCUMENT_CATEGORIES = {)/, `$1\n    ${categoryConst}: '${category}',`);
+        await writeFile(fmCatPath, fmCatContent);
+        console.log(`✅ Added new category to DOCUMENT_CATEGORIES: ${category}`);
+    }
+    else {
+        console.log(`ℹ️  Category ${categoryConst} already exists in DOCUMENT_CATEGORIES`);
+    }
     console.log(`✅ Scaffolded new processor: ${name} under category ${category}`);
 }
 main().catch(error => {

@@ -4,8 +4,14 @@
   "type": "object",
   "patternProperties": {
     "^.+$": {
-      "type": "string",
-      "pattern": "^\\\\.\\\\.\\\\/documentTemplates/.+\\\\.(ts|js)#\\\\w+$"
+      "type": "object",
+      "properties": {
+        "module": { "type": "string", "pattern": "^\\.\\.\\/documentTemplates/.+\\.(ts|js)#\\w+$" },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "priority": { "type": "number" }
+      },
+      "required": ["module", "priority"],
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

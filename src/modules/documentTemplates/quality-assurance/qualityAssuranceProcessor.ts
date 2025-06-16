@@ -1,6 +1,6 @@
-import { AIProcessor } from '../../ai/AIProcessor';
-import type { ProjectContext } from '../../ai/types';
-import type { DocumentOutput, DocumentProcessor } from '../../documentGenerator/types';
+import { AIProcessor } from '../../ai/AIProcessor.js';
+import type { ProjectContext } from '../../ai/types.js';
+import type { DocumentOutput, DocumentProcessor } from '../../documentGenerator/types.js';
 
 export class TestStrategyProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
@@ -262,7 +262,7 @@ Requirements:
   }
 }
 
-export class AcceptanceCriteriaProcessor implements DocumentProcessor {
+export class TechAcceptanceCriteriaProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
 
   constructor() {
@@ -280,18 +280,18 @@ export class AcceptanceCriteriaProcessor implements DocumentProcessor {
       await this.validateOutput(content);
       
       return {
-        title: 'Acceptance Criteria Template',
+        title: 'Tech Acceptance Criteria Template',
         content
       };
     } catch (error) {
-      console.error('Error processing Acceptance Criteria Template:', error);
-      throw new Error(`Failed to generate Acceptance Criteria Template: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error processing Tech Acceptance Criteria Template:', error);
+      throw new Error(`Failed to generate Tech Acceptance Criteria Template: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   private createPrompt(context: ProjectContext): string {
-    return `Based on the following project context, generate a comprehensive Acceptance Criteria Template.
-    
+    return `Based on the following project context, generate a comprehensive Tech Acceptance Criteria Template.
+
 Project Context:
 - Name: ${context.projectName}
 - Type: ${context.projectType}

@@ -42,25 +42,34 @@ Goal: Make adding new document types frictionless.
 ## Phase 3 – Context Relationship Management
 Goal: Explicitly track document dependencies and enforce build order.
 
-1. Extend config entries with a `provides` array and numeric `priority`
+1. Extend config entries with a `dependencies` array (`string[]`) and a numeric `priority`
 2. Build a simple DAG resolver that:
    - Sorts processors topologically by dependencies
    - Detects and rejects cycles at startup
-3. Surface an error if unsupported dependencies or cycles detected
+3. Reject startup with clear error messages when unknown dependencies or cycles are detected
 
 **Deliverables:**
 - Enhanced `processor-config.json` fields
 - `DocumentOrchestrator` updated to use DAG order
+- `DocumentGenerator.filterTasks()` updated to use DAG order
 
 ---
 
 ## Phase 4 – Error Handling & Monitoring
 Goal: Catch and log failures; surface slow processors.
 
-1. Wrap each `processor.process()` call in `try/catch`:
-   - On error: log processor name, config, and stack trace
-2. Measure execution time with `console.time()`/`console.timeEnd()` or a metrics library
-3. Emit warnings if a processor exceeds a configurable threshold
+1. Introduce a centralized logger (e.g., Winston) and replace existing `console.*` calls in `ProcessorFactory` and `DocumentGenerator` with `logger.error/info/warn/debug`.
+2. Wrap each processor invocation in try/catch within `DocumentGenerator.generateSingleDocument`:
+   - On error: use `logger.error` with task key, module path, and full stack trace.
+3. Measure execution time per task:
+   - Record start/end timestamps and log duration at debug level (`logger.debug`).
+4. Emit warnings when a task’s duration exceeds a configurable threshold (exposed via CLI flag or environment variable), using `logger.warn`.
+5. At the end of `generateAll()`, emit a summary metrics report:
+   - Total run time, slowest N tasks, counts of warnings/errors.
+6. Add unit and integration tests to verify error handling and timing behavior:
+   - Simulate processor failures and delays to assert logs and warnings are emitted as expected.
+7. Update documentation and CI configuration:
+   - Document new CLI flags (e.g., `--slow-threshold`) and include sample logs or artifacts in CI jobs.
 
 **Deliverables:**
 - Centralized error logger (e.g., Winston)

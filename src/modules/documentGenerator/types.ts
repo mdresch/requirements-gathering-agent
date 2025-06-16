@@ -20,6 +20,8 @@ export interface GenerationTask {
     category: string;
     /** Priority for document generation (lower = higher priority) */
     priority: number;
+    /** Task dependencies (keys that must run before this one) */
+    dependencies?: string[];
     /** PMBOK reference number or identifier */
     pmbokRef?: string;
 }

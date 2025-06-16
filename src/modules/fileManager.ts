@@ -35,6 +35,7 @@ export interface DocumentMetadata {
 
 // Define document categories for better organization
 export const DOCUMENT_CATEGORIES = {
+    STRATEGIC_STATEMENTS: 'strategic-statements',
     CORE: 'core-analysis',
     STRATEGIC: 'strategic-statements',
     CHARTER: 'project-charter',
@@ -42,11 +43,17 @@ export const DOCUMENT_CATEGORIES = {
     PLANNING_ARTIFACTS: 'planning-artifacts',
     STAKEHOLDER: 'stakeholder-management',
     TECHNICAL: 'technical-analysis',
+    QUALITY_ASSURANCE: 'quality-assurance',
+    IMPLEMENTATION_GUIDES: 'implementation-guides',
     UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'purpose-statement': { title: 'Purpose-Statement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
     'project-summary': {
         title: 'Project Summary and Goals',
         filename: 'project-summary.md',
@@ -374,13 +381,6 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Work Performance Information (Scope)',
         generatedAt: ''
-    },    // Strategic documents that might be missing
-    'mission-vision-core-values': {
-        title: 'Mission, Vision, and Core Values',
-        filename: 'mission-vision-core-values.md',
-        category: DOCUMENT_CATEGORIES.STRATEGIC,
-        description: 'Strategic mission, vision, and core values documentation',
-        generatedAt: ''
     },
     'project-purpose': {
         title: 'Project Purpose',
@@ -530,14 +530,13 @@ export function saveDocument(documentKey: string, content: string): void {
         return;
     }
 
-    // Continue with normal processing...
     const baseDir = 'generated-documents';
-    const categoryDir = path.join(baseDir, config.category);
-    const filePath = path.join(categoryDir, config.filename);
-
-    // Ensure directory exists
-    if (!fs.existsSync(categoryDir)) {
-        fs.mkdirSync(categoryDir, { recursive: true });
+    // Use filename (which may include category subfolder) directly under baseDir
+    const filePath = path.join(baseDir, config.filename);
+    // Ensure parent directory exists
+    const parentDir = path.dirname(filePath);
+    if (!fs.existsSync(parentDir)) {
+        fs.mkdirSync(parentDir, { recursive: true });
     }
 
     // Add document header with metadata

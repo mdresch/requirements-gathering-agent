@@ -1,7 +1,7 @@
 import { AIProcessor } from '../../ai/AIProcessor';
 import type { ProjectContext } from '../../ai/types';
 import type { DocumentOutput } from '../../documentGenerator/types';
-import type { DocumentProcessor } from '../../documentGenerator/ProcessorFactory';
+import type { DocumentProcessor } from '../../documentGenerator/types';
 
 class ExpectedError extends Error {
   constructor(message: string) {

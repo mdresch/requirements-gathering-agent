@@ -1,37 +1,191 @@
 {
-  "architecture-design": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ArchitectureDesignProcessor",
-  "system-design": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SystemDesignProcessor",
-  "database-schema": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DatabaseSchemaProcessor",
-  "api-documentation": "../documentTemplates/technical-design/technicalDesignProcessor.ts#APIDocumentationProcessor",
-  "security-design": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SecurityDesignProcessor",
-  "performance-requirements": "../documentTemplates/technical-design/technicalDesignProcessor.ts#PerformanceRequirementsProcessor",
-  "integration-design": "../documentTemplates/technical-design/technicalDesignProcessor.ts#IntegrationDesignProcessor",
-  "technical-stack": "../documentTemplates/technical-design/technicalDesignProcessor.ts#TechnicalStackProcessor",
-  "deployment-architecture": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DeploymentArchitectureProcessor",
-  "error-handling": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ErrorHandlingProcessor",
-  "test-strategy": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestStrategyProcessor",
-  "test-plan": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestPlanProcessor",
-  "test-cases": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestCaseProcessor",
-  "quality-metrics": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#QualityMetricsProcessor",
-  "acceptance-criteria": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#AcceptanceCriteriaProcessor",
-  "performance-test-plan": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#PerformanceTestProcessor",
-  "security-testing": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#SecurityTestingProcessor",
-  "code-review": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#CodeReviewProcessor",
-  "bug-report": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#BugReportProcessor",
-  "test-environment": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestEnvironmentProcessor",
-  "coding-standards": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CodingStandardsProcessor",
-  "development-setup": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DevelopmentSetupProcessor",
-  "version-control": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#VersionControlProcessor",
-  "ci-pipeline": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CIPipelineProcessor",
-  "release-process": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#ReleaseProcessProcessor",
-  "code-documentation": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CodeDocumentationProcessor",
-  "troubleshooting": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#TroubleshootingProcessor",
-  "development-workflow": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DevelopmentWorkflowProcessor",
-  "api-integration": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#APIIntegrationProcessor",
-  "deployment-guide": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DeploymentGuideProcessor",
-  "mission-vision-core-values": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#MissionVisionCoreValuesProcessor",
-  "project-purpose": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor",
-  "project-kickoff-preparations-checklist": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor",
-  "sample-checklist": "../documentTemplates/planningArtifacts/SampleChecklistProcessor.ts#SampleChecklistProcessor",
-  "babokintroduction": "../documentTemplates/BABOK/BABOKIntroductionProcessor.ts#BABOKIntroductionProcessor"
+  "architecture-design": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ArchitectureDesignProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "system-design": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SystemDesignProcessor",
+    "dependencies": [
+      "architecture-design"
+    ],
+    "priority": 2
+  },
+  "database-schema": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DatabaseSchemaProcessor",
+    "dependencies": [
+      "system-design"
+    ],
+    "priority": 3
+  },
+  "api-documentation": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#APIDocumentationProcessor",
+    "dependencies": [],
+    "priority": 4
+  },
+  "security-design": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SecurityDesignProcessor",
+    "dependencies": [],
+    "priority": 5
+  },
+  "performance-requirements": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#PerformanceRequirementsProcessor",
+    "dependencies": [],
+    "priority": 6
+  },
+  "integration-design": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#IntegrationDesignProcessor",
+    "dependencies": [],
+    "priority": 7
+  },
+  "technical-stack": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#TechnicalStackProcessor",
+    "dependencies": [],
+    "priority": 8
+  },
+  "deployment-architecture": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DeploymentArchitectureProcessor",
+    "dependencies": [],
+    "priority": 9
+  },
+  "error-handling": {
+    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ErrorHandlingProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
+  "test-strategy": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestStrategyProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "test-plan": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestPlanProcessor",
+    "dependencies": [],
+    "priority": 2
+  },
+  "test-cases": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestCaseProcessor",
+    "dependencies": [],
+    "priority": 3
+  },
+  "quality-metrics": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#QualityMetricsProcessor",
+    "dependencies": [],
+    "priority": 4
+  },
+  "tech-acceptance-criteria": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TechAcceptanceCriteriaProcessor",
+    "dependencies": [],
+    "priority": 5
+  },
+  "performance-test-plan": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#PerformanceTestProcessor",
+    "dependencies": [],
+    "priority": 6
+  },
+  "security-testing": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#SecurityTestingProcessor",
+    "dependencies": [],
+    "priority": 7
+  },
+  "code-review": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#CodeReviewProcessor",
+    "dependencies": [],
+    "priority": 8
+  },
+  "bug-report": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#BugReportProcessor",
+    "dependencies": [],
+    "priority": 9
+  },
+  "test-environment": {
+    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestEnvironmentProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
+  "coding-standards": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CodingStandardsProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "development-setup": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DevelopmentSetupProcessor",
+    "dependencies": [],
+    "priority": 2
+  },
+  "version-control": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#VersionControlProcessor",
+    "dependencies": [],
+    "priority": 3
+  },
+  "ci-pipeline": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CIPipelineProcessor",
+    "dependencies": [],
+    "priority": 4
+  },
+  "release-process": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#ReleaseProcessProcessor",
+    "dependencies": [],
+    "priority": 5
+  },
+  "code-documentation": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#CodeDocumentationProcessor",
+    "dependencies": [],
+    "priority": 6
+  },
+  "troubleshooting": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#TroubleshootingProcessor",
+    "dependencies": [],
+    "priority": 7
+  },
+  "development-workflow": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DevelopmentWorkflowProcessor",
+    "dependencies": [],
+    "priority": 8
+  },
+  "api-integration": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#APIIntegrationProcessor",
+    "dependencies": [],
+    "priority": 9
+  },
+  "deployment-guide": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DeploymentGuideProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
+  "mission-vision-core-values": {
+    "module": "../documentTemplates/strategic-statements/MissionVisionCoreValuesProcessor.ts#MissionVisionCoreValuesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "project-purpose": {
+    "module": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "project-kickoff-preparations-checklist": {
+    "module": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "sample-checklist": {
+    "module": "../documentTemplates/planningArtifacts/SampleChecklistProcessor.ts#SampleChecklistProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "babokintroduction": {
+    "module": "../documentTemplates/BABOK/BABOKIntroductionProcessor.ts#BABOKIntroductionProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "company-values": {
+    "module": "../documentTemplates/strategic-statements/CompanyValuesProcessor.ts#CompanyValuesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "purpose-statement": {
+    "module": "../documentTemplates/strategic-statements/Purpose-StatementProcessor.ts#Purpose-StatementProcessor",
+    "dependencies": [],
+    "priority": 999
+  }
 }

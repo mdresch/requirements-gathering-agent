@@ -137,10 +137,10 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: '',
   },
   {
-    key: 'acceptance-criteria',
+    key: 'tech-acceptance-criteria',
     name: 'Acceptance Criteria Template',
     category: 'quality-assurance',
-    func: 'acceptance-criteria-template.md',
+    func: 'tech-acceptance-criteria-template.md',
     priority: 5,
     emoji: '✔️',
     pmbokRef: '',
@@ -377,12 +377,81 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '📝',
     pmbokRef: ''
   },
+  {
+    key: 'mission-vision-core-values',
+    name: 'MissionVisionCoreValues',
+    category: 'strategic-statements',
+    func: 'mission-vision-core-values.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'company-values',
+    name: 'CompanyValues',
+    category: 'strategic-statements',
+    func: 'company-values.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'purpose-statement',
+    name: 'Purpose-Statement',
+    category: 'strategic-statements',
+    func: 'purpose-statement.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
 ];
 
 /**
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
+    'purpose-statement': { filename: 'strategic-statements/purpose-statement.md', title: 'Purpose-Statement' },
+
+    'company-values': { filename: 'strategic-statements/company-values.md', title: 'CompanyValues' },
+
+
+
+    // Technical Design Documents
+    'architecture-design': { filename: 'technical-design/architecture-design.md', title: 'Architecture Design Document' },
+    'system-design':       { filename: 'technical-design/system-design.md',       title: 'System Design Specification' },
+    'database-schema':     { filename: 'technical-design/database-schema.md',     title: 'Database Schema Design' },
+    'api-documentation':   { filename: 'technical-design/api-documentation.md',   title: 'API Documentation' },
+    'security-design':     { filename: 'technical-design/security-design.md',     title: 'Security Design Document' },
+    'performance-requirements': { filename: 'technical-design/performance-requirements.md', title: 'Performance Requirements' },
+    'integration-design':  { filename: 'technical-design/integration-design.md',  title: 'Integration Design' },
+    'technical-stack':     { filename: 'technical-design/technical-stack.md',     title: 'Technical Stack Overview' },
+    'deployment-architecture': { filename: 'technical-design/deployment-architecture.md', title: 'Deployment Architecture' },
+    'error-handling':      { filename: 'technical-design/error-handling.md',      title: 'Error Handling Guidelines' },
+
+    // Quality Assurance Documents
+    'test-strategy':           { filename: 'quality-assurance/test-strategy.md',           title: 'Test Strategy Document' },
+    'test-plan':               { filename: 'quality-assurance/test-plan.md',               title: 'Test Plan Template' },
+    'test-cases':              { filename: 'quality-assurance/test-cases.md',              title: 'Test Case Specifications' },
+    'quality-metrics':         { filename: 'quality-assurance/quality-metrics.md',         title: 'Quality Metrics Definition' },
+    'tech-acceptance-criteria':     { filename: 'quality-assurance/tech-acceptance-criteria.md',     title: 'Tech Acceptance Criteria Template' },
+    'performance-test-plan':   { filename: 'quality-assurance/performance-test-plan.md',   title: 'Performance Test Plan' },
+    'security-testing':        { filename: 'quality-assurance/security-testing.md',        title: 'Security Testing Guidelines' },
+    'code-review':             { filename: 'quality-assurance/code-review.md',             title: 'Code Review Checklist' },
+    'bug-report':              { filename: 'quality-assurance/bug-report.md',              title: 'Bug Report Template' },
+    'test-environment':        { filename: 'quality-assurance/test-environment.md',        title: 'Test Environment Setup Guide' },
+
+    // Implementation Guides Documents
+    'coding-standards':       { filename: 'implementation-guides/coding-standards.md',       title: 'Coding Standards Guide' },
+    'development-setup':       { filename: 'implementation-guides/development-setup.md',       title: 'Development Setup Guide' },
+    'version-control':         { filename: 'implementation-guides/version-control.md',         title: 'Version Control Guide' },
+    'ci-pipeline':            { filename: 'implementation-guides/ci-pipeline.md',            title: 'CI Pipeline Guide' },
+    'release-process':        { filename: 'implementation-guides/release-process.md',        title: 'Release Process Guide' },
+    'code-documentation':     { filename: 'implementation-guides/code-documentation.md',     title: 'Code Documentation Guide' },
+    'troubleshooting':        { filename: 'implementation-guides/troubleshooting.md',        title: 'Troubleshooting Guide' },
+    'development-workflow':   { filename: 'implementation-guides/development-workflow.md',   title: 'Development Workflow Guide' },
+    'api-integration':        { filename: 'implementation-guides/api-integration.md',        title: 'API Integration Guide' },
+    'deployment-guide':       { filename: 'implementation-guides/deployment-guide.md',       title: 'Deployment Guide' },
+
     'babokintroduction': { filename: 'BABOK/babokintroduction.md', title: 'BABOKIntroduction' },
 
     // Core Analysis Documents
