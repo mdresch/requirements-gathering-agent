@@ -35,6 +35,10 @@ export interface DocumentMetadata {
 
 // Define document categories for better organization
 export const DOCUMENT_CATEGORIES = {
+    PROJECT_CHARTER: 'project-charter',
+    RISK_MANAGEMENT: 'risk-management',
+    STAKEHOLDER_MANAGEMENT: 'stakeholder-management',
+    SCOPE_MANAGEMENT: 'scope-management',
     STRATEGIC_STATEMENTS: 'strategic-statements',
     CORE: 'core-analysis',
     STRATEGIC: 'strategic-statements',
@@ -50,6 +54,8 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'risk-register': { title: 'RiskRegister', filename: 'risk-management/risk-register.md', category: DOCUMENT_CATEGORIES.RISK_MANAGEMENT, description: '', generatedAt: '' },
+    'scope-statement': { title: 'ScopeStatement', filename: 'scope-management/scope-statement.md', category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT, description: '', generatedAt: '' },
     'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
@@ -107,11 +113,10 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.CHARTER,
         description: 'PMBOK Project Management Plan',
         generatedAt: ''
-    },
-    'scope-management-plan': {
+    },    'scope-management-plan': {
         title: 'Scope Management Plan',
-        filename: 'scope-management-plan.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/scope-management-plan.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Scope Management Plan',
         generatedAt: ''
     },
@@ -156,25 +161,24 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Procurement Management Plan',
         generatedAt: ''
-    },
-    // Stakeholder Management - Fix missing properties
+    },    // Stakeholder Management - Fix missing properties
     'stakeholder-engagement-plan': {
         title: 'Stakeholder Engagement Plan',
-        filename: 'stakeholder-engagement-plan.md',
+        filename: 'stakeholder-management/stakeholder-engagement-plan.md',
         category: DOCUMENT_CATEGORIES.STAKEHOLDER,
         description: 'PMBOK Stakeholder Engagement Plan',
         generatedAt: ''
     },
     'stakeholder-register': {
         title: 'Stakeholder Register',
-        filename: 'stakeholder-register.md',
+        filename: 'stakeholder-management/stakeholder-register.md',
         category: DOCUMENT_CATEGORIES.STAKEHOLDER,
         description: 'PMBOK Stakeholder Register',
         generatedAt: ''
     },
     'stakeholder-analysis': {
         title: 'Stakeholder Analysis',
-        filename: 'stakeholder-analysis.md',
+        filename: 'stakeholder-management/stakeholder-analysis.md',
         category: DOCUMENT_CATEGORIES.STAKEHOLDER,
         description: 'PMBOK Stakeholder Analysis',
         generatedAt: ''
@@ -271,7 +275,7 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         generatedAt: ''
     },    'ui-ux-considerations': {
         title: 'UI/UX Considerations',
-        filename: 'ui-ux-considerations.md',
+        filename: 'ui-ux-considerations.md',        
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'User experience and interface design recommendations',
         generatedAt: ''
@@ -279,8 +283,8 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     // Missing documents that were incorrectly categorized as "unknown"
     'control-scope': {
         title: 'Control Scope Process',
-        filename: 'control-scope.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/control-scope.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Control Scope Process',
         generatedAt: ''
     },
@@ -290,11 +294,10 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Direct and Manage Project Work Process',
         generatedAt: ''
-    },
-    'project-scope-statement': {
+    },    'project-scope-statement': {
         title: 'Project Scope Statement',
-        filename: 'project-scope-statement.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/project-scope-statement.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Project Scope Statement',
         generatedAt: ''
     },
@@ -311,17 +314,16 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Requirements Traceability Matrix',
         generatedAt: ''
-    },
-    'scope-baseline': {
+    },    'scope-baseline': {
         title: 'Scope Baseline',
-        filename: 'scope-baseline.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/scope-baseline.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Scope Baseline',
-        generatedAt: ''
-    },    'validate-scope': {
+        generatedAt: ''    },
+    'validate-scope': {
         title: 'Validate Scope Process',
-        filename: 'validate-scope.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/validate-scope.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Validate Scope Process',
         generatedAt: ''
     },
@@ -339,11 +341,10 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Close Project or Phase Process',
         generatedAt: ''
-    },
-    'plan-scope-management': {
+    },    'plan-scope-management': {
         title: 'Plan Scope Management',
-        filename: 'plan-scope-management.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/plan-scope-management.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Plan Scope Management',
         generatedAt: ''
     },
@@ -360,11 +361,10 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Collect Requirements Process',
         generatedAt: ''
-    },
-    'define-scope': {
+    },    'define-scope': {
         title: 'Define Scope Process',
-        filename: 'define-scope.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/define-scope.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Define Scope Process',
         generatedAt: ''
     },
@@ -374,11 +374,10 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Create WBS Process',
         generatedAt: ''
-    },
-    'work-performance-information-scope': {
+    },    'work-performance-information-scope': {
         title: 'Work Performance Information (Scope)',
-        filename: 'work-performance-information-scope.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
+        filename: 'scope-management/work-performance-information-scope.md',
+        category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
         description: 'PMBOK Work Performance Information (Scope)',
         generatedAt: ''
     },

@@ -315,17 +315,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'direct-and-manage-project-work', name: 'Direct and Manage Project Work Process', func: 'getAiDirectAndManageProjectWorkProcess', emoji: '🚦', category: 'management-plans', priority: 9.5, pmbokRef: '4.3' },
     { key: 'perform-integrated-change-control', name: 'Perform Integrated Change Control Process', func: 'getAiPerformIntegratedChangeControlProcess', emoji: '🔄', category: 'management-plans', priority: 9.6, pmbokRef: '4.6' },
     { key: 'close-project-or-phase', name: 'Close Project or Phase Process', func: 'getAiCloseProjectOrPhaseProcess', emoji: '🏁', category: 'management-plans', priority: 9.7, pmbokRef: '4.7' },
-    { key: 'plan-scope-management', name: 'Plan Scope Management', func: 'getAiPlanScopeManagement', emoji: '📝', category: 'management-plans', priority: 9.8, pmbokRef: '5.1' },
+    { key: 'plan-scope-management', name: 'Plan Scope Management', func: 'getAiPlanScopeManagement', emoji: '📝', category: 'scope-management', priority: 9.8, pmbokRef: '5.1' },
     { key: 'requirements-management-plan', name: 'Requirements Management Plan', func: 'getAiRequirementsManagementPlan', emoji: '📑', category: 'management-plans', priority: 9.85, pmbokRef: '5.1.3.1' },
     { key: 'collect-requirements', name: 'Collect Requirements Process', func: 'getAiCollectRequirementsProcess', emoji: '🗒️', category: 'management-plans', priority: 9.87, pmbokRef: '5.2' },
     { key: 'requirements-documentation', name: 'Requirements Documentation', func: 'getAiRequirementsDocumentation', emoji: '📃', category: 'management-plans', priority: 9.88, pmbokRef: '5.2.3.1' },
     { key: 'requirements-traceability-matrix', name: 'Requirements Traceability Matrix', func: 'getAiRequirementsTraceabilityMatrix', emoji: '🔗', category: 'management-plans', priority: 9.89, pmbokRef: '5.2.3.2' },
-    { key: 'define-scope', name: 'Define Scope Process', func: 'getAiDefineScopeProcess', emoji: '🛑', category: 'management-plans', priority: 9.9, pmbokRef: '5.3' },
-    { key: 'project-scope-statement', name: 'Project Scope Statement', func: 'getAiProjectScopeStatement', emoji: '📄', category: 'management-plans', priority: 9.91, pmbokRef: '5.3.3.1' },
-    { key: 'create-wbs', name: 'Create WBS Process', func: 'getAiCreateWbsProcess', emoji: '🧩', category: 'management-plans', priority: 9.92, pmbokRef: '5.4' },
-    { key: 'scope-baseline', name: 'Scope Baseline', func: 'getAiScopeBaseline', emoji: '📏', category: 'management-plans', priority: 9.93, pmbokRef: '5.4.3.1' },
-    { key: 'validate-scope', name: 'Validate Scope Process', func: 'getAiValidateScopeProcess', emoji: '✅', category: 'management-plans', priority: 9.94, pmbokRef: '5.5' },
-    { key: 'control-scope', name: 'Control Scope Process', func: 'getAiControlScopeProcess', emoji: '🛡️', category: 'management-plans', priority: 9.95, pmbokRef: '5.6' },
+    { key: 'define-scope', name: 'Define Scope Process', func: 'getAiDefineScopeProcess', emoji: '🛑', category: 'scope-management', priority: 9.9, pmbokRef: '5.3' },
+    { key: 'project-scope-statement', name: 'Project Scope Statement', func: 'getAiProjectScopeStatement', emoji: '📄', category: 'scope-management', priority: 9.91, pmbokRef: '5.3.3.1' },
+    { key: 'create-wbs', name: 'Create WBS Process', func: 'getAiCreateWbsProcess', emoji: '🧩', category: 'management-plans', priority: 9.92, pmbokRef: '5.4' },    { key: 'scope-baseline', name: 'Scope Baseline', func: 'getAiScopeBaseline', emoji: '📏', category: 'scope-management', priority: 9.93, pmbokRef: '5.4.3.1' },
+    { key: 'validate-scope', name: 'Validate Scope Process', func: 'getAiValidateScopeProcess', emoji: '✅', category: 'scope-management', priority: 9.94, pmbokRef: '5.5' },
+    { key: 'control-scope', name: 'Control Scope Process', func: 'getAiControlScopeProcess', emoji: '🛡️', category: 'scope-management', priority: 9.95, pmbokRef: '5.6' },
     { key: 'work-performance-information-scope', name: 'Work Performance Information (Scope)', func: 'getAiWorkPerformanceInformationScope', emoji: '📈', category: 'management-plans', priority: 9.96, pmbokRef: '5.6.3.2' },
     
     // Management Plans (High Priority)
@@ -411,12 +410,34 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '💼',
     pmbokRef: ''
   },
+  {
+    key: 'scope-statement',
+    name: 'ScopeStatement',
+    category: 'scope-management',
+    func: 'scope-statement.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'risk-register',
+    name: 'RiskRegister',
+    category: 'risk-management',
+    func: 'risk-register.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
 ];
 
 /**
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
+    'risk-register': { filename: 'risk-management/risk-register.md', title: 'RiskRegister' },
+
+    'scope-statement': { filename: 'scope-management/scope-statement.md', title: 'ScopeStatement' },
+
     'purpose-statement': { filename: 'strategic-statements/purpose-statement.md', title: 'PurposeStatement' },
 
     'company-values': { filename: 'strategic-statements/company-values.md', title: 'CompanyValues' },

@@ -192,5 +192,34 @@
     "module": "../documentTemplates/strategic-statements/BusinesscaseProcessor.ts#BusinesscaseProcessor",
     "dependencies": [],
     "priority": 999
+  },
+  "stakeholder-register": {
+    "module": "../documentTemplates/stakeholder-management/StakeholderregisterProcessor.ts#StakeholderregisterProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
+  "project-scope-statement": {
+    "module": "../documentTemplates/scope-management/ProjectscopestatementProcessor.ts#ProjectscopestatementProcessor",
+    "dependencies": [],
+    "priority": 11
+  },
+  "scope-statement": {
+    "module": "../documentTemplates/scope-management/ScopestatementProcessor.ts#ScopestatementProcessor",
+    "dependencies": [],
+    "priority": 12
+  },
+  "risk-register": {
+    "module": "../documentTemplates/risk-management/RiskregisterProcessor.ts#RiskregisterProcessor",
+    "dependencies": [],
+    "priority": 13
+  },
+  "project-charter": {
+    "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
+    "dependencies": [
+      "stakeholder-register",
+      "project-scope-statement", 
+      "risk-register"
+    ],
+    "priority": 100
   }
 }
