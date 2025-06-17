@@ -37,15 +37,6 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: '',
   },
   {
-    key: 'api-documentation',
-    name: 'API Documentation',
-    category: 'technical-design',
-    func: 'api-documentation.md',
-    priority: 4,
-    emoji: '📡',
-    pmbokRef: '',
-  },
-  {
     key: 'security-design',
     name: 'Security Design Document',
     category: 'technical-design',
@@ -428,12 +419,166 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '📝',
     pmbokRef: ''
   },
+  {
+    key: 'apidocumentation',
+    name: 'APIDocumentation',
+    category: 'technical-design',
+    func: 'apidocumentation.md',
+    priority: 4,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'schedule-management-plan',
+    name: 'ScheduleManagementPlan',
+    category: 'planning',
+    func: 'schedule-management-plan.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'quality-management-plsn',
+    name: 'QualityManagementPlsn',
+    category: 'planning',
+    func: 'quality-management-plsn.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'monitor-and-control-project-work',
+    name: 'MonitorAndControlProjectWork',
+    category: 'pmbok',
+    func: 'monitor-and-control-project-work.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'develop-project-charter',
+    name: 'DevelopProjectCharter',
+    category: 'pmbok',
+    func: 'develop-project-charter.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'validate-scope-process',
+    name: 'ValidateScopeProcess',
+    category: 'pmbok',
+    func: 'validate-scope-process.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'control-scope-process',
+    name: 'ControlScopeProcess',
+    category: 'pmbok',
+    func: 'control-scope-process.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'perform-integration-change-control-process',
+    name: 'PerformIntegrationChangeControlProcess',
+    category: 'pmbok',
+    func: 'perform-integration-change-control-process.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'close-project-phase-process',
+    name: 'CloseProjectPhaseProcess',
+    category: 'pmbok',
+    func: 'close-project-phase-process.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'summary-and-goals',
+    name: 'SummaryAndGoals',
+    category: 'basic-docs',
+    func: 'summary-and-goals.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'core-values',
+    name: 'CoreValues',
+    category: 'basic-docs',
+    func: 'core-values.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'develop-schedule-input',
+    name: 'DevelopScheduleInput',
+    category: 'basic-docs',
+    func: 'develop-schedule-input.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'key-rbacroles',
+    name: 'KeyRBACroles',
+    category: 'requirements',
+    func: 'key-rbacroles.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'collect-requirements-process',
+    name: 'CollectRequirementsProcess',
+    category: 'requirements',
+    func: 'collect-requirements-process.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
 ];
 
 /**
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
+    'collect-requirements-process': { filename: 'requirements/collect-requirements-process.md', title: 'CollectRequirementsProcess' },
+
+    'key-rbacroles': { filename: 'requirements/key-rbacroles.md', title: 'KeyRBACroles' },
+
+    'develop-schedule-input': { filename: 'basic-docs/develop-schedule-input.md', title: 'DevelopScheduleInput' },
+
+    'core-values': { filename: 'basic-docs/core-values.md', title: 'CoreValues' },
+
+    'summary-and-goals': { filename: 'basic-docs/summary-and-goals.md', title: 'SummaryAndGoals' },
+
+    'close-project-phase-process': { filename: 'pmbok/close-project-phase-process.md', title: 'CloseProjectPhaseProcess' },
+
+    'perform-integration-change-control-process': { filename: 'pmbok/perform-integration-change-control-process.md', title: 'PerformIntegrationChangeControlProcess' },
+
+    'control-scope-process': { filename: 'pmbok/control-scope-process.md', title: 'ControlScopeProcess' },
+
+    'validate-scope-process': { filename: 'pmbok/validate-scope-process.md', title: 'ValidateScopeProcess' },
+
+    'develop-project-charter': { filename: 'pmbok/develop-project-charter.md', title: 'DevelopProjectCharter' },
+
+    'monitor-and-control-project-work': { filename: 'pmbok/monitor-and-control-project-work.md', title: 'MonitorAndControlProjectWork' },
+
+    'quality-management-plsn': { filename: 'planning/quality-management-plsn.md', title: 'QualityManagementPlsn' },
+
+    'schedule-management-plan': { filename: 'planning/schedule-management-plan.md', title: 'ScheduleManagementPlan' },
+
+    
+
     'risk-register': { filename: 'risk-management/risk-register.md', title: 'RiskRegister' },
 
     'scope-statement': { filename: 'scope-management/scope-statement.md', title: 'ScopeStatement' },
@@ -450,7 +595,7 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'architecture-design': { filename: 'technical-design/architecture-design.md', title: 'Architecture Design Document' },
     'system-design':       { filename: 'technical-design/system-design.md',       title: 'System Design Specification' },
     'database-schema':     { filename: 'technical-design/database-schema.md',     title: 'Database Schema Design' },
-    'api-documentation':   { filename: 'technical-design/api-documentation.md',   title: 'API Documentation' },
+    'apidocumentation':    { filename: 'technical-design/apidocumentation.md',   title: 'APIDocumentation' },
     'security-design':     { filename: 'technical-design/security-design.md',     title: 'Security Design Document' },
     'performance-requirements': { filename: 'technical-design/performance-requirements.md', title: 'Performance Requirements' },
     'integration-design':  { filename: 'technical-design/integration-design.md',  title: 'Integration Design' },

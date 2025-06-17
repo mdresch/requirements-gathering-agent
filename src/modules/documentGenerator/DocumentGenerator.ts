@@ -20,6 +20,10 @@
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { join } from 'path';
+import process from 'process';
+import { writeFile } from 'fs/promises';
+import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
 import { 
     createDirectoryStructure, 
     saveDocument, 
@@ -647,16 +651,14 @@ ${content}`;
             delayBetweenCalls: 600
         });
         return await generator.generateAll();
-    }
-
-    /**
-     * Generate technical analysis only
+    }    /**
+     * Generate technical analysis including technical design documents
      * @param context Project context
      * @returns Generation result
      */
     public static async generateTechnicalAnalysis(context: string): Promise<GenerationResult> {
         const generator = new DocumentGenerator(context, {
-            includeCategories: ['technical-analysis'],
+            includeCategories: ['technical-analysis', 'technical-design'],
             delayBetweenCalls: 500
         });
         return await generator.generateAll();
@@ -674,45 +676,87 @@ ${content}`;
             maxConcurrent: 1
         });
         return await generator.generateAll();
-    }
-
-    /**
-     * Validate PMBOK compliance across documents
-     * @returns Compliance validation result
+    }    /**
+     * Validate PMBOK compliance across documents using the real PMBOKValidator
+     * @returns Comprehensive compliance validation result
      */
-    public async validatePMBOKCompliance(): Promise<{ compliance: boolean; consistencyScore: number }> {
-        // Validate PMBOK compliance across documents
-        const terminology = await this.validatePMBOKTerminology();
-        const structure = await this.validateDocumentStructure();
-        const elements = await this.validateRequiredElements();
+    public async validatePMBOKCompliance(): Promise<{ 
+        compliance: boolean; 
+        consistencyScore: number; 
+        documentQuality: Record<string, any>;
+        validationResult?: any;
+    }> {
+        console.log('🔍 Running comprehensive PMBOK validation...');
         
-        // Calculate weighted consistency score (0-100)
-        const consistencyScore = Math.round(
-            (terminology.score * 0.4) + 
-            (structure.score * 0.3) + 
-            (elements.score * 0.3)
-        );
-
-        return {
-            compliance: consistencyScore >= 80,
-            consistencyScore
-        };
+        try {
+            // Initialize the real PMBOKValidator
+            const validator = new PMBOKValidator(this.options.outputDir);
+            
+            // Get all available document types from the configuration
+            const documentTypes = Object.keys(processors);
+            
+            // Perform comprehensive validation
+            const validationResult = await validator.performComprehensiveValidation(documentTypes);
+              // Extract key metrics for compatibility with existing interfaces
+            const consistencyScore = validationResult.pmbokCompliance.consistencyScore || 0;
+            const documentQuality = validationResult.pmbokCompliance.documentQuality || {};
+            
+            // Determine overall compliance based on our enhanced criteria
+            const compliance = this.determineOverallCompliance(validationResult);
+            
+            console.log(`✅ PMBOK validation complete. Consistency Score: ${consistencyScore}/100`);
+            
+            return {
+                compliance,
+                consistencyScore,
+                documentQuality,
+                validationResult // Include full validation result for detailed reporting
+            };
+            
+        } catch (error) {
+            console.error('❌ Error during PMBOK validation:', error);
+            
+            // Fallback to ensure the system continues to work
+            return {
+                compliance: false,
+                consistencyScore: 0,
+                documentQuality: {},
+                validationResult: { error: error instanceof Error ? error.message : 'Unknown validation error' }
+            };
+        }
     }
-
-    private async validatePMBOKTerminology(): Promise<{ score: number }> {
-        // Placeholder: Implement terminology validation
-        return { score: 90 };
-    }
-
-    private async validateDocumentStructure(): Promise<{ score: number }> {
-        // Placeholder: Implement structure validation
-        return { score: 85 };
-    }
-
-    private async validateRequiredElements(): Promise<{ score: number }> {
-        // Placeholder: Implement required elements validation
-        return { score: 95 };
-    }
+      /**
+     * Determine overall compliance based on comprehensive validation results
+     * @param validationResult Full validation result from PMBOKValidator
+     * @returns Whether the documents meet compliance standards
+     */
+    private determineOverallCompliance(validationResult: any): boolean {
+        // More sophisticated compliance determination
+        const consistencyScore = validationResult.pmbokCompliance?.consistencyScore || 0;
+        const documentQuality = validationResult.pmbokCompliance?.documentQuality || {};
+        
+        // Check if consistency score meets threshold
+        if (consistencyScore < 70) {
+            return false;
+        }
+        
+        // Check if any critical documents have very low scores
+        const criticalDocuments = ['project-charter', 'stakeholder-register', 'scope-management-plan'];
+        for (const docType of criticalDocuments) {
+            const quality = documentQuality[docType];
+            if (quality && quality.score < 60) {
+                return false;
+            }
+        }
+        
+        // Check for critical missing documents
+        const generationSuccess = validationResult.validation?.isComplete;
+        if (generationSuccess === false) {
+            return false;
+        }
+        
+        return true;
+    }    // Placeholder methods removed - now using real PMBOKValidator
 
     /**
      * Generate all documents and validate PMBOK compliance
@@ -721,28 +765,209 @@ ${content}`;
      */
     public static async generateAllWithPMBOKValidation(context: string): Promise<{ 
         result: GenerationResult;
-        compliance: { score: number; details: string[] };
+        compliance: { 
+            score: number; 
+            details: string[];
+            isCompliant: boolean;
+            qualityReport: any;
+            actionableInsights: string[];
+            improvementRecommendations: string[];
+        };
     }> {
+        console.log('🚀 Starting Generate-and-Validate Cycle...');
+        console.log('📊 This is the ADPA Quality Assurance Engine in action');
+        
         const generator = new DocumentGenerator(context);
+        
+        // Phase 1: Generation
+        console.log('\n🔄 Phase 1: Document Generation');
         const result = await generator.generateAll();
         
-        // Validate PMBOK compliance
+        if (!result.success) {
+            return {
+                result: result,
+                compliance: {
+                    score: 0,
+                    details: ['Generation failed - cannot validate'],
+                    isCompliant: false,
+                    qualityReport: null,
+                    actionableInsights: ['Fix generation errors before validation'],
+                    improvementRecommendations: ['Check configuration and context quality']
+                }
+            };
+        }
+        
+        console.log(`✅ Generated ${result.successCount} documents successfully`);
+        
+        // Phase 2: Comprehensive PMBOK Validation
+        console.log('\n🔍 Phase 2: PMBOK 7.0 Validation & Quality Assessment');
         const pmbokValidation = await generator.validatePMBOKCompliance();
+        
+        // Phase 3: Generate Quality Report with Actionable Insights
+        console.log('\n📋 Phase 3: Quality Analysis & Improvement Recommendations');
+        
+        const actionableInsights: string[] = [];
+        const improvementRecommendations: string[] = [];
+        
+        // Analyze document quality scores and provide specific guidance
+        if (pmbokValidation.documentQuality) {
+            for (const [docKey, quality] of Object.entries(pmbokValidation.documentQuality)) {
+                const docQuality = quality as any;
+                if (docQuality.score < 70) {
+                    actionableInsights.push(`🚨 ${docKey}: Score ${docQuality.score}/100 - Needs immediate attention`);
+                    
+                    // Specific recommendations based on missing elements
+                    if (docQuality.missingElements?.length > 0) {
+                        improvementRecommendations.push(
+                            `${docKey}: Add missing PMBOK elements: ${docQuality.missingElements.slice(0, 3).join(', ')}${docQuality.missingElements.length > 3 ? '...' : ''}`
+                        );
+                    }
+                    
+                    if (docQuality.structureScore < 60) {
+                        improvementRecommendations.push(`${docKey}: Improve document structure and section organization`);
+                    }
+                    
+                    if (docQuality.terminologyScore < 60) {
+                        improvementRecommendations.push(`${docKey}: Enhance PMBOK terminology usage in prompts`);
+                    }
+                }
+            }
+        }
+        
+        // Cross-document consistency insights
+        if (pmbokValidation.consistencyScore < 80) {
+            actionableInsights.push(`🔗 Cross-document consistency needs improvement: ${pmbokValidation.consistencyScore}/100`);
+            improvementRecommendations.push('Review project charter alignment across all documents');
+            improvementRecommendations.push('Ensure stakeholder information is consistent between documents');
+        }
+        
+        // Generate overall quality insights
+        const overallScore = pmbokValidation.consistencyScore;
+        const isCompliant = pmbokValidation.compliance && overallScore >= 75;
+        
+        if (!isCompliant) {
+            actionableInsights.push('🎯 Overall PMBOK compliance below acceptable threshold');
+            improvementRecommendations.push('Focus on top 3 lowest-scoring documents for prompt engineering');
+            improvementRecommendations.push('Review PMBOK 7.0 performance domains integration');
+        }
+        
+        // Success insights
+        if (isCompliant) {
+            actionableInsights.push('✅ PMBOK compliance achieved - documents meet professional standards');
+        }
+        
+        console.log('\n📊 Quality Assessment Complete');
+        console.log(`🎯 Overall Compliance Score: ${overallScore}/100`);
+        console.log(`📋 Status: ${isCompliant ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}`);
+        
+        if (actionableInsights.length > 0) {
+            console.log('\n💡 Key Insights:');
+            actionableInsights.forEach((insight, i) => console.log(`   ${i + 1}. ${insight}`));
+        }
+        
+        if (improvementRecommendations.length > 0) {
+            console.log('\n🔧 Improvement Recommendations:');
+            improvementRecommendations.slice(0, 5).forEach((rec, i) => console.log(`   ${i + 1}. ${rec}`));
+        }
+        
+        // Save comprehensive quality report
+        const qualityReportPath = join(process.cwd(), 'generated-documents', 'quality-assessment-report.md');
+        const qualityReportContent = this.generateQualityReport(pmbokValidation, actionableInsights, improvementRecommendations);
+        
+        try {
+            await writeFile(qualityReportPath, qualityReportContent);
+            console.log(`\n📄 Comprehensive quality report saved: ${qualityReportPath}`);
+        } catch (error) {
+            console.warn('Could not save quality report:', error);
+        }
         
         return {
             result: result,
             compliance: {
-                score: pmbokValidation.consistencyScore,
+                score: overallScore,
                 details: [
                     `PMBOK Compliance: ${pmbokValidation.compliance ? 'Compliant' : 'Non-compliant'}`,
-                    `Consistency Score: ${pmbokValidation.consistencyScore}/100`
-                ]
+                    `Consistency Score: ${pmbokValidation.consistencyScore}/100`,
+                    `Documents Assessed: ${Object.keys(pmbokValidation.documentQuality || {}).length}`,
+                    `Critical Issues: ${actionableInsights.filter(i => i.includes('🚨')).length}`,
+                    `Improvement Areas: ${improvementRecommendations.length}`
+                ],
+                isCompliant,
+                qualityReport: pmbokValidation,
+                actionableInsights,
+                improvementRecommendations
             }
         };
     }
+
+    /**
+     * Generate a comprehensive quality assessment report in markdown format
+     */
+    private static generateQualityReport(
+        validation: any, 
+        insights: string[], 
+        recommendations: string[]
+    ): string {
+        const timestamp = new Date().toISOString();
+        
+        return `# ADPA Quality Assurance Report
+
+**Generated:** ${timestamp}  
+**System:** ADPA Quality Assurance Engine v2.0  
+**Standard:** PMBOK 7.0 Performance Domains  
+
+## Executive Summary
+
+**Overall Compliance Score:** ${validation.consistencyScore}/100  
+**Status:** ${validation.compliance ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}  
+**Documents Assessed:** ${Object.keys(validation.documentQuality || {}).length}  
+
+## Key Quality Insights
+
+${insights.map((insight, i) => `${i + 1}. ${insight.replace(/🚨|🔗|🎯|✅/g, '')}`).join('\n')}
+
+## Document Quality Breakdown
+
+${Object.entries(validation.documentQuality || {}).map(([key, quality]: [string, any]) => {
+    return `### ${key}
+- **Score:** ${quality.score}/100
+- **Issues Found:** ${quality.issues?.length || 0}
+- **Strengths:** ${quality.strengths?.length || 0}
+- **Status:** ${quality.score >= 70 ? '✅ Acceptable' : '❌ Needs Improvement'}
+
+${quality.issues?.length > 0 ? `**Issues:** ${quality.issues.slice(0, 5).join(', ')}${quality.issues.length > 5 ? '...' : ''}` : ''}
+${quality.strengths?.length > 0 ? `**Strengths:** ${quality.strengths.join(', ')}` : ''}
+`;
+}).join('\n')}
+
+## Improvement Recommendations
+
+${recommendations.map((rec, i) => `${i + 1}. ${rec}`).join('\n')}
+
+## Cross-Document Consistency
+
+**Consistency Score:** ${validation.consistencyScore}/100
+
+${validation.consistencyIssues ? 
+`**Issues Found:**
+${validation.consistencyIssues.map((issue: string) => `- ${issue}`).join('\n')}` : 
+'No significant consistency issues detected.'}
+
+## Next Steps for Quality Improvement
+
+1. **Priority Focus:** Address documents scoring below 70/100
+2. **Prompt Engineering:** Enhance prompts for low-scoring documents
+3. **PMBOK Integration:** Strengthen performance domain coverage
+4. **Consistency Review:** Align cross-document references and terminology
+5. **Iterative Improvement:** Re-run validation after improvements
+
+---
+
+*This report was generated by the ADPA Quality Assurance Engine - your intelligent document compliance partner.*
+`;    }
 }
 
 /**
  * Version information
  */
-export const documentGeneratorVersion = '2.2.0';
+export const documentGeneratorVersion = '2.1.3';

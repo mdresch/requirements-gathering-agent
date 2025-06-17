@@ -380,18 +380,44 @@ A comprehensive software project requiring PMBOK documentation.
       await writeFile(promptReportPath, promptReport);
       console.log('Prompt adjustment report written to:', promptReportPath);
       return;
-    }
-
-    // Check for comprehensive validation mode
+    }    // Check for comprehensive validation mode - The ADPA Quality Assurance Engine
     if (args.includes('--generate-with-validation') || args.includes('--validate-pmbok')) {
-      if (!options.quiet) console.log('🎯 Generating all documents with PMBOK 7.0 validation...');
+      if (!options.quiet) {
+        console.log('🚀 ADPA Quality Assurance Engine Activated');
+        console.log('🎯 Generating all documents with comprehensive PMBOK 7.0 validation...');
+        console.log('📊 This creates an intelligent feedback loop for continuous improvement');
+      }
+      
       const result = await DocumentGenerator.generateAllWithPMBOKValidation(context);
       
       if (result.result.success) {
-        console.log(`✅ Successfully generated ${result.result.successCount} documents with validation`);
-        console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
+        console.log(`\n✅ Generation Complete: ${result.result.successCount} documents created`);
+        console.log(`📁 Documents saved to: ${options.outputDir}/`);
+        
+        // Display compliance summary
+        console.log('\n📊 QUALITY ASSURANCE SUMMARY:');
+        console.log(`   🎯 Compliance Score: ${result.compliance.score}/100`);
+        console.log(`   📋 Status: ${result.compliance.isCompliant ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}`);
+        
+        if (result.compliance.actionableInsights.length > 0) {
+          console.log(`   � Key Insights: ${result.compliance.actionableInsights.length} identified`);
+        }
+        
+        if (result.compliance.improvementRecommendations.length > 0) {
+          console.log(`   🔧 Recommendations: ${result.compliance.improvementRecommendations.length} available`);
+        }
+        
+        console.log('\n📄 Check quality-assessment-report.md for detailed analysis and improvement guidance');
+        
+        if (!result.compliance.isCompliant) {
+          console.log('\n⚠️  Some documents need improvement. Use the quality report to guide prompt engineering.');
+        } else {
+          console.log('\n🎉 Congratulations! Your documents meet PMBOK professional standards.');
+        }
+        
       } else {
         console.error('❌ Document generation failed');
+        console.error('🔍 Check configuration and project context for issues');
         process.exit(1);
       }
       return;
@@ -1097,7 +1123,11 @@ DOCUMENT TYPES:
 
 VALIDATION OPTIONS:
   --validate-pmbok        Generate all documents with PMBOK 7.0 validation
-  --generate-with-validation  Generate with comprehensive quality assessment
+  --generate-with-validation  🚀 ACTIVATE QUALITY ASSURANCE ENGINE
+                               Generate with comprehensive PMBOK validation,
+                               intelligent quality assessment, and actionable
+                               improvement recommendations. Creates detailed
+                               quality reports for continuous improvement.
   --validate-only         Validate existing documents without regenerating
   --validate-consistency  Check cross-document consistency only
   --quality-assessment    Provide detailed quality scores for documents

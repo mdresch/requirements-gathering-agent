@@ -1,55 +1,55 @@
 {
   "architecture-design": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ArchitectureDesignProcessor",
+    "module": "../documentTemplates/technical-design/ArchitecturedesignProcessor.ts#ArchitecturedesignProcessor",
     "dependencies": [],
     "priority": 1
   },
   "system-design": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SystemDesignProcessor",
+    "module": "../documentTemplates/technical-design/SystemdesignProcessor.ts#SystemDesignProcessor",
     "dependencies": [
       "architecture-design"
     ],
     "priority": 2
   },
   "database-schema": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DatabaseSchemaProcessor",
+    "module": "../documentTemplates/technical-design/DatabaseschemaProcessor.ts#DatabaseSchemaProcessor",
     "dependencies": [
       "system-design"
     ],
     "priority": 3
   },
-  "api-documentation": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#APIDocumentationProcessor",
+  "apidocumentation": {
+    "module": "../documentTemplates/technical-design/ApidocumentationProcessor.ts#APIDocumentationProcessor",
     "dependencies": [],
     "priority": 4
   },
   "security-design": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#SecurityDesignProcessor",
+    "module": "../documentTemplates/technical-design/SecuritydesignProcessor.ts#SecurityDesignProcessor",
     "dependencies": [],
     "priority": 5
   },
   "performance-requirements": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#PerformanceRequirementsProcessor",
+    "module": "../documentTemplates/technical-design/PerformancerequirementsProcessor.ts#PerformanceRequirementsProcessor",
     "dependencies": [],
     "priority": 6
   },
   "integration-design": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#IntegrationDesignProcessor",
+    "module": "../documentTemplates/technical-design/IntegrationdesignProcessor.ts#IntegrationDesignProcessor",
     "dependencies": [],
     "priority": 7
   },
   "technical-stack": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#TechnicalStackProcessor",
+    "module": "../documentTemplates/technical-design/TechnicalstackProcessor.ts#TechnicalStackProcessor",
     "dependencies": [],
     "priority": 8
   },
   "deployment-architecture": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#DeploymentArchitectureProcessor",
+    "module": "../documentTemplates/technical-design/DeploymentarchitectureProcessor.ts#DeploymentArchitectureProcessor",
     "dependencies": [],
     "priority": 9
   },
   "error-handling": {
-    "module": "../documentTemplates/technical-design/technicalDesignProcessor.ts#ErrorHandlingProcessor",
+    "module": "../documentTemplates/technical-design/ErrorhandlingProcessor.ts#ErrorHandlingProcessor",
     "dependencies": [],
     "priority": 10
   },
@@ -217,9 +217,169 @@
     "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
     "dependencies": [
       "stakeholder-register",
-      "project-scope-statement", 
+      "project-scope-statement",
       "risk-register"
     ],
     "priority": 100
+  },
+  "schedule-management-plan": {
+    "module": "../documentTemplates/planning/SchedulemanagementplanProcessor.ts#SchedulemanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "cost-management-plan": {
+    "module": "../documentTemplates/planning/CostmanagementplanProcessor.ts#CostmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "quality-management-plsn": {
+    "module": "../documentTemplates/planning/QualitymanagementplsnProcessor.ts#QualitymanagementplsnProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "resource-management-plan": {
+    "module": "../documentTemplates/planning/ResourcemanagementplanProcessor.ts#ResourcemanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "communication-management-plan": {
+    "module": "../documentTemplates/planning/CommunicationmanagementplanProcessor.ts#CommunicationmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "risk-management-plan": {
+    "module": "../documentTemplates/planning/RiskmanagementplanProcessor.ts#RiskmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "procurement-management-plan": {
+    "module": "../documentTemplates/planning/ProcurementmanagementplanProcessor.ts#ProcurementmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "stakeholder-engagement-plan": {
+    "module": "../documentTemplates/planning/StakeholderengagementplanProcessor.ts#StakeholderengagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "project-management-plan": {
+    "module": "../documentTemplates/pmbok/ProjectmanagementplanProcessor.ts#ProjectmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "direct-and-manage-project-work": {
+    "module": "../documentTemplates/pmbok/DirectandmanageprojectworkProcessor.ts#DirectandmanageprojectworkProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "monitor-and-control-project-work": {
+    "module": "../documentTemplates/pmbok/MonitorandcontrolprojectworkProcessor.ts#MonitorandcontrolprojectworkProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "develop-project-charter": {
+    "module": "../documentTemplates/pmbok/DevelopprojectcharterProcessor.ts#DevelopprojectcharterProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "validate-scope-process": {
+    "module": "../documentTemplates/pmbok/ValidatescopeprocessProcessor.ts#ValidatescopeprocessProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "control-scope-process": {
+    "module": "../documentTemplates/pmbok/ControlscopeprocessProcessor.ts#ControlscopeprocessProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "perform-integration-change-control-process": {
+    "module": "../documentTemplates/pmbok/PerformintegrationchangecontrolprocessProcessor.ts#PerformintegrationchangecontrolprocessProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "close-project-phase-process": {
+    "module": "../documentTemplates/pmbok/CloseprojectphaseprocessProcessor.ts#CloseprojectphaseprocessProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "summary-and-goals": {
+    "module": "../documentTemplates/basic-docs/SummaryandgoalsProcessor.ts#SummaryandgoalsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "user-stories": {
+    "module": "../documentTemplates/basic-docs/UserstoriesProcessor.ts#UserstoriesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "risk-analysis": {
+    "module": "../documentTemplates/basic-docs/RiskanalysisProcessor.ts#RiskanalysisProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "core-values": {
+    "module": "../documentTemplates/basic-docs/CorevaluesProcessor.ts#CorevaluesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "schedule-network-diagram": {
+    "module": "../documentTemplates/basic-docs/SchedulenetworkdiagramProcessor.ts#SchedulenetworkdiagramProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "milestone-list": {
+    "module": "../documentTemplates/basic-docs/MilestonelistProcessor.ts#MilestonelistProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "develop-schedule-input": {
+    "module": "../documentTemplates/basic-docs/DevelopscheduleinputProcessor.ts#DevelopscheduleinputProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "project-statement-of-work": {
+    "module": "../documentTemplates/basic-docs/ProjectstatementofworkProcessor.ts#ProjectstatementofworkProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "user-personas": {
+    "module": "../documentTemplates/requirements/UserpersonasProcessor.ts#UserpersonasProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "acceptance-criteria": {
+    "module": "../documentTemplates/requirements/AcceptancecriteriaProcessor.ts#AcceptancecriteriaProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "key-roles-and-needs": {
+    "module": "../documentTemplates/requirements/KeyrolesandneedsProcessor.ts#KeyrolesandneedsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "key-rbacroles": {
+    "module": "../documentTemplates/requirements/KeyrbacrolesProcessor.ts#KeyrbacrolesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "requirements-documentation": {
+    "module": "../documentTemplates/requirements/RequirementsdocumentationProcessor.ts#RequirementsdocumentationProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "requirements-traceability-matrix": {
+    "module": "../documentTemplates/requirements/RequirementstraceabilitymatrixProcessor.ts#RequirementstraceabilitymatrixProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "requirements-management-plan": {
+    "module": "../documentTemplates/requirements/RequirementsmanagementplanProcessor.ts#RequirementsmanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "collect-requirements-process": {
+    "module": "../documentTemplates/requirements/CollectrequirementsprocessProcessor.ts#CollectrequirementsprocessProcessor",
+    "dependencies": [],
+    "priority": 999
   }
 }

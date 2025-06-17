@@ -390,27 +390,38 @@ export const QUALITY_THRESHOLDS = {
 };
 
 /**
- * Scoring weights for different quality aspects
+ * Scoring weights for different quality aspects - UPDATED FOR STRICTER COMPLIANCE
  */
 export const QUALITY_SCORING = {
-    COMPREHENSIVE_CONTENT_POINTS: 20,
-    GOOD_STRUCTURE_POINTS: 15,
-    PMBOK_TERMINOLOGY_POINTS: 15,
-    REQUIRED_ELEMENTS_WEIGHT: 0.5, // Multiply by percentage of covered elements
-    CRITICAL_ISSUE_PENALTY: 20,
-    WARNING_PENALTY: 10,
-    QUALITY_BONUS_WEIGHT: 0.3, // Multiply by average quality score
-    PERFORMANCE_DOMAIN_WEIGHT: 0.15,
-    PRINCIPLES_WEIGHT: 0.15,
-    VALUE_DELIVERY_WEIGHT: 0.1,
-    QUALITY_METRICS_WEIGHT: 0.1,
-    RISK_MANAGEMENT_WEIGHT: 0.1,
-    STAKEHOLDER_ENGAGEMENT_WEIGHT: 0.1,
-    LIFECYCLE_INTEGRATION_WEIGHT: 0.1,
-    RESOURCE_MANAGEMENT_WEIGHT: 0.1,
-    COMMUNICATION_WEIGHT: 0.1,
-    CHANGE_MANAGEMENT_WEIGHT: 0.1,
-    KNOWLEDGE_MANAGEMENT_WEIGHT: 0.1,
-    SUSTAINABILITY_WEIGHT: 0.1,
-    DIGITAL_TRANSFORMATION_WEIGHT: 0.1
+    BASE_SCORE: 100, // Start with perfect score and deduct points
+    COMPREHENSIVE_CONTENT_POINTS: 10, // Reduced - this is bonus, not core requirement
+    GOOD_STRUCTURE_POINTS: 10, // Reduced - this is bonus, not core requirement
+    PMBOK_TERMINOLOGY_POINTS: 10, // Reduced - this is bonus, not core requirement
+    
+    // CRITICAL PENALTIES - These should significantly impact scores
+    MISSING_REQUIRED_ELEMENT_PENALTY: 15, // Major penalty for each missing required element
+    MISSING_PERFORMANCE_DOMAIN_PENALTY: 8, // Major penalty for each missing performance domain
+    MISSING_PRINCIPLE_PENALTY: 5, // Penalty for each missing PMBOK principle
+    MISSING_CRITICAL_COMPONENT_PENALTY: 10, // Penalty for missing critical components
+    
+    // ORIGINAL PENALTIES (increased)
+    CRITICAL_ISSUE_PENALTY: 25, // Increased from 20
+    WARNING_PENALTY: 15, // Increased from 10
+    
+    // WEIGHTED SCORING (reduced weights since we're now penalty-based)
+    REQUIRED_ELEMENTS_WEIGHT: 0.3, // Multiply by percentage of covered elements
+    QUALITY_BONUS_WEIGHT: 0.2, // Multiply by average quality score
+    PERFORMANCE_DOMAIN_WEIGHT: 0.05, // Reduced since we now penalize missing domains
+    PRINCIPLES_WEIGHT: 0.05, // Reduced since we now penalize missing principles
+    VALUE_DELIVERY_WEIGHT: 0.05,
+    QUALITY_METRICS_WEIGHT: 0.05,
+    RISK_MANAGEMENT_WEIGHT: 0.05,
+    STAKEHOLDER_ENGAGEMENT_WEIGHT: 0.05,
+    LIFECYCLE_INTEGRATION_WEIGHT: 0.05,
+    RESOURCE_MANAGEMENT_WEIGHT: 0.05,
+    COMMUNICATION_WEIGHT: 0.05,
+    CHANGE_MANAGEMENT_WEIGHT: 0.05,
+    KNOWLEDGE_MANAGEMENT_WEIGHT: 0.05,
+    SUSTAINABILITY_WEIGHT: 0.05,
+    DIGITAL_TRANSFORMATION_WEIGHT: 0.05
 };

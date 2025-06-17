@@ -35,6 +35,11 @@ export interface DocumentMetadata {
 
 // Define document categories for better organization
 export const DOCUMENT_CATEGORIES = {
+    REQUIREMENTS: 'requirements',
+    BASIC_DOCS: 'basic-docs',
+    PMBOK: 'pmbok',
+    PLANNING: 'planning',
+    TECHNICAL_DESIGN: 'technical-design',
     PROJECT_CHARTER: 'project-charter',
     RISK_MANAGEMENT: 'risk-management',
     STAKEHOLDER_MANAGEMENT: 'stakeholder-management',
@@ -54,6 +59,29 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'collect-requirements-process': { title: 'CollectRequirementsProcess', filename: 'requirements/collect-requirements-process.md', category: DOCUMENT_CATEGORIES.REQUIREMENTS, description: '', generatedAt: '' },
+    'key-rbacroles': { title: 'KeyRBACroles', filename: 'requirements/key-rbacroles.md', category: DOCUMENT_CATEGORIES.REQUIREMENTS, description: '', generatedAt: '' },
+    'develop-schedule-input': { title: 'DevelopScheduleInput', filename: 'basic-docs/develop-schedule-input.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'core-values': { title: 'CoreValues', filename: 'basic-docs/core-values.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'summary-and-goals': { title: 'SummaryAndGoals', filename: 'basic-docs/summary-and-goals.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'close-project-phase-process': { title: 'CloseProjectPhaseProcess', filename: 'pmbok/close-project-phase-process.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'perform-integration-change-control-process': { title: 'PerformIntegrationChangeControlProcess', filename: 'pmbok/perform-integration-change-control-process.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'control-scope-process': { title: 'ControlScopeProcess', filename: 'pmbok/control-scope-process.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'validate-scope-process': { title: 'ValidateScopeProcess', filename: 'pmbok/validate-scope-process.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'develop-project-charter': { title: 'DevelopProjectCharter', filename: 'pmbok/develop-project-charter.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'monitor-and-control-project-work': { title: 'MonitorAndControlProjectWork', filename: 'pmbok/monitor-and-control-project-work.md', category: DOCUMENT_CATEGORIES.PMBOK, description: '', generatedAt: '' },
+    'quality-management-plsn': { title: 'QualityManagementPlsn', filename: 'planning/quality-management-plsn.md', category: DOCUMENT_CATEGORIES.PLANNING, description: '', generatedAt: '' },
+    'schedule-management-plan': { title: 'ScheduleManagementPlan', filename: 'planning/schedule-management-plan.md', category: DOCUMENT_CATEGORIES.PLANNING, description: '', generatedAt: '' },
+    'error-handling': { title: 'ErrorHandling', filename: 'technical-design/error-handling.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'deployment-architecture': { title: 'DeploymentArchitecture', filename: 'technical-design/deployment-architecture.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'technical-stack': { title: 'TechnicalStack', filename: 'technical-design/technical-stack.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'integration-design': { title: 'IntegrationDesign', filename: 'technical-design/integration-design.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'performance-requirements': { title: 'PerformanceRequirements', filename: 'technical-design/performance-requirements.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'security-design': { title: 'SecurityDesign', filename: 'technical-design/security-design.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'apidocumentation': { title: 'APIDocumentation', filename: 'technical-design/apidocumentation.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'database-schema': { title: 'DatabaseSchema', filename: 'technical-design/database-schema.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'system-design': { title: 'SystemDesign', filename: 'technical-design/system-design.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
+    'architecture-design': { title: 'ArchitectureDesign', filename: 'technical-design/architecture-design.md', category: DOCUMENT_CATEGORIES.TECHNICAL_DESIGN, description: '', generatedAt: '' },
     'risk-register': { title: 'RiskRegister', filename: 'risk-management/risk-register.md', category: DOCUMENT_CATEGORIES.RISK_MANAGEMENT, description: '', generatedAt: '' },
     'scope-statement': { title: 'ScopeStatement', filename: 'scope-management/scope-statement.md', category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT, description: '', generatedAt: '' },
     'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },

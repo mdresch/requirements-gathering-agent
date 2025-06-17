@@ -44,7 +44,9 @@ export class AIProcessor {
         this.initializationPromise = this.initializeProviderManager();
     }    private async initializeProviderManager(): Promise<void> {
         const results = await this.providerManager.validateConfigurations();
-        console.log('Provider validation results:', results);
+        
+        // Debug output disabled - uncomment if needed for troubleshooting
+        // console.log('Provider validation results:', results);
         
         // Sync the active provider with ConfigurationManager
         const activeProvider = this.providerManager.getActiveProvider();

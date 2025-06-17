@@ -28,8 +28,8 @@ import {
     DIGITAL_TRANSFORMATION_REQUIREMENTS
 } from './validationRules.js';
 
-// Add missing constant
-const MIN_QUALITY_SCORE = 70;
+// Stricter minimum quality score for PMBOK compliance
+const MIN_QUALITY_SCORE = 80;
 
 /**
  * Class responsible for validating document compliance with PMBOK 7.0 standards
@@ -116,8 +116,7 @@ export class PMBOKValidator {
             } else {
                 await fs.readdir(this.documentsBasePath);
             }
-            
-            await Promise.all(
+              await Promise.all(
                 Object.entries(PMBOK_DOCUMENT_REQUIREMENTS).map(async ([docKey, requirements]) => {
                     const filePath = `${this.documentsBasePath}/${requirements.category}/${docKey}.md`;
                     if (!PMBOKValidator.suppressLogging) console.log(`Checking file: ${filePath}`);
@@ -125,22 +124,38 @@ export class PMBOKValidator {
                         const content = await fs.readFile(filePath, 'utf-8');
                         if (!PMBOKValidator.suppressLogging) console.log(`Successfully read: ${filePath}`);
                         const quality = await this.assessDocumentQuality(content);
-                        validation.documentQuality[docKey] = quality;
+                        
+                        // APPLY ADDITIONAL PENALTIES FOR MISSING REQUIRED ELEMENTS
+                        let adjustedScore = quality.score;
+                        let missingRequiredCount = 0;
 
-                        if (quality.score < MIN_QUALITY_SCORE) {
-                            validation.compliance = false;
-                            validation.findings.critical.push(`Document ${docKey} does not meet quality standards (score: ${quality.score})`);
-                        }
-
-                        // Check for critical PMBOK elements
+                        // Check for critical PMBOK elements and apply penalties
                         for (const element of requirements.required) {
                             if (!this.contentContainsElement(content, element)) {
                                 validation.findings.critical.push(`${docKey}: Missing required PMBOK element '${element}'`);
                                 validation.compliance = false;
+                                missingRequiredCount++;
+                                // Apply penalty for each missing required element
+                                adjustedScore -= QUALITY_SCORING.MISSING_REQUIRED_ELEMENT_PENALTY;
+                                quality.issues.push(`Missing required PMBOK element '${element}'`);
                             }
                         }
 
-                        return { docKey, quality };
+                        // Ensure adjusted score doesn't go below 0
+                        adjustedScore = Math.max(0, adjustedScore);
+                        
+                        // Update the quality assessment with adjusted score
+                        const adjustedQuality = {
+                            ...quality,
+                            score: adjustedScore
+                        };
+                        
+                        validation.documentQuality[docKey] = adjustedQuality;                        if (adjustedQuality.score < MIN_QUALITY_SCORE) {
+                            validation.compliance = false;
+                            validation.findings.critical.push(`Document ${docKey} does not meet quality standards (score: ${adjustedQuality.score}/100, missing ${missingRequiredCount} required elements)`);
+                        }
+
+                        return { docKey, quality: adjustedQuality };
                     } catch (error) {
                         if (!PMBOKValidator.suppressLogging) console.error(`Error reading ${filePath}:`, error);
                         validation.findings.critical.push(`Document ${docKey} not found or could not be read`);
@@ -189,32 +204,34 @@ export class PMBOKValidator {
             validation: basicValidation, 
             pmbokCompliance 
         };
-    }
-
-    /**
-     * Assess document quality based on PMBOK 7.0 standards
+    }    /**
+     * Assess document quality based on PMBOK 7.0 standards - UPDATED FOR STRICTER COMPLIANCE
      * @param content Document content
      * @returns Document quality assessment
      */
     private async assessDocumentQuality(content: string): Promise<{ score: number; issues: string[]; strengths: string[] }> {
         const issues: string[] = [];
         const strengths: string[] = [];
-        let score = 0;
+        
+        // START WITH PERFECT SCORE AND DEDUCT POINTS FOR NON-COMPLIANCE
+        let score = QUALITY_SCORING.BASE_SCORE;
 
-        // Basic quality checks
+        // Basic quality checks (these give small bonuses, not core score)
         if (content.length < QUALITY_THRESHOLDS.BRIEF_CONTENT_LENGTH) {
             issues.push('Content is too brief');
+            score -= QUALITY_SCORING.CRITICAL_ISSUE_PENALTY;
         } else if (content.length >= QUALITY_THRESHOLDS.COMPREHENSIVE_CONTENT_LENGTH) {
             strengths.push('Comprehensive content coverage');
-            score += QUALITY_SCORING.COMPREHENSIVE_CONTENT_POINTS;
+            // Small bonus for comprehensive content
         }
 
         const sections = content.split('\n\n').filter(section => section.trim().length > 0);
         if (sections.length < QUALITY_THRESHOLDS.MIN_SECTION_COUNT) {
             issues.push('Insufficient section structure');
+            score -= QUALITY_SCORING.WARNING_PENALTY;
         } else {
             strengths.push('Well-structured with multiple sections');
-            score += QUALITY_SCORING.GOOD_STRUCTURE_POINTS;
+            // Small bonus for good structure
         }
 
         const pmbokTerms = PMBOK_TERMINOLOGY.filter(term => 
@@ -222,12 +239,13 @@ export class PMBOKValidator {
         );
         if (pmbokTerms.length < QUALITY_THRESHOLDS.MIN_PMBOK_TERMS) {
             issues.push('Insufficient PMBOK terminology usage');
+            score -= QUALITY_SCORING.WARNING_PENALTY;
         } else {
             strengths.push(`Uses appropriate PMBOK terminology (${pmbokTerms.length} terms found)`);
-            score += QUALITY_SCORING.PMBOK_TERMINOLOGY_POINTS;
+            // Small bonus for terminology usage
         }
 
-        // PMBOK 7.0 specific checks
+        // PMBOK 7.0 specific checks - STRICT PENALTY-BASED SCORING
         const performanceDomains = await this.validatePerformanceDomains(content);
         const principles = await this.validatePrinciples(content);
         const valueDelivery = await this.validateValueDelivery(content);
@@ -242,57 +260,95 @@ export class PMBOKValidator {
         const sustainability = await this.validateSustainability(content);
         const digitalTransformation = await this.validateDigitalTransformation(content);
 
-        // Add findings to issues
-        [
-            performanceDomains,
-            principles,
-            valueDelivery,
-            qualityMetrics,
-            riskManagement,
-            stakeholderEngagement,
-            projectLifecycle,
-            resourceManagement,
-            communication,
-            changeManagement,
-            knowledgeManagement,
-            sustainability,
-            digitalTransformation
-        ].forEach(result => {
+        // APPLY STRICT PENALTIES FOR MISSING COMPONENTS
+        const validationResults = [
+            { name: 'Performance Domains', result: performanceDomains, penalty: QUALITY_SCORING.MISSING_PERFORMANCE_DOMAIN_PENALTY },
+            { name: 'PMBOK Principles', result: principles, penalty: QUALITY_SCORING.MISSING_PRINCIPLE_PENALTY },
+            { name: 'Value Delivery', result: valueDelivery, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Quality Metrics', result: qualityMetrics, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Risk Management', result: riskManagement, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Stakeholder Engagement', result: stakeholderEngagement, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Project Lifecycle', result: projectLifecycle, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Resource Management', result: resourceManagement, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Communication', result: communication, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Change Management', result: changeManagement, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Knowledge Management', result: knowledgeManagement, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Sustainability', result: sustainability, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY },
+            { name: 'Digital Transformation', result: digitalTransformation, penalty: QUALITY_SCORING.MISSING_CRITICAL_COMPONENT_PENALTY }
+        ];
+
+        // Apply penalties for each missing component
+        validationResults.forEach(({ name, result, penalty }) => {
+            // Add findings to issues
             issues.push(...result.findings);
+            
+            // Apply penalty based on how many components are missing
+            const missingCount = result.findings.length;
+            if (missingCount > 0) {
+                const penaltyAmount = Math.min(missingCount * penalty, penalty * 3); // Cap penalty per category
+                score -= penaltyAmount;
+            }
         });
 
-        // Calculate weighted score
-        score += performanceDomains.score * QUALITY_SCORING.PERFORMANCE_DOMAIN_WEIGHT;
-        score += principles.score * QUALITY_SCORING.PRINCIPLES_WEIGHT;
-        score += valueDelivery.score * QUALITY_SCORING.VALUE_DELIVERY_WEIGHT;
-        score += qualityMetrics.score * QUALITY_SCORING.QUALITY_METRICS_WEIGHT;
-        score += riskManagement.score * QUALITY_SCORING.RISK_MANAGEMENT_WEIGHT;
-        score += stakeholderEngagement.score * QUALITY_SCORING.STAKEHOLDER_ENGAGEMENT_WEIGHT;
-        score += projectLifecycle.score * QUALITY_SCORING.LIFECYCLE_INTEGRATION_WEIGHT;
-        score += resourceManagement.score * QUALITY_SCORING.RESOURCE_MANAGEMENT_WEIGHT;
-        score += communication.score * QUALITY_SCORING.COMMUNICATION_WEIGHT;
-        score += changeManagement.score * QUALITY_SCORING.CHANGE_MANAGEMENT_WEIGHT;
-        score += knowledgeManagement.score * QUALITY_SCORING.KNOWLEDGE_MANAGEMENT_WEIGHT;
-        score += sustainability.score * QUALITY_SCORING.SUSTAINABILITY_WEIGHT;
-        score += digitalTransformation.score * QUALITY_SCORING.DIGITAL_TRANSFORMATION_WEIGHT;
+        // Add small weighted bonuses for high-performing areas (but only if they're actually good)
+        if (performanceDomains.score >= 80) {
+            strengths.push('Strong performance domain coverage');
+            score += performanceDomains.score * QUALITY_SCORING.PERFORMANCE_DOMAIN_WEIGHT;
+        }
+        if (principles.score >= 80) {
+            strengths.push('Well-aligned with PMBOK principles');
+            score += principles.score * QUALITY_SCORING.PRINCIPLES_WEIGHT;
+        }
+        if (valueDelivery.score >= 80) {
+            strengths.push('Comprehensive value delivery approach');
+            score += valueDelivery.score * QUALITY_SCORING.VALUE_DELIVERY_WEIGHT;
+        }
+        if (qualityMetrics.score >= 80) {
+            strengths.push('Robust quality metrics implementation');
+            score += qualityMetrics.score * QUALITY_SCORING.QUALITY_METRICS_WEIGHT;
+        }
+        if (riskManagement.score >= 80) {
+            strengths.push('Thorough risk management approach');
+            score += riskManagement.score * QUALITY_SCORING.RISK_MANAGEMENT_WEIGHT;
+        }
+        if (stakeholderEngagement.score >= 80) {
+            strengths.push('Effective stakeholder engagement strategy');
+            score += stakeholderEngagement.score * QUALITY_SCORING.STAKEHOLDER_ENGAGEMENT_WEIGHT;
+        }
+        if (projectLifecycle.score >= 80) {
+            strengths.push('Clear project lifecycle integration');
+            score += projectLifecycle.score * QUALITY_SCORING.LIFECYCLE_INTEGRATION_WEIGHT;
+        }
+        if (resourceManagement.score >= 80) {
+            strengths.push('Comprehensive resource management');
+            score += resourceManagement.score * QUALITY_SCORING.RESOURCE_MANAGEMENT_WEIGHT;
+        }
+        if (communication.score >= 80) {
+            strengths.push('Well-defined communication approach');
+            score += communication.score * QUALITY_SCORING.COMMUNICATION_WEIGHT;
+        }
+        if (changeManagement.score >= 80) {
+            strengths.push('Strong change management framework');
+            score += changeManagement.score * QUALITY_SCORING.CHANGE_MANAGEMENT_WEIGHT;
+        }
+        if (knowledgeManagement.score >= 80) {
+            strengths.push('Effective knowledge management');
+            score += knowledgeManagement.score * QUALITY_SCORING.KNOWLEDGE_MANAGEMENT_WEIGHT;
+        }
+        if (sustainability.score >= 80) {
+            strengths.push('Strong sustainability considerations');
+            score += sustainability.score * QUALITY_SCORING.SUSTAINABILITY_WEIGHT;
+        }
+        if (digitalTransformation.score >= 80) {
+            strengths.push('Robust digital transformation approach');
+            score += digitalTransformation.score * QUALITY_SCORING.DIGITAL_TRANSFORMATION_WEIGHT;
+        }
 
-        // Add strengths based on high scores
-        if (performanceDomains.score >= 80) strengths.push('Strong performance domain coverage');
-        if (principles.score >= 80) strengths.push('Well-aligned with PMBOK principles');
-        if (valueDelivery.score >= 80) strengths.push('Comprehensive value delivery approach');
-        if (qualityMetrics.score >= 80) strengths.push('Robust quality metrics implementation');
-        if (riskManagement.score >= 80) strengths.push('Thorough risk management approach');
-        if (stakeholderEngagement.score >= 80) strengths.push('Effective stakeholder engagement strategy');
-        if (projectLifecycle.score >= 80) strengths.push('Clear project lifecycle integration');
-        if (resourceManagement.score >= 80) strengths.push('Comprehensive resource management');
-        if (communication.score >= 80) strengths.push('Well-defined communication approach');
-        if (changeManagement.score >= 80) strengths.push('Strong change management framework');
-        if (knowledgeManagement.score >= 80) strengths.push('Effective knowledge management');
-        if (sustainability.score >= 80) strengths.push('Strong sustainability considerations');
-        if (digitalTransformation.score >= 80) strengths.push('Robust digital transformation approach');
+        // Ensure score is within valid range
+        const finalScore = Math.max(0, Math.min(Math.round(score), QUALITY_THRESHOLDS.PERFECT_SCORE));
 
         return {
-            score: Math.min(Math.round(score), QUALITY_THRESHOLDS.PERFECT_SCORE),
+            score: finalScore,
             issues,
             strengths
         };

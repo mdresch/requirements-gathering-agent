@@ -1,0 +1,15 @@
+
+=== PROMPT ADJUSTMENT REPORT ===
+
+Document: project-charter
+  - Missing required element: measurable objectives
+
+Document: stakeholder-register
+  - Missing required element: assessment information
+  - Missing required element: stakeholder classification
+
+Document: project-scope-statement
+  - Missing required element: product scope description
+
+Document: mission-vision-core-values
+  - Missing required element: alignment with project goals
