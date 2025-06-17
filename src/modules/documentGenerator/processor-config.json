@@ -54,52 +54,62 @@
     "priority": 10
   },
   "test-strategy": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestStrategyProcessor",
+    "module": "../documentTemplates/quality-assurance/TestStrategyProcessor.ts#TestStrategyProcessor",
     "dependencies": [],
     "priority": 1
   },
   "test-plan": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestPlanProcessor",
-    "dependencies": [],
+    "module": "../documentTemplates/quality-assurance/TestPlanProcessor.ts#TestPlanProcessor",
+    "dependencies": [
+      "test-strategy"
+    ],
     "priority": 2
   },
   "test-cases": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestCaseProcessor",
-    "dependencies": [],
+    "module": "../documentTemplates/quality-assurance/TestCasesProcessor.ts#TestCasesProcessor",
+    "dependencies": [
+      "test-plan"
+    ],
     "priority": 3
   },
   "quality-metrics": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#QualityMetricsProcessor",
-    "dependencies": [],
+    "module": "../documentTemplates/quality-assurance/QualityMetricsProcessor.ts#QualityMetricsProcessor",
+    "dependencies": [
+      "test-cases"
+    ],
     "priority": 4
   },
   "tech-acceptance-criteria": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TechAcceptanceCriteriaProcessor",
-    "dependencies": [],
+    "module": "../documentTemplates/quality-assurance/TechAcceptanceCriteriaProcessor.ts#TechAcceptanceCriteriaProcessor",
+    "dependencies": [
+      "quality-metrics"
+    ],
     "priority": 5
   },
   "performance-test-plan": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#PerformanceTestProcessor",
-    "dependencies": [],
+    "module": "../documentTemplates/quality-assurance/PerformanceTestPlanProcessor.ts#PerformanceTestPlanProcessor",
+    "dependencies": [
+      "tech-acceptance-criteria"
+    ],
     "priority": 6
   },
   "security-testing": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#SecurityTestingProcessor",
+    "module": "../documentTemplates/quality-assurance/SecurityTestingProcessor.ts#SecurityTestingProcessor",
     "dependencies": [],
     "priority": 7
   },
   "code-review": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#CodeReviewProcessor",
+    "module": "../documentTemplates/quality-assurance/CodeReviewProcessor.ts#CodeReviewProcessor",
     "dependencies": [],
     "priority": 8
   },
   "bug-report": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#BugReportProcessor",
+    "module": "../documentTemplates/quality-assurance/BugReportProcessor.ts#BugReportProcessor",
     "dependencies": [],
     "priority": 9
   },
   "test-environment": {
-    "module": "../documentTemplates/quality-assurance/qualityAssuranceProcessor.ts#TestEnvironmentProcessor",
+    "module": "../documentTemplates/quality-assurance/TestEnvironmentProcessor.ts#TestEnvironmentProcessor",
     "dependencies": [],
     "priority": 10
   },
@@ -168,11 +178,6 @@
     "dependencies": [],
     "priority": 1
   },
-  "sample-checklist": {
-    "module": "../documentTemplates/planningArtifacts/SampleChecklistProcessor.ts#SampleChecklistProcessor",
-    "dependencies": [],
-    "priority": 1
-  },
   "babokintroduction": {
     "module": "../documentTemplates/BABOK/BABOKIntroductionProcessor.ts#BABOKIntroductionProcessor",
     "dependencies": [],
@@ -190,6 +195,11 @@
   },
   "business-case": {
     "module": "../documentTemplates/strategic-statements/BusinesscaseProcessor.ts#BusinesscaseProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "strategic-business-case": {
+    "module": "../documentTemplates/strategic-statements/StrategicbusinesscaseProcessor.ts#StrategicbusinesscaseProcessor",
     "dependencies": [],
     "priority": 999
   },
@@ -248,7 +258,7 @@
     "priority": 999
   },
   "risk-management-plan": {
-    "module": "../documentTemplates/planning/RiskmanagementplanProcessor.ts#RiskmanagementplanProcessor",
+    "module": "../documentTemplates/risk-management/RiskmanagementplanProcessor.ts#RiskmanagementplanProcessor",
     "dependencies": [],
     "priority": 999
   },
@@ -263,7 +273,7 @@
     "priority": 999
   },
   "project-management-plan": {
-    "module": "../documentTemplates/pmbok/ProjectmanagementplanProcessor.ts#ProjectmanagementplanProcessor",
+    "module": "../documentTemplates/project-charter/ProjectmanagementplanProcessor.ts#ProjectmanagementplanProcessor",
     "dependencies": [],
     "priority": 999
   },
@@ -379,6 +389,151 @@
   },
   "collect-requirements-process": {
     "module": "../documentTemplates/requirements/CollectrequirementsprocessProcessor.ts#CollectrequirementsprocessProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "project-summary": {
+    "module": "../documentTemplates/basic-docs/SummaryandgoalsProcessor.ts#SummaryandgoalsProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "plan-scope-management": {
+    "module": "../documentTemplates/planning/PlanscopemanagementProcessor.ts#PlanscopemanagementProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "collect-requirements": {
+    "module": "../documentTemplates/requirements/CollectrequirementsProcessor.ts#CollectrequirementsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "define-scope": {
+    "module": "../documentTemplates/scope-management/DefinescopeProcessor.ts#DefinescopeProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "create-wbs": {
+    "module": "../documentTemplates/planning/CreatewbsProcessor.ts#CreatewbsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "scope-baseline": {
+    "module": "../documentTemplates/scope-management/ScopebaselineProcessor.ts#ScopebaselineProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "validate-scope": {
+    "module": "../documentTemplates/scope-management/ValidatescopeProcessor.ts#ValidatescopeProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "control-scope": {
+    "module": "../documentTemplates/scope-management/ControlscopeProcessor.ts#ControlscopeProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "work-performance-information-scope": {
+    "module": "../documentTemplates/planning/WorkperformanceinformationscopeProcessor.ts#WorkperformanceinformationscopeProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "scope-management-plan": {
+    "module": "../documentTemplates/scope-management/ScopemanagementplanProcessor.ts#ScopemanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "quality-management-plan": {
+    "module": "../documentTemplates/planning/QualitymanagementplanProcessor.ts#QualitymanagementplanProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "perform-integrated-change-control": {
+    "module": "../documentTemplates/pmbok/PerformintegratedchangecontrolProcessor.ts#PerformintegratedchangecontrolProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "close-project-or-phase": {
+    "module": "../documentTemplates/pmbok/CloseprojectorphaseProcessor.ts#CloseprojectorphaseProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "stakeholder-analysis": {
+    "module": "../documentTemplates/stakeholder-management/StakeholderanalysisProcessor.ts#StakeholderanalysisProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "work-breakdown-structure": {
+    "module": "../documentTemplates/planning/WorkbreakdownstructureProcessor.ts#WorkbreakdownstructureProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "wbs-dictionary": {
+    "module": "../documentTemplates/planning/WbsdictionaryProcessor.ts#WbsdictionaryProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "activity-list": {
+    "module": "../documentTemplates/planning/ActivitylistProcessor.ts#ActivitylistProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "activity-duration-estimates": {
+    "module": "../documentTemplates/planning/ActivitydurationestimatesProcessor.ts#ActivitydurationestimatesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "activity-resource-estimates": {
+    "module": "../documentTemplates/planning/ActivityresourceestimatesProcessor.ts#ActivityresourceestimatesProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "schedule-development-input": {
+    "module": "../documentTemplates/planning/ScheduledevelopmentinputProcessor.ts#ScheduledevelopmentinputProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "data-model-suggestions": {
+    "module": "../documentTemplates/technical-analysis/DataModelSuggestionsProcessor.ts#DataModelSuggestionsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "tech-stack-analysis": {
+    "module": "../documentTemplates/technical-analysis/TechStackAnalysisProcessor.ts#TechStackAnalysisProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "compliance-considerations": {
+    "module": "../documentTemplates/technical-analysis/ComplianceConsiderationsProcessor.ts#ComplianceConsiderationsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "ui-ux-considerations": {
+    "module": "../documentTemplates/technical-analysis/UIUXConsiderationsProcessor.ts#UIUXConsiderationsProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "common-goals-user-personas": {
+    "module": "../documentTemplates/basic-docs/CommongoalsuserpersonasProcessor.ts#CommongoalsuserpersonasProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "common-challenges-user-personas": {
+    "module": "../documentTemplates/basic-docs/CommonchallengesuserpersonasProcessor.ts#CommonchallengesuserpersonasProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "technology-comfort-user-personas": {
+    "module": "../documentTemplates/basic-docs/TechnologycomfortuserpersonasProcessor.ts#TechnologycomfortuserpersonasProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "persona-utilize-app": {
+    "module": "../documentTemplates/basic-docs/PersonautilizeappProcessor.ts#PersonautilizeappProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
+  "personas-assess-motivations": {
+    "module": "../documentTemplates/basic-docs/PersonasassessmotivationsProcessor.ts#PersonasassessmotivationsProcessor",
     "dependencies": [],
     "priority": 999
   }

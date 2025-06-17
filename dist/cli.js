@@ -27,10 +27,11 @@ import process from 'process';
 import { execSync } from 'child_process';
 import os from 'os';
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
-import { DocumentGenerator, generateDocumentsWithRetry } from './modules/documentGenerator.js';
+import { DocumentGenerator, generateDocumentsWithRetry, getAvailableCategories } from './modules/documentGenerator.js';
+import { getTasksByCategory, GENERATION_TASKS } from './modules/documentGenerator/generationTasks.js';
 import { readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
-import { writeFile, readFile, mkdir, access } from 'fs/promises';
+import { writeFile } from 'fs/promises';
 import readline from 'readline';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -470,22 +471,42 @@ A comprehensive software project requiring PMBOK documentation.
                 }
                 return;
             }
-            // Generate with validation if requested
-            if (generateAll && !options.quiet) {
-                console.log('\n🔍 Running document validation...');
-                const generator = new DocumentGenerator(context);
-                const validation = await generator.validateGeneration();
-                if (validation.isComplete) {
-                    console.log('✅ All documents generated and validated successfully!');
+            // Generate quality assurance documents if requested
+            if (generateAll || generateTypes.has('quality-assurance')) {
+                if (!options.quiet)
+                    console.log('🧪 Generating quality assurance documents...');
+                const results = await generateDocumentsWithRetry(context, {
+                    includeCategories: ['quality-assurance'],
+                    maxRetries: options.retries
+                });
+                if (results?.success) {
+                    console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} quality assurance documents`);
+                    console.log(`📁 Check the ${options.outputDir}/quality-assurance/ directory`);
                 }
                 else {
-                    console.log('⚠️ Some documents may be missing or incomplete');
-                    validation.missing.forEach(doc => console.log(`   • ${doc}`));
+                    console.error('❌ Failed to generate quality assurance documents');
+                    process.exit(1);
                 }
             }
-            if (!options.quiet) {
-                console.log('🎉 Document generation completed successfully!');
-                console.log(`📁 Check the ${options.outputDir}/ directory for organized output`);
+            // Handle --generate-category command
+            const categoryIndex = args.indexOf('--generate-category');
+            if (categoryIndex !== -1 && categoryIndex + 1 < args.length) {
+                const categoryName = args[categoryIndex + 1];
+                if (!options.quiet)
+                    console.log(`📂 Generating ${categoryName} documents...`);
+                const results = await generateDocumentsWithRetry(context, {
+                    includeCategories: [categoryName],
+                    maxRetries: options.retries
+                });
+                if (results?.success) {
+                    console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} documents in ${categoryName} category`);
+                    console.log(`📁 Check the ${options.outputDir}/${categoryName}/ directory`);
+                }
+                else {
+                    console.error(`❌ Failed to generate ${categoryName} documents`);
+                    process.exit(1);
+                }
+                return;
             }
         }
         catch (genError) {
@@ -764,649 +785,145 @@ async function showStatus() {
             }
             // Ollama
             const ollamaEndpoint = process.env.OLLAMA_ENDPOINT;
-            const isOllama = ollamaEndpoint?.includes('localhost:11434') || ollamaEndpoint?.includes('127.0.0.1:11434');
-            console.log('\n   🟡 Ollama (Local):');
-            console.log(`      Endpoint: ${isOllama ? '✅ Set' : '❌ Not configured'}`);
-            if (isOllama) {
+            const isOllama = ollamaEndpoint?.includes('localhost:11434') || ollamaEndpoint?.includes('127.0.0.1');
+            console.log('\n   🦙 Ollama:');
+            console.log(`      Endpoint: ${ollamaEndpoint ? '✅ Set' : '❌ Missing'}`);
+            if (ollamaEndpoint) {
                 console.log(`      URL: ${ollamaEndpoint}`);
-                console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'llama3.1'}`);
-            }
-            // Overall configuration status
-            const providers = detectConfiguredProviders();
-            console.log('\n📊 OVERALL STATUS:');
-            if (providers.length > 0) {
-                console.log(`   ✅ Configured Providers: ${providers.join(', ')}`);
-            }
-            else {
-                console.log('   ⚠️  No fully configured providers found');
-                console.log('   💡 Run --setup to configure providers');
+                console.log(`      Model: ${process.env.OLLAMA_MODEL || 'llama2'}`);
             }
         }
         else {
             console.log('   ❌ .env file: Not found');
-            console.log('   💡 Create a .env file with your AI provider configuration');
+            console.log('      Run --setup to configure providers');
         }
-        // Check output directory
-        const outputDir = 'generated-documents';
-        if (existsSync(outputDir)) {
-            const { readdirSync } = await import('fs');
-            const files = readdirSync(outputDir, { recursive: true });
-            console.log(`\n📁 Output Directory: ${outputDir} (${files.length} files)`);
-        }
-        else {
-            console.log(`\n📁 Output Directory: ${outputDir} (will be created)`);
-        }
-        // Project context status
-        const readmePath = join(process.cwd(), 'README.md');
-        if (existsSync(readmePath)) {
-            console.log('   ✅ Project Context: README.md found');
-        }
-        else {
-            console.log('   ⚠️  Project Context: No README.md (will use default)');
-        }
-        console.log('\n🎯 READY STATUS:');
-        const isReady = existsSync(envPath) && detectConfiguredProviders().length > 0;
-        if (isReady) {
-            console.log('   ✅ System ready for document generation');
-        }
-        else {
-            console.log('   ⚠️  System needs configuration (run --setup for help)');
-        }
-        console.log('');
     }
     catch (error) {
-        console.error('   ❌ Error checking configuration:', error instanceof Error ? error.message : String(error));
-    }
-    finally {
-        // Ensure the process exits
-        setTimeout(() => process.exit(0), 100);
+        console.error('❌ Error checking configuration:', error);
     }
 }
 /**
- * Interactive setup wizard for first-time users
+ * Show all available templates dynamically from the generation tasks
  */
-async function runSetupWizard() {
-    console.log('\n🧙‍♂️ Requirements Gathering Agent - Setup Wizard\n');
-    console.log('Welcome! Let\'s get you set up for PMBOK document generation.\n');
-    // Step 1: Check current directory
-    console.log('📁 STEP 1: Project Detection');
-    const readmePath = join(process.cwd(), 'README.md');
-    if (existsSync(readmePath)) {
-        console.log('   ✅ Found README.md - this will be used as project context');
-    }
-    else {
-        console.log('   ⚠️  No README.md found - a default context will be used');
-        console.log('   💡 Tip: Create a README.md with your project description for better results');
-    }
-    // Step 2: Environment configuration
-    console.log('\n⚙️  STEP 2: AI Provider Configuration');
-    const envPath = join(process.cwd(), '.env');
-    const envExamplePath = join(process.cwd(), '.env.example');
-    if (!existsSync(envPath)) {
-        console.log('   📝 Creating .env file configuration...');
-        if (existsSync(envExamplePath)) {
-            console.log('   💡 Found .env.example file');
-            console.log('   📋 Copy .env.example to .env and configure your settings:');
-            console.log('      cp .env.example .env');
-        }
-        else {
-            console.log('   📝 Create a .env file with one of these configurations:');
-        }
-        console.log('\n🔧 RECOMMENDED CONFIGURATIONS:');
-        console.log('\n   🟣 Google AI Studio (Free tier, quick setup):');
-        console.log('      GOOGLE_AI_API_KEY=your-google-ai-api-key');
-        console.log('      GOOGLE_AI_MODEL=gemini-1.5-flash');
-        console.log('      Get key: https://makersuite.google.com/app/apikey');
-        console.log('\n   🟢 GitHub AI (Free tier for GitHub users):');
-        console.log('      AZURE_AI_ENDPOINT=https://models.inference.ai.azure.com');
-        console.log('      GITHUB_TOKEN=your-github-token');
-        console.log('      REQUIREMENTS_AGENT_MODEL=gpt-4o-mini');
-        console.log('\n   🔷 Azure OpenAI (Enterprise, most reliable):');
-        console.log('      AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/');
-        console.log('      DEPLOYMENT_NAME=gpt-4');
-        console.log('      USE_ENTRA_ID=true');
-        console.log('      Then run: az login');
-    }
-    else {
-        console.log('   ✅ .env file exists');
-        const providers = detectConfiguredProviders();
-        if (providers.length > 0) {
-            console.log(`   ✅ Configured providers: ${providers.join(', ')}`);
-        }
-        else {
-            console.log('   ⚠️  No valid provider configuration found in .env');
-        }
-    }
-    // Step 3: Next steps
-    console.log('\n🚀 STEP 3: Ready to Generate Documents');
-    console.log('   📋 Once configured, run these commands:');
-    console.log('      requirements-gathering-agent --help    # See all options');
-    console.log('      requirements-gathering-agent           # Generate all documents');
-    console.log('      requirements-gathering-agent --validate-pmbok  # With validation');
-    console.log('\n📚 STEP 4: Learn More');
-    console.log('   🌐 GitHub: https://github.com/mdresch/requirements-gathering-agent');
-    console.log('   📖 Full documentation available in generated GitBook');
-    console.log('   🎯 Run --status to check configuration anytime');
-    console.log('\n✨ Happy documenting! Your PMBOK suite awaits.\n');
-}
-/**
- * Run the interactive provider selection menu
- */
-async function runProviderSelectionMenu() {
-    console.log('\n🤖 AI Provider Selection\n');
-    // Check if we're in an interactive environment
-    if (!process.stdout.isTTY) {
-        console.log('⚠️  Non-interactive terminal detected');
-        console.log('   Use --setup for non-interactive configuration');
-        console.log('   Or run in an interactive terminal for the full menu experience');
-        return;
-    }
-    const menu = new InteractiveProviderMenu({
-        showMetrics: true,
-        allowExit: true
-    });
+function showAvailableTemplates() {
+    console.log('📋 Available Document Templates\n');
     try {
-        const selectedProvider = await menu.showMenu();
-        if (selectedProvider) {
-            console.log(`\n✅ Successfully configured: ${selectedProvider}`);
-            console.log('\n🚀 Ready to generate documents!');
-            console.log('\nNext steps:');
-            console.log('  requirements-gathering-agent           # Generate all documents');
-            console.log('  requirements-gathering-agent --help    # See all options');
-            console.log('  requirements-gathering-agent --status  # Check configuration');
-            // After provider selection, ensure CURRENT_PROVIDER is written to .env
-            if (typeof selectedProvider === 'string' && selectedProvider.length > 0) {
-                const fs = await import('fs/promises');
-                const path = await import('path');
-                const envPath = path.join(process.cwd(), '.env');
-                let envContent = '';
-                try {
-                    envContent = await fs.readFile(envPath, 'utf8');
+        const categories = getAvailableCategories();
+        console.log(`Found ${categories.length} categories with ${GENERATION_TASKS.length} total templates:\n`);
+        for (const category of categories) {
+            const tasks = getTasksByCategory(category);
+            if (tasks.length > 0) {
+                // Convert category slug to display name
+                const displayCategory = category
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                console.log(`${displayCategory} (${tasks.length} documents):`);
+                for (const task of tasks) {
+                    console.log(`  ${task.emoji} ${task.name}`);
+                    console.log(`      Key: ${task.key}`);
+                    console.log(`      Generate: node dist/cli.js --generate ${task.key}`);
+                    console.log('');
                 }
-                catch { /* file may not exist yet */ }
-                const currentProviderLine = `CURRENT_PROVIDER=${selectedProvider}`;
-                const currentProviderRegex = /^CURRENT_PROVIDER=.*$/m;
-                if (currentProviderRegex.test(envContent)) {
-                    envContent = envContent.replace(currentProviderRegex, currentProviderLine);
-                }
-                else {
-                    if (envContent && !envContent.endsWith('\n'))
-                        envContent += '\n';
-                    envContent += currentProviderLine + '\n';
-                }
-                await fs.writeFile(envPath, envContent, 'utf8');
-                process.env.CURRENT_PROVIDER = selectedProvider;
             }
         }
-        else {
-            console.log('\n👋 Provider selection cancelled.');
-            console.log('   You can run this again anytime with --select-provider');
-        }
+        console.log('\n📚 Usage Examples:');
+        console.log('   node dist/cli.js --generate project-charter');
+        console.log('   node dist/cli.js --generate-category quality-assurance');
+        console.log('   node dist/cli.js --generate-quality-assurance');
+        console.log('\n💡 Tips:');
+        console.log('   • Use --generate-category <category> to generate all documents in a category');
+        console.log('   • Use --generate <key> to generate a specific document');
+        console.log('   • Category batch generation: --generate-quality-assurance, --generate-core-analysis, etc.');
     }
     catch (error) {
-        console.error('\n❌ Error during provider selection:', error instanceof Error ? error.message : String(error));
-        console.log('   You can try again or use --setup for manual configuration');
-    }
-    finally {
-        await menu.cleanup();
+        console.error('❌ Error loading templates:', error);
+        console.log('\n🔧 Fallback: Basic template list available');
+        console.log('   • project-charter: Project Charter Document');
+        console.log('   • business-case: Business Case Analysis');
+        console.log('   • stakeholder-register: Stakeholder Register');
     }
 }
 /**
- * Enhanced setup wizard with interactive provider selection
+ * Print comprehensive help information
  */
-async function runEnhancedSetupWizard() {
-    console.log('\n🧙‍♂️ Requirements Gathering Agent - Enhanced Setup Wizard\n');
-    console.log('Welcome! Let\'s get you set up for PMBOK document generation.\n');
-    // Step 1: Project detection (existing logic)
-    console.log('📁 STEP 1: Project Detection');
-    const readmePath = join(process.cwd(), 'README.md');
-    if (existsSync(readmePath)) {
-        console.log('   ✅ Found README.md - this will be used as project context');
-    }
-    else {
-        console.log('   ⚠️  No README.md found - a default context will be used');
-        console.log('   💡 Tip: Create a README.md with your project description for better results');
-    }
-    // Step 2: Interactive provider selection
-    console.log('\n⚙️  STEP 2: AI Provider Selection');
-    // Check if we can use interactive menu
-    if (process.stdout.isTTY && !process.env.CI) {
-        console.log('Choose your AI provider for document generation:\n');
-        const useInteractive = await getUserConfirmation('Would you like to use the interactive provider selection menu? (y/n): ');
-        if (useInteractive) {
-            await runProviderSelectionMenu();
-        }
-        else {
-            // Fall back to existing configuration guidance
-            await showProviderConfigurationGuidance();
-        }
-    }
-    else {
-        console.log('Non-interactive environment detected. Showing configuration guidance:');
-        await showProviderConfigurationGuidance();
-    }
-}
-function showAvailableTemplates() {
-    console.log('\n📋 Requirements Gathering Agent - Available Templates\n');
-    // Modular architecture: templates are loaded from processor-config.json and generationTasks.ts
-    // Example (abbreviated):
-    console.log('Planning Artifacts:');
-    console.log('  • Project KickOff Preparations Checklist (key: project-kickoff-preparations-checklist)');
-    // ...list other templates by category...
-    // For full list, see documentation or run with --help
-}
 function printHelp() {
     console.log(`
-Requirements Gathering Agent v2.1.3 - Celebrating 175 Weekly Downloads!
-AI-powered PMBOK documentation generator with validation
+🚀 Requirements Gathering Agent CLI v2.1.3
 
 USAGE:
-  requirements-gathering-agent [options] [document-types]
+   node dist/cli.js [COMMAND] [OPTIONS]
 
-OPTIONS:
-  -h, --help              Show this help message
-  -v, --version           Show version information
-  --output <dir>          Specify output directory (default: generated-documents)
-  --format <fmt>          Output format: markdown|json|yaml (default: markdown)
-  --quiet                 Suppress progress messages (good for CI/CD)
-  --verbose               Enable verbose output with detailed progress
-  --retries <n>           Number of retry attempts for failed generations
-  --metrics               Show performance metrics (timing, token usage)
-  --no-progress           Disable progress indicators
+MAIN COMMANDS:
+   --setup                     🔧 Interactive setup wizard for AI providers
+   --generate <key>           📝 Generate specific document by key
+   --generate-category <cat>  📂 Generate all documents in category
+   --generate-all             🎯 Generate all available documents
+   --list-templates           📋 Show all available document templates
+   --analyze                  🔍 Analyze workspace without generating docs
+   --status                   ℹ️  Show configuration and system status
 
-NEW V2.1.3 FEATURES:
-  --milestone, --achievement    Show milestone celebration details
-  --status, --info             Show system status and configuration
-  --setup                      Enhanced interactive setup wizard for new users
-  --select-provider            Interactive AI provider selection menu  
-  --choose-provider            (Alternative flag for provider selection)
-  --list-templates, --templates Show available document templates
-  --analyze                    Analyze workspace without generating docs
+CATEGORY SHORTCUTS:
+   --generate-core-analysis        📊 Generate all core analysis documents
+   --generate-quality-assurance    ✅ Generate all QA documents
+   --generate-technical-analysis   🔧 Generate all technical analysis docs
+   --generate-project-charter      📜 Generate project charter documents
+   --generate-management-plans     📋 Generate all management plans
 
-DOCUMENT TYPES:
-  --generate-core         Generate core analysis documents
-  --generate-management   Generate management plans
-  --generate-planning     Generate planning artifacts
-  --generate-technical    Generate technical analysis
-  --generate-stakeholder  Generate stakeholder management documents
-  (If no types specified, generates all document types)
+PMBOK VALIDATION:
+   --validate                 ✅ Validate generated documents against PMBOK
+   --validate-file <file>     📄 Validate specific document file
 
-VALIDATION OPTIONS:
-  --validate-pmbok        Generate all documents with PMBOK 7.0 validation
-  --generate-with-validation  🚀 ACTIVATE QUALITY ASSURANCE ENGINE
-                               Generate with comprehensive PMBOK validation,
-                               intelligent quality assessment, and actionable
-                               improvement recommendations. Creates detailed
-                               quality reports for continuous improvement.
-  --validate-only         Validate existing documents without regenerating
-  --validate-consistency  Check cross-document consistency only
-  --quality-assessment    Provide detailed quality scores for documents
+VERSION CONTROL:
+   vcs init                   🔄 Initialize git repository in output directory
+   vcs commit <file> [msg]    💾 Commit specific generated document
+   vcs status                 📊 Show git status of generated documents
 
 CONFIGURATION:
-  Create a .env file with your AI provider configuration:
-  
-  Google AI Studio (Free tier available):
-    GOOGLE_AI_API_KEY=your-google-ai-api-key
-    GOOGLE_AI_MODEL=gemini-1.5-flash
-  
-  Azure OpenAI with Entra ID (Recommended):
-    AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-    DEPLOYMENT_NAME=gpt-4
-    USE_ENTRA_ID=true
-  
-  Azure OpenAI with API Key:
-    AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
-    AZURE_AI_API_KEY=your-api-key
-    REQUIREMENTS_AGENT_MODEL=gpt-4
-  
-  GitHub AI (Free tier):
-    AZURE_AI_ENDPOINT=https://models.inference.ai.azure.com
-    GITHUB_TOKEN=your-github-token
-    REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
-  
-  Ollama (Local):
-    OLLAMA_ENDPOINT=http://localhost:11434
-    REQUIREMENTS_AGENT_MODEL=llama3.1
+   --reload-env              ♻️  Reload environment configuration
+   --config-status           ⚙️  Show detailed configuration status
 
-AUTHENTICATION:
-  For Azure Entra ID: Run "az login" to authenticate.
-  For API keys: Set in .env file.
-  For Ollama: Start "ollama serve".
+EXAMPLES:
+   node dist/cli.js --setup
+   node dist/cli.js --generate project-charter
+   node dist/cli.js --generate-quality-assurance
+   node dist/cli.js --list-templates
+   node dist/cli.js --status
+   node dist/cli.js vcs commit business-case.md "Updated business case"
 
-VCS (VERSION CONTROL) COMMANDS:
-  requirements-gathering-agent vcs log
-      Show commit history for generated documents.
-  requirements-gathering-agent vcs diff <file>
-      Show changes for a specific document.
-  requirements-gathering-agent vcs revert <file> <commit>
-      Revert a document to a previous version.
-  requirements-gathering-agent vcs status
-      Show uncommitted changes in generated docs.
-  requirements-gathering-agent vcs push
-      Push local changes to remote repository (if configured).
-  requirements-gathering-agent vcs pull
-      Pull latest changes from remote repository (if configured).
-
-Learn more:
-  See documentation: https://github.com/mdresch/requirements-gathering-agent
-  Run "requirements-gathering-agent --help" for command options.
-
-Ready to configure your AI provider? Let's go!
+For more information, visit: https://github.com/your-repo/requirements-gathering-agent
 `);
 }
-/**
- * Interactive confirmation prompt
- */
-async function getUserConfirmation(prompt) {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    return new Promise((resolve) => {
-        rl.question(prompt, (answer) => {
-            rl.close();
-            resolve(answer.trim().toLowerCase() === 'y');
-        });
-    });
+// Missing function implementations
+async function scaffoldNewProcessor(category, name) {
+    console.log(`🏗️  Scaffolding new processor: ${name} in category: ${category}`);
+    console.log('This feature is not yet implemented.');
+    process.exit(0);
 }
-/**
- * Show provider configuration guidance
- */
-async function showProviderConfigurationGuidance() {
-    console.log(`
-📋 AI Provider Configuration Guidance
-
-To get started, you need to configure at least one AI provider in your .env file.
-
-🔧 Recommended Quick Setup:
-1. For Google AI Studio (Free tier):
-    - GOOGLE_AI_API_KEY=your-google-ai-api-key
-    - GOOGLE_AI_MODEL=gemini-1.5-flash
-    - Get API key: https://makersuite.google.com/app/apikey
-
-2. For Azure OpenAI with Entra ID (Enterprise):
-    - AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-    - DEPLOYMENT_NAME=gpt-4
-    - USE_ENTRA_ID=true
-    - Then run: az login
-
-3. For Azure OpenAI with API Key:
-    - AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
-    - AZURE_AI_API_KEY=your-api-key
-    - REQUIREMENTS_AGENT_MODEL=gpt-4
-
-4. For GitHub AI (Free tier):
-    - AZURE_AI_ENDPOINT=https://models.inference.ai.azure.com
-    - GITHUB_TOKEN=your-github-token
-    - REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
-
-5. For Ollama (Local, offline):
-    - OLLAMA_ENDPOINT=http://localhost:11434
-    - REQUIREMENTS_AGENT_MODEL=llama3.1
-    - Then run: ollama serve
-
-📄 Example .env file:
-GOOGLE_AI_API_KEY=your-google-ai-api-key
-GOOGLE_AI_MODEL=gemini-1.5-flash
-
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-DEPLOYMENT_NAME=gpt-4
-USE_ENTRA_ID=true
-
-AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_AI_API_KEY=your-api-key
-REQUIREMENTS_AGENT_MODEL=gpt-4
-
-GITHUB_ENDPOINT=https://models.github.ai/inference/
-GITHUB_TOKEN=your-github-token
-REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
-
-OLLAMA_ENDPOINT=http://localhost:11434
-REQUIREMENTS_AGENT_MODEL=llama3.1
-
-🔑 Authentication:
-  For Azure Entra ID: Run 'az login' to authenticate.
-  For API keys: Set in .env file.
-  For Ollama: Start 'ollama serve'.
-
-📚 Learn more:
-  See documentation: https://github.com/mdresch/requirements-gathering-agent
-  Run 'requirements-gathering-agent --help' for command options.
-
-Ready to configure your AI provider? Let's go!
-`);
-}
-/**
- * Analyze workspace for context and documentation
- */
-async function analyzeWorkspace() {
-    console.log('\n🔍 Requirements Gathering Agent - Workspace Analysis\n');
+async function runProviderSelectionMenu() {
+    console.log('🤖 AI Provider Selection Menu');
     try {
-        const { analyzeProjectComprehensively } = await import('./modules/projectAnalyzer.js');
-        const projectPath = process.cwd();
-        const analysis = await analyzeProjectComprehensively(projectPath);
-        // (Moved CLI scaffolding block inside main())
-        console.log('\n🔗 Suggested Context Sources:');
-        if (analysis.suggestedSources && analysis.suggestedSources.length > 0) {
-            analysis.suggestedSources.forEach(src => console.log(`   - ${src}`));
-        }
-        else {
-            console.log('   (No additional sources suggested)');
-        }
-        console.log('\n🧠 Project Context Preview:\n');
-        console.log(analysis.projectContext.slice(0, 500) + (analysis.projectContext.length > 500 ? ' ...' : ''));
-        console.log(analysis.projectContext.slice(0, 500) + (analysis.projectContext.length > 500 ? ' ...' : ''));
-        console.log('\n✅ Workspace analysis complete.\n');
+        const menu = new InteractiveProviderMenu();
+        await menu.showMenu();
     }
     catch (error) {
-        console.error('❌ Error analyzing workspace:', error.message);
+        console.error('Error running provider selection menu:', error);
+        process.exit(1);
     }
 }
-// (Removed duplicate CLI scaffolding block - handled inside main())
-async function scaffoldNewProcessor(category, name) {
-    const rootDir = process.cwd();
-    // Sanitize name to proper PascalCase (remove hyphens, capitalize words)
-    const sanitizedName = name
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join('');
-    const key = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    const templateDir = join(rootDir, 'src', 'modules', 'documentTemplates', category);
-    await mkdir(templateDir, { recursive: true });
-    const templateFile = join(templateDir, `${sanitizedName}Template.ts`);
-    const processorFile = join(templateDir, `${sanitizedName}Processor.ts`);
-    // Check for existing files to prevent overwriting
-    const templateExists = await access(templateFile).then(() => true).catch(() => false);
-    const processorExists = await access(processorFile).then(() => true).catch(() => false);
-    if (templateExists) {
-        console.log(`⚠️  Template file already exists: ${templateFile}`);
-        console.log('   Skipping template creation...');
-    }
-    if (processorExists) {
-        console.log(`⚠️  Processor file already exists: ${processorFile}`);
-        console.log('   Skipping processor creation...');
-    }
-    if (templateExists || processorExists) {
-        console.log('❌ Cannot proceed with scaffolding - files already exist');
-        console.log('   Please choose a different name or manually remove existing files');
-        return;
-    }
-    // Standard Template stub
-    const templateContent = `import type { ProjectContext } from '../../ai/types';
-
-/**
- * ${sanitizedName} Template generates the content for the ${sanitizedName} document.
- */
-export class ${sanitizedName}Template {
-  constructor(private context: ProjectContext) {}
-
-  /**
-   * Build the markdown content for ${sanitizedName}
-   */
-  generateContent(): string {
-    // TODO: Implement content generation logic using this.context
-    return \`# ${sanitizedName}\\n\\n\` +
-      \`**Project:** \${this.context.projectName}\\n\\n\` +
-      \`- Replace this with your checklist items or sections\`;
-  }
-}`; // Standard Processor stub
-    const processorContent = `import { AIProcessor } from '../../ai/AIProcessor.js';
-import type { ProjectContext } from '../../ai/types.js';
-import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
-import { ${sanitizedName}Template } from '../${category}/${sanitizedName}Template.js';
-
-class ExpectedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ExpectedError';
-  }
+async function runEnhancedSetupWizard() {
+    console.log('🧙‍♂️ Enhanced Setup Wizard');
+    console.log('This feature is not yet implemented.');
+    process.exit(0);
 }
-
-/**
- * Processor for the ${sanitizedName} document.
- */
-export class ${sanitizedName}Processor implements DocumentProcessor {
-  private aiProcessor: AIProcessor;
-
-  constructor() {
-    this.aiProcessor = AIProcessor.getInstance();
-  }
-  async process(context: ProjectContext): Promise<DocumentOutput> {
-    try {
-      const prompt = this.createPrompt(context);
-      const content = await this.aiProcessor.makeAICall([
-        { role: 'system', content: 'You are an expert consultant specializing in ${category.replace('-', ' ')} documentation. Generate comprehensive, professional content based on the project context.' },
-        { role: 'user', content: prompt }
-      ]).then(res => typeof res === 'string' ? res : res.content);
-
-      await this.validateOutput(content);
-      
-      return {
-        title: '${sanitizedName}',
-        content
-      };
-    } catch (error) {
-      if (error instanceof ExpectedError) {
-        console.warn('Expected error in ${sanitizedName} processing:', error.message);
-        throw new Error(\`Failed to generate ${sanitizedName}: \${error.message}\`);
-      } else {
-        console.error('Unexpected error in ${sanitizedName} processing:', error);
-        throw new Error('An unexpected error occurred while generating ${sanitizedName}');
-      }
-    }
-  }
-
-  private createPrompt(context: ProjectContext): string {
-    // Get the template as an example structure
-    const template = new ${sanitizedName}Template(context);
-    const exampleStructure = template.generateContent();
-
-    return \`Based on the following project context, generate a comprehensive ${sanitizedName} document.
-
-Project Context:
-- Name: \${context.projectName || 'Untitled Project'}
-- Type: \${context.projectType || 'Not specified'}
-- Description: \${context.description || 'No description provided'}
-
-Use this structure as a reference (but customize the content for the specific project):
-
-\${exampleStructure}
-
-Important Instructions:
-- Make the content specific to the project context provided
-- Ensure the language is professional and appropriate for the document type
-- Include practical guidance where applicable
-- Focus on what makes this project unique
-- Use markdown formatting for proper structure
-- Keep content concise but comprehensive\`;
-  }
-
-  private async validateOutput(content: string): Promise<void> {
-    if (!content || content.trim().length === 0) {
-      throw new ExpectedError('Generated content is empty');
-    }
-
-    // Basic validation - ensure content has some structure
-    if (!content.includes('#')) {
-      throw new ExpectedError('Generated content lacks proper markdown structure');
-    }
-  }
-}`;
-    await writeFile(templateFile, templateContent + '\n');
-    await writeFile(processorFile, processorContent + '\n');
-    // Check and update processor-config.json
-    const configPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'processor-config.json');
-    const configJson = JSON.parse(await readFile(configPath, 'utf-8'));
-    if (configJson[key]) {
-        console.log(`⚠️  Entry already exists in processor-config.json: ${key}`);
-        console.log('   Skipping processor-config.json update...');
-    }
-    else {
-        configJson[key] = {
-            module: `../documentTemplates/${category}/${sanitizedName}Processor.ts#${sanitizedName}Processor`,
-            dependencies: [],
-            priority: 999
-        };
-        await writeFile(configPath, JSON.stringify(configJson, null, 2) + '\n');
-        console.log(`✅ Added processor config entry: ${key}`);
-    }
-    // Backup ProcessorFactory.ts before updating
-    // const backupPath = join(rootDir, 'src', 'modules', 'documentGenerator', `ProcessorFactory.${Date.now()}.bak.ts`);
-    // await copyFile(factoryPath, backupPath);
-    // console.log(`✅ Archived ProcessorFactory.ts to ${backupPath}`);   // Update generationTasks.ts to include the new document task
-    const tasksPath = join(rootDir, 'src', 'modules', 'documentGenerator', 'generationTasks.ts');
-    let tasksContent = await readFile(tasksPath, 'utf-8');
-    // Check for duplicate entries in GENERATION_TASKS and DOCUMENT_CONFIG
-    if (tasksContent.includes(`key: '${key}'`)) {
-        console.log(`⚠️  Entry already exists in GENERATION_TASKS: ${key}`);
-        console.log('   Skipping generationTasks.ts update...');
-    }
-    else {
-        const newTaskEntry = `  {
-    key: '${key}',
-    name: '${name}',
-    category: '${category}',
-    func: '${key}.md',
-    priority: 999,
-    emoji: '📝',
-    pmbokRef: ''
-  },\n`;
-        tasksContent = tasksContent.replace(/\n\];/, `\n${newTaskEntry}];`);
-        // After updating GENERATION_TASKS, also update DOCUMENT_CONFIG
-        const docConfigEntry = `    '${key}': { filename: '${category}/${key}.md', title: '${name}' },\n`;
-        tasksContent = tasksContent.replace(/export const DOCUMENT_CONFIG:[^\n]+{/, match => `${match}\n${docConfigEntry}`);
-        await writeFile(tasksPath, tasksContent);
-        console.log(`✅ Added generation task entry: ${key}`);
-    }
-    // Update fileManager.ts to register this document for version control
-    const fmPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
-    let fmContent = await readFile(fmPath, 'utf-8');
-    // Check for duplicate entry in fileManager DOCUMENT_CONFIG
-    if (fmContent.includes(`'${key}': {`)) {
-        console.log(`⚠️  Entry already exists in fileManager DOCUMENT_CONFIG: ${key}`);
-        console.log('   Skipping fileManager.ts update...');
-    }
-    else {
-        const newFmEntry = `    '${key}': { title: '${name}', filename: '${category}/${key}.md', category: DOCUMENT_CATEGORIES.${category.replace(/-/g, '_').toUpperCase()}, description: '', generatedAt: '' },\n`;
-        // Insert after DOCUMENT_CONFIG opening brace
-        fmContent = fmContent.replace(/(export const DOCUMENT_CONFIG:[^=]+=\s*{\s*\n)/, `$1${newFmEntry}`);
-        await writeFile(fmPath, fmContent);
-        console.log(`✅ Registered new document in fileManager.ts: ${key}`);
-    } // Add new category to DOCUMENT_CATEGORIES if it doesn't exist
-    const fmCatPath = join(rootDir, 'src', 'modules', 'fileManager.ts');
-    let fmCatContent = await readFile(fmCatPath, 'utf-8');
-    const categoryConst = category.replace(/-/g, '_').toUpperCase();
-    // More precise regex to check for existing category constant
-    const categoryRegex = new RegExp(`^\\s*${categoryConst}:\\s*'[^']*',?\\s*$`, 'm');
-    if (!categoryRegex.test(fmCatContent)) {
-        fmCatContent = fmCatContent.replace(/(export const DOCUMENT_CATEGORIES = {)/, `$1\n    ${categoryConst}: '${category}',`);
-        await writeFile(fmCatPath, fmCatContent);
-        console.log(`✅ Added new category to DOCUMENT_CATEGORIES: ${category}`);
-    }
-    else {
-        console.log(`ℹ️  Category ${categoryConst} already exists in DOCUMENT_CATEGORIES`);
-    }
-    console.log(`✅ Scaffolded new processor: ${name} under category ${category}`);
+async function analyzeWorkspace() {
+    console.log('🔍 Analyzing workspace...');
+    console.log('This feature is not yet implemented.');
+    process.exit(0);
 }
-main().catch(error => {
-    console.error('❌ Unhandled error:', error);
+// Run the CLI
+main().catch((error) => {
+    console.error('❌ Fatal error:', error);
     process.exit(1);
 });
 //# sourceMappingURL=cli.js.map

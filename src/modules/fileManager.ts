@@ -59,6 +59,11 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'personas-assess-motivations': { title: 'PersonasAssessMotivations', filename: 'basic-docs/personas-assess-motivations.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'persona-utilize-app': { title: 'PersonaUtilizeApp', filename: 'basic-docs/persona-utilize-app.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'technology-comfort-user-personas': { title: 'TechnologyComfortUserPersonas', filename: 'basic-docs/technology-comfort-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'common-challenges-user-personas': { title: 'CommonChallengesUserPersonas', filename: 'basic-docs/common-challenges-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
+    'common-goals-user-personas': { title: 'CommonGoalsUserPersonas', filename: 'basic-docs/common-goals-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
     'collect-requirements-process': { title: 'CollectRequirementsProcess', filename: 'requirements/collect-requirements-process.md', category: DOCUMENT_CATEGORIES.REQUIREMENTS, description: '', generatedAt: '' },
     'key-rbacroles': { title: 'KeyRBACroles', filename: 'requirements/key-rbacroles.md', category: DOCUMENT_CATEGORIES.REQUIREMENTS, description: '', generatedAt: '' },
     'develop-schedule-input': { title: 'DevelopScheduleInput', filename: 'basic-docs/develop-schedule-input.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: '', generatedAt: '' },
@@ -422,7 +427,164 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'Checklist for project kickoff preparations, including scope, stakeholders, resources, and readiness.',
         generatedAt: ''
-    }
+    },
+    // Quality Assurance Documents
+    'test-strategy': {
+        title: 'Test Strategy',
+        filename: 'quality-assurance/test-strategy.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Comprehensive testing strategy and approach',
+        generatedAt: ''
+    },
+    'test-plan': {
+        title: 'Test Plan',
+        filename: 'quality-assurance/test-plan.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Detailed test plan with test scenarios and execution plan',
+        generatedAt: ''
+    },
+    'test-cases': {
+        title: 'Test Cases',
+        filename: 'quality-assurance/test-cases.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Detailed test cases and test scenarios',
+        generatedAt: ''
+    },
+    'quality-metrics': {
+        title: 'Quality Metrics',
+        filename: 'quality-assurance/quality-metrics.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Quality metrics and measurement criteria',
+        generatedAt: ''
+    },
+    'tech-acceptance-criteria': {
+        title: 'Technical Acceptance Criteria',
+        filename: 'quality-assurance/tech-acceptance-criteria.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Technical acceptance criteria and validation requirements',
+        generatedAt: ''
+    },
+    'performance-test-plan': {
+        title: 'Performance Test Plan',
+        filename: 'quality-assurance/performance-test-plan.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Performance testing strategy and test plan',
+        generatedAt: ''
+    },
+    'security-testing': {
+        title: 'Security Testing',
+        filename: 'quality-assurance/security-testing.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Security testing procedures and validation',
+        generatedAt: ''
+    },
+    'code-review': {
+        title: 'Code Review',
+        filename: 'quality-assurance/code-review.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Code review processes and standards',
+        generatedAt: ''
+    },
+    'bug-report': {
+        title: 'Bug Report',
+        filename: 'quality-assurance/bug-report.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Bug reporting template and procedures',
+        generatedAt: ''
+    },
+    'test-environment': {
+        title: 'Test Environment',
+        filename: 'quality-assurance/test-environment.md',
+        category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE,
+        description: 'Test environment setup and configuration',
+        generatedAt: ''
+    },
+    // Implementation Guides Documents
+    'coding-standards': {
+        title: 'Coding Standards',
+        filename: 'implementation-guides/coding-standards.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Development coding standards and guidelines',
+        generatedAt: ''
+    },
+    'development-setup': {
+        title: 'Development Setup',
+        filename: 'implementation-guides/development-setup.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Development environment setup guide',
+        generatedAt: ''
+    },
+    'version-control': {
+        title: 'Version Control',
+        filename: 'implementation-guides/version-control.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Version control procedures and best practices',
+        generatedAt: ''
+    },
+    'ci-pipeline': {
+        title: 'CI Pipeline',
+        filename: 'implementation-guides/ci-pipeline.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Continuous integration pipeline setup and configuration',
+        generatedAt: ''
+    },
+    'release-process': {
+        title: 'Release Process',
+        filename: 'implementation-guides/release-process.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Software release process and procedures',
+        generatedAt: ''
+    },
+    'code-documentation': {
+        title: 'Code Documentation',
+        filename: 'implementation-guides/code-documentation.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Code documentation standards and guidelines',
+        generatedAt: ''
+    },
+    'troubleshooting': {
+        title: 'Troubleshooting',
+        filename: 'implementation-guides/troubleshooting.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Troubleshooting guide and common issues',
+        generatedAt: ''
+    },
+    'development-workflow': {
+        title: 'Development Workflow',
+        filename: 'implementation-guides/development-workflow.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Development workflow and processes',
+        generatedAt: ''
+    },
+    'api-integration': {
+        title: 'API Integration',
+        filename: 'implementation-guides/api-integration.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'API integration guide and best practices',
+        generatedAt: ''
+    },
+    'deployment-guide': {
+        title: 'Deployment Guide',
+        filename: 'implementation-guides/deployment-guide.md',
+        category: DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES,
+        description: 'Application deployment guide and procedures',
+        generatedAt: ''
+    },
+    // Strategic Statements Documents
+    'strategic-business-case': {
+        title: 'Strategic Business Case',
+        filename: 'strategic-statements/strategic-business-case.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
+        description: 'Strategic business case and strategic analysis',
+        generatedAt: ''
+    },    // BABOK Documents
+    'babokintroduction': {
+        title: 'BABOK Introduction',
+        filename: 'BABOK/babokintroduction.md',
+        category: DOCUMENT_CATEGORIES.REQUIREMENTS,
+        description: 'Business Analysis Body of Knowledge introduction',
+        generatedAt: ''
+    },
 };
 
 // Create organized directory structure

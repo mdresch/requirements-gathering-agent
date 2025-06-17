@@ -17,12 +17,11 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 1,
     emoji: '🏗️',
     pmbokRef: '',
-  },
-  {
+  },  {
     key: 'system-design',
     name: 'System Design Specification',
     category: 'technical-design',
-    func: 'system-design-specification.md',
+    func: 'generateSystemDesign',
     priority: 2,
     emoji: '📐',
     pmbokRef: '',
@@ -31,16 +30,15 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'database-schema',
     name: 'Database Schema Design',
     category: 'technical-design',
-    func: 'database-schema-design.md',
+    func: 'generateDatabaseSchema',
     priority: 3,
     emoji: '🗄️',
     pmbokRef: '',
-  },
-  {
+  },  {
     key: 'security-design',
     name: 'Security Design Document',
     category: 'technical-design',
-    func: 'security-design.md',
+    func: 'generateSecurityDesign',
     priority: 5,
     emoji: '🔒',
     pmbokRef: '',
@@ -49,7 +47,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'performance-requirements',
     name: 'Performance Requirements',
     category: 'technical-design',
-    func: 'performance-requirements.md',
+    func: 'generatePerformanceRequirements',
     priority: 6,
     emoji: '⚡',
     pmbokRef: '',
@@ -58,7 +56,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'integration-design',
     name: 'Integration Design',
     category: 'technical-design',
-    func: 'integration-design.md',
+    func: 'generateIntegrationDesign',
     priority: 7,
     emoji: '🔄',
     pmbokRef: '',
@@ -67,7 +65,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'technical-stack',
     name: 'Technical Stack Overview',
     category: 'technical-design',
-    func: 'technical-stack-overview.md',
+    func: 'generateTechnicalStack',
     priority: 8,
     emoji: '🔧',
     pmbokRef: '',
@@ -76,7 +74,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'deployment-architecture',
     name: 'Deployment Architecture',
     category: 'technical-design',
-    func: 'deployment-architecture.md',
+    func: 'generateDeploymentArchitecture',
     priority: 9,
     emoji: '🚀',
     pmbokRef: '',
@@ -85,7 +83,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     key: 'error-handling',
     name: 'Error Handling Guidelines',
     category: 'technical-design',
-    func: 'error-handling-guidelines.md',
+    func: 'generateErrorHandling',
     priority: 10,
     emoji: '⚠️',
     pmbokRef: '',
@@ -545,12 +543,67 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '📝',
     pmbokRef: ''
   },
+  {
+    key: 'common-goals-user-personas',
+    name: 'CommonGoalsUserPersonas',
+    category: 'basic-docs',
+    func: 'common-goals-user-personas.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'common-challenges-user-personas',
+    name: 'CommonChallengesUserPersonas',
+    category: 'basic-docs',
+    func: 'common-challenges-user-personas.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'technology-comfort-user-personas',
+    name: 'TechnologyComfortUserPersonas',
+    category: 'basic-docs',
+    func: 'technology-comfort-user-personas.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'persona-utilize-app',
+    name: 'PersonaUtilizeApp',
+    category: 'basic-docs',
+    func: 'persona-utilize-app.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
+  {
+    key: 'personas-assess-motivations',
+    name: 'PersonasAssessMotivations',
+    category: 'basic-docs',
+    func: 'personas-assess-motivations.md',
+    priority: 999,
+    emoji: '📝',
+    pmbokRef: ''
+  },
 ];
 
 /**
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
+    'personas-assess-motivations': { filename: 'basic-docs/personas-assess-motivations.md', title: 'PersonasAssessMotivations' },
+
+    'persona-utilize-app': { filename: 'basic-docs/persona-utilize-app.md', title: 'PersonaUtilizeApp' },
+
+    'technology-comfort-user-personas': { filename: 'basic-docs/technology-comfort-user-personas.md', title: 'TechnologyComfortUserPersonas' },
+
+    'common-challenges-user-personas': { filename: 'basic-docs/common-challenges-user-personas.md', title: 'CommonChallengesUserPersonas' },
+
+    'common-goals-user-personas': { filename: 'basic-docs/common-goals-user-personas.md', title: 'CommonGoalsUserPersonas' },
+
     'collect-requirements-process': { filename: 'requirements/collect-requirements-process.md', title: 'CollectRequirementsProcess' },
 
     'key-rbacroles': { filename: 'requirements/key-rbacroles.md', title: 'KeyRBACroles' },
