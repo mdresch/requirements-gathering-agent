@@ -1,7 +1,7 @@
 import { AIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
-import { ScopemanagementplanTemplate } from '../scope-management/ScopemanagementplanTemplate';
+import { ScopemanagementplanTemplate } from '../scope-management/ScopemanagementplanTemplate.js';
 
 class ExpectedError extends Error {
   constructor(message: string) {

@@ -169,12 +169,12 @@
     "priority": 999
   },
   "project-purpose": {
-    "module": "../documentTemplates/strategic-statements/strategicStatementsProcessor.js#ProjectPurposeProcessor",
+    "module": "../documentTemplates/strategic-statements/PurposestatementProcessor.ts#PurposestatementProcessor",
     "dependencies": [],
     "priority": 1
   },
   "project-kickoff-preparations-checklist": {
-    "module": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.js#ProjectKickoffPreparationsChecklistProcessor",
+    "module": "../documentTemplates/planningArtifacts/projectKickoffPreparationsChecklistProcessor.ts#ProjectKickoffPreparationsChecklistProcessor",
     "dependencies": [],
     "priority": 1
   },
@@ -403,7 +403,7 @@
     "priority": 999
   },
   "collect-requirements": {
-    "module": "../documentTemplates/requirements/CollectrequirementsProcessor.ts#CollectrequirementsProcessor",
+    "module": "../documentTemplates/requirements/CollectrequirementsprocessProcessor.ts#CollectrequirementsprocessProcessor",
     "dependencies": [],
     "priority": 999
   },
@@ -443,17 +443,17 @@
     "priority": 999
   },
   "quality-management-plan": {
-    "module": "../documentTemplates/planning/QualitymanagementplanProcessor.ts#QualitymanagementplanProcessor",
+    "module": "../documentTemplates/planning/QualitymanagementplsnProcessor.ts#QualitymanagementplsnProcessor",
     "dependencies": [],
     "priority": 999
   },
   "perform-integrated-change-control": {
-    "module": "../documentTemplates/pmbok/PerformintegratedchangecontrolProcessor.ts#PerformintegratedchangecontrolProcessor",
+    "module": "../documentTemplates/pmbok/PerformintegrationchangecontrolprocessProcessor.ts#PerformintegrationchangecontrolprocessProcessor",
     "dependencies": [],
     "priority": 999
   },
   "close-project-or-phase": {
-    "module": "../documentTemplates/pmbok/CloseprojectorphaseProcessor.ts#CloseprojectorphaseProcessor",
+    "module": "../documentTemplates/pmbok/CloseprojectphaseprocessProcessor.ts#CloseprojectphaseprocessProcessor",
     "dependencies": [],
     "priority": 999
   },

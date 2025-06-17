@@ -95,54 +95,55 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
     'project-summary': {
         title: 'Project Summary and Goals',
-        filename: 'project-summary.md',
+        filename: 'basic-docs/project-summary.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'AI-generated project overview with business goals and objectives',
         generatedAt: ''
     },
     'user-stories': {
         title: 'User Stories and Requirements',
-        filename: 'user-stories.md',
+        filename: 'basic-docs/user-stories.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Comprehensive user stories following Agile format',
         generatedAt: ''
     },
     'user-personas': {
         title: 'User Personas',
-        filename: 'user-personas.md',
+        filename: 'basic-docs/user-personas.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Detailed user personas and demographics',
         generatedAt: ''
-    },    'key-roles-and-needs': {
+    },
+    'key-roles-and-needs': {
         title: 'Key Roles and Needs Analysis',
-        filename: 'key-roles-and-needs.md',
+        filename: 'basic-docs/key-roles-and-needs.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Analysis of user roles and their specific needs',
         generatedAt: ''
     },
     'project-statement-of-work': {
         title: 'Project Statement of Work',
-        filename: 'project-statement-of-work.md',
+        filename: 'basic-docs/project-statement-of-work.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Project Statement of Work detailing scope, deliverables, and acceptance criteria',
         generatedAt: ''
     },
     'business-case': {
         title: 'Business Case',
-        filename: 'business-case.md',
+        filename: 'basic-docs/business-case.md',
         category: DOCUMENT_CATEGORIES.CORE,
         description: 'Comprehensive business case and justification',
         generatedAt: ''
     },'project-charter': {
         title: 'Project Charter',
-        filename: 'project-charter.md',
+        filename: 'project-charter/project-charter.md',
         category: DOCUMENT_CATEGORIES.CHARTER,
         description: 'PMBOK Project Charter formally authorizing the project',
         generatedAt: ''
     },
     'project-management-plan': {
         title: 'Project Management Plan',
-        filename: 'project-management-plan.md',
+        filename: 'project-charter/project-management-plan.md',
         category: DOCUMENT_CATEGORIES.CHARTER,
         description: 'PMBOK Project Management Plan',
         generatedAt: ''
@@ -155,42 +156,42 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'risk-management-plan': {
         title: 'Risk Management Plan',
-        filename: 'risk-management-plan.md',
+        filename: 'management-plans/risk-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Risk Management Plan',
         generatedAt: ''
     },
     'cost-management-plan': {
         title: 'Cost Management Plan',
-        filename: 'cost-management-plan.md',
+        filename: 'management-plans/cost-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Cost Management Plan',
         generatedAt: ''
     },
     'quality-management-plan': {
         title: 'Quality Management Plan',
-        filename: 'quality-management-plan.md',
+        filename: 'management-plans/quality-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Quality Management Plan',
         generatedAt: ''
     },
     'resource-management-plan': {
         title: 'Resource Management Plan',
-        filename: 'resource-management-plan.md',
+        filename: 'management-plans/resource-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Resource Management Plan',
         generatedAt: ''
     },
     'communication-management-plan': {
         title: 'Communication Management Plan',
-        filename: 'communication-management-plan.md',
+        filename: 'management-plans/communication-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Communication Management Plan',
         generatedAt: ''
     },
     'procurement-management-plan': {
         title: 'Procurement Management Plan',
-        filename: 'procurement-management-plan.md',
+        filename: 'management-plans/procurement-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Procurement Management Plan',
         generatedAt: ''
@@ -218,97 +219,97 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'work-breakdown-structure': {
         title: 'Work Breakdown Structure (WBS)',
-        filename: 'work-breakdown-structure.md',
+        filename: 'planning/work-breakdown-structure.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Work Breakdown Structure',
         generatedAt: ''
     },
     'wbs-dictionary': {
         title: 'WBS Dictionary',
-        filename: 'wbs-dictionary.md',
+        filename: 'planning/wbs-dictionary.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK WBS Dictionary with detailed descriptions',
         generatedAt: ''
     },
     'activity-list': {
         title: 'Activity List',
-        filename: 'activity-list.md',
+        filename: 'planning/activity-list.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Activity List',
         generatedAt: ''
     },
     'activity-duration-estimates': {
         title: 'Activity Duration Estimates',
-        filename: 'activity-duration-estimates.md',
+        filename: 'planning/activity-duration-estimates.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Activity Duration Estimates',
         generatedAt: ''
     },
     'activity-resource-estimates': {
         title: 'Activity Resource Estimates',
-        filename: 'activity-resource-estimates.md',
+        filename: 'planning/activity-resource-estimates.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Activity Resource Estimates',
         generatedAt: ''
     },
     'schedule-network-diagram': {
         title: 'Schedule Network Diagram',
-        filename: 'schedule-network-diagram.md',
+        filename: 'planning/schedule-network-diagram.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Schedule Network Diagram',
         generatedAt: ''
     },
     'milestone-list': {
         title: 'Milestone List',
-        filename: 'milestone-list.md',
+        filename: 'planning/milestone-list.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Milestone List',
         generatedAt: ''
     },
     'schedule-development-input': {
         title: 'Schedule Development Input',
-        filename: 'schedule-development-input.md',
+        filename: 'planning/schedule-development-input.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'PMBOK Schedule Development Input',
         generatedAt: ''
     },
     'data-model-suggestions': {
         title: 'Data Model Suggestions',
-        filename: 'data-model-suggestions.md',
+        filename: 'technical-analysis/data-model-suggestions.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Database architecture and data model recommendations',
         generatedAt: ''
     },
     'tech-stack-analysis': {
         title: 'Technology Stack Analysis',
-        filename: 'tech-stack-analysis.md',
+        filename: 'technical-analysis/tech-stack-analysis.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Comprehensive technology stack recommendations',
         generatedAt: ''
     },
     'risk-analysis': {
         title: 'Risk Analysis',
-        filename: 'risk-analysis.md',
+        filename: 'technical-analysisrisk-analysis.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Detailed risk analysis and mitigation strategies',
         generatedAt: ''
     },
     'acceptance-criteria': {
         title: 'Acceptance Criteria',
-        filename: 'acceptance-criteria.md',
+        filename: 'technical-analysis/acceptance-criteria.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Comprehensive acceptance criteria and validation methods',
         generatedAt: ''
     },
     'compliance-considerations': {
         title: 'Compliance Considerations',
-        filename: 'compliance-considerations.md',
+        filename: 'technical-analysis/compliance-considerations.md',
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'Regulatory and compliance requirements analysis',
         generatedAt: ''
     },    'ui-ux-considerations': {
         title: 'UI/UX Considerations',
-        filename: 'ui-ux-considerations.md',        
+        filename: 'technical-analysis/ui-ux-considerations.md',        
         category: DOCUMENT_CATEGORIES.TECHNICAL,
         description: 'User experience and interface design recommendations',
         generatedAt: ''
@@ -323,7 +324,7 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'direct-and-manage-project-work': {
         title: 'Direct and Manage Project Work Process',
-        filename: 'direct-and-manage-project-work.md',
+        filename: 'management-plans/direct-and-manage-project-work.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Direct and Manage Project Work Process',
         generatedAt: ''
@@ -336,14 +337,14 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'requirements-documentation': {
         title: 'Requirements Documentation',
-        filename: 'requirements-documentation.md',
+        filename: 'management-plans/requirements-documentation.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Requirements Documentation',
         generatedAt: ''
     },
     'requirements-traceability-matrix': {
         title: 'Requirements Traceability Matrix',
-        filename: 'requirements-traceability-matrix.md',
+        filename: 'management-plans/requirements-traceability-matrix.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Requirements Traceability Matrix',
         generatedAt: ''
@@ -363,14 +364,14 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     // Additional missing PMBOK documents
     'perform-integrated-change-control': {
         title: 'Perform Integrated Change Control Process',
-        filename: 'perform-integrated-change-control.md',
+        filename: 'management-plans/perform-integrated-change-control.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Perform Integrated Change Control Process',
         generatedAt: ''
     },
     'close-project-or-phase': {
         title: 'Close Project or Phase Process',
-        filename: 'close-project-or-phase.md',
+        filename: 'management-plans/close-project-or-phase.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Close Project or Phase Process',
         generatedAt: ''
@@ -383,14 +384,14 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'requirements-management-plan': {
         title: 'Requirements Management Plan',
-        filename: 'requirements-management-plan.md',
+        filename: 'management-plans/requirements-management-plan.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Requirements Management Plan',
         generatedAt: ''
     },
     'collect-requirements': {
         title: 'Collect Requirements Process',
-        filename: 'collect-requirements.md',
+        filename: 'management-plans/collect-requirements.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Collect Requirements Process',
         generatedAt: ''
@@ -403,7 +404,7 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'create-wbs': {
         title: 'Create WBS Process',
-        filename: 'create-wbs.md',
+        filename: 'management-plans/create-wbs.md',
         category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
         description: 'PMBOK Create WBS Process',
         generatedAt: ''
@@ -416,14 +417,14 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     },
     'project-purpose': {
         title: 'Project Purpose',
-        filename: 'project-purpose.md',
+        filename: 'strategic-statements/project-purpose.md',
         category: DOCUMENT_CATEGORIES.STRATEGIC,
         description: 'Project purpose and objectives documentation',
         generatedAt: ''
     },
     'project-kickoff-preparations-checklist': {
         title: 'Project KickOff Preparations Checklist',
-        filename: 'Project-KickOff-Preprations-CheckList.md',
+        filename: 'planning/Project-KickOff-Preprations-CheckList.md',
         category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
         description: 'Checklist for project kickoff preparations, including scope, stakeholders, resources, and readiness.',
         generatedAt: ''

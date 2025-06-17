@@ -1,7 +1,7 @@
 import { AIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
-import { RiskmanagementplanTemplate } from '../risk-management/RiskmanagementplanTemplate';
+import { RiskmanagementplanTemplate } from '../risk-management/RiskmanagementplanTemplate.js';
 
 class ExpectedError extends Error {
   constructor(message: string) {
