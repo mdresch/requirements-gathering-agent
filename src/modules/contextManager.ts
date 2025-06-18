@@ -51,6 +51,7 @@ function extractContent(response: any) {
 }
 
 export class ContextManager {
+    private static instance: ContextManager | null = null;
     private maxContextTokens: number;
     private coreContext: string = '';
     public enrichedContext: Map<string, string> = new Map();
@@ -65,6 +66,16 @@ export class ContextManager {
         this.initializeModelTokenLimits();
         // Auto-adjust based on current AI provider and model
         this.autoAdjustTokenLimits();
+    }
+    
+    /**
+     * Get singleton instance of ContextManager
+     */
+    public static getInstance(): ContextManager {
+        if (!ContextManager.instance) {
+            ContextManager.instance = new ContextManager();
+        }
+        return ContextManager.instance;
     }
 
     private initializeModelTokenLimits() {
@@ -196,13 +207,33 @@ export class ContextManager {
     }
 
     buildContextForDocument(documentType: string, additionalContext?: string[]): string {
-        const cacheKey = `${documentType}_${this.hashString(this.coreContext)}_${additionalContext?.join('|') || ''}`;
-        if (this.contextCache.has(cacheKey)) {
+        const cacheKey = `${documentType}_${this.hashString(this.coreContext)}_${additionalContext?.join('|') || ''}`;        if (this.contextCache.has(cacheKey)) {
             return this.contextCache.get(cacheKey)!;
         }
+        
         let context = this.coreContext;
         const isLargeContext = this.supportsLargeContext();
         let remainingTokens = this.getEffectiveTokenLimit('enriched') - this.estimateTokens(context);
+        
+        // HIGHEST PRIORITY: Add existing generated documents first
+        const existingDocsKeys = Array.from(this.enrichedContext.keys())
+            .filter(key => key.startsWith('PRIORITY-EXISTING-'))
+            .sort(); // Sort to ensure consistent ordering
+        
+        console.log(`🎯 Processing ${existingDocsKeys.length} existing documents as priority context`);
+        
+        for (const contextKey of existingDocsKeys) {
+            const contextPart = this.enrichedContext.get(contextKey)!;
+            const tokens = this.estimateTokens(contextPart);
+            if (tokens <= remainingTokens - 1000) { // Reserve some tokens for other context
+                context += `\n\n## 🔥 PRIORITY CONTEXT (User Modified): ${contextKey.replace('PRIORITY-EXISTING-', '')}\n${contextPart}`;
+                remainingTokens -= tokens;
+                console.log(`✅ Added priority context: ${contextKey}`);
+            } else {
+                console.log(`⚠️ Skipping priority context due to token limit: ${contextKey}`);
+            }
+        }
+        
         const relevantContext = this.getRelevantContext(documentType);
         if (additionalContext) {
             relevantContext.push(...additionalContext);
@@ -610,6 +641,128 @@ ${file.content}`;
         this.autoConfigDone = true;
         return null; // Config already done
     }
+
+    /**
+     * Loads existing generated documents as highest priority context
+     * This ensures manual edits and existing content are respected by the LLM
+     */
+    async loadExistingGeneratedDocuments(generatedDocsPath: string = 'generated-documents'): Promise<void> {
+        try {
+            console.log('🔍 Scanning for existing generated documents...');
+            
+            // Check if generated-documents directory exists
+            const docsPath = path.resolve(generatedDocsPath);
+            try {
+                await fs.access(docsPath);
+            } catch {
+                console.log('📁 No generated-documents directory found, skipping existing docs injection');
+                return;
+            }
+            
+            const existingDocs = await this.scanGeneratedDocuments(docsPath);
+            
+            if (existingDocs.length === 0) {
+                console.log('📄 No existing generated documents found');
+                return;
+            }
+            
+            console.log(`📚 Found ${existingDocs.length} existing generated documents`);
+            
+            // Add each document as highest priority context
+            for (const doc of existingDocs) {
+                const contextKey = `PRIORITY-EXISTING-${doc.category}-${doc.name}`;
+                const contextContent = `
+# EXISTING DOCUMENT (USER MODIFIED) - HIGHEST PRIORITY
+**Document:** ${doc.name}
+**Category:** ${doc.category}
+**Path:** ${doc.filePath}
+**Last Modified:** ${doc.lastModified}
+
+⚠️ **IMPORTANT**: This document may contain manual user modifications. 
+When generating similar documents, prioritize consistency with this content and respect user changes.
+
+## Content:
+${doc.content}
+                `.trim();
+                
+                // Add with highest priority prefix to ensure it's used first
+                this.enrichedContext.set(contextKey, contextContent);
+                console.log(`✅ Added existing document as priority context: ${doc.name}`);
+            }
+            
+            console.log('🎯 Existing generated documents loaded as highest priority context');
+            
+        } catch (error) {
+            console.warn('⚠️ Failed to load existing generated documents:', error);
+            // Don't throw - allow system to continue
+        }
+    }
+    
+    /**
+     * Recursively scans the generated-documents directory for existing documents
+     */
+    private async scanGeneratedDocuments(docsPath: string): Promise<Array<{
+        name: string;
+        category: string;
+        filePath: string;
+        content: string;
+        lastModified: Date;
+    }>> {
+        const documents: Array<{
+            name: string;
+            category: string;
+            filePath: string;
+            content: string;
+            lastModified: Date;
+        }> = [];
+        
+        const scanDirectory = async (dirPath: string, category: string = 'general'): Promise<void> => {
+            try {
+                const entries = await fs.readdir(dirPath, { withFileTypes: true });
+                
+                for (const entry of entries) {
+                    const fullPath = path.join(dirPath, entry.name);
+                    
+                    if (entry.isDirectory()) {
+                        // Recursively scan subdirectories
+                        await scanDirectory(fullPath, entry.name);
+                    } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'README.md') {
+                        try {
+                            const content = await fs.readFile(fullPath, 'utf-8');
+                            const stats = await fs.stat(fullPath);
+                            
+                            // Only include documents that look like they were generated by this tool
+                            if (content.includes('Generated by Requirements Gathering Agent') || 
+                                content.includes('PMBOK') ||
+                                content.length > 100) { // Basic content length check
+                                
+                                documents.push({
+                                    name: entry.name.replace('.md', ''),
+                                    category: category,
+                                    filePath: fullPath,
+                                    content: content,
+                                    lastModified: stats.mtime
+                                });
+                            }
+                        } catch (error) {
+                            console.warn(`⚠️ Could not read document: ${fullPath}`, error);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn(`⚠️ Could not scan directory: ${dirPath}`, error);
+            }
+        };
+        
+        await scanDirectory(docsPath);
+        
+        // Sort by last modified (newest first) to prioritize recent changes
+        documents.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+        
+        return documents;
+    }
+
+    // ...existing code...
 }
 
 // Version export for tracking

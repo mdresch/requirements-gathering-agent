@@ -24,6 +24,50 @@ import * as path from 'path';
 import type { ProjectAnalysis, ProjectMarkdownFile } from './projectAnalyzer.js';
 import { analyzeProjectComprehensively } from './projectAnalyzer.js';
 import { populateEnhancedContextFromAnalysis } from './llmProcessor.js';
+import { ConfigurationManager } from './ai/ConfigurationManager.js';
+import type { AIProvider } from './ai/types.js';
+
+// Function to get project info from package.json
+function getProjectInfo() {
+    try {
+        const packageJsonPath = path.resolve(process.cwd(), 'package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        return {
+            name: packageJson.name || 'Requirements Gathering Agent',
+            version: packageJson.version || '2.1.2',
+            description: packageJson.description || 'AI-powered PMBOK documentation generator'
+        };
+    } catch (error) {
+        console.warn('Could not read package.json, using fallback values');
+        return {
+            name: 'Requirements Gathering Agent',
+            version: '2.1.2',
+            description: 'AI-powered PMBOK documentation generator'
+        };
+    }
+}
+
+// Function to get AI provider display name
+function getAIProviderDisplayName(): string {
+    try {
+        const configManager = ConfigurationManager.getInstance();
+        const provider = configManager.getAIProvider();
+        
+        const providerNames: Record<AIProvider, string> = {
+            'azure-openai': 'Azure OpenAI',
+            'azure-openai-key': 'Azure OpenAI (API Key)',
+            'azure-ai-studio': 'Azure AI Studio',
+            'google-ai': 'Google AI (Gemini)',
+            'github-ai': 'GitHub AI',
+            'ollama': 'Ollama'
+        };
+        
+        return providerNames[provider] || provider;
+    } catch (error) {
+        console.warn('Could not determine AI provider, using fallback');
+        return 'AI Provider';
+    }
+}
 
 export interface DocumentMetadata {
     title: string;
@@ -51,7 +95,7 @@ export const DOCUMENT_CATEGORIES = {
     MANAGEMENT_PLANS: 'management-plans',
     PLANNING_ARTIFACTS: 'planning-artifacts',
     STAKEHOLDER: 'stakeholder-management',
-    TECHNICAL: 'technical-analysis',
+    TECHNICAL_ANALYSIS: 'technical-analysis',
     QUALITY_ASSURANCE: 'quality-assurance',
     IMPLEMENTATION_GUIDES: 'implementation-guides',
     UNKNOWN: 'unknown' // Added for fallback/validation
@@ -92,62 +136,61 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
-    'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
-    'project-summary': {
+    'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },    'project-summary': {
         title: 'Project Summary and Goals',
         filename: 'basic-docs/project-summary.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'AI-generated project overview with business goals and objectives',
         generatedAt: ''
     },
     'user-stories': {
         title: 'User Stories and Requirements',
         filename: 'basic-docs/user-stories.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Comprehensive user stories following Agile format',
         generatedAt: ''
     },
     'user-personas': {
         title: 'User Personas',
         filename: 'basic-docs/user-personas.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Detailed user personas and demographics',
         generatedAt: ''
     },
     'key-roles-and-needs': {
         title: 'Key Roles and Needs Analysis',
         filename: 'basic-docs/key-roles-and-needs.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Analysis of user roles and their specific needs',
         generatedAt: ''
     },
     'project-statement-of-work': {
         title: 'Project Statement of Work',
         filename: 'basic-docs/project-statement-of-work.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Project Statement of Work detailing scope, deliverables, and acceptance criteria',
         generatedAt: ''
     },
     'business-case': {
         title: 'Business Case',
         filename: 'basic-docs/business-case.md',
-        category: DOCUMENT_CATEGORIES.CORE,
+        category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Comprehensive business case and justification',
         generatedAt: ''
     },'project-charter': {
         title: 'Project Charter',
         filename: 'project-charter/project-charter.md',
-        category: DOCUMENT_CATEGORIES.CHARTER,
+        category: DOCUMENT_CATEGORIES.PROJECT_CHARTER,
         description: 'PMBOK Project Charter formally authorizing the project',
         generatedAt: ''
     },
     'project-management-plan': {
         title: 'Project Management Plan',
         filename: 'project-charter/project-management-plan.md',
-        category: DOCUMENT_CATEGORIES.CHARTER,
+        category: DOCUMENT_CATEGORIES.PROJECT_CHARTER,
         description: 'PMBOK Project Management Plan',
         generatedAt: ''
-    },    'scope-management-plan': {
+    },'scope-management-plan': {
         title: 'Scope Management Plan',
         filename: 'scope-management/scope-management-plan.md',
         category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
@@ -192,125 +235,123 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'procurement-management-plan': {
         title: 'Procurement Management Plan',
         filename: 'management-plans/procurement-management-plan.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,
-        description: 'PMBOK Procurement Management Plan',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,        description: 'PMBOK Procurement Management Plan',
         generatedAt: ''
-    },    // Stakeholder Management - Fix missing properties
+    },
+    // Stakeholder Management - Fix missing properties
     'stakeholder-engagement-plan': {
         title: 'Stakeholder Engagement Plan',
         filename: 'stakeholder-management/stakeholder-engagement-plan.md',
-        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
         description: 'PMBOK Stakeholder Engagement Plan',
         generatedAt: ''
     },
     'stakeholder-register': {
         title: 'Stakeholder Register',
         filename: 'stakeholder-management/stakeholder-register.md',
-        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
         description: 'PMBOK Stakeholder Register',
         generatedAt: ''
     },
     'stakeholder-analysis': {
         title: 'Stakeholder Analysis',
         filename: 'stakeholder-management/stakeholder-analysis.md',
-        category: DOCUMENT_CATEGORIES.STAKEHOLDER,
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
         description: 'PMBOK Stakeholder Analysis',
         generatedAt: ''
-    },
-    'work-breakdown-structure': {
+    },    'work-breakdown-structure': {
         title: 'Work Breakdown Structure (WBS)',
         filename: 'planning/work-breakdown-structure.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Work Breakdown Structure',
         generatedAt: ''
     },
     'wbs-dictionary': {
         title: 'WBS Dictionary',
         filename: 'planning/wbs-dictionary.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK WBS Dictionary with detailed descriptions',
         generatedAt: ''
     },
     'activity-list': {
         title: 'Activity List',
         filename: 'planning/activity-list.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Activity List',
         generatedAt: ''
     },
     'activity-duration-estimates': {
         title: 'Activity Duration Estimates',
         filename: 'planning/activity-duration-estimates.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Activity Duration Estimates',
         generatedAt: ''
     },
     'activity-resource-estimates': {
         title: 'Activity Resource Estimates',
         filename: 'planning/activity-resource-estimates.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Activity Resource Estimates',
         generatedAt: ''
     },
     'schedule-network-diagram': {
         title: 'Schedule Network Diagram',
         filename: 'planning/schedule-network-diagram.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Schedule Network Diagram',
         generatedAt: ''
     },
     'milestone-list': {
         title: 'Milestone List',
         filename: 'planning/milestone-list.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Milestone List',
         generatedAt: ''
     },
     'schedule-development-input': {
         title: 'Schedule Development Input',
         filename: 'planning/schedule-development-input.md',
-        category: DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS,
+        category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK Schedule Development Input',
         generatedAt: ''
-    },
-    'data-model-suggestions': {
+    },    'data-model-suggestions': {
         title: 'Data Model Suggestions',
         filename: 'technical-analysis/data-model-suggestions.md',
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'Database architecture and data model recommendations',
         generatedAt: ''
     },
     'tech-stack-analysis': {
         title: 'Technology Stack Analysis',
         filename: 'technical-analysis/tech-stack-analysis.md',
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'Comprehensive technology stack recommendations',
         generatedAt: ''
     },
     'risk-analysis': {
         title: 'Risk Analysis',
-        filename: 'technical-analysisrisk-analysis.md',
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        filename: 'technical-analysis/risk-analysis.md',
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'Detailed risk analysis and mitigation strategies',
         generatedAt: ''
     },
     'acceptance-criteria': {
         title: 'Acceptance Criteria',
         filename: 'technical-analysis/acceptance-criteria.md',
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'Comprehensive acceptance criteria and validation methods',
         generatedAt: ''
     },
     'compliance-considerations': {
         title: 'Compliance Considerations',
         filename: 'technical-analysis/compliance-considerations.md',
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'Regulatory and compliance requirements analysis',
         generatedAt: ''
     },    'ui-ux-considerations': {
         title: 'UI/UX Considerations',
         filename: 'technical-analysis/ui-ux-considerations.md',        
-        category: DOCUMENT_CATEGORIES.TECHNICAL,
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
         description: 'User experience and interface design recommendations',
         generatedAt: ''
     },
@@ -638,19 +679,17 @@ export async function readEnhancedProjectContext(projectPath: string = process.c
         const { populateEnhancedContextFromAnalysis } = await import('./llmProcessor.js');
 
         // Perform comprehensive analysis
-        const analysis = await analyzeProjectComprehensively(projectPath);
-
-        // Log findings for transparency
+        const analysis = await analyzeProjectComprehensively(projectPath);        // Log findings for transparency
         if (analysis.additionalMarkdownFiles?.length > 0) {
             console.log(`📋 Found ${analysis.additionalMarkdownFiles.length} additional relevant files:`);
             analysis.additionalMarkdownFiles
-                .slice(0, 5) // Show top 5
+                .slice(0, 10) // Show top 10
                 .forEach((file: ProjectMarkdownFile) => {
                     console.log(`   • ${file.fileName} (${file.category}, score: ${file.relevanceScore})`);
                 });
 
-            if (analysis.additionalMarkdownFiles.length > 5) {
-                console.log(`   • ... and ${analysis.additionalMarkdownFiles.length - 5} more files`);
+            if (analysis.additionalMarkdownFiles.length > 10) {
+                console.log(`   • ... and ${analysis.additionalMarkdownFiles.length - 10} more files`);
             }
         }
 
@@ -695,12 +734,11 @@ export function saveDocument(documentKey: string, content: string): void {
         // Ensure directory exists
         if (!fs.existsSync(categoryDir)) {
             fs.mkdirSync(categoryDir, { recursive: true });
-        }
-
-        const timestamp = new Date().toISOString();
+        }        const timestamp = new Date().toISOString();
+        const projectInfo = getProjectInfo();
         const documentHeader = `# ${fallbackConfig.title}
 
-**Generated by Requirements Gathering Agent v2.1.2**  
+**Generated by ${projectInfo.name} v${projectInfo.version}**  
 **Category:** ${fallbackConfig.category}  
 **Generated:** ${timestamp}  
 **Description:** ${fallbackConfig.description}
@@ -727,13 +765,12 @@ export function saveDocument(documentKey: string, content: string): void {
     const parentDir = path.dirname(filePath);
     if (!fs.existsSync(parentDir)) {
         fs.mkdirSync(parentDir, { recursive: true });
-    }
-
-    // Add document header with metadata
+    }    // Add document header with metadata
     const timestamp = new Date().toISOString();
+    const projectInfo = getProjectInfo();
     const documentHeader = `# ${config.title}
 
-**Generated by Requirements Gathering Agent v2.1.2**  
+**Generated by ${projectInfo.name} v${projectInfo.version}**  
 **Category:** ${config.category}  
 **Generated:** ${timestamp}  
 **Description:** ${config.description}
@@ -756,11 +793,12 @@ export function generateIndexFile(): void {
     const baseDir = 'generated-documents';
     const indexPath = path.join(baseDir, 'README.md');
 
-    const timestamp = new Date().toISOString();
-
+    const timestamp = new Date().toISOString();    
+    const projectInfo = getProjectInfo();
+    const aiProvider = getAIProviderDisplayName();
     let indexContent = `# Generated PMBOK Documentation
 
-**Generated by Requirements Gathering Agent v2.1.2**  
+**Generated by ${projectInfo.name} v${projectInfo.version}**  
 **Timestamp:** ${timestamp}  
 **Total Documents:** ${Object.keys(DOCUMENT_CONFIG).length}
 
@@ -782,10 +820,9 @@ This directory contains comprehensive PMBOK (Project Management Body of Knowledg
     // Generate index by category
     Object.entries(categorizedDocs).forEach(([category, docs]) => {
         const categoryTitle = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        indexContent += `\n### ${categoryTitle}\n\n`;
-
-        docs.forEach(doc => {
-            const filePath = path.join(category, doc.filename);
+        indexContent += `\n### ${categoryTitle}\n\n`;        docs.forEach(doc => {
+            // Check if filename already includes a directory path
+            const filePath = doc.filename.includes('/') ? doc.filename : path.join(category, doc.filename);
             indexContent += `- [${doc.title}](${filePath}) - ${doc.description}\n`;
         });
     });
@@ -796,15 +833,10 @@ Each document is AI-generated based on your project's README.md context and foll
 
 ## Categories Explained
 
-- **Core Analysis**: Fundamental project analysis including user stories, personas, and requirements
-- **Project Charter**: Formal project authorization and high-level planning
-- **Management Plans**: Detailed PMBOK management plans for scope, risk, cost, quality, etc.
-- **Planning Artifacts**: Detailed planning documents including WBS, schedules, and activities
-- **Stakeholder Management**: Stakeholder analysis and engagement strategies
-- **Technical Analysis**: Technology stack, data models, compliance, and UX considerations
+${generateCategoriesExplanation()}
 
 ---
-*Generated by Requirements Gathering Agent using Azure OpenAI*
+*Generated by ${projectInfo.name} using ${aiProvider}*
 `;
 
     try {
@@ -815,8 +847,56 @@ Each document is AI-generated based on your project's README.md context and foll
     }
 }
 
+// Function to get category descriptions
+function getCategoryDescriptions(): Record<string, string> {
+    return {
+        [DOCUMENT_CATEGORIES.BASIC_DOCS]: 'Fundamental project analysis including user stories, personas, and requirements',
+        [DOCUMENT_CATEGORIES.PROJECT_CHARTER]: 'Formal project authorization and high-level planning',
+        [DOCUMENT_CATEGORIES.MANAGEMENT_PLANS]: 'Detailed PMBOK management plans for scope, risk, cost, quality, etc.',
+        [DOCUMENT_CATEGORIES.PLANNING]: 'Detailed planning documents including WBS, schedules, and activities',
+        [DOCUMENT_CATEGORIES.PLANNING_ARTIFACTS]: 'Planning artifacts and work breakdown structures',
+        [DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT]: 'Stakeholder analysis and engagement strategies',
+        [DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS]: 'Technology stack, data models, compliance, and UX considerations',
+        [DOCUMENT_CATEGORIES.TECHNICAL_DESIGN]: 'Technical design documents including architecture, security, and system design',
+        [DOCUMENT_CATEGORIES.QUALITY_ASSURANCE]: 'Testing strategies, quality metrics, and validation procedures',
+        [DOCUMENT_CATEGORIES.IMPLEMENTATION_GUIDES]: 'Development guides, coding standards, and deployment procedures',
+        [DOCUMENT_CATEGORIES.PMBOK]: 'PMBOK process documentation and methodology guides',
+        [DOCUMENT_CATEGORIES.REQUIREMENTS]: 'Requirements gathering, analysis, and documentation',
+        [DOCUMENT_CATEGORIES.RISK_MANAGEMENT]: 'Risk identification, analysis, and mitigation strategies',
+        [DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT]: 'Project scope definition, validation, and control processes',
+        [DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS]: 'Strategic planning documents including mission, vision, and purpose statements',
+        [DOCUMENT_CATEGORIES.CORE]: 'Core analysis and foundational documents'
+    };
+}
+
+// Function to generate dynamic categories explanation
+function generateCategoriesExplanation(): string {
+    const categoryDescriptions = getCategoryDescriptions();
+    const usedCategories = new Set<string>();
+    
+    // Collect all unique categories used in DOCUMENT_CONFIG
+    Object.values(DOCUMENT_CONFIG).forEach(doc => {
+        usedCategories.add(doc.category);
+    });
+    
+    // Generate explanation for each used category
+    const explanations = Array.from(usedCategories)
+        .sort()
+        .map(category => {
+            const categoryName = category.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            
+            const description = categoryDescriptions[category] || 'Additional project documentation';
+            return `- **${categoryName}**: ${description}`;
+        })
+        .join('\n');
+    
+    return explanations;
+}
+
 // Version export for tracking
-export const fileManagerVersion = '2.1.2';
+export const fileManagerVersion = getProjectInfo().version;
 
 export function cleanupOldFiles(): void {
     // Remove any .md files from root directory (except README.md)
