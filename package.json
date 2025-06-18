@@ -1,7 +1,7 @@
 {
   "name": "requirements-gathering-agent",
-  "version": "2.1.3-prerelease",
-  "description": "🎉 AI-powered PMBOK documentation generator - celebrating 175 weekly downloads milestone! Generates comprehensive project management documents from README context",
+  "version": "2.1.3",
+  "description": "🚀 BREAKTHROUGH: Revolutionary Enhanced Context Generation System! AI-powered PMBOK documentation generator with Evaluative Contextual Synthesis and Hierarchical Authority Recognition. Celebrating 175+ weekly downloads!",
   "main": "dist/cli.js",
   "type": "module",
   "engines": {
@@ -26,8 +26,11 @@
     "test:failover": "jest --testPathPattern=failover",
     "test:unit": "jest --testPathPattern=\"test/(?!providers).*\\.test\\.ts$\"",
     "prepublishOnly": "npm run clean && npm run build"
-  },
-  "keywords": [
+  },  "keywords": [
+    "enhanced-context-generation",
+    "evaluative-contextual-synthesis", 
+    "hierarchical-authority-recognition",
+    "breakthrough-ai-technology",
     "requirements-gathering",
     "pmbok",
     "project-management",
@@ -44,6 +47,10 @@
     "scope-management",
     "ai-assistant",
     "document-generation",
+    "technical-design-documents",
+    "strategic-business-documents",
+    "context-management",
+    "enterprise-intelligence",
     "entra-id"
   ],
   "author": {
