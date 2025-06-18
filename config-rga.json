@@ -14,14 +14,37 @@
   "AI_TIMEOUT": 60000,
   "EXPERIMENTAL_FEATURES": true,
   "providers": {
-    "github-ai": { "model": "gpt-4o-mini" },
-    "google-ai": { "model": "gemini-1.5-flash" },
-    "ollama": { "model": "llama3.1" }
+    "github-ai": {
+      "model": "gpt-4o-mini"
+    },
+    "google-ai": {
+      "model": "gemini-1.5-flash"
+    },
+    "ollama": {
+      "model": "llama3.1"
+    }
   },
   "docsVcs": {
     "enabled": true,
     "remote": "",
     "autoCommit": true,
     "branch": "main"
+  },
+  "confluence": {
+    "baseUrl": "https://your-domain.atlassian.net",
+    "email": "your-email@domain.com",
+    "spaceKey": "YOURSPACE",
+    "parentPageId": "",
+    "defaultLabels": [
+      "project-management",
+      "requirements",
+      "documentation"
+    ],
+    "publishingOptions": {
+      "createParentPages": true,
+      "updateExisting": true,
+      "includeMetadata": true,
+      "rateLimitDelay": 1000
+    }
   }
 }

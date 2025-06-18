@@ -11,8 +11,7 @@
     "requirements-gathering-agent": "dist/cli.js",
     "requirements-agent": "dist/cli.js",
     "rga": "dist/cli.js"
-  },
-  "scripts": {
+  },  "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
     "dev": "tsc --watch",
@@ -25,10 +24,15 @@
     "test:ollama": "jest --testPathPattern=ollama",
     "test:failover": "jest --testPathPattern=failover",
     "test:unit": "jest --testPathPattern=\"test/(?!providers).*\\.test\\.ts$\"",
-    "prepublishOnly": "npm run clean && npm run build"
-  },  "keywords": [
+    "prepublishOnly": "npm run clean && npm run build",
+    "confluence:init": "node dist/cli.js confluence init",
+    "confluence:test": "node dist/cli.js confluence test",
+    "confluence:publish": "node dist/cli.js confluence publish",
+    "confluence:status": "node dist/cli.js confluence status"
+  },
+  "keywords": [
     "enhanced-context-generation",
-    "evaluative-contextual-synthesis", 
+    "evaluative-contextual-synthesis",
     "hierarchical-authority-recognition",
     "breakthrough-ai-technology",
     "requirements-gathering",
@@ -73,7 +77,9 @@
     "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.21.0",
     "@types/node-fetch": "^2.6.12",
+    "axios": "^1.10.0",
     "dotenv": "^16.4.7",
+    "form-data": "^4.0.3",
     "node-fetch": "^2.7.0",
     "openai": "^5.0.2",
     "requirements-gathering-agent": "^2.1.2",

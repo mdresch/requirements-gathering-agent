@@ -1,0 +1,19 @@
+
+=== PROMPT ADJUSTMENT REPORT ===
+
+Document: stakeholder-register
+  - Missing required element: assessment information
+  - Missing required element: stakeholder classification
+
+Document: project-charter
+  - Missing required element: project purpose
+  - Missing required element: measurable objectives
+
+Document: project-purpose
+  - Missing required element: executive summary
+  - Missing required element: project background
+  - Missing required element: strategic importance
+  - Missing required element: expected impact
+  - Missing required element: success criteria
+  - Missing required element: stakeholder benefits
+  - Missing required element: alignment with strategy

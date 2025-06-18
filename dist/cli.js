@@ -213,8 +213,7 @@ async function main() {
         if (args.includes('--help') || args.includes('-h')) {
             printHelp();
             return;
-        }
-        // --- VCS COMMANDS ---
+        } // --- VCS COMMANDS ---
         if (args[0] === 'vcs') {
             const vcsCmd = args[1];
             const vcsFile = args[2];
@@ -256,6 +255,50 @@ async function main() {
             catch (e) {
                 const err = e;
                 console.error('❌ VCS command failed:', err.message);
+            }
+            return;
+        }
+        // --- CONFLUENCE COMMANDS ---
+        if (args[0] === 'confluence') {
+            const confluenceCmd = args[1];
+            try {
+                const { testConfluenceConnection, initConfluenceConfig, publishToConfluence, showConfluenceStatus } = await import('./modules/confluence/ConfluenceCLI.js');
+                switch (confluenceCmd) {
+                    case 'init':
+                        await initConfluenceConfig();
+                        break;
+                    case 'test':
+                        await testConfluenceConnection();
+                        break;
+                    case 'publish':
+                        const documentsPath = args[2] || options.outputDir;
+                        const publishOptions = {
+                            parentPageTitle: getArgValue('--parent-page', ''),
+                            labelPrefix: getArgValue('--label-prefix', 'adpa'),
+                            dryRun: args.includes('--dry-run'),
+                            force: args.includes('--force')
+                        };
+                        await publishToConfluence(documentsPath, publishOptions);
+                        break;
+                    case 'status':
+                        await showConfluenceStatus();
+                        break;
+                    default:
+                        console.log('🔗 Confluence Integration Commands:');
+                        console.log('  confluence init      - Initialize Confluence configuration');
+                        console.log('  confluence test      - Test Confluence connection');
+                        console.log('  confluence publish   - Publish documents to Confluence');
+                        console.log('  confluence status    - Show Confluence integration status');
+                        console.log('\nPublish Options:');
+                        console.log('  --parent-page <title>  - Parent page title for organization');
+                        console.log('  --label-prefix <prefix> - Label prefix for published pages');
+                        console.log('  --dry-run             - Preview what would be published');
+                        console.log('  --force               - Force publish even if validation fails');
+                }
+            }
+            catch (e) {
+                const err = e;
+                console.error('❌ Confluence command failed:', err.message);
             }
             return;
         }
@@ -878,6 +921,21 @@ VERSION CONTROL:
    vcs init                   🔄 Initialize git repository in output directory
    vcs commit <file> [msg]    💾 Commit specific generated document
    vcs status                 📊 Show git status of generated documents
+   vcs log                    📜 Show git history
+   vcs diff <file>            🔍 Show changes in specific file
+   vcs revert <file> <commit> ↩️  Revert file to specific commit
+
+CONFLUENCE INTEGRATION:
+   confluence init            ⚙️  Initialize Confluence configuration
+   confluence test            🔗 Test Confluence connection
+   confluence publish         📤 Publish documents to Confluence
+   confluence status          📊 Show Confluence integration status
+
+CONFLUENCE PUBLISH OPTIONS:
+   --parent-page <title>      📄 Parent page title for organization
+   --label-prefix <prefix>    🏷️  Label prefix for published pages
+   --dry-run                  👁️  Preview what would be published
+   --force                    ⚡ Force publish even if validation fails
 
 CONFIGURATION:
    --reload-env              ♻️  Reload environment configuration
@@ -889,7 +947,16 @@ EXAMPLES:
    node dist/cli.js --generate-quality-assurance
    node dist/cli.js --list-templates
    node dist/cli.js --status
+   node dist/cli.js confluence init
+   node dist/cli.js confluence publish --parent-page "Project Documentation"
    node dist/cli.js vcs commit business-case.md "Updated business case"
+
+🎯 Breakthrough Features in v2.1.3:
+   • Evaluative Contextual Synthesis
+   • Hierarchical Authority Recognition
+   • Enhanced Context Generation
+   • Confluence Integration
+   • Milestone Downloads: 175+ weekly
 
 For more information, visit: https://github.com/your-repo/requirements-gathering-agent
 `);
