@@ -13,13 +13,22 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { ConfluenceConfig, validateConfluenceConfig } from './ConfluencePublisher.js';
+import { OAuth2Config } from './ConfluenceOAuth2.js';
 
 export interface ConfluenceConfigFile {
     confluence?: {
+        authMethod?: 'oauth2' | 'api-token';
+        // OAuth2 configuration (stored in config file, secrets in .env)
+        oauth2?: {
+            redirectUri?: string;
+            scopes?: string[];
+        };
+        // Legacy API token configuration
         baseUrl?: string;
         email?: string;
         spaceKey?: string;
         parentPageId?: string;
+        cloudId?: string;
         defaultLabels?: string[];
         publishingOptions?: {
             createParentPages?: boolean;
@@ -68,32 +77,72 @@ export class ConfluenceConfigManager {
         } catch (error) {
             throw new Error(`Failed to save configuration: ${error}`);
         }
-    }
-
-    /**
+    }    /**
      * Get Confluence configuration with environment variable fallbacks
      * @returns Complete Confluence configuration
      */
     getConfluenceConfig(): ConfluenceConfig {
         const confluenceConfig = this.config.confluence || {};
-        
-        // Get configuration with environment variable fallbacks
-        const config: ConfluenceConfig = {
-            baseUrl: confluenceConfig.baseUrl || 
-                     process.env.CONFLUENCE_BASE_URL || 
-                     process.env.ATLASSIAN_BASE_URL || '',
-            email: confluenceConfig.email || 
-                   process.env.CONFLUENCE_EMAIL || 
-                   process.env.ATLASSIAN_EMAIL || '',
-            apiToken: process.env.CONFLUENCE_API_TOKEN || 
-                      process.env.ATLASSIAN_API_TOKEN || '',
-            spaceKey: confluenceConfig.spaceKey || 
-                      process.env.CONFLUENCE_SPACE_KEY || '',
-            parentPageId: confluenceConfig.parentPageId || 
-                          process.env.CONFLUENCE_PARENT_PAGE_ID
-        };
+          // Determine authentication method
+        const authMethod = confluenceConfig.authMethod || 
+                          process.env.CONFLUENCE_AUTH_METHOD as ('oauth2' | 'api-token') ||
+                          (process.env.CONFLUENCE_OAUTH2_CLIENT_ID || process.env.CONFLUENCE_CLIENT_ID ? 'oauth2' : 'api-token');
 
-        return config;
+        if (authMethod === 'oauth2') {            // OAuth2 configuration
+            const oauth2Config: OAuth2Config = {
+                clientId: process.env.CONFLUENCE_OAUTH2_CLIENT_ID || 
+                         process.env.CONFLUENCE_CLIENT_ID || '',
+                clientSecret: process.env.CONFLUENCE_OAUTH2_CLIENT_SECRET || 
+                             process.env.CONFLUENCE_CLIENT_SECRET || '',
+                redirectUri: confluenceConfig.oauth2?.redirectUri || 
+                            process.env.CONFLUENCE_OAUTH2_REDIRECT_URI || 
+                            process.env.CONFLUENCE_REDIRECT_URI ||
+                            'http://localhost:3000/callback',                scopes: confluenceConfig.oauth2?.scopes || 
+                       (process.env.CONFLUENCE_OAUTH2_SCOPES?.split(',').map(s => s.trim())) || 
+                       (process.env.CONFLUENCE_SCOPES?.split(',').map(s => s.trim())) ||
+                       [
+                           'read:content:confluence',     // View detailed contents
+                           'write:content:confluence',    // Create and update contents  
+                           'read:user:confluence',        // View user details
+                           'read:space:confluence'        // View spaces
+                       ]
+            };            const config: ConfluenceConfig = {
+                authMethod: 'oauth2',
+                oauth2: oauth2Config,
+                baseUrl: confluenceConfig.baseUrl || 
+                        process.env.CONFLUENCE_BASE_URL || 
+                        process.env.ATLASSIAN_BASE_URL || '',
+                spaceKey: confluenceConfig.spaceKey || 
+                         process.env.CONFLUENCE_SPACE_KEY || '',
+                parentPageId: confluenceConfig.parentPageId || 
+                             process.env.CONFLUENCE_PARENT_PAGE_ID,
+                cloudId: confluenceConfig.cloudId || 
+                        process.env.CONFLUENCE_CLOUD_ID
+            };
+
+            return config;
+        } else {
+            // Legacy API token configuration
+            const config: ConfluenceConfig = {
+                authMethod: 'api-token',
+                baseUrl: confluenceConfig.baseUrl || 
+                        process.env.CONFLUENCE_BASE_URL || 
+                        process.env.ATLASSIAN_BASE_URL || '',
+                email: confluenceConfig.email || 
+                      process.env.CONFLUENCE_EMAIL || 
+                      process.env.ATLASSIAN_EMAIL || '',
+                apiToken: process.env.CONFLUENCE_API_TOKEN || 
+                         process.env.ATLASSIAN_API_TOKEN || '',
+                spaceKey: confluenceConfig.spaceKey || 
+                         process.env.CONFLUENCE_SPACE_KEY || '',
+                parentPageId: confluenceConfig.parentPageId || 
+                             process.env.CONFLUENCE_PARENT_PAGE_ID,
+                cloudId: confluenceConfig.cloudId || 
+                        process.env.CONFLUENCE_CLOUD_ID
+            };
+
+            return config;
+        }
     }
 
     /**
@@ -119,9 +168,7 @@ export class ConfluenceConfigManager {
             errors: validation.errors,
             warnings
         };
-    }
-
-    /**
+    }    /**
      * Update Confluence configuration
      * @param updates Configuration updates
      */
@@ -130,11 +177,32 @@ export class ConfluenceConfigManager {
             this.config.confluence = {};
         }
 
-        // Update non-sensitive fields only (API token handled via env vars)
-        if (updates.baseUrl) this.config.confluence.baseUrl = updates.baseUrl;
-        if (updates.email) this.config.confluence.email = updates.email;
+        // Update authentication method
+        if (updates.authMethod) {
+            this.config.confluence.authMethod = updates.authMethod;
+        }
+
+        // Update OAuth2 configuration (non-sensitive parts only)
+        if (updates.oauth2) {
+            if (!this.config.confluence.oauth2) {
+                this.config.confluence.oauth2 = {};
+            }
+            if (updates.oauth2.redirectUri) {
+                this.config.confluence.oauth2.redirectUri = updates.oauth2.redirectUri;
+            }
+            if (updates.oauth2.scopes) {
+                this.config.confluence.oauth2.scopes = updates.oauth2.scopes;
+            }
+        }
+
+        // Update common configuration
         if (updates.spaceKey) this.config.confluence.spaceKey = updates.spaceKey;
         if (updates.parentPageId) this.config.confluence.parentPageId = updates.parentPageId;
+        if (updates.cloudId) this.config.confluence.cloudId = updates.cloudId;
+
+        // Update API token configuration (non-sensitive parts only)
+        if (updates.baseUrl) this.config.confluence.baseUrl = updates.baseUrl;
+        if (updates.email) this.config.confluence.email = updates.email;
     }
 
     /**

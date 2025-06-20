@@ -12,7 +12,8 @@
     "requirements-agent": "dist/cli.js",
     "rga": "dist/cli.js"
   },  "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-configs",
+    "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
     "start": "node dist/cli.js",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
@@ -27,8 +28,18 @@
     "prepublishOnly": "npm run clean && npm run build",
     "confluence:init": "node dist/cli.js confluence init",
     "confluence:test": "node dist/cli.js confluence test",
+    "confluence:oauth2:login": "node dist/cli.js confluence oauth2 login",
+    "confluence:oauth2:status": "node dist/cli.js confluence oauth2 status",
+    "confluence:oauth2:debug": "node dist/cli.js confluence oauth2 debug",
     "confluence:publish": "node dist/cli.js confluence publish",
-    "confluence:status": "node dist/cli.js confluence status"
+    "confluence:status": "node dist/cli.js confluence status",
+    "sharepoint:init": "node dist/cli.js sharepoint init",
+    "sharepoint:test": "node dist/cli.js sharepoint test",
+    "sharepoint:oauth2:login": "node dist/cli.js sharepoint oauth2 login",
+    "sharepoint:oauth2:status": "node dist/cli.js sharepoint oauth2 status",
+    "sharepoint:oauth2:debug": "node dist/cli.js sharepoint oauth2 debug",
+    "sharepoint:publish": "node dist/cli.js sharepoint publish",
+    "sharepoint:status": "node dist/cli.js sharepoint status"
   },
   "keywords": [
     "enhanced-context-generation",
@@ -76,10 +87,13 @@
     "@azure/identity": "^4.4.1",
     "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.21.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@types/node-fetch": "^2.6.12",
     "axios": "^1.10.0",
     "dotenv": "^16.4.7",
+    "express": "^5.1.0",
     "form-data": "^4.0.3",
+    "glob": "^11.0.3",
     "node-fetch": "^2.7.0",
     "openai": "^5.0.2",
     "requirements-gathering-agent": "^2.1.2",
@@ -87,6 +101,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.0.0-beta.3",
+    "@types/express": "^5.0.3",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.1",
@@ -95,12 +110,12 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.3.4",
     "typescript": "^5.7.2"
-  },
-  "files": [
+  },  "files": [
     "dist/**/*",
     "README.md",
     "LICENSE",
-    ".env.example"
+    ".env.example",
+    "config-rga.json"
   ],
   "preferGlobal": true,
   "publishConfig": {

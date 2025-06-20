@@ -1,0 +1,42 @@
+# Development files
+src/
+webpack.config.js
+tsconfig.json
+.eslintrc.json
+
+# Node modules
+node_modules/
+
+# Development builds
+*.log
+*.tmp
+
+# Test files
+test/
+tests/
+*.test.js
+*.test.ts
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Experimental features (not ready for production)
+src/commands/word.ts
+examples/
+
+# Only include production-ready files
+!dist/
+!manifest.json
+!README.md
+!LICENSE

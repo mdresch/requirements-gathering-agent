@@ -610,10 +610,9 @@ ${content}`;
         
         await fs.writeFile(filePath, fileContent, 'utf-8');
         console.log(`✅ Generated: ${filePath}`);
-    }
-
+    }    
     // Static convenience methods for different document sets
-
+    
     /**
      * Generate core documents only
      * @param context Project context
@@ -621,7 +620,7 @@ ${content}`;
      */
     public static async generateCoreDocuments(context: string): Promise<GenerationResult> {
         const generator = new DocumentGenerator(context, {
-            includeCategories: ['core-analysis', 'project-charter'],
+            includeCategories: ['core-analysis', 'project-charter', 'scope-management', 'risk-management'],
             delayBetweenCalls: 1000
         });
         return await generator.generateAll();

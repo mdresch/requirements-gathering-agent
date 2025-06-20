@@ -31,14 +31,15 @@
     "branch": "main"
   },
   "confluence": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "email": "your-email@domain.com",
-    "spaceKey": "YOURSPACE",
+    "baseUrl": "https://cba-adpa.atlassian.net",
+    "email": "menno@cbadmin.onmicrosoft.com",
+    "spaceKey": "ADPA",
     "parentPageId": "",
     "defaultLabels": [
       "project-management",
       "requirements",
-      "documentation"
+      "documentation",
+      "adpa"
     ],
     "publishingOptions": {
       "createParentPages": true,
@@ -46,5 +47,28 @@
       "includeMetadata": true,
       "rateLimitDelay": 1000
     }
+  },
+  "sharepoint": {
+    "authMethod": "oauth2",
+    "tenantId": "20cb7a52-c98f-424c-9b33-58a5877bd23b",
+    "clientId": "9346292d-6b21-4eff-b87d-bf53ff8cb04f",
+    "siteUrl": "https://test.sharepoint.com/sites/test",
+    "documentLibrary": "Generated-Documents",
+    "oauth2": {
+      "redirectUri": "http://localhost:3000/auth/callback",
+      "scopes": [
+        "https://graph.microsoft.com/Sites.ReadWrite.All",
+        "https://graph.microsoft.com/Files.ReadWrite.All",
+        "https://graph.microsoft.com/User.Read"
+      ],
+      "authority": "https://login.microsoftonline.com/20cb7a52-c98f-424c-9b33-58a5877bd23b"
+    },
+    "publishingOptions": {
+      "enableVersioning": true,
+      "createFolders": true,
+      "overwriteExisting": false,
+      "addMetadata": true
+    },
+    "rootFolderPath": "ADPA"
   }
 }

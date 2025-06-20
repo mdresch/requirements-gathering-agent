@@ -1,0 +1,72 @@
+{
+  "__guidance": {
+    "AI_TIMEOUT": "Timeout for AI requests in milliseconds. Too small may cause frequent failures on slow networks or large requests. Too large may make the app feel unresponsive if the AI is slow. Recommended: 10000-60000.",
+    "EXPERIMENTAL_FEATURES": "Enable to try new, possibly unstable features. Set to true for early access, false for stability.",
+    "showMetrics": "Show performance metrics (timing, token usage) in CLI output.",
+    "currentProvider": "The preferred/active AI provider for document generation.",
+    "defaultOutputDir": "Default directory for generated documents.",
+    "preferredFormat": "Default output format for generated documents (markdown, json, yaml, etc.)."
+  },
+  "currentProvider": "github-ai",
+  "defaultOutputDir": "generated-documents",
+  "preferredFormat": "markdown",
+  "showMetrics": true,
+  "AI_TIMEOUT": 60000,
+  "EXPERIMENTAL_FEATURES": true,
+  "providers": {
+    "github-ai": {
+      "model": "gpt-4o-mini"
+    },
+    "google-ai": {
+      "model": "gemini-1.5-flash"
+    },
+    "ollama": {
+      "model": "llama3.1"
+    }
+  },
+  "docsVcs": {
+    "enabled": true,
+    "remote": "",
+    "autoCommit": true,
+    "branch": "main"
+  },
+  "confluence": {
+    "baseUrl": "https://cba-adpa.atlassian.net",
+    "email": "menno@cbadmin.onmicrosoft.com",
+    "spaceKey": "ADPA",
+    "parentPageId": "",
+    "defaultLabels": [
+      "project-management",
+      "requirements",
+      "documentation",
+      "adpa"
+    ],
+    "publishingOptions": {
+      "createParentPages": true,
+      "updateExisting": true,
+      "includeMetadata": true,
+      "rateLimitDelay": 1000
+    }
+  },
+  "sharepoint": {
+    "authMethod": "oauth2",
+    "tenantId": "test-tenant-id",
+    "clientId": "test-client-id",
+    "siteUrl": "https://test.sharepoint.com/sites/test",
+    "documentLibrary": "Documents",
+    "oauth2": {
+      "redirectUri": "http://localhost:3000/auth/callback",
+      "scopes": [
+        "https://graph.microsoft.com/Sites.ReadWrite.All"
+      ],
+      "authority": "https://login.microsoftonline.com/test-tenant-id"
+    },
+    "publishingOptions": {
+      "enableVersioning": true,
+      "createFolders": true,
+      "overwriteExisting": false,
+      "addMetadata": true
+    },
+    "rootFolderPath": "ADPA"
+  }
+}

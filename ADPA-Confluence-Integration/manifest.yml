@@ -1,0 +1,49 @@
+modules:
+  macro:
+    - key: git-confluence-publisher-macro
+      resource: main
+      resolver:
+        function: document-generator
+      title: Git to Confluence Publisher
+      description: Publish Git repository content (README and docs) to Confluence pages
+      config:
+        resource: macro-config
+        viewportSize: max
+        title: Git Publisher Configuration
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: document-generator
+      handler: documentGenerator.handler
+    - key: confluence-publisher
+      handler: confluencePublisher.handler
+  webtrigger:
+    - key: adpa-webhook
+      function: document-generator
+resources:
+  - key: main
+    path: static/document-generator/build
+  - key: macro-config
+    path: static/config/build
+app:
+  runtime:
+    name: nodejs22.x
+    memoryMB: 512
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/8d37e9a3-8bec-4f57-ad88-092a29543953
+
+permissions:
+  scopes:
+    - read:confluence-content.all
+    - write:confluence-content
+    - read:confluence-space.summary
+    - write:confluence-space
+    - read:confluence-user
+    - write:confluence-file
+    - read:confluence-content.summary
+  external:
+    fetch:
+      backend:
+        - https://api.github.com
+        - https://github.com
+        - https://raw.githubusercontent.com

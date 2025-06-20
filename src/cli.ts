@@ -276,17 +276,19 @@ async function main() {
         console.error('❌ VCS command failed:', err.message);
       }
       return;
-    }
-
-    // --- CONFLUENCE COMMANDS ---
+    }    // --- CONFLUENCE COMMANDS ---
     if (args[0] === 'confluence') {
       const confluenceCmd = args[1];
-      try {
-        const { 
+      const confluenceSubCmd = args[2];
+      
+      try {        const { 
           testConfluenceConnection, 
           initConfluenceConfig, 
           publishToConfluence, 
-          showConfluenceStatus 
+          showConfluenceStatus,
+          confluenceOAuth2Login,
+          confluenceOAuth2Status,
+          confluenceDebugOAuth2
         } = await import('./modules/confluence/ConfluenceCLI.js');
         
         switch (confluenceCmd) {
@@ -295,6 +297,24 @@ async function main() {
             break;
           case 'test':
             await testConfluenceConnection();
+            break;          case 'oauth2':
+            switch (confluenceSubCmd) {
+              case 'login':
+                await confluenceOAuth2Login();
+                break;
+              case 'status':
+                await confluenceOAuth2Status();
+                break;
+              case 'debug':
+                await confluenceDebugOAuth2();
+                break;
+              default:
+                console.log('🔐 Confluence OAuth2 Commands:');
+                console.log('  confluence oauth2 login  - Start OAuth2 authentication flow');
+                console.log('  confluence oauth2 status - Check OAuth2 authentication status');
+                console.log('  confluence oauth2 debug  - Debug OAuth2 configuration');
+                break;
+            }
             break;
           case 'publish':
             const documentsPath = args[2] || options.outputDir;
@@ -311,10 +331,15 @@ async function main() {
             break;
           default:
             console.log('🔗 Confluence Integration Commands:');
-            console.log('  confluence init      - Initialize Confluence configuration');
-            console.log('  confluence test      - Test Confluence connection');
-            console.log('  confluence publish   - Publish documents to Confluence');
-            console.log('  confluence status    - Show Confluence integration status');
+            console.log('  confluence init         - Initialize Confluence configuration');
+            console.log('  confluence test         - Test Confluence connection');
+            console.log('  confluence oauth2 login - Start OAuth2 authentication (recommended)');
+            console.log('  confluence oauth2 status- Check OAuth2 authentication status');
+            console.log('  confluence publish      - Publish documents to Confluence');
+            console.log('  confluence status       - Show Confluence integration status');
+            console.log('\nAuthentication Methods:');
+            console.log('  • OAuth2 (recommended) - More secure, uses modern authentication');
+            console.log('  • API Token (legacy)   - Basic auth with API token');
             console.log('\nPublish Options:');
             console.log('  --parent-page <title>  - Parent page title for organization');
             console.log('  --label-prefix <prefix> - Label prefix for published pages');
@@ -324,6 +349,84 @@ async function main() {
       } catch (e) {
         const err = e as any;
         console.error('❌ Confluence command failed:', err.message);
+      }
+      return;
+    }
+
+    // --- SHAREPOINT COMMANDS ---
+    if (args[0] === 'sharepoint') {
+      const sharepointCmd = args[1];
+      const sharepointSubCmd = args[2];
+      
+      try {        const { 
+          testSharePointConnection, 
+          initSharePointConfig, 
+          publishToSharePoint, 
+          showSharePointStatus,
+          sharePointOAuth2Login,
+          sharePointOAuth2Status,
+          sharePointDebugOAuth2
+        } = await import('./modules/sharepoint/SharePointCLI.js');
+        
+        switch (sharepointCmd) {
+          case 'init':
+            await initSharePointConfig();
+            break;
+          case 'test':
+            await testSharePointConnection();
+            break;
+          case 'oauth2':
+            switch (sharepointSubCmd) {
+              case 'login':
+                await sharePointOAuth2Login();
+                break;
+              case 'status':
+                await sharePointOAuth2Status();
+                break;
+              case 'debug':
+                await sharePointDebugOAuth2();
+                break;
+              default:
+                console.log('🔐 SharePoint OAuth2 Commands:');
+                console.log('  sharepoint oauth2 login  - Start OAuth2 authentication flow');
+                console.log('  sharepoint oauth2 status - Check OAuth2 authentication status');
+                console.log('  sharepoint oauth2 debug  - Debug OAuth2 configuration');
+                break;
+            }
+            break;
+          case 'publish':
+            const documentsPath = args[2] || options.outputDir;
+            const publishOptions = {
+              folderPath: getArgValue('--folder-path', ''),
+              labelPrefix: getArgValue('--label-prefix', 'adpa'),
+              dryRun: args.includes('--dry-run'),
+              force: args.includes('--force')
+            };
+            await publishToSharePoint(documentsPath, publishOptions);
+            break;
+          case 'status':
+            await showSharePointStatus();
+            break;
+          default:
+            console.log('📄 SharePoint Integration Commands:');
+            console.log('  sharepoint init         - Initialize SharePoint configuration');
+            console.log('  sharepoint test         - Test SharePoint connection');
+            console.log('  sharepoint oauth2 login - Start OAuth2 authentication (recommended)');
+            console.log('  sharepoint oauth2 status- Check OAuth2 authentication status');
+            console.log('  sharepoint publish      - Publish documents to SharePoint');
+            console.log('  sharepoint status       - Show SharePoint integration status');
+            console.log('\nAuthentication Methods:');
+            console.log('  • OAuth2 (recommended) - Secure, modern authentication');
+            console.log('  • Service Principal    - For automated scenarios');
+            console.log('\nPublish Options:');
+            console.log('  --folder-path <path>   - Target folder path in SharePoint');
+            console.log('  --label-prefix <prefix> - Label prefix for metadata');
+            console.log('  --dry-run             - Preview what would be published');
+            console.log('  --force               - Force publish even if validation fails');
+        }
+      } catch (e) {
+        const err = e as any;
+        console.error('❌ SharePoint command failed:', err.message);
       }
       return;
     }
@@ -1024,6 +1127,18 @@ CONFLUENCE PUBLISH OPTIONS:
    --dry-run                  👁️  Preview what would be published
    --force                    ⚡ Force publish even if validation fails
 
+SHAREPOINT INTEGRATION:
+   sharepoint init            ⚙️  Initialize SharePoint configuration
+   sharepoint test            🔗 Test SharePoint connection
+   sharepoint publish         📤 Publish documents to SharePoint
+   sharepoint status          📊 Show SharePoint integration status
+
+SHAREPOINT PUBLISH OPTIONS:
+   --folder-path <path>       📂 Target folder path in SharePoint
+   --label-prefix <prefix>    🏷️  Label prefix for metadata
+   --dry-run                  👁️  Preview what would be published
+   --force                    ⚡ Force publish even if validation fails
+
 CONFIGURATION:
    --reload-env              ♻️  Reload environment configuration
    --config-status           ⚙️  Show detailed configuration status
@@ -1037,6 +1152,8 @@ EXAMPLES:
    node dist/cli.js confluence init
    node dist/cli.js confluence publish --parent-page "Project Documentation"
    node dist/cli.js vcs commit business-case.md "Updated business case"
+   node dist/cli.js sharepoint init
+   node dist/cli.js sharepoint publish --folder-path "/sites/mysite/documents"
 
 🎯 Breakthrough Features in v2.1.3:
    • Evaluative Contextual Synthesis
