@@ -1,0 +1,13 @@
+{
+  "templateId": "53bba375-799b-4b9d-a090-1c3942fbd4b8",
+  "content": "Generate BABOK Enterprise Framework for Live Demo Output Display",
+  "inputFormat": "markdown",
+  "outputFormat": "pdf",
+  "metadata": {
+    "project_name": "Live API Demo - Current Session",
+    "organization_name": "Fortune 500 Enterprise Client",
+    "business_domain": "Enterprise Consulting Demonstration",
+    "complexity_level": "Enterprise",
+    "timestamp": "2025-06-22 Real-Time Demo"
+  }
+}

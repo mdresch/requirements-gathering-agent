@@ -199,12 +199,14 @@ export class DocumentJob {
     public processingDuration?: number;
     public originalFilename?: string;
     public generatedFilename?: string;
+    public outputFormat: OutputFormat;
     public error?: { code: string; message: string; retryable: boolean };
     public logs: string[] = [];
 
     constructor(id: string, request: DocumentConversionRequest) {
         this.id = id;
         this.request = request;
+        this.outputFormat = request.outputFormat;
         this.logs.push(`Job ${id} created at ${this.createdAt.toISOString()}`);
     }
 

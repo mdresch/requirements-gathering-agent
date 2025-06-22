@@ -1,0 +1,282 @@
+{
+  "name": "BABOK Requirements Elicitation Guide",
+  "description": "A comprehensive template based on BABOK v3 for conducting requirements elicitation procedures, including techniques, planning, and deliverables",
+  "category": "business-analysis",
+  "tags": ["babok", "requirements", "elicitation", "business-analysis", "stakeholder-engagement"],
+  "content": {
+    "documentStructure": {
+      "title": "Requirements Elicitation Procedure Guide",
+      "version": "1.0",
+      "sections": [
+        {
+          "id": "executive-summary",
+          "title": "Executive Summary",
+          "content": "This document provides a structured approach to requirements elicitation based on BABOK v3 standards, ensuring comprehensive stakeholder engagement and thorough requirements gathering."
+        },
+        {
+          "id": "purpose-scope",
+          "title": "Purpose and Scope",
+          "content": "Define the business need, project scope, and elicitation objectives aligned with organizational goals and stakeholder expectations."
+        },
+        {
+          "id": "elicitation-planning",
+          "title": "Elicitation Planning",
+          "subsections": [
+            {
+              "id": "stakeholder-identification",
+              "title": "Stakeholder Identification and Analysis",
+              "content": "Systematic identification of all relevant stakeholders using RACI matrices, influence-interest grids, and stakeholder onion models."
+            },
+            {
+              "id": "technique-selection",
+              "title": "Elicitation Technique Selection",
+              "content": "Selection of appropriate elicitation techniques based on stakeholder characteristics, time constraints, and information complexity."
+            },
+            {
+              "id": "resource-planning",
+              "title": "Resource and Schedule Planning",
+              "content": "Allocation of human resources, tools, and timeline for elicitation activities."
+            }
+          ]
+        },
+        {
+          "id": "elicitation-techniques",
+          "title": "Elicitation Techniques",
+          "subsections": [
+            {
+              "id": "collaborative-techniques",
+              "title": "Collaborative Techniques",
+              "techniques": [
+                {
+                  "name": "Brainstorming",
+                  "description": "Structured group creativity technique for generating ideas",
+                  "when_to_use": "Early requirements discovery, innovative solutions",
+                  "participants": "Cross-functional team members, stakeholders",
+                  "deliverables": "Idea lists, prioritized concepts"
+                },
+                {
+                  "name": "Focus Groups",
+                  "description": "Moderated discussion with representative users",
+                  "when_to_use": "User experience requirements, market research",
+                  "participants": "6-12 representative users, facilitator",
+                  "deliverables": "User insights, preference patterns"
+                },
+                {
+                  "name": "Workshops",
+                  "description": "Structured working sessions with stakeholders",
+                  "when_to_use": "Complex requirements, consensus building",
+                  "participants": "Key stakeholders, subject matter experts",
+                  "deliverables": "Requirements documentation, decisions log"
+                }
+              ]
+            },
+            {
+              "id": "research-techniques",
+              "title": "Research Techniques",
+              "techniques": [
+                {
+                  "name": "Document Analysis",
+                  "description": "Review of existing documentation and artifacts",
+                  "when_to_use": "Understanding current state, compliance requirements",
+                  "sources": "Policies, procedures, system documentation",
+                  "deliverables": "Current state analysis, gap identification"
+                },
+                {
+                  "name": "Benchmarking",
+                  "description": "Comparison with industry standards and best practices",
+                  "when_to_use": "Performance targets, competitive analysis",
+                  "sources": "Industry reports, competitor analysis",
+                  "deliverables": "Benchmark metrics, improvement opportunities"
+                }
+              ]
+            },
+            {
+              "id": "observational-techniques",
+              "title": "Observational Techniques",
+              "techniques": [
+                {
+                  "name": "Job Shadowing",
+                  "description": "Direct observation of work processes",
+                  "when_to_use": "Process understanding, workflow optimization",
+                  "duration": "Full work cycles, multiple iterations",
+                  "deliverables": "Process maps, pain point identification"
+                },
+                {
+                  "name": "Ethnographic Studies",
+                  "description": "Immersive observation in natural work environment",
+                  "when_to_use": "Cultural understanding, user behavior patterns",
+                  "duration": "Extended periods, multiple contexts",
+                  "deliverables": "Behavioral insights, cultural analysis"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "execution-guidelines",
+          "title": "Elicitation Execution",
+          "subsections": [
+            {
+              "id": "preparation-checklist",
+              "title": "Pre-Elicitation Preparation",
+              "checklist": [
+                "Stakeholder confirmation and scheduling",
+                "Materials and tools preparation",
+                "Agenda and question preparation",
+                "Environment setup (physical/virtual)",
+                "Recording permissions and logistics"
+              ]
+            },
+            {
+              "id": "facilitation-guidelines",
+              "title": "Facilitation Best Practices",
+              "guidelines": [
+                "Maintain neutral facilitation stance",
+                "Encourage participation from all stakeholders",
+                "Manage time effectively",
+                "Document decisions and action items",
+                "Handle conflicts constructively"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "documentation-standards",
+          "title": "Requirements Documentation",
+          "standards": [
+            {
+              "artifact": "Requirements Specification",
+              "template": "IEEE 830 or organizational standard",
+              "attributes": ["ID", "Priority", "Source", "Acceptance Criteria"]
+            },
+            {
+              "artifact": "Traceability Matrix",
+              "purpose": "Link requirements to business objectives and test cases",
+              "maintenance": "Updated throughout project lifecycle"
+            }
+          ]
+        },
+        {
+          "id": "validation-verification",
+          "title": "Requirements Validation and Verification",
+          "activities": [
+            {
+              "name": "Stakeholder Review",
+              "description": "Formal review with requirement sources",
+              "deliverables": "Approved requirements, change requests"
+            },
+            {
+              "name": "Prototyping",
+              "description": "Visual/interactive representation for validation",
+              "types": ["Wireframes", "Mockups", "Working prototypes"]
+            },
+            {
+              "name": "Requirements Walkthrough",
+              "description": "Systematic review of documented requirements",
+              "participants": "Business analysts, stakeholders, development team"
+            }
+          ]
+        },
+        {
+          "id": "change-management",
+          "title": "Requirements Change Management",
+          "process": [
+            "Change request submission",
+            "Impact analysis",
+            "Stakeholder approval",
+            "Documentation update",
+            "Communication to affected parties"
+          ]
+        },
+        {
+          "id": "tools-templates",
+          "title": "Tools and Templates",
+          "categories": [
+            {
+              "name": "Elicitation Tools",
+              "items": ["Survey platforms", "Collaboration tools", "Modeling software"]
+            },
+            {
+              "name": "Documentation Templates",
+              "items": ["Requirements specification template", "Meeting minutes template", "Stakeholder register template"]
+            }
+          ]
+        },
+        {
+          "id": "success-metrics",
+          "title": "Success Metrics and KPIs",
+          "metrics": [
+            {
+              "name": "Requirements Quality",
+              "measures": ["Completeness", "Consistency", "Testability"]
+            },
+            {
+              "name": "Stakeholder Satisfaction",
+              "measures": ["Engagement level", "Feedback scores", "Change requests volume"]
+            },
+            {
+              "name": "Process Efficiency",
+              "measures": ["Time to completion", "Resource utilization", "Rework percentage"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "variables": [
+    {
+      "name": "project_name",
+      "type": "string",
+      "description": "Name of the project requiring elicitation",
+      "required": true
+    },
+    {
+      "name": "project_timeline",
+      "type": "string",
+      "description": "Project duration and key milestones",
+      "required": true
+    },
+    {
+      "name": "primary_stakeholders",
+      "type": "array",
+      "description": "List of key stakeholders and their roles",
+      "required": true
+    },
+    {
+      "name": "business_domain",
+      "type": "string",
+      "description": "Industry or business domain context",
+      "required": true
+    },
+    {
+      "name": "complexity_level",
+      "type": "string",
+      "description": "Project complexity (Low/Medium/High)",
+      "required": true,
+      "options": ["Low", "Medium", "High"]
+    },
+    {
+      "name": "regulatory_requirements",
+      "type": "string",
+      "description": "Applicable regulations or compliance standards",
+      "required": false
+    },
+    {
+      "name": "preferred_techniques",
+      "type": "array",
+      "description": "Stakeholder-preferred elicitation techniques",
+      "required": false
+    }
+  ],
+  "outputFormats": ["pdf", "docx", "html", "markdown"],
+  "metadata": {
+    "author": "ADPA Business Analysis Team",
+    "version": "1.0",
+    "lastModified": "2025-06-22",
+    "babok_version": "3.0",
+    "compliance": ["ISO 29148", "IEEE 830"],
+    "difficulty_level": "Intermediate to Advanced",
+    "estimated_time": "2-4 hours to complete",
+    "target_audience": ["Business Analysts", "Product Managers", "Project Managers", "Requirements Engineers"]
+  }
+}

@@ -23,6 +23,28 @@ export class DocumentController {
     private static jobManager = new JobManager();
 
     /**
+     * Helper method to convert DocumentJob to DocumentConversionResponse
+     */
+    private static convertJobToResponse(job: any): DocumentConversionResponse {
+        return {
+            jobId: job.id,
+            status: job.status as ProcessingStatus,
+            downloadUrl: job.downloadUrl,
+            fileSize: job.fileSize,
+            progress: job.progress,
+            estimatedCompletion: job.estimatedCompletion,
+            createdAt: job.createdAt,
+            completedAt: job.completedAt,
+            processingDuration: job.processingDuration,
+            outputFormat: job.outputFormat as OutputFormat,
+            originalFilename: job.originalFilename,
+            generatedFilename: job.generatedFilename,
+            error: job.error,
+            logs: job.logs
+        };
+    }
+
+    /**
      * Convert a single document
      * POST /api/v1/documents/convert
      */
@@ -105,10 +127,9 @@ export class DocumentController {
 
             // Start batch conversion
             const batch = await DocumentController.documentProcessor.startBatchConversion(request);
-            
-            const response: BatchConversionResponse = {
+              const response: BatchConversionResponse = {
                 batchId: batch.id,
-                jobs: batch.jobs,
+                jobs: batch.jobs.map(job => DocumentController.convertJobToResponse(job)),
                 status: batch.status as ProcessingStatus,
                 progress: batch.progress,
                 successCount: batch.successCount,
@@ -150,24 +171,7 @@ export class DocumentController {
                     },
                     requestId
                 });
-            }
-
-            const response: DocumentConversionResponse = {
-                jobId: job.id,
-                status: job.status as ProcessingStatus,
-                downloadUrl: job.downloadUrl,
-                fileSize: job.fileSize,
-                progress: job.progress,
-                estimatedCompletion: job.estimatedCompletion,
-                createdAt: job.createdAt,
-                completedAt: job.completedAt,
-                processingDuration: job.processingDuration,
-                outputFormat: job.outputFormat as OutputFormat,
-                originalFilename: job.originalFilename,
-                generatedFilename: job.generatedFilename,
-                error: job.error,
-                logs: job.logs
-            };
+            }            const response: DocumentConversionResponse = DocumentController.convertJobToResponse(job);
 
             res.json({
                 success: true,

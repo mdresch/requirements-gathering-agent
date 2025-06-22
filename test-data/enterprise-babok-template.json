@@ -1,0 +1,114 @@
+{
+  "name": "BABOK v3 Enterprise Requirements Elicitation Framework",
+  "description": "Comprehensive BABOK v3 compliant template for enterprise requirements elicitation with stakeholder management, regulatory compliance, and quality assurance",
+  "category": "enterprise-business-analysis",
+  "tags": ["babok-v3", "requirements-elicitation", "enterprise", "stakeholder-management", "compliance"],
+  "templateData": {
+    "content": "# BABOK v3 Enterprise Requirements Elicitation Framework\n\n## 📋 Executive Summary\n\n**Project:** {{project_name}}\n**Organization:** {{organization_name}}\n**Domain:** {{business_domain}}\n**Complexity:** {{complexity_level}}\n**Duration:** {{project_timeline}}\n**Regulatory Framework:** {{regulatory_requirements}}\n\nThis document establishes a comprehensive requirements elicitation framework based on BABOK v3 standards, ensuring stakeholder alignment, regulatory compliance, and delivery excellence.\n\n---\n\n## 🎯 Business Context & Objectives\n\n### Strategic Alignment\n{{business_objectives}}\n\n### Success Criteria\n{{success_criteria}}\n\n### Stakeholder Ecosystem\n{{#each stakeholder_groups}}\n#### {{this.category}}\n{{#each this.members}}\n- **{{this.role}}**: {{this.name}} ({{this.influence_level}})\n  - **Responsibilities**: {{this.responsibilities}}\n  - **Expectations**: {{this.expectations}}\n  - **Communication Preferences**: {{this.communication_style}}\n{{/each}}\n{{/each}}\n\n---\n\n## 📈 Elicitation Strategy & Planning\n\n### BABOK Knowledge Areas Integration\n\n#### 1. Business Analysis Planning and Monitoring\n- **Governance Framework**: Executive steering committee with monthly reviews\n- **Performance Metrics**: Requirements coverage, stakeholder satisfaction, compliance adherence\n- **Risk Management**: Proactive identification and mitigation strategies\n\n#### 2. Elicitation and Collaboration\n- **Primary Techniques**: {{#each primary_techniques}}{{this}}, {{/each}}\n- **Stakeholder Engagement**: Multi-modal communication and collaboration approach\n- **Documentation Standards**: IEEE 830 compliant requirements specification\n\n#### 3. Requirements Life Cycle Management\n- **Traceability Strategy**: End-to-end requirements traceability from business objectives to test cases\n- **Change Management**: Formal change control process with impact assessment\n- **Version Control**: Automated versioning and configuration management\n\n### Enterprise Risk Mitigation\n{{#each risk_factors}}\n- **Risk**: {{this.description}}\n- **Impact**: {{this.impact_level}}\n- **Mitigation**: {{this.mitigation_strategy}}\n{{/each}}\n\n---\n\n## 🔍 Comprehensive Elicitation Techniques\n\n### Collaborative Techniques (BABOK 10.2)\n\n#### Executive Stakeholder Interviews\n- **Objective**: Capture strategic vision and high-level requirements\n- **Duration**: 90-minute structured interviews\n- **Deliverables**: Strategic requirements, success criteria, constraint identification\n\n#### Multi-Stakeholder Workshops\n- **Structure**: 3-day intensive requirements workshops\n- **Day 1**: Current state analysis and pain point identification\n- **Day 2**: Future state visioning and solution architecture\n- **Day 3**: Requirements prioritization and acceptance criteria definition\n\n#### Focus Groups by User Segment\n- **Segments**: Executive users, operational staff, customer-facing teams\n- **Methodology**: Moderated discussions with structured questionnaires\n- **Analysis**: Pattern identification and requirement synthesis\n\n### Research Techniques (BABOK 10.3)\n\n#### Comprehensive Document Analysis\n- **Enterprise Architecture**: Current system documentation and architecture diagrams\n- **Business Processes**: Process documentation and workflow analyses\n- **Regulatory Documentation**: Compliance reports and audit findings\n- **Competitive Analysis**: Industry benchmarking and best practices\n\n#### Industry Benchmarking\n- **Peer Analysis**: Comparable organizations and their solutions\n- **Best Practices**: Industry standards and proven methodologies\n- **Innovation Trends**: Emerging technologies and market directions\n\n### Observational Techniques (BABOK 10.4)\n\n#### Process Mining and Analysis\n- **System Logs**: Transaction pattern analysis and bottleneck identification\n- **User Behavior**: Workflow observation and user experience assessment\n- **Performance Metrics**: Current state performance baseline establishment\n\n---\n\n## 📋 Requirements Documentation Standards\n\n### IEEE 830 Compliant Structure\n\n#### Functional Requirements Template\n```\nREQ-[ID]: [Requirement Statement]\nPriority: [Critical/High/Medium/Low]\nSource: [Stakeholder/Document Reference]\nRationale: [Business Justification]\nAcceptance Criteria:\n- Measurable criterion 1\n- Measurable criterion 2\n- Measurable criterion 3\nDependencies: [Related Requirements]\nRisks: [Implementation Risks]\nCompliance: [Regulatory Requirements]\n```\n\n#### Non-Functional Requirements\n- **Performance**: Response time <100ms for 95% of transactions\n- **Availability**: 99.99% uptime with disaster recovery capabilities\n- **Security**: Multi-factor authentication and encryption at rest/transit\n- **Scalability**: Support for 10x current transaction volume\n- **Compliance**: {{regulatory_requirements}} adherence\n\n### Enterprise Traceability Matrix\n| Requirement ID | Business Objective | Stakeholder | Priority | Regulatory Impact | Test Case | Status |\n|---|---|---|---|---|---|---|\n| REQ-001 | Strategic Objective 1 | Executive Sponsor | Critical | Basel III | TC-001 | Approved |\n| REQ-002 | Operational Efficiency | Business Lead | High | GDPR | TC-002 | Under Review |\n\n---\n\n## ✅ Quality Assurance & Validation Framework\n\n### Requirements Quality Criteria (BABOK 8.1)\n\n#### Essential Characteristics\n- **Atomic**: Each requirement addresses a single, specific need\n- **Complete**: All necessary information and context provided\n- **Consistent**: No contradictions with other requirements or constraints\n- **Concise**: Clear, unambiguous language without unnecessary complexity\n- **Feasible**: Technically and economically viable within project constraints\n- **Testable**: Verification criteria clearly defined and measurable\n- **Prioritized**: Business value and urgency appropriately ranked\n\n### Multi-Phase Validation Process\n\n#### Phase 1: Stakeholder Review\n- **Process**: Structured review sessions with requirement originators\n- **Deliverables**: Validated requirements with stakeholder sign-off\n- **Timeline**: 5 business days per review cycle\n\n#### Phase 2: Technical Feasibility Assessment\n- **Architecture Review**: Technical viability and integration assessment\n- **Performance Analysis**: Scalability and performance impact evaluation\n- **Security Assessment**: Security implications and compliance verification\n\n#### Phase 3: Regulatory Compliance Validation\n- **Compliance Mapping**: Requirements mapped to regulatory obligations\n- **Audit Preparation**: Evidence collection for regulatory review\n- **Risk Assessment**: Compliance risk identification and mitigation\n\n---\n\n## 🔄 Enterprise Change Management\n\n### Formal Change Control Process\n\n1. **Change Request Submission**\n   - Standardized change request form\n   - Business justification and impact analysis\n   - Stakeholder identification and approval workflow\n\n2. **Multi-Dimensional Impact Assessment**\n   - **Scope Impact**: Feature additions, modifications, or removals\n   - **Schedule Impact**: Timeline adjustments and milestone effects\n   - **Budget Impact**: Cost implications and resource requirements\n   - **Quality Impact**: Risk assessment and mitigation strategies\n   - **Regulatory Impact**: Compliance implications and requirements\n\n3. **Change Advisory Board Review**\n   - Cross-functional review team including business, technical, and compliance representatives\n   - Prioritization based on business value and strategic alignment\n   - Risk assessment and mitigation planning\n\n4. **Implementation and Verification**\n   - Controlled implementation with rollback procedures\n   - Stakeholder communication and training\n   - Post-implementation validation and lessons learned\n\n---\n\n{{#if regulatory_requirements}}\n## ⚖️ Regulatory Compliance Framework\n\n### Multi-Jurisdictional Compliance\n**Applicable Regulations:** {{regulatory_requirements}}\n\n### Compliance Control Framework\n{{#each compliance_controls}}\n#### {{this.regulation}}\n- **Requirements**: {{this.requirements}}\n- **Evidence Collection**: {{this.evidence_requirements}}\n- **Validation Process**: {{this.validation_process}}\n- **Reporting Obligations**: {{this.reporting_requirements}}\n- **Audit Readiness**: Continuous compliance monitoring and documentation\n{{/each}}\n\n### Regulatory Risk Management\n- **Compliance Monitoring**: Real-time compliance dashboard and alerting\n- **Regulatory Updates**: Continuous monitoring of regulatory changes\n- **Audit Preparation**: Comprehensive evidence collection and documentation\n- **Violation Response**: Incident response and remediation procedures\n{{/if}}\n\n---\n\n## 📊 Enterprise Success Metrics & KPIs\n\n### Requirements Quality Metrics\n- **Completeness**: 100% of requirements have defined acceptance criteria\n- **Consistency**: Zero conflicting requirements across all documentation\n- **Traceability**: 100% requirements traced from business objectives to test cases\n- **Testability**: 95% of requirements have automated test coverage\n- **Stakeholder Approval**: 90% first-time approval rate for requirement reviews\n\n### Project Performance Indicators\n- **Schedule Performance**: On-time delivery of all major milestones\n- **Budget Performance**: Within 5% of approved project budget\n- **Quality Performance**: <1% defect escape rate to production\n- **Stakeholder Satisfaction**: >4.5/5.0 average satisfaction score\n- **Compliance Performance**: 100% regulatory audit compliance\n\n### Business Value Realization\n- **ROI Achievement**: Target ROI within 18 months post-implementation\n- **Operational Efficiency**: 35% reduction in manual processing time\n- **Customer Experience**: >95% customer satisfaction with new capabilities\n- **Risk Reduction**: 50% reduction in operational risk incidents\n\n---\n\n## 🛠️ Enterprise Technology Stack\n\n### Requirements Management Platform\n- **Primary Tool**: Enterprise requirements management system with full lifecycle support\n- **Integration**: Automated integration with project management and testing tools\n- **Reporting**: Real-time dashboards and automated compliance reporting\n\n### Collaboration and Communication\n- **Workshops**: Virtual and in-person facilitation capabilities\n- **Documentation**: Collaborative editing and version control\n- **Stakeholder Engagement**: Multi-modal communication and feedback collection\n\n### Quality Assurance and Testing\n- **Test Management**: Integrated test case management and execution\n- **Automation**: Automated requirement validation and testing\n- **Compliance**: Regulatory compliance testing and evidence collection\n\n---\n\n## 📈 Continuous Improvement Framework\n\n### Lessons Learned Process\n1. **Collection**: Regular retrospectives and stakeholder feedback sessions\n2. **Analysis**: Pattern identification and root cause analysis\n3. **Documentation**: Formal lessons learned repository and knowledge base\n4. **Application**: Process improvements and template updates for future projects\n\n### Process Optimization\n- **Efficiency Metrics**: Continuous monitoring of process performance\n- **Automation Opportunities**: Identification and implementation of automation\n- **Tool Enhancements**: Regular evaluation and upgrade of toolset\n- **Training and Development**: Ongoing team capability development\n\n---\n\n## 📞 Enterprise Communication Strategy\n\n### Multi-Tier Communication Framework\n\n| Stakeholder Tier | Frequency | Communication Method | Content Focus | Responsible Party |\n|---|---|---|---|---|\n| Executive Sponsors | Weekly | Executive Dashboard | Progress, risks, decisions, ROI | Program Manager |\n| Business Leaders | Bi-weekly | Status Reports | Requirements progress, issues | Business Analyst Lead |\n| Technical Teams | Daily | Agile Ceremonies | Technical clarification, dependencies | Technical Lead |\n| Compliance Teams | Monthly | Compliance Reports | Regulatory adherence, audit readiness | Compliance Officer |\n| End Users | Quarterly | Town Halls | Feature previews, training preparation | Change Manager |\n\n### Escalation Framework\n1. **Level 1**: Project team resolution (same day)\n2. **Level 2**: Functional leads resolution (48 hours)\n3. **Level 3**: Steering committee resolution (1 week)\n4. **Level 4**: Executive sponsor resolution (immediate)\n\n---\n\n## 🎯 Implementation Roadmap\n\n### Phase 1: Foundation (Weeks 1-4)\n- Stakeholder identification and engagement\n- Governance structure establishment\n- Tool setup and configuration\n- Initial risk assessment and mitigation planning\n\n### Phase 2: Discovery (Weeks 5-12)\n- Comprehensive elicitation activities\n- Current state analysis and documentation\n- Regulatory compliance mapping\n- Stakeholder validation and approval\n\n### Phase 3: Definition (Weeks 13-20)\n- Requirements documentation and specification\n- Traceability establishment\n- Quality assurance and validation\n- Change management process implementation\n\n### Phase 4: Delivery (Weeks 21-24)\n- Final stakeholder approval\n- Handoff to development teams\n- Ongoing support and maintenance\n- Lessons learned and process improvement\n\n---\n\n## 📋 Executive Summary & Recommendations\n\nThis BABOK v3 compliant enterprise requirements elicitation framework provides:\n\n✅ **Professional Excellence**: Adherence to international business analysis standards\n✅ **Stakeholder Alignment**: Comprehensive engagement across all organizational levels\n✅ **Regulatory Compliance**: Built-in compliance framework for multi-jurisdictional requirements\n✅ **Quality Assurance**: Rigorous validation and verification processes\n✅ **Risk Management**: Proactive identification and mitigation strategies\n✅ **Continuous Improvement**: Feedback loops and process optimization\n\n### Critical Success Factors\n1. **Executive Sponsorship**: Visible and active executive commitment\n2. **Stakeholder Engagement**: Proactive and inclusive stakeholder participation\n3. **Resource Allocation**: Adequate skilled resources and tool availability\n4. **Communication Excellence**: Clear, consistent, and timely communication\n5. **Quality Focus**: Uncompromising commitment to quality and compliance\n\n### Immediate Next Steps\n1. **Stakeholder Commitment**: Secure formal commitment from all key stakeholders\n2. **Resource Planning**: Finalize team assignments and tool procurement\n3. **Governance Activation**: Establish steering committee and governance processes\n4. **Risk Mitigation**: Implement initial risk mitigation strategies\n5. **Communication Launch**: Initiate stakeholder communication and engagement plan\n\n---\n\n**Document Classification**: {{document_classification}}\n**Approval Authority**: {{approval_authority}}\n**Document Date**: {{document_date}}\n**Author**: ADPA Enterprise Business Analysis Center of Excellence\n**Version**: 1.0\n**BABOK Compliance**: Version 3.0\n**Standards Adherence**: ISO 29148, IEEE 830, PMI-PBA\n\n*This framework represents enterprise-grade business analysis consulting capabilities suitable for Fortune 500 digital transformation initiatives with multi-jurisdictional regulatory requirements.*",
+    "variables": [
+      {
+        "name": "project_name",
+        "type": "text",
+        "description": "Official project name and identifier",
+        "required": true
+      },
+      {
+        "name": "organization_name",
+        "type": "text",
+        "description": "Client organization name",
+        "required": true
+      },
+      {
+        "name": "business_domain",
+        "type": "text",
+        "description": "Industry sector and business domain",
+        "required": true
+      },
+      {
+        "name": "complexity_level",
+        "type": "text",
+        "description": "Project complexity assessment",
+        "required": true,
+        "defaultValue": "Enterprise"
+      },
+      {
+        "name": "project_timeline",
+        "type": "text",
+        "description": "Project duration with key milestones",
+        "required": true
+      },
+      {
+        "name": "regulatory_requirements",
+        "type": "text",
+        "description": "Applicable regulatory frameworks",
+        "required": false
+      },
+      {
+        "name": "business_objectives",
+        "type": "text",
+        "description": "Strategic business objectives",
+        "required": true
+      },
+      {
+        "name": "success_criteria",
+        "type": "text",
+        "description": "Measurable success criteria",
+        "required": true
+      },
+      {
+        "name": "stakeholder_groups",
+        "type": "array",
+        "description": "Stakeholder groups with details",
+        "required": true
+      },
+      {
+        "name": "risk_factors",
+        "type": "array",
+        "description": "Project risks and mitigation",
+        "required": true
+      },
+      {
+        "name": "primary_techniques",
+        "type": "array",
+        "description": "Primary elicitation techniques",
+        "required": true
+      },
+      {
+        "name": "compliance_controls",
+        "type": "array",
+        "description": "Compliance controls",
+        "required": false
+      },
+      {
+        "name": "document_classification",
+        "type": "text",
+        "description": "Document security classification",
+        "required": false,
+        "defaultValue": "Confidential"
+      },
+      {
+        "name": "approval_authority",
+        "type": "text",
+        "description": "Document approval authority",
+        "required": false,
+        "defaultValue": "Project Steering Committee"
+      },
+      {
+        "name": "document_date",
+        "type": "text",
+        "description": "Document creation date",
+        "required": false,
+        "defaultValue": "2025-06-22"
+      }
+    ],    "layout": {
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 25,
+        "bottom": 25,
+        "left": 30,
+        "right": 25
+      }
+    }
+  }
+}

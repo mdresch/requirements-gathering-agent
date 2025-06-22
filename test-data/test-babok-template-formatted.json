@@ -1,0 +1,64 @@
+{
+  "name": "BABOK Requirements Elicitation Guide",
+  "description": "A comprehensive template based on BABOK v3 for conducting requirements elicitation procedures, including techniques, planning, and deliverables",
+  "category": "business-analysis",
+  "tags": ["babok", "requirements", "elicitation", "business-analysis", "stakeholder-engagement"],
+  "templateData": {
+    "content": "# BABOK Requirements Elicitation Procedure Guide\n\n## Executive Summary\n\nThis document provides a structured approach to requirements elicitation based on BABOK v3 standards, ensuring comprehensive stakeholder engagement and thorough requirements gathering.\n\n**Project:** {{project_name}}\n**Timeline:** {{project_timeline}}\n**Business Domain:** {{business_domain}}\n**Complexity Level:** {{complexity_level}}\n\n## Purpose and Scope\n\nDefine the business need, project scope, and elicitation objectives aligned with organizational goals and stakeholder expectations.\n\n### Key Stakeholders\n{{#each primary_stakeholders}}\n- {{this}}\n{{/each}}\n\n## Elicitation Planning\n\n### Stakeholder Identification and Analysis\n\nSystematic identification of all relevant stakeholders using:\n- RACI matrices\n- Influence-interest grids\n- Stakeholder onion models\n\n### Elicitation Technique Selection\n\nBased on project complexity level ({{complexity_level}}) and stakeholder characteristics:\n\n{{#if preferred_techniques}}\n**Preferred Techniques:**\n{{#each preferred_techniques}}\n- {{this}}\n{{/each}}\n{{/if}}\n\n#### Collaborative Techniques\n\n**1. Brainstorming**\n- **Purpose:** Structured group creativity for generating ideas\n- **When to use:** Early requirements discovery, innovative solutions\n- **Participants:** Cross-functional team members, stakeholders\n- **Deliverables:** Idea lists, prioritized concepts\n\n**2. Focus Groups**\n- **Purpose:** Moderated discussion with representative users\n- **When to use:** User experience requirements, market research\n- **Participants:** 6-12 representative users, facilitator\n- **Deliverables:** User insights, preference patterns\n\n**3. Workshops**\n- **Purpose:** Structured working sessions with stakeholders\n- **When to use:** Complex requirements, consensus building\n- **Participants:** Key stakeholders, subject matter experts\n- **Deliverables:** Requirements documentation, decisions log\n\n#### Research Techniques\n\n**1. Document Analysis**\n- **Purpose:** Review of existing documentation and artifacts\n- **When to use:** Understanding current state, compliance requirements\n- **Sources:** Policies, procedures, system documentation\n- **Deliverables:** Current state analysis, gap identification\n\n**2. Benchmarking**\n- **Purpose:** Comparison with industry standards and best practices\n- **When to use:** Performance targets, competitive analysis\n- **Sources:** Industry reports, competitor analysis\n- **Deliverables:** Benchmark metrics, improvement opportunities\n\n#### Observational Techniques\n\n**1. Job Shadowing**\n- **Purpose:** Direct observation of work processes\n- **When to use:** Process understanding, workflow optimization\n- **Duration:** Full work cycles, multiple iterations\n- **Deliverables:** Process maps, pain point identification\n\n**2. Ethnographic Studies**\n- **Purpose:** Immersive observation in natural work environment\n- **When to use:** Cultural understanding, user behavior patterns\n- **Duration:** Extended periods, multiple contexts\n- **Deliverables:** Behavioral insights, cultural analysis\n\n## Elicitation Execution\n\n### Pre-Elicitation Preparation Checklist\n\n- [ ] Stakeholder confirmation and scheduling\n- [ ] Materials and tools preparation\n- [ ] Agenda and question preparation\n- [ ] Environment setup (physical/virtual)\n- [ ] Recording permissions and logistics\n\n### Facilitation Best Practices\n\n- Maintain neutral facilitation stance\n- Encourage participation from all stakeholders\n- Manage time effectively\n- Document decisions and action items\n- Handle conflicts constructively\n\n## Requirements Documentation Standards\n\n### Requirements Specification\n- **Template:** IEEE 830 or organizational standard\n- **Attributes:** ID, Priority, Source, Acceptance Criteria\n\n### Traceability Matrix\n- **Purpose:** Link requirements to business objectives and test cases\n- **Maintenance:** Updated throughout project lifecycle\n\n## Requirements Validation and Verification\n\n### Stakeholder Review\n- **Description:** Formal review with requirement sources\n- **Deliverables:** Approved requirements, change requests\n\n### Prototyping\n- **Description:** Visual/interactive representation for validation\n- **Types:** Wireframes, Mockups, Working prototypes\n\n### Requirements Walkthrough\n- **Description:** Systematic review of documented requirements\n- **Participants:** Business analysts, stakeholders, development team\n\n## Requirements Change Management Process\n\n1. Change request submission\n2. Impact analysis\n3. Stakeholder approval\n4. Documentation update\n5. Communication to affected parties\n\n{{#if regulatory_requirements}}\n## Regulatory and Compliance Considerations\n\n**Applicable Regulations:** {{regulatory_requirements}}\n\n- Ensure all elicitation activities comply with regulatory requirements\n- Document compliance evidence throughout the process\n- Include compliance stakeholders in validation activities\n{{/if}}\n\n## Success Metrics and KPIs\n\n### Requirements Quality\n- **Completeness:** All requirements identified and documented\n- **Consistency:** No conflicting requirements\n- **Testability:** Requirements can be verified through testing\n\n### Stakeholder Satisfaction\n- **Engagement level:** Active participation in elicitation activities\n- **Feedback scores:** Stakeholder satisfaction surveys\n- **Change requests volume:** Minimal post-approval changes\n\n### Process Efficiency\n- **Time to completion:** Within planned timeline\n- **Resource utilization:** Optimal use of allocated resources\n- **Rework percentage:** Minimal requirement revisions\n\n## Tools and Templates\n\n### Elicitation Tools\n- Survey platforms (SurveyMonkey, Google Forms)\n- Collaboration tools (Miro, Mural, Microsoft Whiteboard)\n- Modeling software (Lucidchart, Visio, Draw.io)\n\n### Documentation Templates\n- Requirements specification template\n- Meeting minutes template\n- Stakeholder register template\n- Decision log template\n\n## Conclusion\n\nThis BABOK-based requirements elicitation guide provides a comprehensive framework for successful requirements gathering. Following these procedures ensures stakeholder alignment, requirement quality, and project success.\n\n---\n\n**Document Information:**\n- **Author:** ADPA Business Analysis Team\n- **Version:** 1.0\n- **Last Modified:** 2025-06-22\n- **BABOK Version:** 3.0\n- **Compliance:** ISO 29148, IEEE 830\n- **Target Audience:** Business Analysts, Product Managers, Project Managers, Requirements Engineers",
+    "variables": [
+      {
+        "name": "project_name",
+        "type": "text",
+        "description": "Name of the project requiring elicitation",
+        "required": true
+      },
+      {
+        "name": "project_timeline",
+        "type": "text",
+        "description": "Project duration and key milestones",
+        "required": true
+      },
+      {
+        "name": "primary_stakeholders",
+        "type": "array",
+        "description": "List of key stakeholders and their roles",
+        "required": true
+      },
+      {
+        "name": "business_domain",
+        "type": "text",
+        "description": "Industry or business domain context",
+        "required": true
+      },
+      {
+        "name": "complexity_level",
+        "type": "text",
+        "description": "Project complexity (Low/Medium/High)",
+        "required": true,
+        "defaultValue": "Medium"
+      },
+      {
+        "name": "regulatory_requirements",
+        "type": "text",
+        "description": "Applicable regulations or compliance standards",
+        "required": false
+      },
+      {
+        "name": "preferred_techniques",
+        "type": "array",
+        "description": "Stakeholder-preferred elicitation techniques",
+        "required": false
+      }
+    ],
+    "layout": {
+      "pageSize": "A4",
+      "orientation": "portrait",
+      "margins": {
+        "top": 20,
+        "bottom": 20,
+        "left": 25,
+        "right": 25
+      }
+    }
+  }
+}

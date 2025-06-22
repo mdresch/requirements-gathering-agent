@@ -1,0 +1,179 @@
+{
+  "templateId": "53bba375-799b-4b9d-a090-1c3942fbd4b8",
+  "content": "Generate comprehensive BABOK v3 requirements elicitation framework for GlobalBank's core banking system modernization initiative",
+  "inputFormat": "markdown",
+  "outputFormat": "pdf",
+  "metadata": {
+    "project_name": "GlobalBank Core Banking Modernization Program",
+    "organization_name": "GlobalBank International Corporation",
+    "business_domain": "Investment Banking & Wealth Management - Multi-jurisdictional Operations",
+    "complexity_level": "Enterprise",
+    "project_timeline": "24 months (Q3 2025 - Q2 2027) with 8 quarterly releases and regulatory checkpoints",
+    "regulatory_requirements": "Basel III, MiFID II, Dodd-Frank, GDPR, PCI DSS, SOX, CFTC, FCA, BaFin, FINRA, Open Banking Standards",
+    "business_objectives": "1) Modernize legacy core banking platform to cloud-native microservices architecture enabling 10x transaction scalability; 2) Achieve 99.99% uptime SLA with zero-downtime deployments; 3) Reduce operational costs by 35% through automation and AI-driven processes; 4) Enable real-time transaction processing with sub-100ms response times; 5) Enhance omnichannel customer experience with personalized digital services; 6) Ensure multi-jurisdictional regulatory compliance with automated reporting; 7) Implement advanced fraud detection and cybersecurity measures; 8) Enable open banking APIs for fintech partnerships",
+    "success_criteria": "1) Zero downtime during phased migration with rollback capabilities; 2) Sub-100ms average transaction response times for 99.5% of requests; 3) 100% regulatory audit compliance across all jurisdictions; 4) 40% reduction in manual operational processes; 5) Customer Net Promoter Score >70 and satisfaction >4.8/5.0; 6) ROI achievement of 25% within 18 months post-implementation; 7) 99.9% fraud detection accuracy with <0.1% false positives; 8) Complete API ecosystem with 50+ certified fintech partners",
+    "stakeholder_groups": [
+      {
+        "category": "C-Suite Executive Leadership",
+        "members": [
+          {
+            "role": "Chief Executive Officer",
+            "name": "Sarah Chen",
+            "influence_level": "Critical",
+            "responsibilities": "Strategic direction, board reporting, regulatory relationships, investor communications",
+            "expectations": "Market leadership position, competitive advantage, 25% ROI, zero regulatory issues",
+            "communication_style": "Monthly executive dashboards, quarterly board presentations, crisis escalations"
+          },
+          {
+            "role": "Chief Technology Officer", 
+            "name": "Michael Rodriguez",
+            "influence_level": "Critical",
+            "responsibilities": "Technology strategy, enterprise architecture, vendor relationships, cybersecurity oversight",
+            "expectations": "Technical excellence, 99.99% uptime, scalable architecture, zero security breaches",
+            "communication_style": "Weekly technical reviews, architecture deep-dives, security briefings"
+          },
+          {
+            "role": "Chief Financial Officer",
+            "name": "Amanda Thompson",
+            "influence_level": "Critical", 
+            "responsibilities": "Budget approval, financial reporting, cost optimization, ROI tracking",
+            "expectations": "Budget adherence, cost reduction targets, financial transparency, audit compliance",
+            "communication_style": "Financial dashboards, budget reviews, ROI reporting, audit presentations"
+          }
+        ]
+      },
+      {
+        "category": "Business Division Leadership",
+        "members": [
+          {
+            "role": "Head of Investment Banking",
+            "name": "James Patterson",
+            "influence_level": "High",
+            "responsibilities": "Trading operations, client relationship management, revenue generation, product innovation",
+            "expectations": "Enhanced trading capabilities, faster client onboarding, revenue growth, competitive positioning",
+            "communication_style": "Business performance reviews, client impact analysis, revenue dashboards"
+          },
+          {
+            "role": "Head of Wealth Management",
+            "name": "Lisa Williams",
+            "influence_level": "High",
+            "responsibilities": "Private client services, asset management, advisory services, client experience",
+            "expectations": "Personalized client experience, efficient advisory tools, portfolio performance, client retention",
+            "communication_style": "Client satisfaction reports, service level reviews, advisory tool demos"
+          },
+          {
+            "role": "Chief Risk Officer",
+            "name": "Elena Volkov",
+            "influence_level": "Critical",
+            "responsibilities": "Enterprise risk management, regulatory compliance, audit oversight, stress testing",
+            "expectations": "Risk mitigation, compliance assurance, audit readiness, regulatory relationship management",
+            "communication_style": "Risk assessments, compliance reports, regulatory updates, audit presentations"
+          }
+        ]
+      },
+      {
+        "category": "Regulatory & Compliance",
+        "members": [
+          {
+            "role": "Chief Compliance Officer",
+            "name": "David Kim",
+            "influence_level": "High",
+            "responsibilities": "Multi-jurisdictional compliance, policy implementation, training, regulatory reporting",
+            "expectations": "Zero regulatory violations, efficient automated reporting, proactive compliance monitoring",
+            "communication_style": "Compliance matrices, regulatory updates, policy briefings, training sessions"
+          },
+          {
+            "role": "Data Protection Officer",
+            "name": "Catherine Moore",
+            "influence_level": "Medium",
+            "responsibilities": "GDPR compliance, data privacy, consent management, breach response",
+            "expectations": "Privacy by design implementation, zero privacy violations, efficient consent management",
+            "communication_style": "Privacy impact assessments, data governance reports, consent analytics"
+          }
+        ]
+      },
+      {
+        "category": "Technology & Operations",
+        "members": [
+          {
+            "role": "Chief Information Security Officer",
+            "name": "Robert Singh",
+            "influence_level": "High",
+            "responsibilities": "Cybersecurity strategy, threat management, security architecture, incident response",
+            "expectations": "Zero security breaches, advanced threat detection, regulatory security compliance",
+            "communication_style": "Security dashboards, threat intelligence reports, incident briefings"
+          },
+          {
+            "role": "Head of Digital Transformation",
+            "name": "Maria Garcia",
+            "influence_level": "High",
+            "responsibilities": "Digital strategy, customer experience, innovation, technology adoption",
+            "expectations": "Digital-first customer experience, innovation leadership, technology modernization",
+            "communication_style": "Digital metrics, customer journey analytics, innovation showcases"
+          }
+        ]
+      }
+    ],
+    "risk_factors": [
+      {
+        "description": "Regulatory compliance failure during migration resulting in fines and sanctions",
+        "impact_level": "Critical",
+        "mitigation_strategy": "Dedicated regulatory sandbox environment, parallel compliance testing, phased rollout with regulatory checkpoints, continuous compliance monitoring"
+      },
+      {
+        "description": "Data integrity issues during system transition affecting customer accounts",
+        "impact_level": "Critical", 
+        "mitigation_strategy": "Comprehensive data validation frameworks, automated reconciliation, real-time monitoring, rollback procedures, customer communication protocols"
+      },
+      {
+        "description": "Cybersecurity vulnerabilities introduced during modernization",
+        "impact_level": "Critical",
+        "mitigation_strategy": "Security-by-design architecture, penetration testing, threat modeling, zero-trust implementation, continuous security monitoring"
+      },
+      {
+        "description": "Customer service disruption during peak trading hours",
+        "impact_level": "High",
+        "mitigation_strategy": "Blue-green deployment strategy, customer communication plan, 24/7 support escalation, automated failover systems"
+      },
+      {
+        "description": "Third-party vendor dependencies and integration failures",
+        "impact_level": "High",
+        "mitigation_strategy": "Vendor risk assessment, contractual SLAs, backup vendor strategies, integration testing frameworks"
+      }
+    ],
+    "primary_techniques": [
+      "C-Suite Executive Strategic Interviews",
+      "Multi-jurisdictional Regulatory Compliance Workshops", 
+      "Enterprise Architecture Design Sessions",
+      "Customer Journey Mapping and Experience Design",
+      "Cybersecurity and Risk Assessment Workshops",
+      "Trading Floor Operational Analysis",
+      "Wealth Management Client Experience Sessions",
+      "Technology Vendor Evaluation Sessions",
+      "Regulatory Sandbox Testing and Validation"
+    ],
+    "compliance_controls": [
+      {
+        "regulation": "Basel III",
+        "requirements": "Capital adequacy reporting, liquidity coverage ratios, stress testing, risk-weighted assets calculation",
+        "evidence_requirements": "Automated regulatory reporting, real-time capital calculations, stress test scenarios, audit trails",
+        "validation_process": "Regulatory sandbox testing, parallel production validation, independent audit verification",
+        "reporting_requirements": "Daily capital reports, monthly liquidity reports, quarterly stress test results, annual regulatory filings"
+      },
+      {
+        "regulation": "MiFID II",
+        "requirements": "Best execution reporting, transaction reporting, client categorization, product governance",
+        "evidence_requirements": "Trade execution analytics, client classification records, product approval documentation",
+        "validation_process": "Trade surveillance testing, compliance monitoring, client communication validation",
+        "reporting_requirements": "Daily transaction reports, weekly best execution reports, quarterly compliance attestations"
+      },
+      {
+        "regulation": "GDPR",
+        "requirements": "Data protection by design, consent management, right to erasure, data portability",
+        "evidence_requirements": "Privacy impact assessments, consent audit trails, data lineage documentation, deletion logs",
+        "validation_process": "Privacy impact assessment, data protection officer review, external privacy audit",
+        "reporting_requirements": "Annual privacy compliance report, breach notifications within 72 hours, consent analytics"
+      }
+    ]
+  }
+}

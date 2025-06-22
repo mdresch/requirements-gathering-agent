@@ -1,0 +1,10 @@
+{
+  "name": "Test Template",
+  "description": "A test template for API testing",
+  "category": "Testing",
+  "tags": ["test", "api"],
+  "templateData": {
+    "title": "{{title}}",
+    "content": "{{content}}"
+  }
+}

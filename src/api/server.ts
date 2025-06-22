@@ -1,7 +1,11 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import { createRequire } from 'module';
+import { Request, Response } from 'express';
+
+const require = createRequire(import.meta.url);
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 import { DocumentController } from './controllers/DocumentController.js';
 import { TemplateController } from './controllers/TemplateController.js';
 import { HealthController } from './controllers/HealthController.js';
@@ -11,8 +15,7 @@ import { apiKeyAuth } from './middleware/auth.js';
 
 /**
  * ADPA API Server
- * 
- * Express.js server implementing the TypeSpec-defined API endpoints
+ *  * Express.js server implementing the TypeSpec-defined API endpoints
  * for professional document processing and conversion services.
  */
 
@@ -84,7 +87,7 @@ app.get('/api/v1/templates/:templateId/stats', TemplateController.getTemplateSta
 app.post('/api/v1/templates/:templateId/validate', TemplateController.validateTemplate);
 
 // API documentation route
-app.get('/api/docs', (req, res) => {
+app.get('/api/docs', (req: Request, res: Response) => {
     res.redirect('/docs/api/index.html');
 });
 

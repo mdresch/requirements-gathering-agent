@@ -1,0 +1,32 @@
+{
+  "templateId": "ca8d4758-03c5-4110-84a7-2f5bcd318539",
+  "content": "Generate a comprehensive BABOK requirements elicitation guide for the Digital Transformation Initiative at TechCorp.",
+  "inputFormat": "markdown",
+  "outputFormat": "pdf",
+  "metadata": {
+    "project_name": "TechCorp Digital Transformation Initiative",
+    "project_timeline": "12 months (Q2 2025 - Q1 2026) with quarterly milestones",
+    "primary_stakeholders": [
+      "Chief Technology Officer - Project Sponsor",
+      "Head of Digital Innovation - Product Owner", 
+      "IT Operations Manager - Technical Lead",
+      "Customer Experience Director - Business Lead",
+      "Compliance Officer - Regulatory Lead",
+      "HR Director - Change Management",
+      "Finance Director - Budget Authority",
+      "External Customers - End Users",
+      "Vendor Partners - Integration Support"
+    ],
+    "business_domain": "Financial Technology (FinTech) - Digital Banking Solutions",
+    "complexity_level": "High",
+    "regulatory_requirements": "PCI DSS, SOX, GDPR, PSD2, Open Banking Standards",
+    "preferred_techniques": [
+      "Design Thinking Workshops",
+      "User Journey Mapping",
+      "Stakeholder Interviews",
+      "Process Mining Analysis",
+      "Regulatory Compliance Reviews",
+      "Technical Architecture Sessions"
+    ]
+  }
+}

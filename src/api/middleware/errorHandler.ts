@@ -5,6 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
  * Error handling middleware for ADPA API
  */
 
+// Async handler wrapper to catch async errors
+export const asyncHandler = (fn: Function) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+};
+
 export function errorHandler(error: any, req: Request, res: Response, next: NextFunction) {
     const requestId = req.headers['x-request-id'] as string || uuidv4();
     
