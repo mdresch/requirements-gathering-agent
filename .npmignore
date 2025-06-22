@@ -1,0 +1,95 @@
+# Development files
+src/
+test/
+coverage/
+.nyc_output/
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# Temporary files
+temp/
+tmp/
+.tmp/
+
+# Build artifacts (except dist)
+tsp-output/
+.tsp/
+
+# Git files
+.git/
+.gitignore
+
+# NPM files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Documentation build files (keeping generated docs)
+.docusaurus/
+.cache/
+
+# Testing
+.coverage/
+.nyc_output/
+junit.xml
+
+# Misc
+.42c/
+.confluence-tokens.json
+upload-to-sharepoint.ps1
+setup.ps1
+setup.sh
+codespaces-setup.sh
+
+# Generated documents (examples only)
+generated-documents/
+Gitbook/
+Github Wiki/
+
+# Config files that shouldn't be published
+config-rga.json
+*.backup
+
+# Large demo files
+demo/large-files/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Commit summary files (development only)
+COMMIT-*.md
+GIT-PUSH-SUCCESS.md
