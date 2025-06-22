@@ -1,6 +1,6 @@
 {
   "name": "adpa-enterprise-framework-automation",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "🏆 Revolutionary Multi-Standard Enterprise Framework Automation Platform: BABOK v3 ✅ PMBOK 7th Edition ✅ DMBOK 2.0 (Coming Soon). Fortune 500-grade business analysis, project management, and data management frameworks generated in seconds. Production-ready Express.js API with TypeSpec architecture. Industry-recognized as 'amazing piece of art' and 'true innovation'. 90% time reduction in requirements gathering, project planning, and data governance.",
   "main": "dist/server.js",
   "type": "module",
@@ -60,7 +60,7 @@
   },
   "keywords": [
     "babok",
-    "pmbok", 
+    "pmbok",
     "dmbok",
     "business-analysis",
     "project-management",
@@ -180,7 +180,7 @@
         "description": "Business Analysis Body of Knowledge v3 - Complete automation of requirements elicitation, stakeholder analysis, and business analysis planning",
         "capabilities": [
           "Requirements Elicitation",
-          "Stakeholder Analysis", 
+          "Stakeholder Analysis",
           "Business Analysis Planning",
           "Requirements Management",
           "Solution Assessment",
@@ -228,7 +228,7 @@
   "enterprise": {
     "compliance": [
       "Basel III",
-      "MiFID II", 
+      "MiFID II",
       "GDPR",
       "SOX",
       "CFTC",
