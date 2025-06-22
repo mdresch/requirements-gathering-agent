@@ -1,0 +1,346 @@
+openapi: 3.0.0
+info:
+  title: ADPA Document Processing API
+  version: 1.0.0
+tags:
+  - name: Document Processing
+paths:
+  /api/v1/documents/convert:
+    post:
+      operationId: DocumentAPI_convertDocument
+      summary: Convert Document
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    required:
+                      - success
+                      - timestamp
+                    properties:
+                      success:
+                        type: boolean
+                      data:
+                        $ref: '#/components/schemas/DocumentConversionResponse'
+                      message:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+                  - $ref: '#/components/schemas/ErrorDetail'
+      tags:
+        - Document Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentConversionRequest'
+  /api/v1/documents/download/{jobId}:
+    get:
+      operationId: DocumentAPI_downloadDocument
+      summary: Download Converted Document
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      tags:
+        - Document Processing
+  /api/v1/documents/jobs:
+    get:
+      operationId: DocumentAPI_listJobs
+      summary: List Jobs
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+          explode: false
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+          explode: false
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    required:
+                      - success
+                      - timestamp
+                    properties:
+                      success:
+                        type: boolean
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProcessingJob'
+                      message:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+                  - $ref: '#/components/schemas/ErrorDetail'
+      tags:
+        - Document Processing
+  /api/v1/documents/jobs/{jobId}:
+    get:
+      operationId: DocumentAPI_getJobStatus
+      summary: Get Job Status
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    required:
+                      - success
+                      - timestamp
+                    properties:
+                      success:
+                        type: boolean
+                      data:
+                        $ref: '#/components/schemas/ProcessingJob'
+                      message:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+                  - $ref: '#/components/schemas/ErrorDetail'
+      tags:
+        - Document Processing
+  /api/v1/health:
+    get:
+      operationId: HealthAPI_health
+      summary: Health Check
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - healthy
+                      - degraded
+                      - unhealthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                required:
+                  - status
+                  - timestamp
+                  - version
+      tags:
+        - Document Processing
+  /api/v1/health/ready:
+    get:
+      operationId: HealthAPI_ready
+      summary: Readiness Check
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ready
+                      - not-ready
+                  timestamp:
+                    type: string
+                    format: date-time
+                required:
+                  - status
+                  - timestamp
+      tags:
+        - Document Processing
+components:
+  schemas:
+    DocumentConversionRequest:
+      type: object
+      required:
+        - content
+        - inputFormat
+        - outputFormat
+      properties:
+        content:
+          type: string
+        inputFormat:
+          type: string
+          enum:
+            - markdown
+            - html
+            - docx
+            - pdf
+        outputFormat:
+          type: string
+          enum:
+            - pdf
+            - docx
+            - html
+            - pptx
+        templateId:
+          type: string
+    DocumentConversionResponse:
+      type: object
+      required:
+        - jobId
+        - status
+        - outputFormat
+        - createdAt
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+        downloadUrl:
+          type: string
+        outputFormat:
+          type: string
+          enum:
+            - pdf
+            - docx
+            - html
+            - pptx
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+    ProcessingJob:
+      type: object
+      required:
+        - id
+        - status
+        - inputFormat
+        - outputFormat
+        - progress
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+        inputFormat:
+          type: string
+          enum:
+            - markdown
+            - html
+            - docx
+            - pdf
+        outputFormat:
+          type: string
+          enum:
+            - pdf
+            - docx
+            - html
+            - pptx
+        progress:
+          type: integer
+          format: int32
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+servers:
+  - url: http://localhost:3000
+    description: Development server
+    variables: {}
+  - url: https://api-staging.adpa.io
+    description: Staging server
+    variables: {}
+  - url: https://api.adpa.io
+    description: Production server
+    variables: {}

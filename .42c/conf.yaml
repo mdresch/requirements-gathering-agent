@@ -1,0 +1,3 @@
+apis:
+  api-specs/generated/openapi/adpa-api.yaml:
+    alias: adpa-document-processing-api

@@ -31,7 +31,11 @@
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
+    "@types/node": "^24.0.3",
     "core-js": "^3.36.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.7.0",
     "regenerator-runtime": "^0.14.1"
   },
   "keywords": [

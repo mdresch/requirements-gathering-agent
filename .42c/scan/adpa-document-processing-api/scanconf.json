@@ -1,0 +1,306 @@
+{
+    "version": "2.0.0",
+    "runtimeConfiguration": {
+        "environment": "default",
+        "laxTestingModeEnabled": false,
+        "apiConnectivityCheck": true,
+        "logLevel": "error",
+        "logDestination": "stdout+platform",
+        "logMaxFileSize": 2147483648,
+        "requestHeaderNameRequestId": "x-scan-request-id",
+        "requestHeaderNameScenarioId": "x-scan-scenario-id",
+        "requestHeaderNameRequestType": "x-scan-request-type",
+        "requestFlowrate": 100,
+        "requestTimeout": 30,
+        "requestTlsInsecureSkipVerify": true,
+        "responseFollowRedirection": false,
+        "responseMaxBodySizeScan": 10485760,
+        "happyPathOnly": false,
+        "maxRequestRetryAttempts": 5,
+        "maxScanDuration": 1800,
+        "memoryLimit": 2147483648,
+        "memoryTimeSpan": 10,
+        "reportMaxRequestSizeHappyPath": 8092,
+        "reportMaxRequestSizeTest": 8092,
+        "reportIncludeRequestBody": true,
+        "reportIncludeResponseBody": true,
+        "reportMaxHttpResponseSizeHappyPath": 8092,
+        "reportMaxBodySizeHappyPath": 8092,
+        "reportMaxHttpResponseSizeTest": 8092,
+        "reportMaxBodySizeTest": 8092,
+        "reportIssuesOnly": false,
+        "reportMaxIssues": 1000,
+        "reportMaxSize": 20971520,
+        "reportGenerateCurlCommand": true,
+        "normalizeServerUrls": true
+    },
+    "customizations": {
+        "happyPaths": {
+            "retry": 1,
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            },
+            "httpStatusExpected": []
+        },
+        "tests": {
+            "responsePolicy": {
+                "httpStatusExpected": true,
+                "mustBeConformant": true
+            }
+        }
+    },
+    "operations": {
+        "DocumentAPI_convertDocument": {
+            "operationId": "DocumentAPI_convertDocument",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/DocumentAPI_convertDocument/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "DocumentAPI_convertDocument",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/documents/convert",
+                        "method": "POST",
+                        "headers": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "requestBody": {
+                            "mode": "json",
+                            "json": {
+                                "content": "cdrkurxtezvdyknemjttmbevziynkukn",
+                                "inputFormat": "docx",
+                                "outputFormat": "html",
+                                "templateId": "ovdjttnuvhinkixyjfdvoioqqthckrxf"
+                            }
+                        }
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "DocumentAPI_downloadDocument": {
+            "operationId": "DocumentAPI_downloadDocument",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/DocumentAPI_downloadDocument/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "DocumentAPI_downloadDocument",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/documents/download/{jobId}",
+                        "method": "GET",
+                        "paths": [
+                            {
+                                "key": "jobId",
+                                "value": "pevoeenrvqvwmioegqimdkbkvytsurra"
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "DocumentAPI_getJobStatus": {
+            "operationId": "DocumentAPI_getJobStatus",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/DocumentAPI_getJobStatus/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "DocumentAPI_getJobStatus",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/documents/jobs/{jobId}",
+                        "method": "GET",
+                        "paths": [
+                            {
+                                "key": "jobId",
+                                "value": "kjmudqymohhysfiuzmwnbgwwyliftzrt"
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "DocumentAPI_listJobs": {
+            "operationId": "DocumentAPI_listJobs",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/DocumentAPI_listJobs/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "DocumentAPI_listJobs",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/documents/jobs",
+                        "method": "GET",
+                        "queries": [
+                            {
+                                "key": "status",
+                                "value": "processing"
+                            },
+                            {
+                                "key": "page",
+                                "value": 1
+                            },
+                            {
+                                "key": "limit",
+                                "value": 10
+                            }
+                        ]
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "HealthAPI_health": {
+            "operationId": "HealthAPI_health",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/HealthAPI_health/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "HealthAPI_health",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/health",
+                        "method": "GET"
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        },
+        "HealthAPI_ready": {
+            "operationId": "HealthAPI_ready",
+            "scenarios": [
+                {
+                    "key": "happy.path",
+                    "fuzzing": true,
+                    "requests": [
+                        {
+                            "$ref": "#/operations/HealthAPI_ready/request",
+                            "fuzzing": true
+                        }
+                    ]
+                }
+            ],
+            "request": {
+                "operationId": "HealthAPI_ready",
+                "request": {
+                    "type": "42c",
+                    "details": {
+                        "url": "{{host}}/api/v1/health/ready",
+                        "method": "GET"
+                    }
+                },
+                "defaultResponse": "200",
+                "responses": {
+                    "200": {
+                        "expectations": {
+                            "httpStatus": 200
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "environments": {
+        "default": {
+            "variables": {
+                "host": {
+                    "from": "environment",
+                    "name": "SCAN42C_HOST",
+                    "required": false,
+                    "default": "http://localhost:3000"
+                }
+            }
+        }
+    }
+}

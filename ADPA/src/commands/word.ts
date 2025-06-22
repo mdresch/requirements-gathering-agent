@@ -547,7 +547,7 @@ const DOCUMENT_CATEGORIES = {
 /**
  * Abstract base class for document readers
  */
-abstract class DocumentReader {
+export abstract class DocumentReader {
   abstract getDocumentsByCategory(category: string): Promise<MarkdownDocument[]>;
   abstract getDocumentByFilename(filename: string): Promise<MarkdownDocument | null>;
   abstract getAllDocuments(): Promise<MarkdownDocument[]>;
@@ -557,7 +557,7 @@ abstract class DocumentReader {
 /**
  * Mock document reader for development and testing
  */
-class MockDocumentReader extends DocumentReader {
+export class MockDocumentReader extends DocumentReader {
   private mockDocuments: MarkdownDocument[] = [
     {
       filename: "project-charter.md",
@@ -688,7 +688,7 @@ Resource allocation includes development team, infrastructure, and training cost
  * File system document reader for Node.js environments
  * Note: This would require Node.js APIs not available in Office.js context
  */
-class FileSystemDocumentReader extends DocumentReader {
+export class FileSystemDocumentReader extends DocumentReader {
   constructor(
     private basePath: string = "c:\\Users\\menno\\Source\\Repos\\requirements-gathering-agent\\generated-documents"
   ) {
@@ -722,7 +722,7 @@ class FileSystemDocumentReader extends DocumentReader {
 /**
  * Web API document reader for browser environments
  */
-class WebDocumentReader extends DocumentReader {
+export class WebDocumentReader extends DocumentReader {
   constructor(private apiBaseUrl: string = "/api/documents") {
     super();
   }
@@ -775,7 +775,7 @@ class WebDocumentReader extends DocumentReader {
 /**
  * Main document integration manager
  */
-class DocumentIntegrationManager {
+export class DocumentIntegrationManager {
   private reader: DocumentReader;
 
   constructor(reader?: DocumentReader) {

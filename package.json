@@ -6,12 +6,12 @@
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
-  },
-  "bin": {
+  },  "bin": {
     "requirements-gathering-agent": "dist/cli.js",
     "requirements-agent": "dist/cli.js",
     "rga": "dist/cli.js"
-  },  "scripts": {
+  },
+  "scripts": {
     "build": "tsc && npm run copy-configs",
     "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
     "start": "node dist/cli.js",
@@ -39,7 +39,14 @@
     "sharepoint:oauth2:status": "node dist/cli.js sharepoint oauth2 status",
     "sharepoint:oauth2:debug": "node dist/cli.js sharepoint oauth2 debug",
     "sharepoint:publish": "node dist/cli.js sharepoint publish",
-    "sharepoint:status": "node dist/cli.js sharepoint status"
+    "sharepoint:status": "node dist/cli.js sharepoint status",
+    "api:compile": "tsp compile api-specs/consolidated-api.tsp --output-dir api-specs/generated",
+    "api:watch": "tsp compile api-specs --watch",
+    "api:format": "tsp format api-specs/**/*.tsp",
+    "api:lint": "tsp compile api-specs --no-emit",
+    "api:docs": "redoc-cli build api-specs/generated/openapi/adpa-api.yaml --output docs/api/index.html",
+    "api:serve-docs": "redoc-cli serve api-specs/generated/openapi/adpa-api.yaml --port 8080",
+    "api:demo": "node demo/typespec-demo.js"
   },
   "keywords": [
     "enhanced-context-generation",
@@ -86,31 +93,41 @@
     "@azure-rest/ai-inference": "^1.0.0-beta.6",
     "@azure/identity": "^4.4.1",
     "@azure/openai": "^2.0.0",
-    "@google/generative-ai": "^0.21.0",
-    "@microsoft/microsoft-graph-client": "^3.0.7",
-    "@types/node-fetch": "^2.6.12",
+    "@google/generative-ai": "^0.21.0",    "@microsoft/microsoft-graph-client": "^3.0.7",
     "axios": "^1.10.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^5.1.0",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.1",
     "form-data": "^4.0.3",
     "glob": "^11.0.3",
+    "helmet": "^7.1.0",
     "node-fetch": "^2.7.0",
     "openai": "^5.0.2",
     "requirements-gathering-agent": "^2.1.2",
-    "ts-node": "^10.9.2"
-  },
-  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "uuid": "^11.0.3"
+  },  "devDependencies": {
     "@jest/globals": "^30.0.0-beta.3",
-    "@types/express": "^5.0.3",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.1",
+    "@types/node-fetch": "^2.6.12",
+    "@types/uuid": "^10.0.0",
+    "@typespec/compiler": "^0.62.0",
+    "@typespec/http": "^0.62.0",
+    "@typespec/rest": "^0.62.0",
+    "@typespec/openapi3": "^0.62.0",
+    "@typespec/json-schema": "^0.62.0",
+    "@redocly/cli": "^1.25.0",
     "ajv": "^8.17.1",
-    "jest": "^29.7.0",
-    "rimraf": "^6.0.1",
+    "jest": "^29.7.0",    "rimraf": "^6.0.1",
     "ts-jest": "^29.3.4",
     "typescript": "^5.7.2"
-  },  "files": [
+  },
+  "files": [
     "dist/**/*",
     "README.md",
     "LICENSE",

@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: ADPA Document Processing API
+  version: 0.0.0
+tags: []
+paths: {}
+components: {}
+servers:
+  - url: http://localhost:3000
+    description: Development server
+    variables: {}
+  - url: https://api-staging.adpa.io
+    description: Staging server
+    variables: {}
+  - url: https://api.adpa.io
+    description: Production server
+    variables: {}

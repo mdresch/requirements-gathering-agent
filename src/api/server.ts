@@ -1,0 +1,110 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { DocumentController } from './controllers/DocumentController.js';
+import { TemplateController } from './controllers/TemplateController.js';
+import { HealthController } from './controllers/HealthController.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { requestLogger } from './middleware/requestLogger.js';
+import { apiKeyAuth } from './middleware/auth.js';
+
+/**
+ * ADPA API Server
+ * 
+ * Express.js server implementing the TypeSpec-defined API endpoints
+ * for professional document processing and conversion services.
+ */
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+        success: false,
+        error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests, please try again later.',
+            timestamp: new Date().toISOString()
+        }
+    }
+});
+
+app.use('/api/', limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Request logging
+app.use(requestLogger);
+
+// API key authentication for protected endpoints
+app.use('/api/v1/documents', apiKeyAuth);
+app.use('/api/v1/templates', apiKeyAuth);
+
+// Health check routes (public)
+app.get('/api/v1/health', HealthController.getHealth);
+app.get('/api/v1/health/ready', HealthController.getReadiness);
+app.get('/api/v1/health/live', HealthController.getLiveness);
+app.get('/api/v1/health/metrics', HealthController.getMetrics);
+app.get('/api/v1/health/version', HealthController.getVersion);
+
+// Document processing routes
+app.post('/api/v1/documents/convert', DocumentController.convertDocument);
+app.post('/api/v1/documents/batch/convert', DocumentController.batchConvert);
+app.get('/api/v1/documents/jobs/:jobId', DocumentController.getJobStatus);
+app.get('/api/v1/documents/batch/:batchId', DocumentController.getBatchStatus);
+app.get('/api/v1/documents/download/:jobId', DocumentController.downloadDocument);
+app.delete('/api/v1/documents/jobs/:jobId', DocumentController.cancelJob);
+app.get('/api/v1/documents/jobs', DocumentController.listJobs);
+app.get('/api/v1/documents/stats', DocumentController.getStats);
+app.post('/api/v1/documents/jobs/:jobId/retry', DocumentController.retryJob);
+app.get('/api/v1/documents/formats', DocumentController.getSupportedFormats);
+
+// Template management routes
+app.post('/api/v1/templates', TemplateController.createTemplate);
+app.get('/api/v1/templates/:templateId', TemplateController.getTemplate);
+app.put('/api/v1/templates/:templateId', TemplateController.updateTemplate);
+app.delete('/api/v1/templates/:templateId', TemplateController.deleteTemplate);
+app.get('/api/v1/templates', TemplateController.listTemplates);
+app.post('/api/v1/templates/:templateId/preview', TemplateController.previewTemplate);
+app.post('/api/v1/templates/:templateId/clone', TemplateController.cloneTemplate);
+app.get('/api/v1/templates/:templateId/stats', TemplateController.getTemplateStats);
+app.post('/api/v1/templates/:templateId/validate', TemplateController.validateTemplate);
+
+// API documentation route
+app.get('/api/docs', (req, res) => {
+    res.redirect('/docs/api/index.html');
+});
+
+// Serve static API documentation
+app.use('/docs', express.static('docs'));
+
+// 404 handler
+app.use(notFoundHandler);
+
+// Error handling middleware
+app.use(errorHandler);
+
+// Start server
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`🚀 ADPA API Server running on port ${PORT}`);
+        console.log(`📚 API Documentation: http://localhost:${PORT}/docs/api/`);
+        console.log(`🏥 Health Check: http://localhost:${PORT}/api/v1/health`);
+        console.log(`🎯 Ready to process documents via API!`);
+    });
+}
+
+export { app };
