@@ -217,11 +217,66 @@ async function main() {
     if (args.includes('--setup')) {
       await runEnhancedSetupWizard();
       return;
+    }    // List available templates
+    if (args.includes('--list-templates') || args.includes('--templates')) {
+      await showAvailableTemplates();
+      return;
     }
 
-    // List available templates
-    if (args.includes('--list-templates') || args.includes('--templates')) {
-      showAvailableTemplates();
+    // Migrate templates to database format
+    if (args.includes('--migrate-templates')) {
+      console.log('🚀 Starting template migration to database format...');
+      try {
+        const { migrateStaticTemplates } = await import('./modules/templates/CLIIntegration.js');
+        const force = args.includes('--force');
+        await migrateStaticTemplates({ force });
+      } catch (error) {
+        console.error('❌ Migration failed:', error);
+        process.exit(1);
+      }
+      return;
+    }
+
+    // Generate with advanced template engine
+    if (args.includes('--generate-advanced')) {
+      const idx = args.indexOf('--generate-advanced');
+      const templateId = args[idx + 1];
+      if (!templateId) {
+        console.error('❌ Missing template ID for --generate-advanced');
+        return;
+      }
+
+      try {
+        const { generateDocumentAdvanced, parseVariablesFromArgs } = await import('./modules/templates/CLIIntegration.js');
+        const variables = parseVariablesFromArgs(args);
+        await generateDocumentAdvanced(templateId, { 
+          variables, 
+          quiet: options.quiet,
+          outputDir: options.outputDir 
+        });
+      } catch (error) {
+        console.error('❌ Advanced generation failed:', error);
+        process.exit(1);
+      }
+      return;
+    }
+
+    // Show template information
+    if (args.includes('--template-info')) {
+      const idx = args.indexOf('--template-info');
+      const templateId = args[idx + 1];
+      if (!templateId) {
+        console.error('❌ Missing template ID for --template-info');
+        return;
+      }
+
+      try {
+        const { showTemplateInfo } = await import('./modules/templates/CLIIntegration.js');
+        await showTemplateInfo(templateId);
+      } catch (error) {
+        console.error('❌ Failed to show template info:', error);
+        process.exit(1);
+      }
       return;
     }
 
@@ -1029,14 +1084,15 @@ async function showStatus(): Promise<void> {
 }
 
 /**
- * Show all available templates dynamically from the generation tasks
+ * Show all available templates dynamically from the generation tasks AND API templates
  */
-function showAvailableTemplates(): void {
+async function showAvailableTemplates(): Promise<void> {
   console.log('📋 Available Document Templates\n');
   
   try {
+    // Show static CLI templates
     const categories = getAvailableCategories();
-    console.log(`Found ${categories.length} categories with ${GENERATION_TASKS.length} total templates:\n`);
+    console.log(`📚 STATIC TEMPLATES (CLI): ${categories.length} categories with ${GENERATION_TASKS.length} total templates:\n`);
     
     for (const category of categories) {
       const tasks = getTasksByCategory(category);
@@ -1059,14 +1115,72 @@ function showAvailableTemplates(): void {
       }
     }
     
+    // Show dynamic API templates
+    console.log('\n🌐 DYNAMIC TEMPLATES (API): User-created templates:\n');
+      try {
+      // Check if API server is running and try to fetch templates
+      const { default: fetch } = await import('node-fetch');
+      const apiPort = process.env.PORT || '3002'; // Use the same port as our API server
+      const response = await fetch(`http://localhost:${apiPort}/api/v1/templates`, {
+        headers: {
+          'X-API-Key': process.env.API_KEY || 'dev-api-key-123' // Use the correct dev API key
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json() as any;
+        const apiTemplates = data.data || [];
+        
+        if (apiTemplates.length > 0) {
+          console.log(`Found ${apiTemplates.length} API templates:`);
+          
+          for (const template of apiTemplates) {
+            console.log(`  📋 ${template.name}`);
+            console.log(`      ID: ${template.id}`);
+            console.log(`      Category: ${template.category}`);
+            console.log(`      Description: ${template.description || 'No description'}`);
+            console.log(`      Created: ${template.createdAt}`);
+            console.log(`      Status: ${template.isActive ? 'Active' : 'Inactive'}`);
+            console.log('');
+          }
+          
+          console.log('💡 To use API templates:');
+          console.log('   • Start the API server: npm run server');
+          console.log('   • Create templates via POST /api/v1/templates');
+          console.log('   • Generate docs via POST /api/v1/documents/convert');
+        } else {
+          console.log('   No API templates found');
+          console.log('   📝 Create templates via: POST /api/v1/templates');
+        }
+      } else {
+        throw new Error(`API responded with status ${response.status}`);
+      }    } catch (apiError) {
+      const apiPort = process.env.PORT || '3002';
+      console.log(`   ❌ Could not connect to API server (http://localhost:${apiPort})`);
+      console.log('   💡 To see API templates:');
+      console.log('      1. Start the API server: npm run api:start');
+      console.log('      2. Create templates via: POST /api/v1/templates');
+      console.log('      3. Re-run this command to see them here');
+      console.log(`   🔍 Error: ${(apiError as Error).message}`);
+    }
+    
     console.log('\n📚 Usage Examples:');
+    console.log('   # Static templates (CLI):');
     console.log('   node dist/cli.js --generate project-charter');
     console.log('   node dist/cli.js --generate-category quality-assurance');
     console.log('   node dist/cli.js --generate-quality-assurance');
+    
+    console.log('\n   # Dynamic templates (API):');
+    console.log('   curl -X POST http://localhost:3001/api/v1/templates \\');
+    console.log('     -H "Content-Type: application/json" \\');
+    console.log('     -H "X-API-Key: your-api-key" \\');
+    console.log('     -d \'{"name": "Custom Template", "category": "Custom"}\'');
+    
     console.log('\n💡 Tips:');
-    console.log('   • Use --generate-category <category> to generate all documents in a category');
-    console.log('   • Use --generate <key> to generate a specific document');
+    console.log('   • Use --generate-category <category> to generate all static documents in a category');
+    console.log('   • Use --generate <key> to generate a specific static document');
     console.log('   • Category batch generation: --generate-quality-assurance, --generate-core-analysis, etc.');
+    console.log('   • API templates are used via the REST API, not CLI commands');
     
   } catch (error) {
     console.error('❌ Error loading templates:', error);
@@ -1095,6 +1209,16 @@ MAIN COMMANDS:
    --list-templates           📋 Show all available document templates
    --analyze                  🔍 Analyze workspace without generating docs
    --status                   ℹ️  Show configuration and system status
+
+ADVANCED TEMPLATE ENGINE:
+   --migrate-templates        🚀 Migrate static templates to database format
+   --generate-advanced <id>   ⚡ Generate with enhanced context injection
+   --template-info <id>       📋 Show detailed template information
+   --list-templates           📚 Show all templates (static + dynamic)
+
+TEMPLATE VARIABLES:
+   --var KEY=VALUE           ⚙️  Set template variables for generation
+   --force                   💪 Force operations (use with migrate-templates)
 
 CATEGORY SHORTCUTS:
    --generate-core-analysis        📊 Generate all core analysis documents
@@ -1155,6 +1279,13 @@ EXAMPLES:
    node dist/cli.js sharepoint init
    node dist/cli.js sharepoint publish --folder-path "/sites/mysite/documents"
 
+ADVANCED TEMPLATE EXAMPLES:
+   node dist/cli.js --migrate-templates
+   node dist/cli.js --generate-advanced stakeholder-register
+   node dist/cli.js --generate-advanced apidocumentation \\
+     --var PROJECT_NAME="Enterprise API" --var VERSION="2.0"
+   node dist/cli.js --template-info stakeholder-register
+
 🎯 Breakthrough Features in v2.1.3:
    • Evaluative Contextual Synthesis
    • Hierarchical Authority Recognition
@@ -1184,16 +1315,224 @@ async function runProviderSelectionMenu(): Promise<void> {
   }
 }
 
-async function runEnhancedSetupWizard(): Promise<void> {
-  console.log('🧙‍♂️ Enhanced Setup Wizard');
-  console.log('This feature is not yet implemented.');
-  process.exit(0);
+async function analyzeWorkspace(): Promise<void> {
+  const { promises: fs } = await import('fs');
+  const path = await import('path');
+  const cwd = process.cwd();
+  console.log('🔍 Analyzing workspace...\n');
+  const summary: string[] = [];
+
+  // Check for key files
+  const filesToCheck = [
+    'package.json',
+    'tsconfig.json',
+    '.env',
+    'README.md',
+    'api-specs/',
+    'admin-interface/',
+    'dist/',
+    'config-rga.json',
+    'src/modules/documentGenerator/processor-config.json'
+  ];
+  for (const file of filesToCheck) {
+    try {
+      const stat = await fs.stat(path.join(cwd, file));
+      summary.push(`✅ ${file} found (${stat.isDirectory() ? 'directory' : 'file'})`);
+    } catch {
+      summary.push(`❌ ${file} missing`);
+    }
+  }
+
+  // Parse package.json
+  try {
+    const pkgRaw = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8');
+    const pkg = JSON.parse(pkgRaw);
+    summary.push(`\n📦 Package: ${pkg.name} v${pkg.version}`);
+    summary.push(`   Description: ${pkg.description}`);
+    summary.push(`   Main: ${pkg.main}`);
+    summary.push(`   Bin: ${JSON.stringify(pkg.bin)}`);
+    summary.push(`   Scripts: ${Object.keys(pkg.scripts).length} scripts defined`);
+    summary.push(`   Dependencies: ${Object.keys(pkg.dependencies || {}).length}`);
+    summary.push(`   DevDependencies: ${Object.keys(pkg.devDependencies || {}).length}`);
+  } catch {
+    summary.push('⚠️  Could not parse package.json');
+  }
+
+  // Parse tsconfig.json
+  try {
+    const tsconfigRaw = await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8');
+    const tsconfig = JSON.parse(tsconfigRaw);
+    summary.push(`\n🛠️  TypeScript config: target=${tsconfig.compilerOptions?.target}, module=${tsconfig.compilerOptions?.module}`);
+  } catch {
+    summary.push('⚠️  Could not parse tsconfig.json');
+  }
+
+  // Check for .env and required variables
+  try {
+    const envRaw = await fs.readFile(path.join(cwd, '.env'), 'utf-8');
+    summary.push('\n🔑 .env file present');
+    const requiredVars = ['GOOGLE_AI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'AZURE_AI_API_KEY', 'GITHUB_TOKEN', 'OLLAMA_ENDPOINT'];
+    for (const v of requiredVars) {
+      if (envRaw.includes(v)) {
+        summary.push(`   • ${v} present`);
+      } else {
+        summary.push(`   • ${v} missing`);
+      }
+    }
+  } catch {
+    summary.push('⚠️  .env file missing or unreadable');
+  }
+
+  // Parse config-rga.json
+  try {
+    const configRgaRaw = await fs.readFile(path.join(cwd, 'config-rga.json'), 'utf-8');
+    const configRga = JSON.parse(configRgaRaw);
+    summary.push(`\n⚙️  config-rga.json loaded: currentProvider=${configRga.currentProvider}, outputDir=${configRga.defaultOutputDir}`);
+    summary.push(`   Providers: ${Object.keys(configRga.providers || {}).join(', ')}`);
+    summary.push(`   VCS: enabled=${configRga.docsVcs?.enabled}, autoCommit=${configRga.docsVcs?.autoCommit}`);
+    summary.push(`   Confluence: ${configRga.confluence?.baseUrl || 'not set'}`);
+    summary.push(`   SharePoint: ${configRga.sharepoint?.siteUrl || 'not set'}`);
+  } catch {
+    summary.push('⚠️  Could not parse config-rga.json');
+  }
+
+  // Parse processor-config.json
+  try {
+    const procConfigPath = path.join(cwd, 'src/modules/documentGenerator/processor-config.json');
+    const procConfigRaw = await fs.readFile(procConfigPath, 'utf-8');
+    const procConfig = JSON.parse(procConfigRaw);
+    summary.push(`\n🧩 processor-config.json loaded: ${Object.keys(procConfig).length} keys`);
+  } catch {
+    summary.push('⚠️  Could not parse processor-config.json');
+  }
+
+  // Output summary
+  console.log(summary.join('\n'));
+  console.log('\nAnalysis complete.');
 }
 
-async function analyzeWorkspace(): Promise<void> {
-  console.log('🔍 Analyzing workspace...');
-  console.log('This feature is not yet implemented.');
-  process.exit(0);
+async function runEnhancedSetupWizard(): Promise<void> {
+  const readline = (await import('readline')).createInterface({ input: process.stdin, output: process.stdout });
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const cwd = process.cwd();
+  console.log('🧙‍♂️ Interactive Setup Wizard\n');
+
+  function ask(question: string): Promise<string> {
+    return new Promise(resolve => readline.question(question, answer => resolve(answer.trim())));
+  }
+
+  // Choose provider
+  const provider = await ask('Select AI provider (google/azure/github/ollama): ');
+  let envVars: Record<string, string> = {};
+  switch (provider.toLowerCase()) {
+    case 'google':
+      envVars = {
+        GOOGLE_AI_API_KEY: await ask('Enter your Google AI API Key: '),
+        GOOGLE_AI_MODEL: await ask('Enter Google AI Model (default: gemini-1.5-flash): ') || 'gemini-1.5-flash'
+      };
+      break;
+    case 'azure':
+      envVars = {
+        AZURE_OPENAI_ENDPOINT: await ask('Enter your Azure OpenAI Endpoint: '),
+        DEPLOYMENT_NAME: await ask('Enter Azure deployment name (default: gpt-4): ') || 'gpt-4',
+        USE_ENTRA_ID: await ask('Use Entra ID? (true/false, default: false): ') || 'false',
+        AZURE_AI_API_KEY: await ask('Enter Azure API Key (optional, press enter to skip): ')
+      };
+      break;
+    case 'github':
+      envVars = {
+        GITHUB_TOKEN: await ask('Enter your GitHub AI Token: '),
+        GITHUB_ENDPOINT: await ask('Enter GitHub AI Endpoint (default: https://models.github.ai/inference/): ') || 'https://models.github.ai/inference/',
+        REQUIREMENTS_AGENT_MODEL: await ask('Enter model (default: gpt-4o-mini): ') || 'gpt-4o-mini'
+      };
+      break;
+    case 'ollama':
+      envVars = {
+        OLLAMA_ENDPOINT: await ask('Enter Ollama endpoint (default: http://localhost:11434): ') || 'http://localhost:11434',
+        REQUIREMENTS_AGENT_MODEL: await ask('Enter model (default: llama3.1): ') || 'llama3.1'
+      };
+      break;
+    default:
+      console.log('Unknown provider. Exiting setup.');
+      readline.close();
+      process.exit(1);
+  }
+
+  // Write .env file
+  let envContent = '';
+  for (const [k, v] of Object.entries(envVars)) {
+    if (v) envContent += `${k}=${v}\n`;
+  }
+  try {
+    await fs.writeFile(path.join(cwd, '.env'), envContent, { encoding: 'utf-8' });
+    console.log('\n✅ .env file created/updated.');
+  } catch (e) {
+    console.error('❌ Failed to write .env:', e);
+  }
+
+  // Optionally update config-rga.json
+  const updateConfig = (await ask('Update config-rga.json with provider/model? (y/n): ')).toLowerCase() === 'y';
+  if (updateConfig) {
+    try {
+      const configPath = path.join(cwd, 'config-rga.json');
+      const configRaw = await fs.readFile(configPath, 'utf-8');
+      const config = JSON.parse(configRaw);
+      config.currentProvider = provider + (provider.endsWith('-ai') ? '' : '-ai');
+      if (!config.providers) config.providers = {};
+      config.providers[config.currentProvider] = { model: envVars.REQUIREMENTS_AGENT_MODEL || envVars.GOOGLE_AI_MODEL || envVars.DEPLOYMENT_NAME || '' };
+      await fs.writeFile(configPath, JSON.stringify(config, null, 2), { encoding: 'utf-8' });
+      console.log('✅ config-rga.json updated.');
+    } catch (e) {
+      console.error('❌ Failed to update config-rga.json:', e);
+    }
+  }
+
+  // Optionally update processor-config.json
+  const updateProc = (await ask('Update processor-config.json (for advanced users)? (y/n): ')).toLowerCase() === 'y';
+  if (updateProc) {
+    try {
+      const procPath = path.join(cwd, 'src/modules/documentGenerator/processor-config.json');
+      let procConfig = {};
+      try {
+        const procRaw = await fs.readFile(procPath, 'utf-8');
+        procConfig = JSON.parse(procRaw);
+      } catch {}
+      // Example: add a timestamp or note
+      (procConfig as any)['lastSetup'] = new Date().toISOString();
+      await fs.writeFile(procPath, JSON.stringify(procConfig, null, 2), { encoding: 'utf-8' });
+      console.log('✅ processor-config.json updated.');
+    } catch (e) {
+      console.error('❌ Failed to update processor-config.json:', e);
+    }
+  }
+
+  // Offer to run npm install
+  const doInstall = (await ask('Run npm install now? (y/n): ')).toLowerCase() === 'y';
+  if (doInstall) {
+    const { execSync } = await import('child_process');
+    try {
+      execSync('npm install', { stdio: 'inherit' });
+      console.log('✅ npm install complete.');
+    } catch (e) {
+      console.error('❌ npm install failed:', e);
+    }
+  }
+
+  // Offer to run build
+  const doBuild = (await ask('Run npm run build now? (y/n): ')).toLowerCase() === 'y';
+  if (doBuild) {
+    const { execSync } = await import('child_process');
+    try {
+      execSync('npm run build', { stdio: 'inherit' });
+      console.log('✅ Build complete.');
+    } catch (e) {
+      console.error('❌ Build failed:', e);
+    }
+  }
+
+  readline.close();
+  console.log('\nSetup complete. You may now use the CLI.');
 }
 
 // Run the CLI

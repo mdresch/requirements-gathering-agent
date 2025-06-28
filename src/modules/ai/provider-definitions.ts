@@ -75,7 +75,6 @@ export const PROVIDER_DEFINITIONS: EnhancedProviderConfig[] = [
       try {
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
           method: 'GET',
-          timeout: 2000, // Reduced timeout
           headers: {
             'x-goog-api-key': process.env.GOOGLE_AI_API_KEY || ''
           }
@@ -164,7 +163,6 @@ export const PROVIDER_DEFINITIONS: EnhancedProviderConfig[] = [
         // Try a quick check to the GitHub AI endpoint
         const response = await fetch(process.env.GITHUB_ENDPOINT, {
           method: 'HEAD',
-          timeout: 2000,
           headers: {
             'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
           }
@@ -297,7 +295,6 @@ export const PROVIDER_DEFINITIONS: EnhancedProviderConfig[] = [
         const url = new URL(process.env.AZURE_OPENAI_ENDPOINT);
         const response = await fetch(`${url.origin}/`, { 
           method: 'HEAD', 
-          timeout: 5000 
         });
         return true; // If we can connect to the domain, Azure is available
       } catch {
@@ -382,7 +379,6 @@ export const PROVIDER_DEFINITIONS: EnhancedProviderConfig[] = [
         const url = new URL(process.env.AZURE_OPENAI_ENDPOINT);
         const response = await fetch(`${url.origin}/`, { 
           method: 'HEAD', 
-          timeout: 5000 
         });
         return true;
       } catch {
@@ -469,7 +465,6 @@ export const PROVIDER_DEFINITIONS: EnhancedProviderConfig[] = [
       try {
         const response = await fetch('http://localhost:11434/api/tags', {
           method: 'GET',
-          timeout: 3000
         });
         return response.ok;
       } catch {

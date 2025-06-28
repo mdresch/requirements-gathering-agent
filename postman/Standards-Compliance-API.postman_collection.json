@@ -1,0 +1,320 @@
+{
+  "info": {
+    "name": "Standards Compliance & Deviation Analysis API",
+    "description": "Comprehensive testing suite for the Standards Compliance API with BABOK, PMBOK, and DMBOK analysis capabilities",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "dev-api-key-123",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api/v1"
+    },
+    {
+      "key": "apiKey",
+      "value": "dev-api-key-123"
+    },
+    {
+      "key": "projectId",
+      "value": "PRJ-2025-TEST-001"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Standards Analysis",
+      "item": [
+        {
+          "name": "Comprehensive Analysis - Healthcare Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectData\": {\n    \"projectId\": \"{{projectId}}\",\n    \"projectName\": \"Healthcare Digital Transformation\",\n    \"industry\": \"HEALTHCARE\",\n    \"projectType\": \"DIGITAL_TRANSFORMATION\",\n    \"complexity\": \"HIGH\",\n    \"duration\": 18,\n    \"budget\": 2500000,\n    \"teamSize\": 25,\n    \"stakeholderCount\": 45,\n    \"methodology\": \"AGILE_HYBRID\",\n    \"documents\": [\n      {\n        \"type\": \"BUSINESS_REQUIREMENTS\",\n        \"status\": \"APPROVED\",\n        \"lastUpdated\": \"2025-06-01T00:00:00.000Z\",\n        \"quality\": \"HIGH\"\n      }\n    ],\n    \"processes\": [\n      {\n        \"name\": \"Requirements Elicitation\",\n        \"standardCompliance\": 85,\n        \"deviations\": [\"Custom stakeholder interview process\"]\n      }\n    ],\n    \"deliverables\": [\n      {\n        \"name\": \"Business Requirements Document\",\n        \"expectedDate\": \"2025-07-30T00:00:00.000Z\",\n        \"actualDate\": \"2025-07-15T00:00:00.000Z\",\n        \"quality\": \"EXCELLENT\"\n      }\n    ],\n    \"governance\": {\n      \"structure\": \"PROJECT_STEERING_COMMITTEE\",\n      \"decisionAuthority\": \"EXECUTIVE_SPONSOR\",\n      \"reportingFrequency\": \"WEEKLY\"\n    },\n    \"metadata\": {\n      \"createdBy\": \"postman-test\",\n      \"createdDate\": \"2025-06-23T00:00:00.000Z\",\n      \"lastAnalyzed\": \"2025-06-23T00:00:00.000Z\",\n      \"analysisVersion\": \"1.0\"\n    }\n  },\n  \"analysisConfig\": {\n    \"enabledStandards\": [\"BABOK_V3\", \"PMBOK_7\"],\n    \"deviationThresholds\": {\n      \"critical\": 70,\n      \"warning\": 85,\n      \"acceptable\": 95\n    },\n    \"analysisDepth\": \"COMPREHENSIVE\",\n    \"autoApprovalThreshold\": 90,\n    \"reportFormats\": [\"JSON\"],\n    \"includeExecutiveSummary\": true,\n    \"includeDetailedAnalysis\": true,\n    \"includeRecommendations\": true\n  },\n  \"metadata\": {\n    \"requestId\": \"POSTMAN-REQ-001\",\n    \"requestedBy\": \"postman-user\",\n    \"requestDate\": \"2025-06-23T00:00:00.000Z\",\n    \"priority\": \"HIGH\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/standards/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "analyze"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quick Analysis - Technology Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectData\": {\n    \"projectId\": \"TECH-{{$randomInt}}\",\n    \"projectName\": \"{{$randomProductName}} Development\",\n    \"industry\": \"TECHNOLOGY\",\n    \"projectType\": \"SOFTWARE_DEVELOPMENT\",\n    \"complexity\": \"MEDIUM\",\n    \"duration\": 6,\n    \"budget\": 500000,\n    \"teamSize\": 8,\n    \"stakeholderCount\": 12,\n    \"methodology\": \"AGILE\",\n    \"documents\": [],\n    \"processes\": [],\n    \"deliverables\": [],\n    \"governance\": {\n      \"structure\": \"AGILE_TEAM\",\n      \"decisionAuthority\": \"PRODUCT_OWNER\",\n      \"reportingFrequency\": \"DAILY\"\n    },\n    \"metadata\": {\n      \"createdBy\": \"postman-quick-test\",\n      \"createdDate\": \"{{$isoTimestamp}}\",\n      \"lastAnalyzed\": \"{{$isoTimestamp}}\",\n      \"analysisVersion\": \"1.0\"\n    }\n  },\n  \"analysisConfig\": {\n    \"enabledStandards\": [\"PMBOK_7\"],\n    \"analysisDepth\": \"BASIC\"\n  },\n  \"metadata\": {\n    \"requestId\": \"QUICK-{{$randomInt}}\",\n    \"requestedBy\": \"postman-user\",\n    \"requestDate\": \"{{$isoTimestamp}}\",\n    \"priority\": \"MEDIUM\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/standards/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "analyze"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Monitoring",
+      "item": [
+        {
+          "name": "Compliance Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "dashboard"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard with Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/dashboard?timeframe=30days&standard=PMBOK_7&industry=HEALTHCARE",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "dashboard"],
+              "query": [
+                {
+                  "key": "timeframe",
+                  "value": "30days"
+                },
+                {
+                  "key": "standard",
+                  "value": "PMBOK_7"
+                },
+                {
+                  "key": "industry",
+                  "value": "HEALTHCARE"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Deviation Management",
+      "item": [
+        {
+          "name": "Deviation Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/deviations/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "deviations", "summary"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Deviation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviationId\": \"DEV-001\",\n  \"approvalDecision\": \"APPROVE\",\n  \"approvedBy\": \"postman-user\",\n  \"approvalReasoning\": \"Deviation provides significant business value with minimal risk. Custom methodology demonstrates superior outcomes while maintaining compliance with core principles.\",\n  \"conditions\": [],\n  \"reviewNotes\": \"Approved for organization-wide adoption. Recommend documenting as new standard practice.\",\n  \"approvalDate\": \"{{$isoTimestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/standards/deviations/DEV-001/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "deviations", "DEV-001", "approve"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Executive Reporting",
+      "item": [
+        {
+          "name": "Executive Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/reports/executive-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "reports", "executive-summary"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Executive Summary - Filtered",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/reports/executive-summary?period=Q2-2025&format=JSON&includeDetails=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "reports", "executive-summary"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "Q2-2025"
+                },
+                {
+                  "key": "format",
+                  "value": "JSON"
+                },
+                {
+                  "key": "includeDetails",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication Tests",
+      "item": [
+        {
+          "name": "Test Invalid API Key",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "invalid-key-test"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/standards/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test No Authentication",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/standards/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "dashboard"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Scenarios",
+      "item": [
+        {
+          "name": "Invalid Project Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectData\": {\n    \"projectId\": \"\",\n    \"projectName\": \"\",\n    \"industry\": \"INVALID_INDUSTRY\",\n    \"complexity\": \"INVALID_COMPLEXITY\"\n  },\n  \"analysisConfig\": {\n    \"enabledStandards\": [\"INVALID_STANDARD\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/standards/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "analyze"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"analysisConfig\": {\n    \"analysisDepth\": \"BASIC\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/standards/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["standards", "analyze"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

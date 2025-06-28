@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "API Health";
+    var isHealthy = (bool)(ViewData["IsHealthy"] ?? false);
+    var details = (string)(ViewData["Details"] ?? "No details available.");
+}
+
+<div class="container mt-4">
+    <h2>API Health Diagnostics</h2>
+    <div class="alert @(isHealthy ? "alert-success" : "alert-danger")" role="alert">
+        <strong>Status:</strong> @(isHealthy ? "Healthy" : "Unhealthy")
+    </div>
+    <div class="card mt-3">
+        <div class="card-header">
+            Details
+        </div>
+        <div class="card-body">
+            <pre>@details</pre>
+        </div>
+    </div>
+    @if (!isHealthy)
+    {
+        <div class="alert alert-danger mt-3">
+            <strong>Error loading API health status:</strong>
+            <div>
+                <span>Failed to fetch API health diagnostics.</span><br />
+                <span><strong>Details:</strong> @details</span>
+            </div>
+            <div class="mt-2">
+                <strong>Possible reasons:</strong>
+                <ul>
+                    <li>The health endpoint URL is incorrect</li>
+                    <li>The API key is missing or invalid</li>
+                    <li>The endpoint does not exist</li>
+                    <li>The backend returned a 400 Bad Request</li>
+                </ul>
+                <span>Please check the API and configuration.</span>
+            </div>
+        </div>
+    }
+</div>

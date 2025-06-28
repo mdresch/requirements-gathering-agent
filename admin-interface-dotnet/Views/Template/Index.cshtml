@@ -1,0 +1,42 @@
+@model IEnumerable<admin_interface_dotnet.Models.Template>
+@{
+    ViewData["Title"] = "Templates";
+}
+<h1>Templates</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Tags</th>
+            <th>UserId</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@if (Model != null)
+{
+    foreach (var item in Model)
+    {
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.Name)</td>
+            <td>@Html.DisplayFor(modelItem => item.Description)</td>
+            <td>@(item.Tags != null ? string.Join(", ", item.Tags) : "")</td>
+            <td>@Html.DisplayFor(modelItem => item.UserId)</td>
+            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+            <td>@Html.DisplayFor(modelItem => item.UpdatedAt)</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+    }
+}
+    </tbody>
+</table>

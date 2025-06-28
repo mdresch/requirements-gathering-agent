@@ -1261,3 +1261,39 @@ export async function showDocumentCatalog(event: Office.AddinCommands.Event) {
 
   event.completed();
 }
+
+/**
+ * Convert current Word document to PDF using Adobe.io
+ */
+import { convertMarkdownToAdobePDF, AdobeCredentials } from "../services/adobePdfService";
+
+export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      const body = context.document.body;
+      context.load(body, "text");
+      await context.sync();
+      const content = body.text;
+
+      // Call backend API to convert to PDF securely
+      const response = await fetch("http://localhost:3001/api/v1/adobe/convert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown: content }),
+      });
+      if (!response.ok) throw new Error(`Backend error: ${response.status}`);
+      const { pdfUrl } = await response.json();
+
+      const successParagraph = context.document.body.insertParagraph(
+        `✅ PDF Generated Successfully! Download: ${pdfUrl}`,
+        Word.InsertLocation.end
+      );
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+      await context.sync();
+    });
+  } catch (error) {
+    console.error("Adobe PDF conversion failed:", error);
+  }
+  event.completed();
+}

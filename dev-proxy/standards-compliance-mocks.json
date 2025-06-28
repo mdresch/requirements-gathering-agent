@@ -1,0 +1,357 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "url": "https://localhost:3001/api/v1/standards/health",
+        "method": "GET"
+      },
+      "response": {
+        "statusCode": 200,
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "status": "healthy",
+          "version": "1.0.0", 
+          "uptime": "2h 34m 12s",
+          "timestamp": "2025-06-23T14:30:00Z",
+          "dependencies": {
+            "database": "healthy",
+            "pmbokValidator": "healthy",
+            "analysisEngine": "healthy"
+          },
+          "features": {
+            "babokValidation": true,
+            "pmbokValidation": true,
+            "dmbokValidation": false,
+            "intelligentDeviations": true,
+            "executiveReporting": true
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "url": "https://localhost:3001/api/v1/standards/analyze",
+        "method": "POST"
+      },
+      "response": {
+        "statusCode": 200,
+        "headers": [
+          {
+            "name": "Content-Type", 
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "analysisId": "ANLZ-2025-001-MOCK",
+          "projectId": "MOCK-PROJECT-001",
+          "projectName": "Mock Healthcare Project",
+          "overallComplianceScore": 87.5,
+          "analysisDate": "2025-06-23T14:30:00Z",
+          "processingTime": 2.45,
+          "standardsAnalyzed": ["BABOK_V3", "PMBOK_7"],
+          "standardsResults": [
+            {
+              "standard": "BABOK_V3",
+              "complianceScore": 85.2,
+              "status": "MINOR_DEVIATIONS",
+              "findings": [
+                "Requirements elicitation exceeds standard expectations",
+                "Custom stakeholder engagement methodology detected",
+                "Enhanced documentation beyond BABOK 6.1 requirements"
+              ]
+            },
+            {
+              "standard": "PMBOK_7",
+              "complianceScore": 89.8,
+              "status": "COMPLIANT",
+              "findings": [
+                "Performance domains well-aligned with PMBOK 7th edition",
+                "Tailoring approach demonstrates advanced maturity",
+                "Risk management exceeds standard practices"
+              ]
+            }
+          ],
+          "deviationAnalysis": {
+            "totalDeviations": 3,
+            "intelligentDeviations": 2,
+            "beneficialDeviations": 2,
+            "riskDeviations": 1,
+            "overallRiskLevel": "LOW",
+            "deviations": [
+              {
+                "deviationId": "DEV-001",
+                "type": "METHODOLOGY",
+                "category": "EFFICIENCY_IMPROVEMENT",
+                "description": "Hybrid agile-waterfall requirements elicitation with parallel discovery",
+                "standardApproach": "Traditional sequential BABOK 6.1 elicitation",
+                "projectApproach": "Parallel discovery with iterative refinement",
+                "businessJustification": {
+                  "timeSavings": "5 weeks reduced timeline",
+                  "costSavings": "$312,500",
+                  "qualityImprovement": "25% better stakeholder satisfaction",
+                  "riskReduction": "Earlier issue identification"
+                },
+                "confidenceScore": 92,
+                "recommendation": "APPROVE",
+                "reasoning": "Custom methodology provides superior outcomes while maintaining compliance with core BABOK principles"
+              },
+              {
+                "deviationId": "DEV-002",
+                "type": "DOCUMENTATION",
+                "category": "QUALITY_ENHANCEMENT", 
+                "description": "Enhanced documentation templates with audit-ready artifacts",
+                "standardApproach": "Standard PMBOK documentation",
+                "projectApproach": "Regulatory-enhanced templates with automated generation",
+                "businessJustification": {
+                  "timeSavings": "2 weeks audit preparation",
+                  "costSavings": "$85,000",
+                  "qualityImprovement": "100% audit readiness",
+                  "riskReduction": "Compliance risk elimination"
+                },
+                "confidenceScore": 95,
+                "recommendation": "APPROVE",
+                "reasoning": "Enhanced documentation exceeds PMBOK standards and provides regulatory compliance benefits"
+              }
+            ]
+          },
+          "executiveSummary": {
+            "keyFindings": [
+              "Project demonstrates innovative practices that exceed industry standards",
+              "Custom methodology reduces timeline by 5 months while maintaining quality",
+              "Enhanced documentation provides audit-ready compliance framework",
+              "All deviations deliver measurable business value with minimal risk"
+            ],
+            "overallAssessment": "EXCELLENT",
+            "riskAssessment": "LOW - All deviations are beneficial with strong business justification",
+            "recommendedActions": [
+              "Approve all intelligent deviations as organizational best practices",
+              "Document methodologies for reuse across similar projects",
+              "Consider establishing these approaches as new organizational standards"
+            ],
+            "businessImpact": {
+              "totalSavings": "$397,500",
+              "timeReduction": "7 weeks",
+              "qualityImprovement": "25% stakeholder satisfaction increase",
+              "riskReduction": "Compliance and operational risks significantly reduced"
+            }
+          },
+          "recommendations": [
+            {
+              "type": "APPROVE_DEVIATION",
+              "description": "Approve hybrid elicitation methodology as superior practice",
+              "priority": "HIGH",
+              "effort": "Low - already implemented",
+              "businessValue": "$312,500 savings"
+            },
+            {
+              "type": "STANDARDIZE_PRACTICE",
+              "description": "Adopt enhanced documentation templates organization-wide",
+              "priority": "MEDIUM", 
+              "effort": "Medium - 4 weeks implementation",
+              "businessValue": "Scalable compliance framework"
+            }
+          ],
+          "metadata": {
+            "analysisDate": "2025-06-23T14:30:00Z",
+            "processingTime": 2.45,
+            "version": "1.0.0",
+            "engine": "StandardsComplianceAnalysisEngine",
+            "mockData": true
+          }
+        }
+      }
+    },
+    {
+      "request": {
+        "url": "https://localhost:3001/api/v1/standards/dashboard",
+        "method": "GET"
+      },
+      "response": {
+        "statusCode": 200,
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "overallHealth": "EXCELLENT",
+          "totalProjects": 24,
+          "averageCompliance": 88.7,
+          "totalAnalyses": 156,
+          "lastUpdated": "2025-06-23T14:30:00Z",
+          "complianceBreakdown": {
+            "BABOK_V3": 87.2,
+            "PMBOK_7": 90.3,
+            "DMBOK_2": "Not Available"
+          },
+          "trends": {
+            "last30Days": {
+              "averageCompliance": 88.7,
+              "trend": "improving",
+              "changePercent": 2.3
+            },
+            "intelligentDeviations": {
+              "total": 47,
+              "approved": 39,
+              "pending": 8,
+              "rejected": 0
+            }
+          },
+          "topPerformingProjects": [
+            {
+              "projectId": "PRJ-2025-001",
+              "projectName": "Healthcare Digital Transformation",
+              "complianceScore": 95.2
+            },
+            {
+              "projectId": "PRJ-2025-003", 
+              "projectName": "Financial Services Modernization",
+              "complianceScore": 93.8
+            }
+          ],
+          "recentAnalyses": [
+            {
+              "analysisId": "ANLZ-2025-156",
+              "projectName": "Mock Healthcare Project",
+              "analysisDate": "2025-06-23T14:30:00Z",
+              "complianceScore": 87.5,
+              "status": "COMPLETED"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "url": "https://localhost:3001/api/v1/standards/deviations/summary",
+        "method": "GET"
+      },
+      "response": {
+        "statusCode": 200,
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "summary": {
+            "totalDeviations": 47,
+            "intelligentDeviations": 39,
+            "beneficialDeviations": 35,
+            "riskDeviations": 4,
+            "pendingApprovals": 8
+          },
+          "categoryBreakdown": {
+            "EFFICIENCY_IMPROVEMENT": 18,
+            "QUALITY_ENHANCEMENT": 12,
+            "INNOVATION_IMPLEMENTATION": 8,
+            "RISK_MITIGATION": 6,
+            "STAKEHOLDER_OPTIMIZATION": 3
+          },
+          "businessImpact": {
+            "totalSavings": "$2,847,500",
+            "averageSavingsPerDeviation": "$60,585",
+            "timeReduction": "156 weeks",
+            "qualityImprovements": 23
+          },
+          "topDeviations": [
+            {
+              "deviationId": "DEV-001",
+              "description": "Hybrid agile-waterfall methodology",
+              "category": "EFFICIENCY_IMPROVEMENT",
+              "businessValue": "$312,500",
+              "confidenceScore": 92,
+              "status": "APPROVED",
+              "projectsUsing": 8
+            },
+            {
+              "deviationId": "DEV-007",
+              "description": "AI-enhanced requirements analysis",
+              "category": "INNOVATION_IMPLEMENTATION", 
+              "businessValue": "$445,000",
+              "confidenceScore": 88,
+              "status": "APPROVED",
+              "projectsUsing": 5
+            }
+          ],
+          "recommendations": [
+            "Consider standardizing top-performing deviations organization-wide",
+            "Develop training programs for beneficial methodologies",
+            "Create center of excellence for innovation practices"
+          ]
+        }
+      }
+    },
+    {
+      "request": {
+        "url": "https://localhost:3001/api/v1/standards/reports/executive-summary",
+        "method": "GET"
+      },
+      "response": {
+        "statusCode": 200,
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "executiveReport": {
+            "reportId": "EXEC-RPT-2025-Q2",
+            "reportDate": "2025-06-23T14:30:00Z",
+            "reportPeriod": "Q2 2025",
+            "overview": {
+              "totalProjects": 24,
+              "averageCompliance": 88.7,
+              "totalDeviations": 47,
+              "beneficialDeviations": 35,
+              "organizationMaturity": "ADVANCED"
+            },
+            "keyAchievements": [
+              "Achieved 88.7% average compliance across all projects",
+              "Identified $2.8M in cost savings through intelligent deviations",
+              "Reduced average project timeline by 6.5 weeks",
+              "Established 8 new organizational best practices"
+            ],
+            "strategicInsights": [
+              "Organization demonstrates innovation leadership in project management",
+              "Custom methodologies consistently outperform industry standards",
+              "Strong culture of continuous improvement and adaptation",
+              "Risk management practices exceed regulatory requirements"
+            ],
+            "recommendations": [
+              {
+                "type": "STRATEGIC",
+                "priority": "HIGH",
+                "description": "Establish Center of Excellence for Project Innovation",
+                "businessCase": "Systematize and scale successful deviations across organization",
+                "expectedBenefit": "$5M annual savings potential"
+              },
+              {
+                "type": "OPERATIONAL",
+                "priority": "MEDIUM",
+                "description": "Develop training curriculum for hybrid methodologies",
+                "businessCase": "Enable broader adoption of successful practices",
+                "expectedBenefit": "25% improvement in project success rates"
+              }
+            ],
+            "riskAssessment": {
+              "overallRisk": "LOW",
+              "complianceRisk": "VERY_LOW",
+              "operationalRisk": "LOW",
+              "strategicRisk": "VERY_LOW",
+              "mitigation": "All deviations are well-documented with strong business justification"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

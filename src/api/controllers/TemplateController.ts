@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { TemplateRepository } from '../../repositories/TemplateRepository.js';
+import { database } from '../../config/database.js';
 
 /**
  * Template Management API Controller
@@ -8,8 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
  * with full CRUD operations for document templates.
  */
 export class TemplateController {
-
-    /**
+    private static templateRepository = new TemplateRepository(database);    /**
      * Create a new template
      * POST /api/v1/templates
      */
@@ -17,29 +18,57 @@ export class TemplateController {
         try {
             const { name, description, category, tags, templateData, isActive } = req.body;
             const requestId = req.headers['x-request-id'] as string || uuidv4();
-            const userId = req.user?.id || 'anonymous';
+            const userId = req.user?.id || 'api-user';
 
-            // TODO: Implement actual template creation with database
-            const templateId = uuidv4();
-            const createdAt = new Date().toISOString();
-
-            const template = {
-                id: templateId,
+            // Create template using actual TemplateRepository
+            const templateRecord = {
                 name,
-                description,
-                category,
-                tags: tags || [],
-                templateData,
-                isActive: isActive !== undefined ? isActive : true,
-                createdBy: userId,
-                createdAt,
-                updatedAt: createdAt,
-                version: 1
+                description: description || `API-created template: ${name}`,
+                category: category || 'api-created',
+                template_type: 'api_created',
+                ai_instructions: templateData?.aiInstructions || `Generate a ${name}`,
+                prompt_template: templateData?.content || `# ${name}\n\n{{content}}`,
+                generation_function: 'getAiGenericDocument',
+                metadata: {
+                    tags: tags || [],
+                    variables: templateData?.variables || [],
+                    layout: templateData?.layout || {},
+                    emoji: '🆕',
+                    priority: 200,
+                    source: 'api'
+                },
+                version: 1,
+                is_active: isActive !== false,
+                is_system: false,
+                created_by: userId
+            };
+
+            const createdTemplate = await TemplateController.templateRepository.createTemplate(templateRecord);
+
+            // Convert to API format
+            const apiTemplate = {
+                id: createdTemplate.id,
+                name: createdTemplate.name,
+                description: createdTemplate.description,
+                category: createdTemplate.category,
+                tags: createdTemplate.metadata?.tags || [],
+                templateData: {
+                    content: createdTemplate.prompt_template,
+                    aiInstructions: createdTemplate.ai_instructions,
+                    variables: createdTemplate.metadata?.variables || [],
+                    layout: createdTemplate.metadata?.layout || {}
+                },
+                isActive: createdTemplate.is_active,
+                createdBy: createdTemplate.created_by,
+                createdAt: createdTemplate.created_at,
+                updatedAt: createdTemplate.updated_at,
+                version: createdTemplate.version,
+                templateType: createdTemplate.template_type
             };
 
             console.log('Template created:', {
                 requestId,
-                templateId,
+                templateId: createdTemplate.id,
                 name,
                 userId,
                 timestamp: new Date().toISOString()
@@ -47,17 +76,16 @@ export class TemplateController {
 
             res.status(201).json({
                 success: true,
-                data: template,
+                data: apiTemplate,
                 timestamp: new Date().toISOString(),
                 requestId
             });
 
         } catch (error) {
+            console.error('Error creating template:', error);
             next(error);
         }
-    }
-
-    /**
+    }/**
      * Get a template by ID
      * GET /api/v1/templates/:templateId
      */
@@ -67,84 +95,33 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id;
 
-            // TODO: Implement actual template retrieval from database
-            // For now, return a mock template
-            if (templateId === 'test-template-123') {
-                const template = {
-                    id: templateId,
-                    name: 'Sample Project Charter Template',
-                    description: 'A comprehensive project charter template for PMBOK-compliant projects',
-                    category: 'Project Management',
-                    tags: ['pmbok', 'project-charter', 'business-case'],
+            // Use the actual TemplateRepository to get template
+            const template = await TemplateController.templateRepository.getTemplateById(templateId);
+              if (template) {
+                // Convert database template to API format
+                const apiTemplate = {
+                    id: template.id,
+                    name: template.name,
+                    description: template.description,
+                    category: template.category,
+                    tags: template.metadata?.tags || [],
                     templateData: {
-                        content: `# {{projectName}}
-
-## Project Overview
-{{projectDescription}}
-
-## Business Case
-{{businessCase}}
-
-## Scope
-{{projectScope}}
-
-## Stakeholders
-{{#each stakeholders}}
-- **{{name}}** ({{role}}): {{responsibilities}}
-{{/each}}`,
-                        variables: [
-                            {
-                                name: 'projectName',
-                                type: 'text',
-                                required: true,
-                                description: 'Name of the project'
-                            },
-                            {
-                                name: 'projectDescription',
-                                type: 'text',
-                                required: true,
-                                description: 'Detailed project description'
-                            },
-                            {
-                                name: 'businessCase',
-                                type: 'text',
-                                required: true,
-                                description: 'Business justification for the project'
-                            },
-                            {
-                                name: 'projectScope',
-                                type: 'text',
-                                required: true,
-                                description: 'Project scope definition'
-                            },
-                            {
-                                name: 'stakeholders',
-                                type: 'array',
-                                required: false,
-                                description: 'List of project stakeholders'
-                            }
-                        ],
-                        layout: {
-                            pageSize: 'A4',
-                            orientation: 'portrait',
-                            margins: {
-                                top: 20,
-                                bottom: 20,
-                                left: 20,
-                                right: 20
-                            }
-                        }
+                        content: template.prompt_template,
+                        aiInstructions: template.ai_instructions,
+                        variables: template.metadata?.variables || [],
+                        layout: template.metadata?.layout || {}
                     },
-                    isActive: true,
-                    createdBy: 'system',
-                    createdAt: '2024-01-15T10:00:00Z',
-                    updatedAt: '2024-01-15T10:00:00Z',
-                    version: 1
+                    isActive: template.is_active,
+                    createdBy: template.created_by,
+                    createdAt: template.created_at,
+                    updatedAt: template.updated_at,
+                    version: template.version,
+                    templateType: template.template_type
                 };
 
                 res.json({
                     success: true,
-                    data: template,
+                    data: apiTemplate,
                     timestamp: new Date().toISOString(),
                     requestId
                 });
@@ -254,50 +231,47 @@ export class TemplateController {
                 tag,
                 search,
                 isActive
-            } = req.query;
+            } = req.query;            const requestId = req.headers['x-request-id'] as string || uuidv4();
 
-            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            // Use the actual TemplateRepository to get templates
+            const searchQuery = {
+                category: category as string,
+                search_text: search as string,
+                is_system: undefined, // Include both system and user templates
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
+            };
 
-            // TODO: Implement actual template listing from database
-            // For now, return mock data
-            const mockTemplates = [
-                {
-                    id: 'test-template-123',
-                    name: 'Sample Project Charter Template',
-                    description: 'A comprehensive project charter template',
-                    category: 'Project Management',
-                    tags: ['pmbok', 'project-charter'],
-                    isActive: true,
-                    createdAt: '2024-01-15T10:00:00Z',
-                    updatedAt: '2024-01-15T10:00:00Z'
-                },
-                {
-                    id: 'template-456',
-                    name: 'Risk Assessment Template',
-                    description: 'Template for project risk assessment',
-                    category: 'Risk Management',
-                    tags: ['risk', 'assessment'],
-                    isActive: true,
-                    createdAt: '2024-01-14T10:00:00Z',
-                    updatedAt: '2024-01-14T10:00:00Z'
-                }
-            ];
+            const templates = await TemplateController.templateRepository.searchTemplates(searchQuery);
 
-            console.log('Template list requested:', {
+            // Convert to API format
+            const apiTemplates = templates.map(template => ({
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                category: template.category,
+                tags: template.metadata?.tags || [],
+                isActive: template.is_active,
+                createdAt: template.created_at,
+                updatedAt: template.updated_at,
+                templateType: template.template_type,
+                version: template.version
+            }));            console.log('Template list requested:', {
                 requestId,
                 filters: { category, tag, search, isActive },
                 pagination: { page, limit, sort, order },
+                resultCount: apiTemplates.length,
                 timestamp: new Date().toISOString()
             });
 
             res.json({
                 success: true,
-                data: mockTemplates,
+                data: apiTemplates,
                 pagination: {
                     page: parseInt(page as string),
                     limit: parseInt(limit as string),
-                    total: mockTemplates.length,
-                    pages: Math.ceil(mockTemplates.length / parseInt(limit as string))
+                    total: apiTemplates.length,
+                    pages: Math.ceil(apiTemplates.length / parseInt(limit as string))
                 },
                 timestamp: new Date().toISOString(),
                 requestId
@@ -471,6 +445,276 @@ export class TemplateController {
             });
 
         } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get overall template statistics (for admin dashboard)
+     * GET /api/v1/templates/stats
+     */
+    static async getOverallTemplateStats(req: Request, res: Response, next: NextFunction) {
+        try {
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            // Get all templates to calculate stats
+            const templates = await TemplateController.templateRepository.getAllTemplates();
+            
+            // Calculate statistics
+            const totalTemplates = templates.length;
+            const categoriesMap = new Map<string, number>();
+            const tagsMap = new Map<string, number>();
+            
+            templates.forEach(template => {
+                // Count categories
+                if (template.category) {
+                    categoriesMap.set(template.category, (categoriesMap.get(template.category) || 0) + 1);
+                }
+                
+                // Count tags
+                if (template.metadata?.tags && Array.isArray(template.metadata.tags)) {
+                    template.metadata.tags.forEach((tag: string) => {
+                        tagsMap.set(tag, (tagsMap.get(tag) || 0) + 1);
+                    });
+                }
+            });
+
+            // Convert to arrays and sort
+            const topCategories = Array.from(categoriesMap.entries())
+                .map(([category, count]) => ({ category, count }))
+                .sort((a, b) => b.count - a.count);
+
+            const topTags = Array.from(tagsMap.entries())
+                .map(([tag, count]) => ({ tag, count }))
+                .sort((a, b) => b.count - a.count);            const stats = {
+                totalTemplates,
+                categoriesCount: categoriesMap.size,
+                topCategories,
+                topTags,
+                recentActivity: templates
+                    .filter(template => template.updated_at)
+                    .sort((a, b) => new Date(b.updated_at!).getTime() - new Date(a.updated_at!).getTime())
+                    .slice(0, 10)
+                    .map(template => ({
+                        type: 'updated' as const,
+                        templateName: template.name,
+                        timestamp: template.updated_at!
+                    }))
+            };
+
+            console.log('Overall template stats retrieved:', {
+                requestId,
+                totalTemplates,
+                timestamp: new Date().toISOString()
+            });
+
+            res.json({
+                success: true,
+                data: stats,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting template stats:', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Get template categories
+     * GET /api/v1/templates/categories
+     */
+    static async getTemplateCategories(req: Request, res: Response, next: NextFunction) {
+        try {
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            const templates = await TemplateController.templateRepository.getAllTemplates();
+            const categories = [...new Set(templates.map(t => t.category).filter(Boolean))].sort();
+
+            res.json({
+                success: true,
+                data: categories,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting template categories:', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Get template tags
+     * GET /api/v1/templates/tags
+     */
+    static async getTemplateTags(req: Request, res: Response, next: NextFunction) {
+        try {
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            const templates = await TemplateController.templateRepository.getAllTemplates();
+            const tagsSet = new Set<string>();
+            
+            templates.forEach(template => {
+                if (template.metadata?.tags && Array.isArray(template.metadata.tags)) {
+                    template.metadata.tags.forEach((tag: string) => tagsSet.add(tag));
+                }
+            });
+
+            const tags = [...tagsSet].sort();
+
+            res.json({
+                success: true,
+                data: tags,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting template tags:', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Bulk delete templates
+     * POST /api/v1/templates/bulk-delete
+     */
+    static async bulkDeleteTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { ids } = req.body;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            if (!Array.isArray(ids)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'ids must be an array',
+                    timestamp: new Date().toISOString(),
+                    requestId
+                });
+            }
+
+            let deleted = 0;
+            for (const id of ids) {
+                try {
+                    await TemplateController.templateRepository.deleteTemplate(id);
+                    deleted++;
+                } catch (error) {
+                    console.error(`Failed to delete template ${id}:`, error);
+                }
+            }
+
+            res.json({
+                success: true,
+                data: { deleted },
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error bulk deleting templates:', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Export templates
+     * GET /api/v1/templates/export
+     */
+    static async exportTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { ids } = req.query;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            let templates;
+            if (ids && typeof ids === 'string') {
+                const templateIds = ids.split(',');
+                templates = [];
+                for (const id of templateIds) {
+                    try {
+                        const template = await TemplateController.templateRepository.getTemplateById(id);
+                        if (template) templates.push(template);
+                    } catch (error) {
+                        console.error(`Failed to get template ${id}:`, error);
+                    }
+                }
+            } else {
+                templates = await TemplateController.templateRepository.getAllTemplates();
+            }
+
+            res.json({
+                success: true,
+                data: templates,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error exporting templates:', error);
+            next(error);
+        }
+    }
+
+    /**
+     * Import templates
+     * POST /api/v1/templates/import
+     */
+    static async importTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { templates } = req.body;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            const userId = req.user?.id || 'api-user';
+
+            if (!Array.isArray(templates)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'templates must be an array',
+                    timestamp: new Date().toISOString(),
+                    requestId
+                });
+            }
+
+            let imported = 0;
+            const errors: string[] = [];
+
+            for (const templateData of templates) {
+                try {
+                    const templateRecord = {
+                        name: templateData.name,
+                        description: templateData.description || `Imported template: ${templateData.name}`,
+                        category: templateData.category || 'imported',
+                        template_type: 'imported',
+                        ai_instructions: templateData.aiInstructions || `Generate a ${templateData.name}`,
+                        prompt_template: templateData.content || `# ${templateData.name}\n\n{{content}}`,
+                        generation_function: 'getAiGenericDocument',
+                        metadata: {
+                            tags: templateData.tags || [],
+                            variables: templateData.variables || [],
+                            source: 'import'
+                        },
+                        version: 1,
+                        is_active: true,
+                        is_system: false,
+                        created_by: userId
+                    };
+
+                    await TemplateController.templateRepository.createTemplate(templateRecord);
+                    imported++;
+                } catch (error) {
+                    errors.push(`Failed to import template "${templateData.name}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+            }
+
+            res.json({
+                success: true,
+                data: { imported, errors },
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error importing templates:', error);
             next(error);
         }
     }

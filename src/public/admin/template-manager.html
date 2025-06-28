@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Manager - ADPA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .templates-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .template-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .template-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .template-info {
+            flex: 1;
+        }
+
+        .template-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-category {
+            display: inline-block;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .template-description {
+            color: #666;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            min-height: 150px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #060;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .connection-status {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .status-disconnected {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c00;
+        }
+
+        .status-connected {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #060;
+        }
+
+        .diagnostic-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .diagnostic-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .diagnostic-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Template Manager</h1>
+    </div>
+
+    <div class="container">
+        <div class="actions">
+            <button class="btn btn-primary" onclick="showCreateModal()">
+                ➕ Create New Template
+            </button>
+            <button class="btn btn-success" onclick="loadTemplates()">
+                🔄 Refresh Templates
+            </button>
+            <button class="btn" onclick="testConnection()" style="background: #f39c12; color: white;">
+                🔍 Test Connection
+            </button>
+            <button class="btn" onclick="runDiagnostics()" style="background: #9b59b6; color: white;">
+                🔧 Run Diagnostics
+            </button>
+            <button class="btn" onclick="toggleCORS()" style="background: #34495e; color: white;">
+                🌐 Toggle CORS Mode
+            </button>
+        </div>
+
+        <div id="connectionStatus"></div>
+        <div id="diagnosticPanel"></div>
+        
+        <input type="text" class="search-bar" id="searchInput" placeholder="🔍 Search templates by name, category, or description..." oninput="filterTemplates()">
+
+        <div id="debugInfo"></div>
+        <div id="templatesContainer" class="templates-grid">
+            <div class="loading">Loading templates...</div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Create New Template</h2>
+            <form id="templateForm">
+                <div class="form-group">
+                    <label class="form-label" for="templateName">Template Name</label>
+                    <input type="text" class="form-input" id="templateName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="templateDescription">Description</label>
+                    <input type="text" class="form-input" id="templateDescription" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="templateCategory">Category</label>
+                    <select class="form-input" id="templateCategory" required>
+                        <option value="">Select category...</option>
+                        <option value="pmbok">PMBOK</option>
+                        <option value="babok">BABOK</option>
+                        <option value="requirements">Requirements</option>
+                        <option value="technical-design">Technical Design</option>
+                        <option value="project-management">Project Management</option>
+                        <option value="business-analysis">Business Analysis</option>
+                        <option value="risk-assessment">Risk Assessment</option>
+                        <option value="quality-assurance">Quality Assurance</option>
+                        <option value="communication">Communication</option>
+                        <option value="procurement">Procurement</option>
+                        <option value="stakeholder">Stakeholder</option>
+                        <option value="integration">Integration</option>
+                        <option value="testing">Testing</option>
+                        <option value="deployment">Deployment</option>
+                        <option value="api-testing">API Testing</option>
+                        <option value="documentation">Documentation</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="templateType">Template Type</label>
+                    <select class="form-input" id="templateType" required>
+                        <option value="ai_instruction">AI Instruction Template</option>
+                        <option value="document">Document Template</option>
+                        <option value="form">Form Template</option>
+                        <option value="report">Report Template</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="aiInstructions">AI Instructions</label>
+                    <textarea class="form-textarea" id="aiInstructions" placeholder="Enter AI system instructions for document generation..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="promptTemplate">Template Content</label>
+                    <textarea class="form-textarea" id="promptTemplate" placeholder="Enter the template content with variables like {{VARIABLE_NAME}}..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn" onclick="hideModal()" style="background: #95a5a6; color: white;">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuration with fallback options
+        let API_BASE = 'http://localhost:3001/api/v1';
+        const API_KEY = 'dev-api-key-123';
+        let USE_CORS_MODE = false;
+        let allTemplates = [];
+        let editingTemplate = null;
+
+        function updateConnectionStatus(isConnected, message = '') {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (isConnected) {
+                statusDiv.innerHTML = `
+                    <div class="connection-status status-connected">
+                        ✅ Connected to API Server
+                        ${message ? `<br><small>${message}</small>` : ''}
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="connection-status status-disconnected">
+                        ❌ Disconnected from API Server
+                        ${message ? `<br><small>${message}</small>` : ''}
+                    </div>
+                `;
+            }
+        }
+
+        function showDebugInfo(message, data = null) {
+            const debugDiv = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            debugDiv.innerHTML = `
+                <div class="debug-info">
+<strong>[${timestamp}] Debug Info:</strong>
+${message}
+${data ? `Data: ${JSON.stringify(data, null, 2)}` : ''}
+                </div>
+            `;
+        }
+
+        async function runDiagnostics() {
+            const diagnosticPanel = document.getElementById('diagnosticPanel');
+            diagnosticPanel.innerHTML = `
+                <div class="diagnostic-panel">
+                    <h3>🔧 Connection Diagnostics</h3>
+                    <div class="diagnostic-item">
+                        <span>API Base URL:</span>
+                        <span>${API_BASE}</span>
+                    </div>
+                    <div class="diagnostic-item">
+                        <span>API Key:</span>
+                        <span>${API_KEY}</span>
+                    </div>
+                    <div class="diagnostic-item">
+                        <span>CORS Mode:</span>
+                        <span>${USE_CORS_MODE ? 'Enabled' : 'Disabled'}</span>
+                    </div>
+                    <div class="diagnostic-item">
+                        <span>Browser:</span>
+                        <span>${navigator.userAgent.split(' ').slice(-2).join(' ')}</span>
+                    </div>
+                    <div class="diagnostic-item">
+                        <span>Protocol:</span>
+                        <span>${window.location.protocol}</span>
+                    </div>
+                    <div class="diagnostic-item">
+                        <span>Current Origin:</span>
+                        <span>${window.location.origin}</span>
+                    </div>
+                </div>
+            `;
+
+            // Test multiple endpoints
+            const endpoints = [
+                { path: '/health', name: 'Health Check' },
+                { path: '/templates', name: 'Templates List' }
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint.path}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-API-Key': API_KEY,
+                            ...(USE_CORS_MODE ? {} : { 'Content-Type': 'application/json' })
+                        },
+                        ...(USE_CORS_MODE ? { mode: 'cors' } : {})
+                    });
+
+                    const status = response.ok ? '✅ Success' : `❌ Failed (${response.status})`;
+                    diagnosticPanel.innerHTML += `
+                        <div class="diagnostic-item">
+                            <span>${endpoint.name}:</span>
+                            <span>${status}</span>
+                        </div>
+                    `;
+                } catch (error) {
+                    diagnosticPanel.innerHTML += `
+                        <div class="diagnostic-item">
+                            <span>${endpoint.name}:</span>
+                            <span>❌ Error: ${error.message}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function toggleCORS() {
+            USE_CORS_MODE = !USE_CORS_MODE;
+            showDebugInfo(`CORS mode ${USE_CORS_MODE ? 'enabled' : 'disabled'}`);
+            alert(`CORS mode ${USE_CORS_MODE ? 'enabled' : 'disabled'}. Try loading templates again.`);
+        }
+
+        async function testConnection() {
+            try {
+                showDebugInfo('Testing connection...', { 
+                    url: `${API_BASE}/health`, 
+                    apiKey: API_KEY,
+                    corsMode: USE_CORS_MODE
+                });
+                
+                const response = await fetch(`${API_BASE}/health`, {
+                    headers: {
+                        'X-API-Key': API_KEY
+                    },
+                    ...(USE_CORS_MODE ? { mode: 'cors' } : {})
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showDebugInfo('✅ Connection successful!', data);
+                    updateConnectionStatus(true, `Server responded: ${data.message || 'OK'}`);
+                    alert('Connection test successful! Check debug info for details.');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showDebugInfo('❌ Connection failed!', { error: error.message });
+                updateConnectionStatus(false, error.message);
+                
+                // Try alternative ports
+                const alternativePorts = [3000, 3002, 8080];
+                let found = false;
+                
+                for (const port of alternativePorts) {
+                    try {
+                        const altUrl = `http://localhost:${port}/api/v1/health`;
+                        const response = await fetch(altUrl, {
+                            headers: { 'X-API-Key': API_KEY }
+                        });
+                        
+                        if (response.ok) {
+                            API_BASE = `http://localhost:${port}/api/v1`;
+                            showDebugInfo(`✅ Found server on port ${port}!`, { newUrl: API_BASE });
+                            updateConnectionStatus(true, `Found server on port ${port}`);
+                            found = true;
+                            break;
+                        }
+                    } catch (e) {
+                        // Continue trying other ports
+                    }
+                }
+                
+                if (!found) {
+                    alert(`Connection test failed: ${error.message}\n\nTroubleshooting tips:\n1. Ensure your Express server is running\n2. Check if it's on port 3001\n3. Verify CORS settings\n4. Try the diagnostic tool`);
+                }
+            }
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            
+            showDebugInfo(`Making API call to: ${url}`, { 
+                method: options.method || 'GET',
+                headers: options.headers,
+                corsMode: USE_CORS_MODE
+            });
+
+            const fetchOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY,
+                    ...options.headers
+                },
+                ...(USE_CORS_MODE ? { mode: 'cors' } : {}),
+                ...options
+            };
+
+            const response = await fetch(url, fetchOptions);
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            showDebugInfo(`API response received`, { 
+                success: data.success, 
+                dataType: typeof data.data,
+                responseSize: JSON.stringify(data).length 
+            });
+            
+            return data;
+        }
+
+        async function loadTemplates() {
+            try {
+                document.getElementById('templatesContainer').innerHTML = '<div class="loading">Loading templates...</div>';
+                
+                const response = await apiCall('/templates');
+                
+                // Handle both direct array and wrapped response formats
+                if (response.success && response.data) {
+                    allTemplates = Array.isArray(response.data) ? response.data : response.data.templates || [];
+                } else if (Array.isArray(response)) {
+                    allTemplates = response;
+                } else {
+                    allTemplates = response.templates || [];
+                }
+                
+                showDebugInfo(`Loaded ${allTemplates.length} templates`, { count: allTemplates.length });
+                updateConnectionStatus(true, `Loaded ${allTemplates.length} templates`);
+                renderTemplates(allTemplates);
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                showDebugInfo('❌ Error loading templates', { error: error.message });
+                updateConnectionStatus(false, `Failed to load templates: ${error.message}`);
+                
+                document.getElementById('templatesContainer').innerHTML = 
+                    `<div class="error">
+                        Error loading templates: ${error.message}
+                        <br><small>Check the debug info above for more details.</small>
+                        <br><br>
+                        <button class="btn btn-primary" onclick="testConnection()">🔍 Test Connection</button>
+                        <button class="btn" onclick="runDiagnostics()" style="background: #9b59b6; color: white;">🔧 Run Diagnostics</button>
+                    </div>`;
+            }
+        }
+
+        function renderTemplates(templates) {
+            const container = document.getElementById('templatesContainer');
+            
+            if (templates.length === 0) {
+                container.innerHTML = '<div class="loading">No templates found. Click "Create New Template" to get started!</div>';
+                return;
+            }
+
+            container.innerHTML = templates.map(template => `
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-info">
+                            <div class="template-name">${escapeHtml(template.name || 'Unnamed Template')}</div>
+                            <span class="template-category">${escapeHtml(template.category || 'uncategorized')}</span>
+                        </div>
+                    </div>
+                    <div class="template-description">${escapeHtml(template.description || 'No description available')}</div>
+                    <div class="template-actions">
+                        <button class="btn btn-primary btn-sm" onclick="editTemplate('${template.id}')">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${template.id}', '${escapeHtml(template.name || 'template')}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterTemplates() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allTemplates.filter(template => 
+                (template.name || '').toLowerCase().includes(search) ||
+                (template.description || '').toLowerCase().includes(search) ||
+                (template.category || '').toLowerCase().includes(search)
+            );
+            renderTemplates(filtered);
+        }
+
+        function showCreateModal() {
+            editingTemplate = null;
+            document.getElementById('modalTitle').textContent = 'Create New Template';
+            document.getElementById('templateForm').reset();
+            document.getElementById('templateModal').style.display = 'block';
+        }
+
+        async function editTemplate(templateId) {
+            try {
+                const response = await apiCall(`/templates/${templateId}`);
+                
+                // Handle wrapped response
+                const template = response.success ? response.data : response;
+                editingTemplate = template;
+                
+                document.getElementById('modalTitle').textContent = 'Edit Template';
+                document.getElementById('templateName').value = template.name || '';
+                document.getElementById('templateDescription').value = template.description || '';
+                document.getElementById('templateCategory').value = template.category || '';
+                document.getElementById('templateType').value = template.templateType || template.template_type || 'ai_instruction';
+                document.getElementById('aiInstructions').value = template.aiInstructions || template.ai_instructions || '';
+                document.getElementById('promptTemplate').value = template.content || template.prompt_template || '';
+                
+                document.getElementById('templateModal').style.display = 'block';
+            } catch (error) {
+                showDebugInfo('❌ Error loading template for edit', { templateId, error: error.message });
+                alert(`Error loading template: ${error.message}`);
+            }
+        }
+
+        async function deleteTemplate(templateId, templateName) {
+            if (!confirm(`Are you sure you want to delete "${templateName}"?`)) {
+                return;
+            }
+
+            try {
+                await apiCall(`/templates/${templateId}`, { method: 'DELETE' });
+                await loadTemplates();
+                showDebugInfo('✅ Template deleted successfully', { templateId, templateName });
+                alert('Template deleted successfully!');
+            } catch (error) {
+                showDebugInfo('❌ Error deleting template', { templateId, error: error.message });
+                alert(`Error deleting template: ${error.message}`);
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('templateModal').style.display = 'none';
+            editingTemplate = null;
+        }
+
+        document.getElementById('templateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const templateData = {
+                name: document.getElementById('templateName').value,
+                description: document.getElementById('templateDescription').value,
+                category: document.getElementById('templateCategory').value,
+                templateType: document.getElementById('templateType').value,
+                aiInstructions: document.getElementById('aiInstructions').value,
+                content: document.getElementById('promptTemplate').value,
+                tags: []
+            };
+
+            try {
+                if (editingTemplate) {
+                    await apiCall(`/templates/${editingTemplate.id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(templateData)
+                    });
+                    showDebugInfo('✅ Template updated successfully', { templateId: editingTemplate.id });
+                    alert('Template updated successfully!');
+                } else {
+                    await apiCall('/templates', {
+                        method: 'POST',
+                        body: JSON.stringify(templateData)
+                    });
+                    showDebugInfo('✅ Template created successfully');
+                    alert('Template created successfully!');
+                }
+                
+                hideModal();
+                await loadTemplates();
+            } catch (error) {
+                showDebugInfo('❌ Error saving template', { templateData, error: error.message });
+                alert(`Error saving template: ${error.message}`);
+            }
+        });
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('templateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'templateModal') {
+                hideModal();
+            }
+        });
+
+        // Load templates on page load
+        window.addEventListener('load', () => {
+            showDebugInfo('Page loaded, starting template load...');
+            updateConnectionStatus(false, 'Initializing...');
+            loadTemplates();
+        });
+    </script>
+</body>
+</html>

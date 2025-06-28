@@ -1,0 +1,625 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Standards Compliance & Deviation Analysis API",
+    "version": "1.0.0",
+    "description": "Revolutionary API for analyzing projects against international standards (BABOK v3, PMBOK 7th Edition, DMBOK 2.0) with intelligent deviation detection and executive reporting.",
+    "contact": {
+      "name": "ADPA API Support",
+      "email": "api-support@adpa.io",
+      "url": "https://docs.adpa.io"
+    },
+    "license": {
+      "name": "Enterprise License",
+      "url": "https://adpa.io/license"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.adpa.io/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.adpa.io/v1",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:3001/api/v1",
+      "description": "Development server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "BearerAuth": []
+    },
+    {
+      "EntraID": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Standards Analysis",
+      "description": "Core standards compliance analysis endpoints"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Real-time compliance monitoring and metrics"
+    },
+    {
+      "name": "Deviations",
+      "description": "Intelligent deviation analysis and management"
+    },
+    {
+      "name": "Reports",
+      "description": "Executive reporting and business intelligence"
+    },
+    {
+      "name": "System",
+      "description": "Health checks and system monitoring"
+    }
+  ],
+  "paths": {
+    "/standards/analyze": {
+      "post": {
+        "tags": ["Standards Analysis"],
+        "summary": "Perform comprehensive standards compliance analysis",
+        "description": "Analyzes project data against BABOK v3, PMBOK 7th Edition, and DMBOK 2.0 standards to identify deviations, provide intelligent recommendations, and generate executive summaries.",
+        "operationId": "analyzeStandardsCompliance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequest"
+              },
+              "examples": {
+                "healthcare-project": {
+                  "summary": "Healthcare Digital Transformation",
+                  "value": {
+                    "projectData": {
+                      "projectId": "PRJ-2025-001",
+                      "projectName": "Healthcare Digital Transformation",
+                      "industry": "HEALTHCARE",
+                      "projectType": "DIGITAL_TRANSFORMATION",
+                      "complexity": "HIGH",
+                      "duration": 18,
+                      "budget": 2500000,
+                      "teamSize": 25,
+                      "stakeholderCount": 45,
+                      "methodology": "AGILE_HYBRID"
+                    },
+                    "analysisConfig": {
+                      "enabledStandards": ["BABOK_V3", "PMBOK_7"],
+                      "analysisDepth": "COMPREHENSIVE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful analysis with comprehensive results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/standards/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Get compliance dashboard data",
+        "description": "Retrieves real-time compliance metrics, trends, and health indicators for executive dashboard display.",
+        "operationId": "getComplianceDashboard",
+        "responses": {
+          "200": {
+            "description": "Dashboard data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardData"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/standards/deviations/summary": {
+      "get": {
+        "tags": ["Deviations"],
+        "summary": "Get executive deviation summary",
+        "description": "Provides a high-level executive summary of all project deviations, highlighting practices that exceed industry standards with business justification.",
+        "operationId": "getDeviationSummary",
+        "responses": {
+          "200": {
+            "description": "Deviation summary retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviationSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/standards/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "API health check",
+        "description": "Returns the health status of the Standards Compliance API and its dependencies.",
+        "operationId": "getHealthStatus",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for service-to-service authentication"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for user authentication"
+      },
+      "EntraID": {
+        "type": "oauth2",
+        "description": "Microsoft Entra ID OAuth 2.0",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize",
+            "tokenUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+            "scopes": {
+              "api://adpa-standards-api/Standards.Read": "Read standards analysis data",
+              "api://adpa-standards-api/Standards.Write": "Create and modify standards analysis",
+              "api://adpa-standards-api/Standards.Admin": "Administrative access to standards API"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AnalysisRequest": {
+        "type": "object",
+        "required": ["projectData", "analysisConfig"],
+        "properties": {
+          "projectData": {
+            "$ref": "#/components/schemas/ProjectData"
+          },
+          "analysisConfig": {
+            "$ref": "#/components/schemas/AnalysisConfig"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/RequestMetadata"
+          }
+        }
+      },
+      "ProjectData": {
+        "type": "object",
+        "required": ["projectId", "projectName", "industry", "projectType", "complexity"],
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "description": "Unique project identifier",
+            "example": "PRJ-2025-001"
+          },
+          "projectName": {
+            "type": "string",
+            "description": "Human-readable project name",
+            "example": "Healthcare Digital Transformation"
+          },
+          "industry": {
+            "type": "string",
+            "enum": ["HEALTHCARE", "FINANCE", "TECHNOLOGY", "MANUFACTURING", "RETAIL", "GOVERNMENT", "EDUCATION", "OTHER"],
+            "description": "Industry sector"
+          },
+          "projectType": {
+            "type": "string",
+            "enum": ["DIGITAL_TRANSFORMATION", "SOFTWARE_DEVELOPMENT", "INFRASTRUCTURE", "PROCESS_IMPROVEMENT", "COMPLIANCE", "OTHER"],
+            "description": "Type of project"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+            "description": "Project complexity level"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Project duration in months",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "budget": {
+            "type": "number",
+            "description": "Project budget in USD",
+            "minimum": 0
+          },
+          "teamSize": {
+            "type": "integer",
+            "description": "Number of team members",
+            "minimum": 1
+          },
+          "stakeholderCount": {
+            "type": "integer",
+            "description": "Number of stakeholders",
+            "minimum": 1
+          },
+          "methodology": {
+            "type": "string",
+            "enum": ["AGILE", "WATERFALL", "HYBRID", "LEAN", "KANBAN", "SCRUM", "OTHER"],
+            "description": "Project methodology"
+          }
+        }
+      },
+      "AnalysisConfig": {
+        "type": "object",
+        "properties": {
+          "enabledStandards": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["BABOK_V3", "PMBOK_7", "DMBOK_2"]
+            },
+            "description": "Standards to analyze against"
+          },
+          "analysisDepth": {
+            "type": "string",
+            "enum": ["BASIC", "COMPREHENSIVE", "DETAILED"],
+            "description": "Depth of analysis to perform"
+          },
+          "deviationThresholds": {
+            "type": "object",
+            "properties": {
+              "critical": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "warning": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "acceptable": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        }
+      },
+      "AnalysisResponse": {
+        "type": "object",
+        "properties": {
+          "analysisId": {
+            "type": "string",
+            "description": "Unique analysis identifier"
+          },
+          "projectId": {
+            "type": "string",
+            "description": "Project identifier"
+          },
+          "overallComplianceScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Overall compliance percentage"
+          },
+          "standardsResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StandardResult"
+            }
+          },
+          "deviationAnalysis": {
+            "$ref": "#/components/schemas/DeviationAnalysis"
+          },
+          "executiveSummary": {
+            "$ref": "#/components/schemas/ExecutiveSummary"
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ResponseMetadata"
+          }
+        }
+      },
+      "StandardResult": {
+        "type": "object",
+        "properties": {
+          "standard": {
+            "type": "string",
+            "enum": ["BABOK_V3", "PMBOK_7", "DMBOK_2"]
+          },
+          "complianceScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLIANT", "MINOR_DEVIATIONS", "MAJOR_DEVIATIONS", "NON_COMPLIANT"]
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DeviationAnalysis": {
+        "type": "object",
+        "properties": {
+          "totalDeviations": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "intelligentDeviations": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["VERY_LOW", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+          },
+          "deviations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntelligentDeviation"
+            }
+          }
+        }
+      },
+      "IntelligentDeviation": {
+        "type": "object",
+        "properties": {
+          "deviationId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["EFFICIENCY_IMPROVEMENT", "INNOVATION_IMPLEMENTATION", "RISK_MITIGATION", "QUALITY_ENHANCEMENT", "STAKEHOLDER_OPTIMIZATION"]
+          },
+          "businessValue": {
+            "type": "string"
+          },
+          "confidenceScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": ["APPROVE", "APPROVE_WITH_CONDITIONS", "REVIEW_REQUIRED", "REJECT"]
+          }
+        }
+      },
+      "ExecutiveSummary": {
+        "type": "object",
+        "properties": {
+          "keyFindings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "riskAssessment": {
+            "type": "string"
+          },
+          "recommendedActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "businessImpact": {
+            "type": "string"
+          }
+        }
+      },
+      "Recommendation": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+          },
+          "effort": {
+            "type": "string"
+          }
+        }
+      },
+      "DashboardData": {
+        "type": "object",
+        "properties": {
+          "overallHealth": {
+            "type": "string",
+            "enum": ["EXCELLENT", "GOOD", "FAIR", "POOR"]
+          },
+          "totalProjects": {
+            "type": "integer"
+          },
+          "averageCompliance": {
+            "type": "number"
+          },
+          "trends": {
+            "type": "object"
+          }
+        }
+      },
+      "DeviationSummary": {
+        "type": "object",
+        "properties": {
+          "totalDeviations": {
+            "type": "integer"
+          },
+          "beneficialDeviations": {
+            "type": "integer"
+          },
+          "riskDeviations": {
+            "type": "integer"
+          },
+          "topDeviations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntelligentDeviation"
+            }
+          }
+        }
+      },
+      "HealthStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "degraded", "unhealthy"]
+          },
+          "version": {
+            "type": "string"
+          },
+          "uptime": {
+            "type": "string"
+          },
+          "dependencies": {
+            "type": "object"
+          }
+        }
+      },
+      "RequestMetadata": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "requestDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+          }
+        }
+      },
+      "ResponseMetadata": {
+        "type": "object",
+        "properties": {
+          "analysisDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processingTime": {
+            "type": "number"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

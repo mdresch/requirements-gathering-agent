@@ -1,11 +1,8 @@
+// server.ts
+// filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\src\api\server.ts
+
 import { createRequire } from 'module';
 import { Request, Response } from 'express';
-
-const require = createRequire(import.meta.url);
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 import { DocumentController } from './controllers/DocumentController.js';
 import { TemplateController } from './controllers/TemplateController.js';
 import { HealthController } from './controllers/HealthController.js';
@@ -13,21 +10,32 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
 
+const require = createRequire(import.meta.url);
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 /**
  * ADPA API Server
- *  * Express.js server implementing the TypeSpec-defined API endpoints
+ * Express.js server implementing the TypeSpec-defined API endpoints
  * for professional document processing and conversion services.
  */
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
+
+// Apply CORS globally for all routes FIRST
+app.use(cors({
+    origin: true, // or ['http://localhost:3003'] for stricter dev
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'X-API-Key'],
+    optionsSuccessStatus: 200
+}));
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-    credentials: true
-}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -77,6 +85,12 @@ app.get('/api/v1/documents/formats', DocumentController.getSupportedFormats);
 
 // Template management routes
 app.post('/api/v1/templates', TemplateController.createTemplate);
+app.get('/api/v1/templates/stats', TemplateController.getOverallTemplateStats);
+app.get('/api/v1/templates/categories', TemplateController.getTemplateCategories);
+app.get('/api/v1/templates/tags', TemplateController.getTemplateTags);
+app.get('/api/v1/templates/export', TemplateController.exportTemplates);
+app.post('/api/v1/templates/import', TemplateController.importTemplates);
+app.post('/api/v1/templates/bulk-delete', TemplateController.bulkDeleteTemplates);
 app.get('/api/v1/templates/:templateId', TemplateController.getTemplate);
 app.put('/api/v1/templates/:templateId', TemplateController.updateTemplate);
 app.delete('/api/v1/templates/:templateId', TemplateController.deleteTemplate);
@@ -102,10 +116,12 @@ app.use(errorHandler);
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => {
-        console.log(`🚀 ADPA API Server running on port ${PORT}`);
-        console.log(`📚 API Documentation: http://localhost:${PORT}/docs/api/`);
-        console.log(`🏥 Health Check: http://localhost:${PORT}/api/v1/health`);
+    const actualPort = PORT;
+    app.listen(actualPort, () => {
+        console.log(`🚀 ADPA API Server running on port ${actualPort}`);
+        console.log(`📚 API Documentation: http://localhost:${actualPort}/docs/api/`);
+        console.log(`🏥 Health Check: http://localhost:${actualPort}/api/v1/health`);
+        console.log(`🎯 Admin Interface: http://localhost:${actualPort}/admin`);        console.log(`🌐 CORS: Open (Development)`);
         console.log(`🎯 Ready to process documents via API!`);
     });
 }

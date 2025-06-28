@@ -415,14 +415,13 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 999,
     emoji: '📝',
     pmbokRef: ''
-  },
-  {
+  },  {
     key: 'apidocumentation',
-    name: 'APIDocumentation',
+    name: 'API Documentation',
     category: 'technical-design',
     func: 'apidocumentation.md',
     priority: 4,
-    emoji: '📝',
+    emoji: '�',
     pmbokRef: ''
   },
   {
@@ -647,7 +646,7 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'architecture-design': { filename: 'technical-design/architecture-design.md', title: 'Architecture Design Document' },
     'system-design':       { filename: 'technical-design/system-design.md',       title: 'System Design Specification' },
     'database-schema':     { filename: 'technical-design/database-schema.md',     title: 'Database Schema Design' },
-    'apidocumentation':    { filename: 'technical-design/apidocumentation.md',   title: 'APIDocumentation' },
+    'apidocumentation':    { filename: 'technical-design/apidocumentation.md',   title: 'API Documentation', description: 'Comprehensive API documentation with endpoints, authentication, and examples' },
     'security-design':     { filename: 'technical-design/security-design.md',     title: 'Security Design Document' },
     'performance-requirements': { filename: 'technical-design/performance-requirements.md', title: 'Performance Requirements' },
     'integration-design':  { filename: 'technical-design/integration-design.md',  title: 'Integration Design' },
@@ -676,7 +675,7 @@ export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; 
     'code-documentation':     { filename: 'implementation-guides/code-documentation.md',     title: 'Code Documentation Guide' },
     'troubleshooting':        { filename: 'implementation-guides/troubleshooting.md',        title: 'Troubleshooting Guide' },
     'development-workflow':   { filename: 'implementation-guides/development-workflow.md',   title: 'Development Workflow Guide' },
-    'api-integration':        { filename: 'implementation-guides/api-integration.md',        title: 'API Integration Guide' },
+    'api-integration':        { filename: 'implementation-guides/api-integration.md',        title: 'API Integration Guide', description: 'API integration guide and best practices' },
     'deployment-guide':       { filename: 'implementation-guides/deployment-guide.md',       title: 'Deployment Guide' },
 
     'babokintroduction': { filename: 'BABOK/babokintroduction.md', title: 'BABOKIntroduction' },
