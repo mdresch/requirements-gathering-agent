@@ -17,6 +17,10 @@ export * from './version.js';
 // Configuration utilities
 export * from './config.js';
 
+// Error handling utilities
+export * from './errorHandler.js';
+
 // Export types for utilities
 export type { } from './version.js';
 export type { RGAConfig } from './config.js';
+export type { LogLevel } from './errorHandler.js';

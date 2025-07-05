@@ -1,9 +1,11 @@
 /**
  * Generate Command Handler
  * Handles document generation commands including single document, category, and all documents
+ * Enhanced with improved error handling and centralized types (Phase 3 refactor)
  */
 
-// 1. Node.js built-ins (none in this file)
+// 1. Node.js built-ins
+import process from 'process';
 
 // 2. Third-party dependencies (none in this file)
 
@@ -18,13 +20,18 @@ import { getTasksByCategory, getTaskByKey, GENERATION_TASKS } from '../modules/d
 import { readEnhancedProjectContext } from '../modules/fileManager.js';
 
 // 4. Constants and utilities
-import { SupportedFormat } from '../constants.js';
+import { SupportedFormat, DEFAULT_OUTPUT_DIR, DEFAULT_RETRY_COUNT } from '../constants.js';
+import type { GenerateOptions } from '../types.js';
+import { ValidationError } from '../types.js';
 import { 
-  ValidationError, 
-  validateOutputDirectory, 
+  validateBaseOptions,
+  validateOutputDirectory as validateOutputDir,
+  executeWithErrorHandling,
+  logSuccess,
+  logInfo
+} from '../utils/errorHandler.js';
+import { 
   validateFormat, 
-  validateRetryCount, 
-  validateRetryBackoff, 
   validateDocumentKey, 
   validateCategory 
 } from './utils/validation.js';
@@ -36,24 +43,50 @@ export async function handleGenerateCommand(key: string, options: GenerateOption
   try {
     // Validate inputs
     validateDocumentKey(key);
-    validateOutputDirectory(options.output);
-    validateFormat(options.format);
-    if (options.retries !== undefined) validateRetryCount(options.retries);
-    if (options.retryBackoff !== undefined) validateRetryBackoff(options.retryBackoff);
+    validateBaseOptions(options);
+    await validateOutputDir(options.output || DEFAULT_OUTPUT_DIR);
+    validateFormat(options.format || 'markdown');
+
+    const outputDir = options.output || DEFAULT_OUTPUT_DIR;
+    const retries = options.retries || DEFAULT_RETRY_COUNT;
     
-    const { output, format, quiet } = options;
-    const context = await readEnhancedProjectContext(process.cwd());
-    const generator = new DocumentGenerator(context, { outputDir: output, format });
-    
-    if (!quiet) {
-      console.log(`🔍 Generating document: ${key} in ${format} format...`);
+    if (!options.quiet) {
+      logInfo(`Generating document: ${key}`);
+      logInfo(`Output directory: ${outputDir}`);
+      logInfo(`Format: ${options.format || 'markdown'}`);
+      if (retries > 0) {
+        logInfo(`Retry configuration: ${retries} attempts`);
+      }
     }
+
+    // Read project context
+    const projectContext = await readEnhancedProjectContext();
     
-    await generator.generateOne(key);
-    
-    if (!quiet) {
-      console.log(`✅ Document generation complete`);
+    // Get the task for this document
+    const task = getTaskByKey(key);
+    if (!task) {
+      throw new ValidationError(`Document key not found: ${key}`, 'key');
     }
+
+    // Generate the document with retry logic
+    const generator = new DocumentGenerator(projectContext);
+    
+    if (retries > 0) {
+      await generateDocumentsWithRetry(
+        projectContext,
+        {
+          maxRetries: retries,
+          retryBackoff: options.retryBackoff,
+          retryMaxDelay: options.retryMaxDelay,
+          outputDir
+        }
+      );
+    } else {
+      // Use the generateOne method which exists on DocumentGenerator
+      await generator.generateOne(key);
+    }
+
+    logSuccess(`Document generated successfully: ${key}`, options.quiet);
   } catch (error) {
     if (error instanceof ValidationError) {
       console.error(`❌ Validation Error: ${error.message}`);
@@ -70,9 +103,7 @@ export async function handleGenerateCategoryCommand(category: string, options: G
   try {
     // Validate inputs
     validateCategory(category);
-    validateOutputDirectory(options.output);
-    if (options.retries !== undefined) validateRetryCount(options.retries);
-    if (options.retryBackoff !== undefined) validateRetryBackoff(options.retryBackoff);
+    await validateOutputDir(options.output);
     
     const { output, retries, retryBackoff, retryMaxDelay, quiet } = options;
     const context = await readEnhancedProjectContext(process.cwd());
@@ -81,13 +112,21 @@ export async function handleGenerateCategoryCommand(category: string, options: G
       console.log(`🔍 Generating all documents in category: ${category}...`);
     }
     
-    await generateDocumentsWithRetry(context, { 
-      includeCategories: [category], 
-      outputDir: output,
-      maxRetries: retries,
-      retryBackoff,
-      retryMaxDelay
-    });
+    // Get tasks for the category
+    const tasks = getTasksByCategory(category);
+    const generator = new DocumentGenerator(context);
+    
+    if (retries && retries > 0) {
+      await generateDocumentsWithRetry(context, {
+        includeCategories: [category],
+        maxRetries: retries,
+        retryBackoff,
+        retryMaxDelay,
+        outputDir: output
+      });
+    } else {
+      await generateAllDocuments(context);
+    }
     
     if (!quiet) {
       console.log(`✅ Category document generation complete`);
@@ -169,15 +208,6 @@ export async function handleListTemplatesCommand(): Promise<void> {
 }
 
 // Types for command options
-export interface GenerateOptions {
-  output: string;
-  format: SupportedFormat;
-  quiet?: boolean;
-  retries?: number;
-  retryBackoff?: number;
-  retryMaxDelay?: number;
-}
-
 export interface GenerateCategoryOptions {
   output: string;
   quiet?: boolean;

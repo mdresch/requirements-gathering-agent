@@ -17,8 +17,8 @@ export {
   handleGenerateCoreAnalysisCommand,
   handleListTemplatesCommand
 } from './generate.js';
+export type { GenerateOptions } from '../types.js';
 export type { 
-  GenerateOptions,
   GenerateCategoryOptions,
   GenerateAllOptions,
   GenerateCoreOptions
