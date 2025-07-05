@@ -21,12 +21,21 @@
  * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\cli.ts
  */
 
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { existsSync } from 'fs';
-import process from 'process';
+// 1. Node.js built-ins
 import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { writeFile, readFile, mkdir, copyFile, access } from 'fs/promises';
 import os from 'os';
+import { dirname, join } from 'path';
+import process from 'process';
+import readline from 'readline';
+import { fileURLToPath } from 'url';
+
+// 2. Third-party dependencies
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+
+// 3. Internal modules
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
 import { 
     DocumentGenerator, 
@@ -37,8 +46,60 @@ import {
 import { getTasksByCategory, getTaskByKey, GENERATION_TASKS } from './modules/documentGenerator/generationTasks.js';
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
-import { writeFile, readFile, mkdir, copyFile, access } from 'fs/promises';
-import readline from 'readline';
+// 4. Constants and configuration
+import { 
+  DEFAULT_OUTPUT_DIR, 
+  DEFAULT_RETRY_COUNT, 
+  DEFAULT_RETRY_BACKOFF, 
+  DEFAULT_RETRY_MAX_DELAY,
+  COMPLIANCE_REPORT_FILENAME,
+  PROMPT_ADJUSTMENT_REPORT_FILENAME,
+  SUPPORTED_FORMATS,
+  CONFIG_FILENAME,
+  PACKAGE_JSON_FILENAME,
+  TSCONFIG_JSON_FILENAME,
+  README_FILENAME,
+  PROCESSOR_CONFIG_FILENAME
+} from './constants.js';
+
+// 5. Command handlers
+import {
+  handleStatusCommand,
+  handleAnalyzeCommand,
+  handleSetupCommand,
+  handleGenerateCommand,
+  handleGenerateCategoryCommand,
+  handleGenerateAllCommand,
+  handleGenerateCoreAnalysisCommand,
+  handleListTemplatesCommand,
+  handleValidateCommand,
+  // Confluence commands
+  handleConfluenceInitCommand,
+  handleConfluenceTestCommand,
+  handleConfluencePublishCommand,
+  handleConfluenceStatusCommand,
+  handleConfluenceOAuth2LoginCommand,
+  handleConfluenceOAuth2StatusCommand,
+  handleConfluenceOAuth2DebugCommand,
+  // SharePoint commands
+  handleSharePointInitCommand,
+  handleSharePointTestCommand,
+  handleSharePointPublishCommand,
+  handleSharePointStatusCommand,
+  handleSharePointOAuth2LoginCommand,
+  handleSharePointOAuth2StatusCommand,
+  handleSharePointOAuth2DebugCommand,
+  // VCS commands
+  handleVcsInitCommand,
+  handleVcsStatusCommand,
+  handleVcsCommitCommand,
+  handleVcsPushCommand
+} from './commands/index.js';
+
+// 6. Version from package.json (centralized configuration)
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,7 +124,7 @@ async function promptAndInstallGitWindows() {
         try {
           const { execSync } = await import('child_process');
           execSync('winget install --id Git.Git -e', { stdio: 'inherit' });
-          console.log('✅ Git installation complete. Please restart your terminal and re-run the command.');
+          console.log('✅ Git installation complete. Please restart your terminal and re-run your command.');
         } catch (e) {
           console.error('❌ Automatic installation failed. Please install Git manually from https://git-scm.com/downloads');
         }
@@ -92,7 +153,7 @@ function promptGitInstallIfMissing() {
 // Call this function before any git VCS operation
 // promptGitInstallIfMissing();
 
-async function ensureGitRepoInitialized(documentsDir = 'generated-documents') {
+async function ensureGitRepoInitialized(documentsDir = DEFAULT_OUTPUT_DIR) {
   const path = (await import('path')).default;
   const gitDir = path.join(process.cwd(), documentsDir, '.git');
   if (!existsSync(gitDir)) {
@@ -107,1196 +168,265 @@ async function ensureGitRepoInitialized(documentsDir = 'generated-documents') {
   }
 }
 
-async function main() {
-  try {
-    // Show milestone celebration banner occasionally (10% chance)
-    if (Math.random() < 0.1) {
-      showMilestoneBanner();
-    }
-    
-    console.log('🚀 Requirements Gathering Agent v2.1.3'); // Updated version
-    
-    // Parse and validate command line arguments
-    const args = process.argv.slice(2);
-    // CLI scaffolding: generate new processor via flag
-    if (args.includes('--generate:processor')) {
-      const catIdx = args.indexOf('--category');
-      const category = catIdx > -1 && args.length > catIdx + 1 ? args[catIdx + 1] : '';
-      const nameIdx = args.indexOf('--name');
-      const name = nameIdx > -1 && args.length > nameIdx + 1 ? args[nameIdx + 1] : '';
-      if (!category || !name) {
-        console.error('Usage: rga --generate:processor --category <category> --name <Name>');
-        process.exit(1);
-      }
-      await scaffoldNewProcessor(category, name);
-      return;
-    }
-    
-    // Helper function to safely get argument value
-    const getArgValue = (flag: string, defaultValue: string, validValues?: string[]): string => {
-      const index = args.indexOf(flag);
-      if (index === -1) return defaultValue;
-      
-      if (index + 1 >= args.length || args[index + 1].startsWith('--')) {
-        console.error(`❌ Error: Missing value for ${flag} flag.`);
-        process.exit(1);
-      }
-      
-      const value = args[index + 1];
-      if (validValues && !validValues.includes(value)) {
-        console.error(`❌ Error: Invalid value for ${flag}. Valid values are: ${validValues.join(', ')}`);
-        process.exit(1);
-      }
-      
-      return value;
-    };
-
-    // Helper function to parse numeric argument
-    const getNumericValue = (flag: string, defaultValue: number): number => {
-      const value = getArgValue(flag, defaultValue.toString());
-      const numValue = parseInt(value);
-      
-      if (isNaN(numValue)) {
-        console.error(`❌ Error: Value for ${flag} must be a number.`);
-        process.exit(1);
-      }
-      
-      if (numValue < 0) {
-        console.error(`❌ Error: Value for ${flag} must be non-negative.`);
-        process.exit(1);
-      }
-      
-      return numValue;
-    };    const options = {
-      outputDir: getArgValue('--output', 'generated-documents'),
-      quiet: args.includes('--quiet'),
-      verbose: args.includes('--verbose'),
-      format: getArgValue('--format', 'markdown', ['markdown', 'json', 'yaml']),
-      retries: getNumericValue('--retries', 0),
-      showProgress: !args.includes('--quiet') && !args.includes('--no-progress'),
-      showMetrics: args.includes('--metrics') || args.includes('--verbose')
-    };    // Show version
-    if (args.includes('--version') || args.includes('-v')) {
-      console.log('v2.1.3'); // Updated version
-      return;
-    }
-
-    // Show milestone achievement
-    if (args.includes('--milestone') || args.includes('--achievement')) {
-      showMilestoneDetails();
-      return;
-    }
-
-    // Show status and configuration
-    if (args.includes('--status') || args.includes('--info')) {
-      await showStatus();
-      return;
-    }    // Interactive provider selection
-    if (args.includes('--select-provider') || args.includes('--choose-provider')) {
-      await runProviderSelectionMenu();
-      // Reload .env and re-initialize configuration after provider selection
-      const { config } = await import('dotenv');
-      config();
-      try {
-        const { ConfigurationManager } = await import('./modules/ai/ConfigurationManager.js');
-        if (ConfigurationManager && ConfigurationManager.getInstance) {
-          // Clear validation cache to force re-validation with new env
-          const cm = ConfigurationManager.getInstance();
-          if (typeof cm.clearValidationCache === 'function') {
-            cm.clearValidationCache();
-          }
-        }
-      } catch (e) {
-        // If ConfigurationManager is not used, ignore
-      }
-      console.log('♻️  Environment reloaded. New provider configuration is now active.');
-      return;
-    }
-
-    // Interactive setup wizard
-    if (args.includes('--setup')) {
-      await runEnhancedSetupWizard();
-      return;
-    }    // List available templates
-    if (args.includes('--list-templates') || args.includes('--templates')) {
-      await showAvailableTemplates();
-      return;
-    }
-
-    // Migrate templates to database format
-    if (args.includes('--migrate-templates')) {
-      console.log('🚀 Starting template migration to database format...');
-      try {
-        const { migrateStaticTemplates } = await import('./modules/templates/CLIIntegration.js');
-        const force = args.includes('--force');
-        await migrateStaticTemplates({ force });
-      } catch (error) {
-        console.error('❌ Migration failed:', error);
-        process.exit(1);
-      }
-      return;
-    }
-
-    // Generate with advanced template engine
-    if (args.includes('--generate-advanced')) {
-      const idx = args.indexOf('--generate-advanced');
-      const templateId = args[idx + 1];
-      if (!templateId) {
-        console.error('❌ Missing template ID for --generate-advanced');
-        return;
-      }
-
-      try {
-        const { generateDocumentAdvanced, parseVariablesFromArgs } = await import('./modules/templates/CLIIntegration.js');
-        const variables = parseVariablesFromArgs(args);
-        await generateDocumentAdvanced(templateId, { 
-          variables, 
-          quiet: options.quiet,
-          outputDir: options.outputDir 
-        });
-      } catch (error) {
-        console.error('❌ Advanced generation failed:', error);
-        process.exit(1);
-      }
-      return;
-    }
-
-    // Show template information
-    if (args.includes('--template-info')) {
-      const idx = args.indexOf('--template-info');
-      const templateId = args[idx + 1];
-      if (!templateId) {
-        console.error('❌ Missing template ID for --template-info');
-        return;
-      }
-
-      try {
-        const { showTemplateInfo } = await import('./modules/templates/CLIIntegration.js');
-        await showTemplateInfo(templateId);
-      } catch (error) {
-        console.error('❌ Failed to show template info:', error);
-        process.exit(1);
-      }
-      return;
-    }
-
-    // Analyze workspace without generating
-    if (args.includes('--analyze')) {
-      await analyzeWorkspace();
-      return;
-    }
-
-    // Show help
-    if (args.includes('--help') || args.includes('-h')) {
-      printHelp();
-      return;
-    }    // --- VCS COMMANDS ---
-    if (args[0] === 'vcs') {
-      const vcsCmd = args[1];
-      const vcsFile = args[2];
-      const vcsCommit = args[3];
-      const vcsDir = options?.outputDir || 'generated-documents';
-      promptGitInstallIfMissing();
-      await ensureGitRepoInitialized(vcsDir);
-      const path = (await import('path')).default;
-      const cwd = path.join(process.cwd(), vcsDir);
-      try {
-        switch (vcsCmd) {
-          case 'log':
-            execSync(`git log --oneline --graph --decorate --all`, { cwd, stdio: 'inherit' });
-            break;
-          case 'diff':
-            if (!vcsFile) throw new Error('Specify a file for diff.');
-            execSync(`git diff ${vcsFile}`, { cwd, stdio: 'inherit' });
-            break;
-          case 'revert':
-            if (!vcsFile || !vcsCommit) throw new Error('Specify a file and commit hash for revert.');
-            execSync(`git checkout ${vcsCommit} -- ${vcsFile}`, { cwd, stdio: 'inherit' });
-            console.log(`Reverted ${vcsFile} to ${vcsCommit}`);
-            break;
-          case 'status':
-            execSync(`git status`, { cwd, stdio: 'inherit' });
-            break;
-          case 'push':
-            execSync(`git push`, { cwd, stdio: 'inherit' });
-            break;
-          case 'pull':
-            execSync(`git pull`, { cwd, stdio: 'inherit' });
-            break;
-          default:
-            console.log('VCS commands: log, diff <file>, revert <file> <commit>, status, push, pull');
-        }
-      } catch (e) {
-        const err = e as any;
-        console.error('❌ VCS command failed:', err.message);
-      }
-      return;
-    }    // --- CONFLUENCE COMMANDS ---
-    if (args[0] === 'confluence') {
-      const confluenceCmd = args[1];
-      const confluenceSubCmd = args[2];
-      
-      try {        const { 
-          testConfluenceConnection, 
-          initConfluenceConfig, 
-          publishToConfluence, 
-          showConfluenceStatus,
-          confluenceOAuth2Login,
-          confluenceOAuth2Status,
-          confluenceDebugOAuth2
-        } = await import('./modules/confluence/ConfluenceCLI.js');
-        
-        switch (confluenceCmd) {
-          case 'init':
-            await initConfluenceConfig();
-            break;
-          case 'test':
-            await testConfluenceConnection();
-            break;          case 'oauth2':
-            switch (confluenceSubCmd) {
-              case 'login':
-                await confluenceOAuth2Login();
-                break;
-              case 'status':
-                await confluenceOAuth2Status();
-                break;
-              case 'debug':
-                await confluenceDebugOAuth2();
-                break;
-              default:
-                console.log('🔐 Confluence OAuth2 Commands:');
-                console.log('  confluence oauth2 login  - Start OAuth2 authentication flow');
-                console.log('  confluence oauth2 status - Check OAuth2 authentication status');
-                console.log('  confluence oauth2 debug  - Debug OAuth2 configuration');
-                break;
-            }
-            break;
-          case 'publish':
-            const documentsPath = args[2] || options.outputDir;
-            const publishOptions = {
-              parentPageTitle: getArgValue('--parent-page', ''),
-              labelPrefix: getArgValue('--label-prefix', 'adpa'),
-              dryRun: args.includes('--dry-run'),
-              force: args.includes('--force')
-            };
-            await publishToConfluence(documentsPath, publishOptions);
-            break;
-          case 'status':
-            await showConfluenceStatus();
-            break;
-          default:
-            console.log('🔗 Confluence Integration Commands:');
-            console.log('  confluence init         - Initialize Confluence configuration');
-            console.log('  confluence test         - Test Confluence connection');
-            console.log('  confluence oauth2 login - Start OAuth2 authentication (recommended)');
-            console.log('  confluence oauth2 status- Check OAuth2 authentication status');
-            console.log('  confluence publish      - Publish documents to Confluence');
-            console.log('  confluence status       - Show Confluence integration status');
-            console.log('\nAuthentication Methods:');
-            console.log('  • OAuth2 (recommended) - More secure, uses modern authentication');
-            console.log('  • API Token (legacy)   - Basic auth with API token');
-            console.log('\nPublish Options:');
-            console.log('  --parent-page <title>  - Parent page title for organization');
-            console.log('  --label-prefix <prefix> - Label prefix for published pages');
-            console.log('  --dry-run             - Preview what would be published');
-            console.log('  --force               - Force publish even if validation fails');
-        }
-      } catch (e) {
-        const err = e as any;
-        console.error('❌ Confluence command failed:', err.message);
-      }
-      return;
-    }
-
-    // --- SHAREPOINT COMMANDS ---
-    if (args[0] === 'sharepoint') {
-      const sharepointCmd = args[1];
-      const sharepointSubCmd = args[2];
-      
-      try {        const { 
-          testSharePointConnection, 
-          initSharePointConfig, 
-          publishToSharePoint, 
-          showSharePointStatus,
-          sharePointOAuth2Login,
-          sharePointOAuth2Status,
-          sharePointDebugOAuth2
-        } = await import('./modules/sharepoint/SharePointCLI.js');
-        
-        switch (sharepointCmd) {
-          case 'init':
-            await initSharePointConfig();
-            break;
-          case 'test':
-            await testSharePointConnection();
-            break;
-          case 'oauth2':
-            switch (sharepointSubCmd) {
-              case 'login':
-                await sharePointOAuth2Login();
-                break;
-              case 'status':
-                await sharePointOAuth2Status();
-                break;
-              case 'debug':
-                await sharePointDebugOAuth2();
-                break;
-              default:
-                console.log('🔐 SharePoint OAuth2 Commands:');
-                console.log('  sharepoint oauth2 login  - Start OAuth2 authentication flow');
-                console.log('  sharepoint oauth2 status - Check OAuth2 authentication status');
-                console.log('  sharepoint oauth2 debug  - Debug OAuth2 configuration');
-                break;
-            }
-            break;
-          case 'publish':
-            const documentsPath = args[2] || options.outputDir;
-            const publishOptions = {
-              folderPath: getArgValue('--folder-path', ''),
-              labelPrefix: getArgValue('--label-prefix', 'adpa'),
-              dryRun: args.includes('--dry-run'),
-              force: args.includes('--force')
-            };
-            await publishToSharePoint(documentsPath, publishOptions);
-            break;
-          case 'status':
-            await showSharePointStatus();
-            break;
-          default:
-            console.log('📄 SharePoint Integration Commands:');
-            console.log('  sharepoint init         - Initialize SharePoint configuration');
-            console.log('  sharepoint test         - Test SharePoint connection');
-            console.log('  sharepoint oauth2 login - Start OAuth2 authentication (recommended)');
-            console.log('  sharepoint oauth2 status- Check OAuth2 authentication status');
-            console.log('  sharepoint publish      - Publish documents to SharePoint');
-            console.log('  sharepoint status       - Show SharePoint integration status');
-            console.log('\nAuthentication Methods:');
-            console.log('  • OAuth2 (recommended) - Secure, modern authentication');
-            console.log('  • Service Principal    - For automated scenarios');
-            console.log('\nPublish Options:');
-            console.log('  --folder-path <path>   - Target folder path in SharePoint');
-            console.log('  --label-prefix <prefix> - Label prefix for metadata');
-            console.log('  --dry-run             - Preview what would be published');
-            console.log('  --force               - Force publish even if validation fails');
-        }
-      } catch (e) {
-        const err = e as any;
-        console.error('❌ SharePoint command failed:', err.message);
-      }
-      return;
-    }
-
-    if (!options.quiet) {
-      console.log('🔧 Initializing...');
-    }
-    
-    // Validate environment and AI provider
-    const isValid = await validateEnvironment();
-    if (!isValid) {
-      return;
-    }
-
-    if (!options.quiet) {
-      console.log('🚀 Starting document generation...');
-    }
-    
-    // Read project context with enhanced analysis and robust fallback
-    let context: string;
-    try {
-      context = await readEnhancedProjectContext(process.cwd());
-      if (!options.quiet) {
-        console.log('✅ Enhanced project context loaded successfully');
-      }
-    } catch (error) {
-      console.warn('⚠️ Could not read enhanced project context, using basic README.md');
-      
-      // Fallback to basic README.md reading
-      const readmePath = join(process.cwd(), 'README.md');
-      if (existsSync(readmePath)) {
-        const { readFileSync } = await import('fs');
-        context = readFileSync(readmePath, 'utf-8');
-        if (!options.quiet) {
-          console.log('✅ Found README.md - using as project context');
-        }
-      } else {
-        // Default sample project context
-        context = `
-# Sample Project
-A comprehensive software project requiring PMBOK documentation.
-
-## Features
-- User management system
-- Data processing capabilities
-- Web-based dashboard
-- API integration
-
-## Technology Stack
-- TypeScript/Node.js backend
-- React frontend
-- PostgreSQL database
-- Azure cloud deployment
-        `.trim();
-        if (!options.quiet) {
-          console.log('📝 Using default project context (no README.md found)');
-        }
-      }
-    }
-    
-    // Check for validation-only mode
-    if (args.includes('--validate-only')) {
-      if (!options.quiet) console.log('🔍 Validating existing documents...');
-      const validator = new PMBOKValidator();
-      const result = await validator.validatePMBOKCompliance();
-      console.log('PMBOK Compliance:', result.compliance);
-      console.log('Critical Findings:', result.findings.critical);
-      console.log('Warnings:', result.findings.warnings);
-      console.log('Recommendations:', result.findings.recommendations);
-      console.log('Document Quality:', result.documentQuality);
-
-      // Generate and save Markdown compliance report
-      function formatMarkdownReport(result: any) {
-          return `\n# PMBOK Compliance Report\n\n**Overall Compliance:** ${result.compliance ? '✅ Compliant' : '❌ Non-compliant'}\n\n## Critical Findings\n${result.findings.critical.length ? result.findings.critical.map((f: any) => `- ${f}`).join('\n') : 'None'}\n\n## Warnings\n${result.findings.warnings.length ? result.findings.warnings.map((f: any) => `- ${f}`).join('\n') : 'None'}\n\n## Recommendations\n${result.findings.recommendations.length ? result.findings.recommendations.map((f: any) => `- ${f}`).join('\n') : 'None'}\n\n## Document Quality\n${Object.entries(result.documentQuality).map(([doc, quality]) => {
-              const q = quality as { score: number; issues: string[]; strengths: string[] };
-              return `### ${doc}\n- Score: ${q.score}\n- Issues: ${q.issues.join('; ') || 'None'}\n- Strengths: ${q.strengths.join('; ') || 'None'}`;
-          }).join('\n\n')}`;
-      }
-      const mdReport = formatMarkdownReport(result);
-      const mdReportPath = join('generated-documents', 'compliance-report.md');
-      await writeFile(mdReportPath, mdReport);
-      console.log('Markdown compliance report written to:', mdReportPath);
-
-      // Generate and save prompt adjustment report
-      const missingElementsByDoc: Record<string, string[]> = {};
-      for (const finding of result.findings.critical) {
-          const match = finding.match(/^(.+): Missing required PMBOK element '(.+)'/);
-          if (match) {
-              const [ , doc, element ] = match;
-              if (!missingElementsByDoc[doc]) missingElementsByDoc[doc] = [];
-              missingElementsByDoc[doc].push(element);
-          }
-      }
-      let promptReport = '\n=== PROMPT ADJUSTMENT REPORT ===\n';
-      for (const [doc, elements] of Object.entries(missingElementsByDoc)) {
-          const els = elements as string[];
-          promptReport += `\nDocument: ${doc}\n`;
-          els.forEach(el => promptReport += `  - Missing required element: ${el}\n`);
-      }
-      if (Object.keys(missingElementsByDoc).length === 0) {
-          promptReport += 'All required PMBOK elements are present in your documents!\n';
-      }
-      const promptReportPath = join('generated-documents', 'prompt-adjustment-report.txt');
-      await writeFile(promptReportPath, promptReport);
-      console.log('Prompt adjustment report written to:', promptReportPath);
-      return;
-    }    // Check for comprehensive validation mode - The ADPA Quality Assurance Engine
-    if (args.includes('--generate-with-validation') || args.includes('--validate-pmbok')) {
-      if (!options.quiet) {
-        console.log('🚀 ADPA Quality Assurance Engine Activated');
-        console.log('🎯 Generating all documents with comprehensive PMBOK 7.0 validation...');
-        console.log('📊 This creates an intelligent feedback loop for continuous improvement');
-      }
-      
-      const result = await DocumentGenerator.generateAllWithPMBOKValidation(context);
-      
-      if (result.result.success) {
-        console.log(`\n✅ Generation Complete: ${result.result.successCount} documents created`);
-        console.log(`📁 Documents saved to: ${options.outputDir}/`);
-        
-        // Display compliance summary
-        console.log('\n📊 QUALITY ASSURANCE SUMMARY:');
-        console.log(`   🎯 Compliance Score: ${result.compliance.score}/100`);
-        console.log(`   📋 Status: ${result.compliance.isCompliant ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}`);
-        
-        if (result.compliance.actionableInsights.length > 0) {
-          console.log(`   � Key Insights: ${result.compliance.actionableInsights.length} identified`);
-        }
-        
-        if (result.compliance.improvementRecommendations.length > 0) {
-          console.log(`   🔧 Recommendations: ${result.compliance.improvementRecommendations.length} available`);
-        }
-        
-        console.log('\n📄 Check quality-assessment-report.md for detailed analysis and improvement guidance');
-        
-        if (!result.compliance.isCompliant) {
-          console.log('\n⚠️  Some documents need improvement. Use the quality report to guide prompt engineering.');
-        } else {
-          console.log('\n🎉 Congratulations! Your documents meet PMBOK professional standards.');
-        }
-        
-      } else {
-        console.error('❌ Document generation failed');
-        console.error('🔍 Check configuration and project context for issues');
-        process.exit(1);
-      }
-      return;
-    }
-
-    // Check for consistency validation only
-    if (args.includes('--validate-consistency')) {
-      if (!options.quiet) console.log('🔍 Checking cross-document consistency...');
-      const generator = new DocumentGenerator(context);
-      const pmbokCompliance = await generator.validatePMBOKCompliance();
-      
-      console.log(`🎯 Consistency Score: ${pmbokCompliance.consistencyScore}/100`);
-      return;
-    }
-
-    // Check for quality assessment only
-    if (args.includes('--quality-assessment')) {
-      if (!options.quiet) console.log('📊 Performing document quality assessment...');
-      const generator = new DocumentGenerator(context);
-      const pmbokCompliance = await generator.validatePMBOKCompliance();
-      return;
-    }
-
-    // Handle single-document generation via --generate <key>
-    if (args.includes('--generate')) {
-      const idx = args.indexOf('--generate');
-      const docKey = args[idx + 1];
-      if (!docKey) {
-        console.error('❌ Missing document key for --generate');
-        return;
-      }
-      if (!options.quiet) console.log(`🚀 Generating single document: ${docKey}...`);
-      const generator = new DocumentGenerator(context);
-      await generator.generateOne(docKey);
-      return;
-    }
-
-    // Determine which documents to generate
-    const generateTypes = new Set(args.filter(arg => arg.startsWith('--generate-')).map(arg => arg.replace('--generate-', '')));
-    const generateAll = generateTypes.size === 0;
-
-    try {
-      if (generateAll || generateTypes.has('core')) {
-        if (!options.quiet) console.log('🎯 Generating core documents...');
-        await DocumentGenerator.generateCoreDocuments(context);
-      }
-      
-      if (generateAll || generateTypes.has('management')) {
-        if (!options.quiet) console.log('📋 Generating management plans...');
-        await DocumentGenerator.generateManagementPlans(context);
-      }
-      
-      if (generateAll || generateTypes.has('planning')) {
-        if (!options.quiet) console.log('🏗️ Generating planning artifacts...');
-        await DocumentGenerator.generatePlanningArtifacts(context);
-      }
-      
-      if (generateAll || generateTypes.has('technical')) {
-        if (!options.quiet) console.log('⚙️ Generating technical analysis...');
-        await DocumentGenerator.generateTechnicalAnalysis(context);
-      }
-
-      if (generateAll || generateTypes.has('stakeholder')) {
-        if (!options.quiet) console.log('👥 Generating stakeholder management...');
-        await DocumentGenerator.generateStakeholderDocuments(context);
-      }
-
-      // Fix the stakeholder generation section
-      if (args.includes('--generate-stakeholder')) {
-        console.log('📊 Generating stakeholder management documents...');
-        
-        const results = await generateDocumentsWithRetry(context, {
-            includeCategories: ['stakeholder-management'],
-            maxRetries: options.retries
-        });
-
-        if (results?.success) {
-            console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} stakeholder documents`);
-            console.log(`📁 Check the ${options.outputDir}/stakeholder-management/ directory`);
-        } else {
-            console.error('❌ Failed to generate stakeholder documents');
-            process.exit(1);
-        }
-        return;
-      }
-
-      // Generate quality assurance documents if requested
-      if (generateAll || generateTypes.has('quality-assurance')) {
-        if (!options.quiet) console.log('🧪 Generating quality assurance documents...');
-        
-        const results = await generateDocumentsWithRetry(context, {
-            includeCategories: ['quality-assurance'],
-            maxRetries: options.retries
-        });
-
-        if (results?.success) {
-            console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} quality assurance documents`);
-            console.log(`📁 Check the ${options.outputDir}/quality-assurance/ directory`);
-        } else {
-            console.error('❌ Failed to generate quality assurance documents');
-            process.exit(1);
-        }
-      }
-
-      // Handle --generate-category command
-      const categoryIndex = args.indexOf('--generate-category');
-      if (categoryIndex !== -1 && categoryIndex + 1 < args.length) {
-        const categoryName = args[categoryIndex + 1];
-        if (!options.quiet) console.log(`📂 Generating ${categoryName} documents...`);
-        
-        const results = await generateDocumentsWithRetry(context, {
-            includeCategories: [categoryName],
-            maxRetries: options.retries
-        });
-
-        if (results?.success) {
-            console.log(`✅ Successfully generated ${results.generatedFiles?.length || 0} documents in ${categoryName} category`);
-            console.log(`📁 Check the ${options.outputDir}/${categoryName}/ directory`);
-        } else {
-            console.error(`❌ Failed to generate ${categoryName} documents`);
-            process.exit(1);
-        }
-        return;
-      }
-    } catch (genError: any) {      if (options.retries > 0) {
-        if (!options.quiet) console.log(`🔄 Retrying failed operations (${options.retries} attempts remaining)...`);
-        await generateDocumentsWithRetry(context, { maxRetries: options.retries });
-      } else {
-        throw genError;
-      }
-    }
-
-    // Auto-commit changes in generated-documents/ directory
-    autoCommitGeneratedDocuments(options.outputDir, process.env.CURRENT_PROVIDER, process.env.REQUIREMENTS_AGENT_MODEL);
-  } catch (error: any) {
-    console.error('❌ Error:', error.message);
-    if (!error.message.includes('Configuration error')) {
-      console.error('Stack trace:', error.stack);
-    }
-    process.exit(1);
-  }
-}
-
-function autoCommitGeneratedDocuments(documentsDir = 'generated-documents', provider = '', model = '') {
-  import('path').then(pathModule => {
-    const path = pathModule.default;
-    const commitMsg = `Generated/updated documents on ${new Date().toISOString()}${provider ? ` [by ${provider}${model ? '/' + model : ''}]` : ''}`;
-    try {
-      execSync('git add .', { cwd: path.join(process.cwd(), documentsDir), stdio: 'inherit' });
-      execSync(`git commit -m "${commitMsg}"`, { cwd: path.join(process.cwd(), documentsDir), stdio: 'inherit' });
-      console.log('✅ Auto-commit complete.');
-    } catch (e) {
-      const err = e as any;
-      if (err && err.message && err.message.includes('nothing to commit')) {
-        console.log('No changes to commit.');
-      } else {
-        console.error('❌ Auto-commit failed:', err);
-      }
-    }
-  });
-}
-
-async function validateEnvironment(): Promise<boolean> {
-  // Check for help flag
-  if (process.argv.includes('--help') || process.argv.includes('-h')) {
-    printHelp();
-    return false;
-  }
-
-  // Check for version flag
-  if (process.argv.includes('--version') || process.argv.includes('-v')) {
-    console.log('2.1.1');
-    return false;
-  }
-
-  // Load environment variables
-  const { config } = await import('dotenv');
-  const result = config();
-  
-  // Check if .env file exists and provide helpful feedback
-  const envPath = join(process.cwd(), '.env');
-  const envExamplePath = join(process.cwd(), '.env.example');
-  
-  if (!existsSync(envPath)) {
-    console.log('📄 No .env file found in current directory');
-    if (existsSync(envExamplePath)) {
-      console.log('💡 Found .env.example - copy it to .env and configure your settings');
-      console.log('   cp .env.example .env');
-    } else {
-      console.log('💡 Create a .env file with your AI provider configuration');
-    }
-    return false;
-  } else if (result.error) {
-    console.warn('⚠️  Error loading .env file:', result.error.message);
-    return false;
-  } else {
-    console.log('✅ Environment configuration loaded');
-  }
-
-  // Enhanced provider detection with better validation
-  const providers = detectConfiguredProviders();
-  
-  if (providers.length === 0) {
-    console.log('⚠️  No AI provider configuration found.');
-    console.log('📋 Please configure at least one AI provider in your .env file.');
-    console.log('📖 See .env.example for configuration options.');
-    console.log('🔍 Ensure you have set the required environment variables for your AI provider. See RGA --help');
-    console.log('💡 Run with --help for more information.');
-    
-    // Provide specific guidance based on missing configuration
-    suggestProviderConfiguration();
-    return false;
-  }
-
-  console.log(`✅ Found ${providers.length} configured provider(s): ${providers.join(', ')}`);
-  
-  // Validate Azure authentication if using Azure OpenAI with Entra ID
-  if (process.env.USE_ENTRA_ID === 'true') {
-    await validateAzureAuthentication();
-  }
-
-  return true;
-}
-
-interface ProviderConfig {
-  name: string;
-  check: () => boolean;
-  priority?: number;
-  description?: string;
-  setupGuide?: string;
-}
-
-function detectConfiguredProviders(): string[] {
-  const providerConfigs = [
-    { 
-      name: 'Google AI Studio', 
-      check: (): boolean => !!process.env.GOOGLE_AI_API_KEY 
-    },
-    { 
-      name: 'Azure OpenAI (Entra ID)', 
-      check: (): boolean => !!process.env.AZURE_OPENAI_ENDPOINT && process.env.USE_ENTRA_ID === 'true' 
-    },
-    { 
-      name: 'Azure OpenAI (API Key)', 
-      check: (): boolean => !!(process.env.AZURE_AI_ENDPOINT?.includes('openai.azure.com') && process.env.AZURE_AI_API_KEY)
-    },
-    { 
-      name: 'GitHub AI', 
-      check: (): boolean => !!(
-        process.env.GITHUB_TOKEN && 
-        process.env.GITHUB_ENDPOINT?.includes('models.github.ai')
-      )
-    },
-    { 
-      name: 'Ollama (Local)', 
-      check: (): boolean => !!(
-        process.env.OLLAMA_ENDPOINT?.includes('localhost:11434') || 
-        process.env.OLLAMA_ENDPOINT?.includes('127.0.0.1:11434')
-      )
-    }
-  ];
-
-  return providerConfigs
-    .filter(config => config.check())
-    .map(config => config.name);
-}
-
-function suggestProviderConfiguration(): void {
-  console.log('\n🔧 Quick setup suggestions:');
-  
-  console.log('\n🟣 For Google AI Studio (Free tier available):');
-  console.log('   GOOGLE_AI_API_KEY=your-google-ai-api-key');
-  console.log('   GOOGLE_AI_MODEL=gemini-1.5-flash');
-  console.log('   Get API key: https://makersuite.google.com/app/apikey');
-  
-  console.log('\n🔷 For Azure OpenAI with Entra ID (Enterprise):');
-  console.log('   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/');
-  console.log('   DEPLOYMENT_NAME=gpt-4');
-  console.log('   USE_ENTRA_ID=true');
-  console.log('   Then run: az login');
-  
-  console.log('\n🔶 For Azure OpenAI with API Key:');
-  console.log('   AZURE_AI_ENDPOINT=https://your-resource.openai.azure.com/');
-  console.log('   AZURE_AI_API_KEY=your-api-key');
-  console.log('   REQUIREMENTS_AGENT_MODEL=gpt-4');
-    console.log('\n🟢 For GitHub AI (Free tier available):');
-  console.log('   GITHUB_ENDPOINT=https://models.github.ai/inference/');
-  console.log('   GITHUB_TOKEN=your-github-token');
-  console.log('   REQUIREMENTS_AGENT_MODEL=gpt-4o-mini');
-  
-  console.log('\n🟡 For Ollama (Local, offline):');
-  console.log('   OLLAMA_ENDPOINT=http://localhost:11434');
-  console.log('   REQUIREMENTS_AGENT_MODEL=llama3.1');
-  console.log('   Then run: ollama serve');
-}
-
-async function validateAzureAuthentication(): Promise<void> {
-  try {
-    console.log('🔐 Validating Azure authentication...');
-    
-    // Try to import Azure credential to validate availability
-    const { DefaultAzureCredential } = await import('@azure/identity');
-    const credential = new DefaultAzureCredential({
-      managedIdentityClientId: process.env.AZURE_CLIENT_ID,
-      tenantId: process.env.AZURE_TENANT_ID
+// Yargs CLI definition
+yargs(hideBin(process.argv))
+  .scriptName('rga')
+  .usage('Usage: $0 <command> [options]')
+  .command('generate [key]', 'Generate a specific document by key', (yargs) => {
+    return yargs
+      .positional('key', { type: 'string', describe: 'Document key' })
+      .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' })
+      .option('format', { type: 'string', default: 'markdown', choices: SUPPORTED_FORMATS, describe: 'Output format' })
+      .option('retries', { type: 'number', default: DEFAULT_RETRY_COUNT, describe: 'Number of retries for generation' })
+      .option('retry-backoff', { type: 'number', default: DEFAULT_RETRY_BACKOFF, describe: 'Initial retry backoff (ms)' })
+      .option('retry-max-delay', { type: 'number', default: DEFAULT_RETRY_MAX_DELAY, describe: 'Max retry backoff (ms)' });
+  }, async (argv) => {
+    await handleGenerateCommand(argv.key as string, {
+      output: argv.output || DEFAULT_OUTPUT_DIR,
+      format: (argv.format as 'markdown' | 'json' | 'yaml') || 'markdown',
+      quiet: argv.quiet,
+      retries: argv.retries,
+      retryBackoff: argv['retry-backoff'],
+      retryMaxDelay: argv['retry-max-delay']
     });
-    
-    // Attempt to get a token (this will validate authentication)
-    try {
-      const tokenResponse = await credential.getToken('https://cognitiveservices.azure.com/.default');
-      if (tokenResponse) {
-        console.log('✅ Azure authentication validated successfully');
-      }
-    } catch (authError: any) {
-      console.warn('⚠️  Azure authentication may have issues:', authError.message);
-      console.log('💡 Run "az login" to authenticate with Azure');
-      console.log('💡 Ensure you have access to the Cognitive Services resource');
-      console.log('💡 Check your Azure subscription and resource permissions');
+  })
+  .command('generate-category <category>', 'Generate all documents in a category', (yargs) => {
+    return yargs
+      .positional('category', { type: 'string', describe: 'Document category' })
+      .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR })
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' })
+      .option('retries', { type: 'number', default: DEFAULT_RETRY_COUNT, describe: 'Number of retries for generation' })
+      .option('retry-backoff', { type: 'number', default: DEFAULT_RETRY_BACKOFF, describe: 'Initial retry backoff (ms)' })
+      .option('retry-max-delay', { type: 'number', default: DEFAULT_RETRY_MAX_DELAY, describe: 'Max retry backoff (ms)' });
+  }, async (argv) => {
+    await handleGenerateCategoryCommand(argv.category as string, {
+      output: argv.output || DEFAULT_OUTPUT_DIR,
+      quiet: argv.quiet,
+      retries: argv.retries,
+      retryBackoff: argv['retry-backoff'],
+      retryMaxDelay: argv['retry-max-delay']
+    });
+  })
+  .command('generate-all', 'Generate all available documents', (yargs) => {
+    return yargs
+      .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR })
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' })
+      .option('retries', { type: 'number', default: DEFAULT_RETRY_COUNT, describe: 'Number of retries for generation' })
+      .option('retry-backoff', { type: 'number', default: DEFAULT_RETRY_BACKOFF, describe: 'Initial retry backoff (ms)' })
+      .option('retry-max-delay', { type: 'number', default: DEFAULT_RETRY_MAX_DELAY, describe: 'Max retry backoff (ms)' });
+  }, async (argv) => {
+    await handleGenerateAllCommand({
+      output: argv.output || DEFAULT_OUTPUT_DIR,
+      quiet: argv.quiet,
+      retries: argv.retries,
+      retryBackoff: argv['retry-backoff'],
+      retryMaxDelay: argv['retry-max-delay']
+    });
+  })
+  .command('list-templates', 'Show all available document templates', {}, async () => {
+    await handleListTemplatesCommand();
+  })
+  .command('status', 'Show configuration and system status', (yargs) => {
+    return yargs
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' })
+      .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed information' });
+  }, async (argv) => {
+    if (!argv.quiet) {
+      await handleStatusCommand();
     }
-    
-  } catch (importError: any) {
-    console.warn('⚠️  Azure Identity SDK not available - install @azure/identity');
-    console.log('💡 Run: npm install @azure/identity');  }
-}
-
-// ===== V2.1.3 MILESTONE CELEBRATION UTILITIES =====
-
-/**
- * Display milestone celebration banner for 175 weekly downloads achievement
- */
-function showMilestoneBanner(): void {
-  console.log('\n🎉═══════════════════════════════════════════════════════════════🎉');
-  console.log('  🌟 MILESTONE ACHIEVEMENT: 175 WEEKLY DOWNLOADS! 🌟');
-  console.log('  🎯 Thank you for being part of our growing community!');
-  console.log('  📈 Your support drives continuous innovation');
-  console.log('🎉═══════════════════════════════════════════════════════════════🎉\n');
-}
-
-/**
- * Show detailed milestone information and statistics
- */
-function showMilestoneDetails(): void {
-  console.log('\n🎉 Requirements Gathering Agent - Milestone Achievement\n');
-  
-  console.log('📊 PACKAGE METRICS:');
-  console.log('   📈 Weekly Downloads: 175 (Growing!)');
-  console.log('   🚀 Version: 2.1.3-celebration.0');
-  console.log('   ⚡ Package Size: 380 kB (Optimized)');
-  console.log('   📦 Total Files: 44');
-  console.log('   🆓 License: MIT (Open Source)');
-  console.log('   📈 Growth Trend: Upward');
-  
-  console.log('\n🎯 ACHIEVEMENT SIGNIFICANCE:');
-  console.log('   ✅ Market Validation: Strong adoption by PM community');
-  console.log('   ✅ Technical Excellence: Stable and reliable downloads');
-  console.log('   ✅ PMBOK Compliance: Professional standards implementation');
-  console.log('   ✅ AI Innovation: Azure OpenAI integration success');
-  
-  console.log('\n🚀 SUCCESS FACTORS:');
-  console.log('   • 29-document comprehensive PMBOK suite');
-  console.log('   • Multi-provider AI support (Azure, Google, GitHub, Ollama)');
-  console.log('   • Professional project management methodology');
-  console.log('   • Quality validation and consistency checking');
-  
-  console.log('\n🙏 Thank you for being part of our journey!');
-  console.log('   🌐 GitHub: https://github.com/mdresch/requirements-gathering-agent');
-  console.log('   📦 NPM: https://www.npmjs.com/package/requirements-gathering-agent');
-  console.log('   📚 Documentation: See generated GitBook docs');
-  console.log('');
-}
-
-/**
- * Show current system status and configuration
- */
-async function showStatus(): Promise<void> {
-  try {
-    console.log('\n🔍 Requirements Gathering Agent - System Status\n');
-    
-    // Version and environment info
-    console.log('📋 VERSION INFO:');
-    console.log(`   🚀 Version: 2.1.3`);
-    console.log(`   📁 Working Directory: ${process.cwd()}`);
-    console.log(`   🟢 Node.js: ${process.version}`);
-    console.log(`   💻 Platform: ${process.platform}`);
-    
-    // Environment configuration
-    console.log('\n⚙️  CONFIGURATION STATUS:');
-    
-    // Check for .env file
-    const envPath = join(process.cwd(), '.env');
-    if (existsSync(envPath)) {
-      console.log('   ✅ .env file: Found');
-      
-      // Load and check providers
-      const { config } = await import('dotenv');
-      config();
-      
-      // Detailed provider status
-      console.log('\n🤖 AI PROVIDER STATUS:');
-      
-      // Google AI Studio
-      const googleKey = process.env.GOOGLE_AI_API_KEY;
-      console.log('\n   🟣 Google AI Studio:');
-      console.log(`      API Key: ${googleKey ? '✅ Set' : '❌ Missing'}`);
-      if (googleKey) {
-        console.log(`      Model: ${process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash'}`);
-      }
-      
-      // GitHub AI
-      const githubToken = process.env.GITHUB_TOKEN;
-      const githubEndpoint = process.env.GITHUB_ENDPOINT;
-      console.log('\n   🟢 GitHub AI:');
-      console.log(`      Token: ${githubToken ? '✅ Set' : '❌ Missing'}`);
-      console.log(`      Endpoint: ${githubEndpoint ? '✅ Set' : '❌ Missing'}`);
-      if (githubEndpoint) {
-        console.log(`      URL: ${githubEndpoint}`);
-      }
-      
-      // Azure OpenAI (Entra ID)
-      const azureOpenAIEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
-      const useEntraID = process.env.USE_ENTRA_ID === 'true';
-      console.log('\n   🔷 Azure OpenAI (Entra ID):');
-      console.log(`      Endpoint: ${azureOpenAIEndpoint ? '✅ Set' : '❌ Missing'}`);
-      console.log(`      Entra ID: ${useEntraID ? '✅ Enabled' : '❌ Disabled'}`);
-      if (azureOpenAIEndpoint) {
-        console.log(`      URL: ${azureOpenAIEndpoint}`);
-        console.log(`      Model: ${process.env.DEPLOYMENT_NAME || 'gpt-4'}`);
-      }
-      
-      // Azure OpenAI (API Key)
-      const azureAIEndpoint = process.env.AZURE_AI_ENDPOINT;
-      const azureAIKey = process.env.AZURE_AI_API_KEY;
-      console.log('\n   🔶 Azure OpenAI (API Key):');
-      console.log(`      Endpoint: ${azureAIEndpoint ? '✅ Set' : '❌ Missing'}`);
-      console.log(`      API Key: ${azureAIKey ? '✅ Set' : '❌ Missing'}`);
-      if (azureAIEndpoint) {
-        console.log(`      URL: ${azureAIEndpoint}`);
-        console.log(`      Model: ${process.env.REQUIREMENTS_AGENT_MODEL || 'gpt-4'}`);
-      }
-        // Ollama
-      const ollamaEndpoint = process.env.OLLAMA_ENDPOINT;
-      const isOllama = ollamaEndpoint?.includes('localhost:11434') || ollamaEndpoint?.includes('127.0.0.1');
-      console.log('\n   🦙 Ollama:');
-      console.log(`      Endpoint: ${ollamaEndpoint ? '✅ Set' : '❌ Missing'}`);
-      if (ollamaEndpoint) {
-        console.log(`      URL: ${ollamaEndpoint}`);
-        console.log(`      Model: ${process.env.OLLAMA_MODEL || 'llama2'}`);
-      }
-    } else {
-      console.log('   ❌ .env file: Not found');
-      console.log('      Run --setup to configure providers');
+  })
+  .command('setup', 'Interactive setup wizard for AI providers', {}, async () => {
+    await handleSetupCommand();
+  })
+  .command('analyze', 'Analyze workspace without generating docs', {}, async () => {
+    await handleAnalyzeCommand();
+  })
+  .command('generate-core-analysis', 'Generate core analysis documents', (yargs) => {
+    return yargs
+      .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR })
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' })
+      .option('retries', { type: 'number', default: DEFAULT_RETRY_COUNT })
+      .option('retry-backoff', { type: 'number', default: DEFAULT_RETRY_BACKOFF })
+      .option('retry-max-delay', { type: 'number', default: DEFAULT_RETRY_MAX_DELAY });
+  }, async (argv) => {
+    await handleGenerateCoreAnalysisCommand({
+      output: argv.output || DEFAULT_OUTPUT_DIR,
+      quiet: argv.quiet,
+      retries: argv.retries,
+      retryBackoff: argv['retry-backoff'],
+      retryMaxDelay: argv['retry-max-delay']
+    });
+  })
+  .command('validate', 'Validate generated documents against PMBOK', (yargs) => {
+    return yargs
+      .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR })
+      .option('quiet', { type: 'boolean', default: false, describe: 'Suppress output' });
+  }, async (argv) => {
+    await handleValidateCommand({
+      outputDir: argv.output || DEFAULT_OUTPUT_DIR,
+      quiet: argv.quiet
+    });
+  })
+  // Confluence commands
+  .command('confluence', 'Confluence integration commands', (yargs) => {
+    return yargs
+      .command('init', 'Initialize Confluence configuration', {}, async (argv) => {
+        await handleConfluenceInitCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('test', 'Test Confluence connection', {}, async (argv) => {
+        await handleConfluenceTestCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('publish', 'Publish documents to Confluence', (yargs) => {
+        return yargs
+          .option('documents-path', { type: 'string', describe: 'Path to documents directory' })
+          .option('parent-page', { type: 'string', describe: 'Parent page title' })
+          .option('label-prefix', { type: 'string', describe: 'Label prefix for metadata' })
+          .option('dry-run', { type: 'boolean', default: false, describe: 'Preview only' })
+          .option('force', { type: 'boolean', default: false, describe: 'Force publish' });
+      }, async (argv) => {
+        await handleConfluencePublishCommand({
+          documentsPath: argv['documents-path'],
+          parentPageTitle: argv['parent-page'],
+          labelPrefix: argv['label-prefix'],
+          dryRun: argv['dry-run'],
+          force: argv.force,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .command('status', 'Show Confluence integration status', {}, async (argv) => {
+        await handleConfluenceStatusCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('oauth2', 'OAuth2 authentication commands', (yargs) => {
+        return yargs
+          .command('login', 'Start OAuth2 authentication', {}, async (argv) => {
+            await handleConfluenceOAuth2LoginCommand({ quiet: argv.quiet as boolean });
+          })
+          .command('status', 'Check OAuth2 authentication status', {}, async (argv) => {
+            await handleConfluenceOAuth2StatusCommand({ quiet: argv.quiet as boolean });
+          })
+          .command('debug', 'Debug OAuth2 authentication', {}, async (argv) => {
+            await handleConfluenceOAuth2DebugCommand({ quiet: argv.quiet as boolean });
+          })
+          .demandCommand(1, 'You must provide a valid oauth2 command.');
+      })
+      .demandCommand(1, 'You must provide a valid confluence command.');
+  })
+  // SharePoint commands
+  .command('sharepoint', 'SharePoint integration commands', (yargs) => {
+    return yargs
+      .command('init', 'Initialize SharePoint configuration', {}, async (argv) => {
+        await handleSharePointInitCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('test', 'Test SharePoint connection', {}, async (argv) => {
+        await handleSharePointTestCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('publish', 'Publish documents to SharePoint', (yargs) => {
+        return yargs
+          .option('documents-path', { type: 'string', describe: 'Path to documents directory' })
+          .option('folder-path', { type: 'string', describe: 'Target folder path' })
+          .option('label-prefix', { type: 'string', describe: 'Label prefix for metadata' })
+          .option('dry-run', { type: 'boolean', default: false, describe: 'Preview only' })
+          .option('force', { type: 'boolean', default: false, describe: 'Force publish' });
+      }, async (argv) => {
+        await handleSharePointPublishCommand({
+          documentsPath: argv['documents-path'],
+          folderPath: argv['folder-path'],
+          labelPrefix: argv['label-prefix'],
+          dryRun: argv['dry-run'],
+          force: argv.force,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .command('status', 'Show SharePoint integration status', {}, async (argv) => {
+        await handleSharePointStatusCommand({ quiet: argv.quiet as boolean });
+      })
+      .command('oauth2', 'OAuth2 authentication commands', (yargs) => {
+        return yargs
+          .command('login', 'Start OAuth2 authentication', {}, async (argv) => {
+            await handleSharePointOAuth2LoginCommand({ quiet: argv.quiet as boolean });
+          })
+          .command('status', 'Check OAuth2 authentication status', {}, async (argv) => {
+            await handleSharePointOAuth2StatusCommand({ quiet: argv.quiet as boolean });
+          })
+          .command('debug', 'Debug OAuth2 authentication', {}, async (argv) => {
+            await handleSharePointOAuth2DebugCommand({ quiet: argv.quiet as boolean });
+          })
+          .demandCommand(1, 'You must provide a valid oauth2 command.');
+      })
+      .demandCommand(1, 'You must provide a valid sharepoint command.');
+  })
+  // VCS commands
+  .command('vcs', 'Version control system commands', (yargs) => {
+    return yargs
+      .command('init', 'Initialize Git repository', (yargs) => {
+        return yargs
+          .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' });
+      }, async (argv) => {
+        await handleVcsInitCommand({
+          outputDir: argv.output,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .command('status', 'Show Git repository status', (yargs) => {
+        return yargs
+          .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' });
+      }, async (argv) => {
+        await handleVcsStatusCommand({
+          outputDir: argv.output,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .command('commit', 'Commit changes to Git repository', (yargs) => {
+        return yargs
+          .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('message', { type: 'string', default: 'Update generated documents', describe: 'Commit message' });
+      }, async (argv) => {
+        await handleVcsCommitCommand({
+          outputDir: argv.output,
+          message: argv.message,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .command('push', 'Push changes to remote repository', (yargs) => {
+        return yargs
+          .option('output', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('remote', { type: 'string', default: 'origin', describe: 'Remote name' })
+          .option('branch', { type: 'string', default: 'main', describe: 'Branch name' });
+      }, async (argv) => {
+        await handleVcsPushCommand({
+          outputDir: argv.output,
+          remote: argv.remote,
+          branch: argv.branch,
+          quiet: argv.quiet as boolean
+        });
+      })
+      .demandCommand(1, 'You must provide a valid vcs command.');
+  })
+  .option('show-version', {
+    alias: 'v',
+    type: 'boolean',
+    description: 'Show version',
+    global: true,
+  })
+  .option('quiet', {
+    alias: 'q',
+    type: 'boolean',
+    description: 'Suppress output',
+    global: true,
+  })
+  .help()
+  .alias('help', 'h')
+  .demandCommand(1, 'You must provide a valid command.')
+  .middleware((argv) => {
+    if (argv['show-version']) {
+      console.log(`🚀 Requirements Gathering Agent v${version}`);
+      process.exit(0);
     }
-  } catch (error) {
-    console.error('❌ Error checking configuration:', error);
-  }
-}
+  })
+  .parse();
 
-/**
- * Show all available templates dynamically from the generation tasks AND API templates
- */
-async function showAvailableTemplates(): Promise<void> {
-  console.log('📋 Available Document Templates\n');
-  
-  try {
-    // Show static CLI templates
-    const categories = getAvailableCategories();
-    console.log(`📚 STATIC TEMPLATES (CLI): ${categories.length} categories with ${GENERATION_TASKS.length} total templates:\n`);
-    
-    for (const category of categories) {
-      const tasks = getTasksByCategory(category);
-      
-      if (tasks.length > 0) {
-        // Convert category slug to display name
-        const displayCategory = category
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        
-        console.log(`${displayCategory} (${tasks.length} documents):`);
-        
-        for (const task of tasks) {
-          console.log(`  ${task.emoji} ${task.name}`);
-          console.log(`      Key: ${task.key}`);
-          console.log(`      Generate: node dist/cli.js --generate ${task.key}`);
-          console.log('');
-        }
-      }
-    }
-    
-    // Show dynamic API templates
-    console.log('\n🌐 DYNAMIC TEMPLATES (API): User-created templates:\n');
-      try {
-      // Check if API server is running and try to fetch templates
-      const { default: fetch } = await import('node-fetch');
-      const apiPort = process.env.PORT || '3002'; // Use the same port as our API server
-      const response = await fetch(`http://localhost:${apiPort}/api/v1/templates`, {
-        headers: {
-          'X-API-Key': process.env.API_KEY || 'dev-api-key-123' // Use the correct dev API key
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json() as any;
-        const apiTemplates = data.data || [];
-        
-        if (apiTemplates.length > 0) {
-          console.log(`Found ${apiTemplates.length} API templates:`);
-          
-          for (const template of apiTemplates) {
-            console.log(`  📋 ${template.name}`);
-            console.log(`      ID: ${template.id}`);
-            console.log(`      Category: ${template.category}`);
-            console.log(`      Description: ${template.description || 'No description'}`);
-            console.log(`      Created: ${template.createdAt}`);
-            console.log(`      Status: ${template.isActive ? 'Active' : 'Inactive'}`);
-            console.log('');
-          }
-          
-          console.log('💡 To use API templates:');
-          console.log('   • Start the API server: npm run server');
-          console.log('   • Create templates via POST /api/v1/templates');
-          console.log('   • Generate docs via POST /api/v1/documents/convert');
-        } else {
-          console.log('   No API templates found');
-          console.log('   📝 Create templates via: POST /api/v1/templates');
-        }
-      } else {
-        throw new Error(`API responded with status ${response.status}`);
-      }    } catch (apiError) {
-      const apiPort = process.env.PORT || '3002';
-      console.log(`   ❌ Could not connect to API server (http://localhost:${apiPort})`);
-      console.log('   💡 To see API templates:');
-      console.log('      1. Start the API server: npm run api:start');
-      console.log('      2. Create templates via: POST /api/v1/templates');
-      console.log('      3. Re-run this command to see them here');
-      console.log(`   🔍 Error: ${(apiError as Error).message}`);
-    }
-    
-    console.log('\n📚 Usage Examples:');
-    console.log('   # Static templates (CLI):');
-    console.log('   node dist/cli.js --generate project-charter');
-    console.log('   node dist/cli.js --generate-category quality-assurance');
-    console.log('   node dist/cli.js --generate-quality-assurance');
-    
-    console.log('\n   # Dynamic templates (API):');
-    console.log('   curl -X POST http://localhost:3001/api/v1/templates \\');
-    console.log('     -H "Content-Type: application/json" \\');
-    console.log('     -H "X-API-Key: your-api-key" \\');
-    console.log('     -d \'{"name": "Custom Template", "category": "Custom"}\'');
-    
-    console.log('\n💡 Tips:');
-    console.log('   • Use --generate-category <category> to generate all static documents in a category');
-    console.log('   • Use --generate <key> to generate a specific static document');
-    console.log('   • Category batch generation: --generate-quality-assurance, --generate-core-analysis, etc.');
-    console.log('   • API templates are used via the REST API, not CLI commands');
-    
-  } catch (error) {
-    console.error('❌ Error loading templates:', error);
-    console.log('\n🔧 Fallback: Basic template list available');
-    console.log('   • project-charter: Project Charter Document');
-    console.log('   • business-case: Business Case Analysis');
-    console.log('   • stakeholder-register: Stakeholder Register');
-  }
-}
-
-/**
- * Print comprehensive help information
- */
-function printHelp(): void {
-  console.log(`
-🚀 Requirements Gathering Agent CLI v2.1.3
-
-USAGE:
-   node dist/cli.js [COMMAND] [OPTIONS]
-
-MAIN COMMANDS:
-   --setup                     🔧 Interactive setup wizard for AI providers
-   --generate <key>           📝 Generate specific document by key
-   --generate-category <cat>  📂 Generate all documents in category
-   --generate-all             🎯 Generate all available documents
-   --list-templates           📋 Show all available document templates
-   --analyze                  🔍 Analyze workspace without generating docs
-   --status                   ℹ️  Show configuration and system status
-
-ADVANCED TEMPLATE ENGINE:
-   --migrate-templates        🚀 Migrate static templates to database format
-   --generate-advanced <id>   ⚡ Generate with enhanced context injection
-   --template-info <id>       📋 Show detailed template information
-   --list-templates           📚 Show all templates (static + dynamic)
-
-TEMPLATE VARIABLES:
-   --var KEY=VALUE           ⚙️  Set template variables for generation
-   --force                   💪 Force operations (use with migrate-templates)
-
-CATEGORY SHORTCUTS:
-   --generate-core-analysis        📊 Generate all core analysis documents
-   --generate-quality-assurance    ✅ Generate all QA documents
-   --generate-technical-analysis   🔧 Generate all technical analysis docs
-   --generate-project-charter      📜 Generate project charter documents
-   --generate-management-plans     📋 Generate all management plans
-
-PMBOK VALIDATION:
-   --validate                 ✅ Validate generated documents against PMBOK
-   --validate-file <file>     📄 Validate specific document file
-
-VERSION CONTROL:
-   vcs init                   🔄 Initialize git repository in output directory
-   vcs commit <file> [msg]    💾 Commit specific generated document
-   vcs status                 📊 Show git status of generated documents
-   vcs log                    📜 Show git history
-   vcs diff <file>            🔍 Show changes in specific file
-   vcs revert <file> <commit> ↩️  Revert file to specific commit
-
-CONFLUENCE INTEGRATION:
-   confluence init            ⚙️  Initialize Confluence configuration
-   confluence test            🔗 Test Confluence connection
-   confluence publish         📤 Publish documents to Confluence
-   confluence status          📊 Show Confluence integration status
-
-CONFLUENCE PUBLISH OPTIONS:
-   --parent-page <title>      📄 Parent page title for organization
-   --label-prefix <prefix>    🏷️  Label prefix for published pages
-   --dry-run                  👁️  Preview what would be published
-   --force                    ⚡ Force publish even if validation fails
-
-SHAREPOINT INTEGRATION:
-   sharepoint init            ⚙️  Initialize SharePoint configuration
-   sharepoint test            🔗 Test SharePoint connection
-   sharepoint publish         📤 Publish documents to SharePoint
-   sharepoint status          📊 Show SharePoint integration status
-
-SHAREPOINT PUBLISH OPTIONS:
-   --folder-path <path>       📂 Target folder path in SharePoint
-   --label-prefix <prefix>    🏷️  Label prefix for metadata
-   --dry-run                  👁️  Preview what would be published
-   --force                    ⚡ Force publish even if validation fails
-
-CONFIGURATION:
-   --reload-env              ♻️  Reload environment configuration
-   --config-status           ⚙️  Show detailed configuration status
-
-EXAMPLES:
-   node dist/cli.js --setup
-   node dist/cli.js --generate project-charter
-   node dist/cli.js --generate-quality-assurance
-   node dist/cli.js --list-templates
-   node dist/cli.js --status
-   node dist/cli.js confluence init
-   node dist/cli.js confluence publish --parent-page "Project Documentation"
-   node dist/cli.js vcs commit business-case.md "Updated business case"
-   node dist/cli.js sharepoint init
-   node dist/cli.js sharepoint publish --folder-path "/sites/mysite/documents"
-
-ADVANCED TEMPLATE EXAMPLES:
-   node dist/cli.js --migrate-templates
-   node dist/cli.js --generate-advanced stakeholder-register
-   node dist/cli.js --generate-advanced apidocumentation \\
-     --var PROJECT_NAME="Enterprise API" --var VERSION="2.0"
-   node dist/cli.js --template-info stakeholder-register
-
-🎯 Breakthrough Features in v2.1.3:
-   • Evaluative Contextual Synthesis
-   • Hierarchical Authority Recognition
-   • Enhanced Context Generation
-   • Confluence Integration
-   • Milestone Downloads: 175+ weekly
-
-For more information, visit: https://github.com/your-repo/requirements-gathering-agent
-`);
-}
-
+// ...existing code for utility functions, command logic, etc...
 // Missing function implementations
 async function scaffoldNewProcessor(category: string, name: string): Promise<void> {
   console.log(`🏗️  Scaffolding new processor: ${name} in category: ${category}`);
@@ -1324,15 +454,15 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Check for key files
   const filesToCheck = [
-    'package.json',
-    'tsconfig.json',
+    PACKAGE_JSON_FILENAME,
+    TSCONFIG_JSON_FILENAME,
     '.env',
-    'README.md',
+    README_FILENAME,
     'api-specs/',
     'admin-interface/',
     'dist/',
-    'config-rga.json',
-    'src/modules/documentGenerator/processor-config.json'
+    CONFIG_FILENAME,
+    PROCESSOR_CONFIG_FILENAME
   ];
   for (const file of filesToCheck) {
     try {
@@ -1345,7 +475,7 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Parse package.json
   try {
-    const pkgRaw = await fs.readFile(path.join(cwd, 'package.json'), 'utf-8');
+    const pkgRaw = await fs.readFile(path.join(cwd, PACKAGE_JSON_FILENAME), 'utf-8');
     const pkg = JSON.parse(pkgRaw);
     summary.push(`\n📦 Package: ${pkg.name} v${pkg.version}`);
     summary.push(`   Description: ${pkg.description}`);
@@ -1360,7 +490,7 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Parse tsconfig.json
   try {
-    const tsconfigRaw = await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8');
+    const tsconfigRaw = await fs.readFile(path.join(cwd, TSCONFIG_JSON_FILENAME), 'utf-8');
     const tsconfig = JSON.parse(tsconfigRaw);
     summary.push(`\n🛠️  TypeScript config: target=${tsconfig.compilerOptions?.target}, module=${tsconfig.compilerOptions?.module}`);
   } catch {
@@ -1385,7 +515,7 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Parse config-rga.json
   try {
-    const configRgaRaw = await fs.readFile(path.join(cwd, 'config-rga.json'), 'utf-8');
+    const configRgaRaw = await fs.readFile(path.join(cwd, CONFIG_FILENAME), 'utf-8');
     const configRga = JSON.parse(configRgaRaw);
     summary.push(`\n⚙️  config-rga.json loaded: currentProvider=${configRga.currentProvider}, outputDir=${configRga.defaultOutputDir}`);
     summary.push(`   Providers: ${Object.keys(configRga.providers || {}).join(', ')}`);
@@ -1398,7 +528,7 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Parse processor-config.json
   try {
-    const procConfigPath = path.join(cwd, 'src/modules/documentGenerator/processor-config.json');
+    const procConfigPath = path.join(cwd, PROCESSOR_CONFIG_FILENAME);
     const procConfigRaw = await fs.readFile(procConfigPath, 'utf-8');
     const procConfig = JSON.parse(procConfigRaw);
     summary.push(`\n🧩 processor-config.json loaded: ${Object.keys(procConfig).length} keys`);
@@ -1475,7 +605,7 @@ async function runEnhancedSetupWizard(): Promise<void> {
   const updateConfig = (await ask('Update config-rga.json with provider/model? (y/n): ')).toLowerCase() === 'y';
   if (updateConfig) {
     try {
-      const configPath = path.join(cwd, 'config-rga.json');
+      const configPath = path.join(cwd, CONFIG_FILENAME);
       const configRaw = await fs.readFile(configPath, 'utf-8');
       const config = JSON.parse(configRaw);
       config.currentProvider = provider + (provider.endsWith('-ai') ? '' : '-ai');
@@ -1492,7 +622,7 @@ async function runEnhancedSetupWizard(): Promise<void> {
   const updateProc = (await ask('Update processor-config.json (for advanced users)? (y/n): ')).toLowerCase() === 'y';
   if (updateProc) {
     try {
-      const procPath = path.join(cwd, 'src/modules/documentGenerator/processor-config.json');
+      const procPath = path.join(cwd, PROCESSOR_CONFIG_FILENAME);
       let procConfig = {};
       try {
         const procRaw = await fs.readFile(procPath, 'utf-8');
@@ -1535,9 +665,6 @@ async function runEnhancedSetupWizard(): Promise<void> {
   console.log('\nSetup complete. You may now use the CLI.');
 }
 
-// Run the CLI
-main().catch((error) => {
-  console.error('❌ Fatal error:', error);
-  process.exit(1);
-});
+// --- FUTURE TESTING REMINDER ---
+// When updating retry/backoff logic or AI/model integration, add/maintain integration tests that simulate rate limits, network errors, and provider failures.\n// Use CLI flags --retries, --retry-backoff, --retry-max-delay for test scenarios.\n// See documentation for test strategies and update as needed.
 

@@ -14,6 +14,7 @@
 import * as readline from 'readline';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { CONFIG_FILENAME } from '../../constants.js';
 import { PROVIDER_DEFINITIONS, getProviderById } from './provider-definitions.js';
 import { 
   EnhancedProviderConfig, 
@@ -357,7 +358,7 @@ export class InteractiveProviderMenu {
     process.env.CURRENT_PROVIDER = providerId;
 
     // Write to config-rga.json (create if missing, update if exists)
-    const configPath = join(process.cwd(), 'config-rga.json');
+    const configPath = join(process.cwd(), CONFIG_FILENAME);
     let userConfig: any = {};
     try {
       const raw = await fs.readFile(configPath, 'utf8');

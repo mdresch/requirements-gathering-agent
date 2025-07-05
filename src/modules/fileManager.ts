@@ -21,6 +21,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { PACKAGE_JSON_FILENAME } from '../constants.js';
 import type { ProjectAnalysis, ProjectMarkdownFile } from './projectAnalyzer.js';
 import { analyzeProjectComprehensively } from './projectAnalyzer.js';
 import { populateEnhancedContextFromAnalysis } from './llmProcessor.js';
@@ -30,7 +31,7 @@ import type { AIProvider } from './ai/types.js';
 // Function to get project info from package.json
 function getProjectInfo() {
     try {
-        const packageJsonPath = path.resolve(process.cwd(), 'package.json');
+        const packageJsonPath = path.resolve(process.cwd(), PACKAGE_JSON_FILENAME);
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
         return {
             name: packageJson.name || 'Requirements Gathering Agent',

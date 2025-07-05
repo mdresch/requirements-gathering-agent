@@ -23,6 +23,7 @@ import dotenv from "dotenv";
 import { AIProvider } from "./types.js";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import { CONFIG_FILENAME } from "../../constants.js";
 
 // Load environment variables once
 dotenv.config();
@@ -73,7 +74,7 @@ export class ConfigurationManager {
     }
 
     private loadUserConfig(): void {
-        const configPath = join(process.cwd(), 'config-rga.json');
+        const configPath = join(process.cwd(), CONFIG_FILENAME);
         if (existsSync(configPath)) {
             try {
                 const raw = readFileSync(configPath, 'utf-8');

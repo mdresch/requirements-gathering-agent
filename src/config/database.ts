@@ -7,6 +7,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
+import { TEMPLATES_FILENAME } from '../constants.js';
 
 interface DatabaseConfig {
     dataDir: string;
@@ -19,7 +20,7 @@ export class SimpleDatabaseAdapter {
     constructor(config?: Partial<DatabaseConfig>) {
         this.config = {
             dataDir: config?.dataDir || join(process.cwd(), 'data'),
-            templatesFile: config?.templatesFile || 'templates.json'
+            templatesFile: config?.templatesFile || TEMPLATES_FILENAME
         };
 
         // Ensure data directory exists

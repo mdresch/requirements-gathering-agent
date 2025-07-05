@@ -4,38 +4,38 @@
  */
 import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator.js';
 import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
+import { withRetry } from '../../utils/retry.js';
 // ProcessorFactory is internal—no public export needed
 import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types';
 
 // Enhanced batch generation with smart retry
 export async function generateDocumentsWithRetry(
     context: string, 
-    options: GenerationOptions & { maxRetries?: number } = {}
+    options: GenerationOptions & { maxRetries?: number, retryBackoff?: number, retryMaxDelay?: number } = {}
 ): Promise<GenerationResult> {
     const maxRetries = options.maxRetries || 2;
+    const retryBackoff = options.retryBackoff || 1000;
+    const retryMaxDelay = options.retryMaxDelay || 25000;
     let lastResult: GenerationResult | null = null;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        console.log(`\n🔄 Generation attempt ${attempt}/${maxRetries}`);
-        
-        const generator = new DocumentGenerator(context, {
-            ...options,
-            cleanup: attempt === 1 // Only cleanup on first attempt
-        });
-        
-        lastResult = await generator.generateAll();
-        
-        if (lastResult.success && lastResult.failureCount === 0) {
-            console.log(`✅ All documents generated successfully on attempt ${attempt}`);
-            break;
-        }
-        
-        if (attempt < maxRetries) {
-            console.log(`⚠️ Some documents failed. Retrying in 5 seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-    
+
+    // Use a custom DocumentGenerator that wraps generateSingleDocument with withRetry
+    const generator = new DocumentGenerator(context, {
+        ...options,
+        cleanup: true // Only cleanup on first attempt
+    });
+    // Patch generateSingleDocument to use withRetry
+    const origGenerateSingle = generator["generateSingleDocument"].bind(generator);
+    generator["generateSingleDocument"] = async function(task) {
+        return await withRetry(
+            () => origGenerateSingle(task),
+            maxRetries,
+            retryBackoff,
+            retryMaxDelay
+        );
+    };
+
+    // Now just call generateAll once (it will use the patched method)
+    lastResult = await generator.generateAll();
     return lastResult!;
 }
 

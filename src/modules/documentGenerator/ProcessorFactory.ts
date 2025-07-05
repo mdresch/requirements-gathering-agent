@@ -1,10 +1,11 @@
 // ProcessorFactory: single function to create processors based on processor-config.json
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { PROCESSOR_CONFIG_FILENAME } from '../../constants.js';
 import type { DocumentProcessor } from './types.js';
 
 // Load the runtime JSON config from source folder
-const configPath = path.resolve(process.cwd(), 'src', 'modules', 'documentGenerator', 'processor-config.json');
+const configPath = path.resolve(process.cwd(), PROCESSOR_CONFIG_FILENAME);
 const processorConfig: Record<string, { module: string }> = JSON.parse(
   readFileSync(configPath, 'utf-8')
 );

@@ -15,6 +15,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { CONFIG_FILENAME } from '../../constants.js';
 import { SharePointConfig } from './types.js';
 
 export interface SharePointConfigFile {
@@ -73,7 +74,7 @@ export class SharePointConfigManager {
     private config: SharePointConfigFile;
 
     constructor(configPath?: string) {
-        this.configPath = configPath || join(process.cwd(), 'config-rga.json');
+        this.configPath = configPath || join(process.cwd(), CONFIG_FILENAME);
         this.config = this.loadConfiguration();
     }
 

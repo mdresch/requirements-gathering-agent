@@ -20,6 +20,7 @@
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { PACKAGE_JSON_FILENAME } from '../constants.js';
 /**
  * Reads the README.md file from the given project path.
  * @param projectPath - The root directory of the project.
@@ -44,7 +45,7 @@ export async function getReadmeContent(projectPath) {
  * @returns The parsed package.json object if found and valid, otherwise null.
  */
 export async function getProjectPackageJson(projectPath) {
-    const pkgPath = path.join(projectPath, 'package.json');
+    const pkgPath = path.join(projectPath, PACKAGE_JSON_FILENAME);
     try {
         const content = await fs.readFile(pkgPath, 'utf-8');
         return JSON.parse(content);

@@ -21,6 +21,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { PACKAGE_JSON_FILENAME } from '../constants.js';
 
 export interface ProjectMarkdownFile {
   fileName: string;
@@ -62,7 +63,7 @@ export async function getReadmeContent(projectPath: string): Promise<string | nu
  * @returns The parsed package.json object if found and valid, otherwise null.
  */
 export async function getProjectPackageJson(projectPath: string): Promise<Record<string, any> | null> {
-  const pkgPath = path.join(projectPath, 'package.json');
+  const pkgPath = path.join(projectPath, PACKAGE_JSON_FILENAME);
   try {
     const content = await fs.readFile(pkgPath, 'utf-8');
     return JSON.parse(content);

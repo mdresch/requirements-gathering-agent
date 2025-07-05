@@ -12,6 +12,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { CONFIG_FILENAME } from '../../constants.js';
 import { ConfluenceConfig, validateConfluenceConfig } from './ConfluencePublisher.js';
 import { OAuth2Config } from './ConfluenceOAuth2.js';
 
@@ -47,7 +48,7 @@ export class ConfluenceConfigManager {
     private config: ConfluenceConfigFile;
 
     constructor(configPath?: string) {
-        this.configPath = configPath || join(process.cwd(), 'config-rga.json');
+        this.configPath = configPath || join(process.cwd(), CONFIG_FILENAME);
         this.config = this.loadConfig();
     }
 
