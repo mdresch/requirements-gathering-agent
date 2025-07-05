@@ -22,9 +22,11 @@ export const DEFAULT_RETRY_MAX_DELAY: number = 25000;
 export const SUPPORTED_FORMATS = ['markdown', 'json', 'yaml'] as const;
 export type SupportedFormat = typeof SUPPORTED_FORMATS[number];
 
-// Version-related constants (these are hardcoded in multiple files)
-export const CLI_VERSION: string = 'v2.1.3';
-export const ADPA_VERSION: string = 'v2.1.3';
+// Version reading utility (use dynamic import from package.json instead of hardcoded values)
+// For version information, import it dynamically from package.json in your modules:
+// import { createRequire } from 'module';
+// const require = createRequire(import.meta.url);
+// const { version } = require('../package.json');
 
 // File extensions
 export const MARKDOWN_EXTENSION: string = '.md';

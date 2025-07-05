@@ -96,10 +96,8 @@ import {
   handleVcsPushCommand
 } from './commands/index.js';
 
-// 6. Version from package.json (centralized configuration)
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const { version } = require('../package.json');
+// 6. Utilities and version management
+import { getLegacyDisplayName } from './utils/version.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -172,6 +170,7 @@ async function ensureGitRepoInitialized(documentsDir = DEFAULT_OUTPUT_DIR) {
 yargs(hideBin(process.argv))
   .scriptName('rga')
   .usage('Usage: $0 <command> [options]')
+  .version(getLegacyDisplayName())
   .command('generate [key]', 'Generate a specific document by key', (yargs) => {
     return yargs
       .positional('key', { type: 'string', describe: 'Document key' })
@@ -403,12 +402,6 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid vcs command.');
   })
-  .option('show-version', {
-    alias: 'v',
-    type: 'boolean',
-    description: 'Show version',
-    global: true,
-  })
   .option('quiet', {
     alias: 'q',
     type: 'boolean',
@@ -418,12 +411,6 @@ yargs(hideBin(process.argv))
   .help()
   .alias('help', 'h')
   .demandCommand(1, 'You must provide a valid command.')
-  .middleware((argv) => {
-    if (argv['show-version']) {
-      console.log(`🚀 Requirements Gathering Agent v${version}`);
-      process.exit(0);
-    }
-  })
   .parse();
 
 // ...existing code for utility functions, command logic, etc...
