@@ -14,16 +14,15 @@ export default {
             },
         ],
     },
-    globals: {
-        'ts-jest': {
-            useESM: true,
-            tsconfig: 'tsconfig.json',
-        },
-    },
+    transformIgnorePatterns: [
+        'node_modules/(?!(.*\\.mjs$))'
+    ],
     testMatch: [
         "**/test/**/*.test.ts",
+        "**/tests/**/*.test.ts",
         "**/src/test/**/*.test.ts",
         "**/test/**/*.integration.test.ts",
+        "**/tests/**/*.integration.test.ts",
         "**/src/test/**/*.integration.test.ts"
     ],
     testPathIgnorePatterns: [

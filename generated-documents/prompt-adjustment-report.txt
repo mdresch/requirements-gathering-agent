@@ -1,0 +1,23 @@
+
+=== PROMPT ADJUSTMENT REPORT ===
+
+Document: stakeholder-register
+  - Missing required element: stakeholder classification
+
+Document: requirements-documentation
+  - Missing required element: quality requirements
+  - Missing required element: acceptance criteria
+
+Document: risk-management-plan
+  - Missing required element: risk categories
+
+Document: stakeholder-engagement-plan
+  - Missing required element: communication requirements
+
+Document: project-purpose
+  - Missing required element: project background
+  - Missing required element: strategic importance
+  - Missing required element: expected impact
+  - Missing required element: success criteria
+  - Missing required element: stakeholder benefits
+  - Missing required element: alignment with strategy
