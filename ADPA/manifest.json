@@ -110,6 +110,21 @@
                             "id": "convertBusinessReq",
                             "type": "executeFunction",
                             "displayName": "convertBusinessReq"
+                        },
+                        {
+                            "id": "convertInDesign",
+                            "type": "executeFunction",
+                            "displayName": "convertInDesign"
+                        },
+                        {
+                            "id": "generateDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "generateDiagrams"
+                        },
+                        {
+                            "id": "multiFormatPackage",
+                            "type": "executeFunction",
+                            "displayName": "multiFormatPackage"
                         }
                     ]
                 }
@@ -284,6 +299,78 @@
                                                 "description": "Convert to professional Business Requirements PDF using BABOK template"
                                             },
                                             "actionId": "convertBusinessReq"
+                                        },
+                                        {
+                                            "id": "ConvertInDesign",
+                                            "type": "button",
+                                            "label": "InDesign Layout",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "InDesign Layout",
+                                                "description": "Create professional print-ready layout using Adobe InDesign"
+                                            },
+                                            "actionId": "convertInDesign"
+                                        },
+                                        {
+                                            "id": "GenerateDiagrams",
+                                            "type": "button",
+                                            "label": "Generate Diagrams",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Generate Diagrams",
+                                                "description": "Create professional diagrams using Adobe Illustrator"
+                                            },
+                                            "actionId": "generateDiagrams"
+                                        },
+                                        {
+                                            "id": "MultiFormatPackage",
+                                            "type": "button",
+                                            "label": "Multi-Format Package",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Multi-Format Package",
+                                                "description": "Generate PDF, InDesign, and Diagrams in one package"
+                                            },
+                                            "actionId": "multiFormatPackage"
                                         }
                                     ]
                                 }
