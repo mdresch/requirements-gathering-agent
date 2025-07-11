@@ -185,6 +185,26 @@
                             "id": "optimizeForMobile",
                             "type": "executeFunction",
                             "displayName": "optimizeForMobile"
+                        },
+                        {
+                            "id": "generateAdvancedAnalytics",
+                            "type": "executeFunction",
+                            "displayName": "generateAdvancedAnalytics"
+                        },
+                        {
+                            "id": "monitorPerformance",
+                            "type": "executeFunction",
+                            "displayName": "monitorPerformance"
+                        },
+                        {
+                            "id": "generatePredictiveInsights",
+                            "type": "executeFunction",
+                            "displayName": "generatePredictiveInsights"
+                        },
+                        {
+                            "id": "createAnalyticsDashboard",
+                            "type": "executeFunction",
+                            "displayName": "createAnalyticsDashboard"
                         }
                     ]
                 }
@@ -719,6 +739,102 @@
                                                 "description": "Optimize document and interface for mobile devices"
                                             },
                                             "actionId": "optimizeForMobile"
+                                        },
+                                        {
+                                            "id": "GenerateAdvancedAnalytics",
+                                            "type": "button",
+                                            "label": "Advanced Analytics",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Advanced Analytics",
+                                                "description": "Generate comprehensive analytics with performance monitoring"
+                                            },
+                                            "actionId": "generateAdvancedAnalytics"
+                                        },
+                                        {
+                                            "id": "MonitorPerformance",
+                                            "type": "button",
+                                            "label": "Performance Monitor",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Performance Monitor",
+                                                "description": "Real-time performance monitoring with optimization recommendations"
+                                            },
+                                            "actionId": "monitorPerformance"
+                                        },
+                                        {
+                                            "id": "GeneratePredictiveInsights",
+                                            "type": "button",
+                                            "label": "Predictive Insights",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Predictive Insights",
+                                                "description": "Machine learning-powered predictions and intelligent recommendations"
+                                            },
+                                            "actionId": "generatePredictiveInsights"
+                                        },
+                                        {
+                                            "id": "CreateAnalyticsDashboard",
+                                            "type": "button",
+                                            "label": "Analytics Dashboard",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Analytics Dashboard",
+                                                "description": "Create real-time dashboard with comprehensive metrics"
+                                            },
+                                            "actionId": "createAnalyticsDashboard"
                                         }
                                     ]
                                 }
