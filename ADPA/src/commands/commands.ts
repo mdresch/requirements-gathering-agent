@@ -14,7 +14,11 @@ import {
   enableRealTimeCollaboration,
   shareAIInsightsWithTeam,
   syncWithProjectManagement,
-  setupDocumentWorkflow
+  setupDocumentWorkflow,
+  enableMobileCollaboration,
+  setupProgressiveWebApp,
+  enableCrossPlatformSync,
+  optimizeForMobileDevices
 } from "./word";
 
 /* global Office */
@@ -37,4 +41,8 @@ Office.onReady(async () => {
   Office.actions.associate("shareAIInsights", shareAIInsightsWithTeam);
   Office.actions.associate("syncWithProject", syncWithProjectManagement);
   Office.actions.associate("setupWorkflow", setupDocumentWorkflow);
+  Office.actions.associate("enableMobileCollaboration", enableMobileCollaboration);
+  Office.actions.associate("setupPWA", setupProgressiveWebApp);
+  Office.actions.associate("enableCrossPlatformSync", enableCrossPlatformSync);
+  Office.actions.associate("optimizeForMobile", optimizeForMobileDevices);
 });

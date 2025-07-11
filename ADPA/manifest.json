@@ -165,6 +165,26 @@
                             "id": "setupWorkflow",
                             "type": "executeFunction",
                             "displayName": "setupWorkflow"
+                        },
+                        {
+                            "id": "enableMobileCollaboration",
+                            "type": "executeFunction",
+                            "displayName": "enableMobileCollaboration"
+                        },
+                        {
+                            "id": "setupPWA",
+                            "type": "executeFunction",
+                            "displayName": "setupPWA"
+                        },
+                        {
+                            "id": "enableCrossPlatformSync",
+                            "type": "executeFunction",
+                            "displayName": "enableCrossPlatformSync"
+                        },
+                        {
+                            "id": "optimizeForMobile",
+                            "type": "executeFunction",
+                            "displayName": "optimizeForMobile"
                         }
                     ]
                 }
@@ -603,6 +623,102 @@
                                                 "description": "Create automated document approval workflow"
                                             },
                                             "actionId": "setupWorkflow"
+                                        },
+                                        {
+                                            "id": "EnableMobileCollaboration",
+                                            "type": "button",
+                                            "label": "Mobile Collaboration",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Mobile Collaboration",
+                                                "description": "Enable cross-platform mobile collaboration with offline support"
+                                            },
+                                            "actionId": "enableMobileCollaboration"
+                                        },
+                                        {
+                                            "id": "SetupPWA",
+                                            "type": "button",
+                                            "label": "Setup PWA",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Setup PWA",
+                                                "description": "Enable Progressive Web App with offline capabilities"
+                                            },
+                                            "actionId": "setupPWA"
+                                        },
+                                        {
+                                            "id": "EnableCrossPlatformSync",
+                                            "type": "button",
+                                            "label": "Cross-Platform Sync",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Cross-Platform Sync",
+                                                "description": "Enable seamless sync across all devices and platforms"
+                                            },
+                                            "actionId": "enableCrossPlatformSync"
+                                        },
+                                        {
+                                            "id": "OptimizeForMobile",
+                                            "type": "button",
+                                            "label": "Mobile Optimization",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Mobile Optimization",
+                                                "description": "Optimize document and interface for mobile devices"
+                                            },
+                                            "actionId": "optimizeForMobile"
                                         }
                                     ]
                                 }
