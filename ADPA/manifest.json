@@ -95,6 +95,21 @@
                             "id": "convertToAdobePDF",
                             "type": "executeFunction",
                             "displayName": "convertToAdobePDF"
+                        },
+                        {
+                            "id": "convertProjectCharter",
+                            "type": "executeFunction",
+                            "displayName": "convertProjectCharter"
+                        },
+                        {
+                            "id": "convertTechnicalSpec",
+                            "type": "executeFunction",
+                            "displayName": "convertTechnicalSpec"
+                        },
+                        {
+                            "id": "convertBusinessReq",
+                            "type": "executeFunction",
+                            "displayName": "convertBusinessReq"
                         }
                     ]
                 }
@@ -197,6 +212,78 @@
                                                 "description": "Convert document to professional PDF using Adobe.io"
                                             },
                                             "actionId": "convertToAdobePDF"
+                                        },
+                                        {
+                                            "id": "ConvertProjectCharter",
+                                            "type": "button",
+                                            "label": "Project Charter PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Project Charter PDF",
+                                                "description": "Convert to professional Project Charter PDF using PMBOK template"
+                                            },
+                                            "actionId": "convertProjectCharter"
+                                        },
+                                        {
+                                            "id": "ConvertTechnicalSpec",
+                                            "type": "button",
+                                            "label": "Technical Spec PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Technical Spec PDF",
+                                                "description": "Convert to professional Technical Specification PDF"
+                                            },
+                                            "actionId": "convertTechnicalSpec"
+                                        },
+                                        {
+                                            "id": "ConvertBusinessReq",
+                                            "type": "button",
+                                            "label": "Business Req PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Business Requirements PDF",
+                                                "description": "Convert to professional Business Requirements PDF using BABOK template"
+                                            },
+                                            "actionId": "convertBusinessReq"
                                         }
                                     ]
                                 }
