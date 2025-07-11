@@ -1263,37 +1263,271 @@ export async function showDocumentCatalog(event: Office.AddinCommands.Event) {
 }
 
 /**
- * Convert current Word document to PDF using Adobe.io
+ * Convert current Word document to PDF using Adobe.io (Direct Integration)
+ * Following ADOBE-IMMEDIATE-START-GUIDE.md implementation
  */
-import { convertMarkdownToAdobePDF, AdobeCredentials } from "../services/adobePdfService";
-
 export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
   try {
     await Word.run(async (context) => {
-      const body = context.document.body;
-      context.load(body, "text");
+      // Show progress message
+      const progressParagraph = context.document.body.insertParagraph(
+        "🔄 Converting document to professional PDF using Adobe.io...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
       await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, 'text');
+      await context.sync();
+
       const content = body.text;
 
-      // Call backend API to convert to PDF securely
-      const response = await fetch("http://localhost:3001/api/v1/adobe/convert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown: content }),
-      });
-      if (!response.ok) throw new Error(`Backend error: ${response.status}`);
-      const { pdfUrl } = await response.json();
+      // Convert to PDF using Adobe.io (direct API call)
+      const pdfUrl = await callAdobePDFAPI(content);
 
+      // Remove progress message
+      progressParagraph.delete();
+
+      // Show success message with download link
       const successParagraph = context.document.body.insertParagraph(
         `✅ PDF Generated Successfully! Download: ${pdfUrl}`,
         Word.InsertLocation.end
       );
       successParagraph.font.color = "green";
       successParagraph.font.bold = true;
+
       await context.sync();
     });
   } catch (error) {
-    console.error("Adobe PDF conversion failed:", error);
+    console.error('Adobe PDF conversion failed:', error);
+
+    // Show error message in document
+    await Word.run(async (context) => {
+      const errorParagraph = context.document.body.insertParagraph(
+        `❌ PDF conversion failed: ${error.message}`,
+        Word.InsertLocation.end
+      );
+      errorParagraph.font.color = "red";
+      errorParagraph.font.bold = true;
+      await context.sync();
+    });
   }
+
   event.completed();
+}
+
+/**
+ * Direct Adobe.io API call (no backend required)
+ * Implementation from ADOBE-IMMEDIATE-START-GUIDE.md
+ */
+async function callAdobePDFAPI(markdownContent: string): Promise<string> {
+  // Adobe.io credentials - Get from configuration
+  // TODO: Replace these with your actual Adobe.io credentials from Adobe Developer Console
+  // Get your credentials from: https://developer.adobe.com/console
+  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
+  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+
+  try {
+    // Step 1: Get Adobe access token
+    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: ADOBE_CLIENT_ID,
+        client_secret: ADOBE_CLIENT_SECRET,
+        scope: 'openid,AdobeID,session'
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Adobe authentication failed: ${tokenResponse.status}`);
+    }
+
+    const { access_token } = await tokenResponse.json();
+
+    if (!access_token) {
+      throw new Error('Failed to get Adobe access token');
+    }
+
+    // Step 2: Convert content to HTML
+    const htmlContent = markdownToHTML(markdownContent);
+
+    // Step 3: Upload to Adobe
+    const uploadResponse = await uploadToAdobe(htmlContent, access_token, ADOBE_CLIENT_ID);
+
+    // Step 4: Create PDF
+    const pdfResponse = await createPDFJob(uploadResponse.assetID, access_token, ADOBE_CLIENT_ID);
+
+    // Step 5: Poll for completion
+    const resultUrl = await pollForPDF(pdfResponse.jobID, access_token, ADOBE_CLIENT_ID);
+
+    return resultUrl;
+
+  } catch (error) {
+    throw new Error(`Adobe PDF conversion failed: ${error.message}`);
+  }
+}
+
+/**
+ * Convert markdown content to styled HTML
+ */
+function markdownToHTML(markdown: string): string {
+  let html = markdown;
+
+  // Basic markdown conversion with ADPA styling
+  html = html.replace(/^# (.*$)/gim, '<h1 style="color: #2E86AB; border-bottom: 2px solid #2E86AB; padding-bottom: 10px;">$1</h1>');
+  html = html.replace(/^## (.*$)/gim, '<h2 style="color: #A23B72; margin-top: 30px;">$1</h2>');
+  html = html.replace(/^### (.*$)/gim, '<h3 style="color: #F18F01; margin-top: 25px;">$1</h3>');
+  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+  html = html.replace(/\n/gim, '<br>');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ADPA Generated Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #2E86AB;
+            border-bottom: 2px solid #2E86AB;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h2 {
+            color: #A23B72;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        h3 {
+            color: #F18F01;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        p { margin-bottom: 12px; }
+        strong { color: #2E86AB; }
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .footer-section {
+            margin-top: 40px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-section">
+        <h1>ADPA Professional Document</h1>
+        <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
+        <p><strong>Powered by:</strong> Adobe.io + ADPA</p>
+    </div>
+    ${html}
+    <div class="footer-section">
+        <p><strong>Document processed by ADPA (Automated Documentation Project Assistant)</strong></p>
+        <p>Professional formatting powered by Adobe Document Services</p>
+    </div>
+</body>
+</html>`;
+}
+
+/**
+ * Upload HTML content to Adobe for processing
+ */
+async function uploadToAdobe(htmlContent: string, accessToken: string, clientId: string): Promise<any> {
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const formData = new FormData();
+  formData.append('file', blob, 'document.html');
+
+  const response = await fetch('https://pdf-services.adobe.io/assets', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'x-api-key': clientId
+    },
+    body: formData
+  });
+
+  if (!response.ok) {
+    throw new Error(`Adobe upload failed: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Create PDF generation job in Adobe
+ */
+async function createPDFJob(assetID: string, accessToken: string, clientId: string): Promise<any> {
+  const response = await fetch('https://pdf-services.adobe.io/operation/createpdf', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'x-api-key': clientId,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      assetID: assetID,
+      outputFormat: 'pdf'
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Adobe PDF job creation failed: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * Poll Adobe for PDF generation completion
+ */
+async function pollForPDF(jobID: string, accessToken: string, clientId: string): Promise<string> {
+  const maxAttempts = 30;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    const response = await fetch(`https://pdf-services.adobe.io/operation/${jobID}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'x-api-key': clientId
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Adobe polling failed: ${response.status}`);
+    }
+
+    const jobStatus = await response.json();
+
+    if (jobStatus.status === 'done') {
+      return jobStatus.downloadUri;
+    } else if (jobStatus.status === 'failed') {
+      throw new Error('Adobe PDF generation failed');
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    attempts++;
+  }
+
+  throw new Error('Adobe PDF generation timed out');
 }
