@@ -22,7 +22,11 @@ import {
   generateAdvancedAnalytics,
   monitorPerformanceMetrics,
   generatePredictiveInsights,
-  createAnalyticsDashboard
+  createAnalyticsDashboard,
+  deployEnterpriseIntelligence,
+  enableAutomationEngine,
+  integrateBusinessIntelligence,
+  createEnterpriseDashboard
 } from "./word";
 
 /* global Office */
@@ -53,4 +57,8 @@ Office.onReady(async () => {
   Office.actions.associate("monitorPerformance", monitorPerformanceMetrics);
   Office.actions.associate("generatePredictiveInsights", generatePredictiveInsights);
   Office.actions.associate("createAnalyticsDashboard", createAnalyticsDashboard);
+  Office.actions.associate("deployEnterpriseIntelligence", deployEnterpriseIntelligence);
+  Office.actions.associate("enableAutomationEngine", enableAutomationEngine);
+  Office.actions.associate("integrateBusinessIntelligence", integrateBusinessIntelligence);
+  Office.actions.associate("createEnterpriseDashboard", createEnterpriseDashboard);
 });

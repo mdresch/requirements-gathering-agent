@@ -205,6 +205,26 @@
                             "id": "createAnalyticsDashboard",
                             "type": "executeFunction",
                             "displayName": "createAnalyticsDashboard"
+                        },
+                        {
+                            "id": "deployEnterpriseIntelligence",
+                            "type": "executeFunction",
+                            "displayName": "deployEnterpriseIntelligence"
+                        },
+                        {
+                            "id": "enableAutomationEngine",
+                            "type": "executeFunction",
+                            "displayName": "enableAutomationEngine"
+                        },
+                        {
+                            "id": "integrateBusinessIntelligence",
+                            "type": "executeFunction",
+                            "displayName": "integrateBusinessIntelligence"
+                        },
+                        {
+                            "id": "createEnterpriseDashboard",
+                            "type": "executeFunction",
+                            "displayName": "createEnterpriseDashboard"
                         }
                     ]
                 }
@@ -835,6 +855,102 @@
                                                 "description": "Create real-time dashboard with comprehensive metrics"
                                             },
                                             "actionId": "createAnalyticsDashboard"
+                                        },
+                                        {
+                                            "id": "DeployEnterpriseIntelligence",
+                                            "type": "button",
+                                            "label": "Enterprise Intelligence",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enterprise Intelligence",
+                                                "description": "Deploy advanced AI models with deep learning and autonomous systems"
+                                            },
+                                            "actionId": "deployEnterpriseIntelligence"
+                                        },
+                                        {
+                                            "id": "EnableAutomationEngine",
+                                            "type": "button",
+                                            "label": "Automation Engine",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Automation Engine",
+                                                "description": "Enable self-healing systems and adaptive automation"
+                                            },
+                                            "actionId": "enableAutomationEngine"
+                                        },
+                                        {
+                                            "id": "IntegrateBusinessIntelligence",
+                                            "type": "button",
+                                            "label": "Business Intelligence",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Business Intelligence",
+                                                "description": "Integrate with enterprise BI platforms and data warehouses"
+                                            },
+                                            "actionId": "integrateBusinessIntelligence"
+                                        },
+                                        {
+                                            "id": "CreateEnterpriseDashboard",
+                                            "type": "button",
+                                            "label": "Enterprise Dashboard",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enterprise Dashboard",
+                                                "description": "Create advanced visualization with AR/VR analytics"
+                                            },
+                                            "actionId": "createEnterpriseDashboard"
                                         }
                                     ]
                                 }
