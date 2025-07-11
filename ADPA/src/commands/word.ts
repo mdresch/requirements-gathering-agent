@@ -1320,6 +1320,66 @@ export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
 }
 
 /**
+ * Convert current Word document to PDF using specific template
+ * Enhanced version with template selection
+ */
+export async function convertToAdobePDFWithTemplate(
+  event: Office.AddinCommands.Event,
+  templateName: string = 'project-charter'
+) {
+  try {
+    await Word.run(async (context) => {
+      // Show progress message with template info
+      const progressParagraph = context.document.body.insertParagraph(
+        `🔄 Converting document to professional PDF using ${templateName} template...`,
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, 'text');
+      await context.sync();
+
+      const content = body.text;
+
+      // Convert to PDF using Adobe.io with specific template
+      const pdfUrl = await callAdobePDFAPIWithTemplate(content, templateName);
+
+      // Remove progress message
+      progressParagraph.delete();
+
+      // Show success message with download link
+      const successParagraph = context.document.body.insertParagraph(
+        `✅ Professional PDF Generated! Template: ${templateName} | Download: ${pdfUrl}`,
+        Word.InsertLocation.end
+      );
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+
+      await context.sync();
+    });
+  } catch (error) {
+    console.error('Adobe PDF conversion with template failed:', error);
+
+    // Show error message in document
+    await Word.run(async (context) => {
+      const errorParagraph = context.document.body.insertParagraph(
+        `❌ PDF conversion failed: ${error.message}`,
+        Word.InsertLocation.end
+      );
+      errorParagraph.font.color = "red";
+      errorParagraph.font.bold = true;
+      await context.sync();
+    });
+  }
+
+  event.completed();
+}
+
+/**
  * Direct Adobe.io API call (no backend required)
  * Implementation from ADOBE-IMMEDIATE-START-GUIDE.md
  */
@@ -1353,8 +1413,8 @@ async function callAdobePDFAPI(markdownContent: string): Promise<string> {
       throw new Error('Failed to get Adobe access token');
     }
 
-    // Step 2: Convert content to HTML
-    const htmlContent = markdownToHTML(markdownContent);
+    // Step 2: Convert content to professional HTML using template system
+    const htmlContent = await markdownToHTML(markdownContent);
 
     // Step 3: Upload to Adobe
     const uploadResponse = await uploadToAdobe(htmlContent, access_token, ADOBE_CLIENT_ID);
@@ -1373,9 +1433,100 @@ async function callAdobePDFAPI(markdownContent: string): Promise<string> {
 }
 
 /**
- * Convert markdown content to styled HTML
+ * Convert markdown content to professional HTML using template system
  */
-function markdownToHTML(markdown: string): string {
+async function markdownToHTML(markdown: string): Promise<string> {
+  try {
+    // Try to use the professional template engine
+    const { generateProfessionalDocument } = await import('../templates/template-engine');
+
+    // Detect document type from content
+    const documentType = detectDocumentType(markdown);
+
+    // Extract variables from content
+    const variables = extractDocumentVariables(markdown);
+
+    // Generate professional HTML using template system
+    return await generateProfessionalDocument(markdown, documentType, variables);
+
+  } catch (error) {
+    console.warn('Template engine not available, falling back to basic conversion:', error);
+
+    // Fallback to basic conversion if template system fails
+    return generateBasicHTML(markdown);
+  }
+}
+
+/**
+ * Detect document type from markdown content
+ */
+function detectDocumentType(markdown: string): string {
+  const content = markdown.toLowerCase();
+
+  // Check for project charter indicators
+  if (content.includes('project charter') ||
+      content.includes('project objectives') ||
+      content.includes('project scope')) {
+    return 'project-charter';
+  }
+
+  // Check for technical specification indicators
+  if (content.includes('technical specification') ||
+      content.includes('system architecture') ||
+      content.includes('api specification')) {
+    return 'technical-specification';
+  }
+
+  // Check for business requirements indicators
+  if (content.includes('business requirements') ||
+      content.includes('functional requirements') ||
+      content.includes('business objectives')) {
+    return 'business-requirements';
+  }
+
+  // Default to project charter
+  return 'project-charter';
+}
+
+/**
+ * Extract variables from markdown content
+ */
+function extractDocumentVariables(markdown: string): Record<string, string> {
+  const variables: Record<string, string> = {};
+
+  // Extract from frontmatter
+  const frontmatterMatch = markdown.match(/^---\n([\s\S]*?)\n---/);
+  if (frontmatterMatch) {
+    const frontmatter = frontmatterMatch[1];
+    const lines = frontmatter.split('\n');
+
+    for (const line of lines) {
+      const match = line.match(/^(\w+):\s*(.+)$/);
+      if (match) {
+        variables[match[1]] = match[2].trim();
+      }
+    }
+  }
+
+  // Extract project name from first header
+  const firstHeaderMatch = markdown.match(/^#\s+(.+)$/m);
+  if (firstHeaderMatch) {
+    variables.projectName = firstHeaderMatch[1].trim();
+    variables.systemName = firstHeaderMatch[1].trim();
+  }
+
+  // Set default values
+  variables.author = variables.author || 'ADPA System';
+  variables.version = variables.version || '1.0';
+  variables.date = variables.date || new Date().toISOString().split('T')[0];
+
+  return variables;
+}
+
+/**
+ * Fallback basic HTML generation
+ */
+function generateBasicHTML(markdown: string): string {
   let html = markdown;
 
   // Basic markdown conversion with ADPA styling
@@ -1530,4 +1681,97 @@ async function pollForPDF(jobID: string, accessToken: string, clientId: string):
   }
 
   throw new Error('Adobe PDF generation timed out');
+}
+
+/**
+ * Adobe.io API call with specific template
+ */
+async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName: string): Promise<string> {
+  // Adobe.io credentials - Get from configuration
+  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
+  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+
+  try {
+    // Step 1: Get Adobe access token
+    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: ADOBE_CLIENT_ID,
+        client_secret: ADOBE_CLIENT_SECRET,
+        scope: 'openid,AdobeID,session'
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Adobe authentication failed: ${tokenResponse.status}`);
+    }
+
+    const { access_token } = await tokenResponse.json();
+
+    if (!access_token) {
+      throw new Error('Failed to get Adobe access token');
+    }
+
+    // Step 2: Convert content to professional HTML using specific template
+    const htmlContent = await generateTemplatedHTML(markdownContent, templateName);
+
+    // Step 3: Upload to Adobe
+    const uploadResponse = await uploadToAdobe(htmlContent, access_token, ADOBE_CLIENT_ID);
+
+    // Step 4: Create PDF
+    const pdfResponse = await createPDFJob(uploadResponse.assetID, access_token, ADOBE_CLIENT_ID);
+
+    // Step 5: Poll for completion
+    const resultUrl = await pollForPDF(pdfResponse.jobID, access_token, ADOBE_CLIENT_ID);
+
+    return resultUrl;
+
+  } catch (error) {
+    throw new Error(`Adobe PDF conversion failed: ${error.message}`);
+  }
+}
+
+/**
+ * Generate HTML using specific template
+ */
+async function generateTemplatedHTML(markdownContent: string, templateName: string): Promise<string> {
+  try {
+    // Try to use the professional template engine with specific template
+    const { generateProfessionalDocument } = await import('../templates/template-engine');
+
+    // Extract variables from content
+    const variables = extractDocumentVariables(markdownContent);
+
+    // Generate professional HTML using specified template
+    return await generateProfessionalDocument(markdownContent, templateName, variables);
+
+  } catch (error) {
+    console.warn(`Template ${templateName} not available, falling back to auto-detection:`, error);
+
+    // Fallback to auto-detection
+    return await markdownToHTML(markdownContent);
+  }
+}
+
+/**
+ * Convert to Project Charter PDF
+ */
+export async function convertProjectCharter(event: Office.AddinCommands.Event) {
+  await convertToAdobePDFWithTemplate(event, 'project-charter');
+}
+
+/**
+ * Convert to Technical Specification PDF
+ */
+export async function convertTechnicalSpec(event: Office.AddinCommands.Event) {
+  await convertToAdobePDFWithTemplate(event, 'technical-specification');
+}
+
+/**
+ * Convert to Business Requirements PDF
+ */
+export async function convertBusinessReq(event: Office.AddinCommands.Event) {
+  await convertToAdobePDFWithTemplate(event, 'business-requirements');
 }
