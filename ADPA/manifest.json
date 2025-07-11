@@ -125,6 +125,26 @@
                             "id": "multiFormatPackage",
                             "type": "executeFunction",
                             "displayName": "multiFormatPackage"
+                        },
+                        {
+                            "id": "analyzeContentAI",
+                            "type": "executeFunction",
+                            "displayName": "analyzeContentAI"
+                        },
+                        {
+                            "id": "generateSmartDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "generateSmartDiagrams"
+                        },
+                        {
+                            "id": "buildCustomTemplate",
+                            "type": "executeFunction",
+                            "displayName": "buildCustomTemplate"
+                        },
+                        {
+                            "id": "optimizeDocumentAI",
+                            "type": "executeFunction",
+                            "displayName": "optimizeDocumentAI"
                         }
                     ]
                 }
@@ -371,6 +391,102 @@
                                                 "description": "Generate PDF, InDesign, and Diagrams in one package"
                                             },
                                             "actionId": "multiFormatPackage"
+                                        },
+                                        {
+                                            "id": "AnalyzeContentAI",
+                                            "type": "button",
+                                            "label": "AI Content Analysis",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Content Analysis",
+                                                "description": "Analyze document with AI for intelligent recommendations"
+                                            },
+                                            "actionId": "analyzeContentAI"
+                                        },
+                                        {
+                                            "id": "GenerateSmartDiagrams",
+                                            "type": "button",
+                                            "label": "Smart Diagrams",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Smart Diagrams",
+                                                "description": "Generate diagrams from natural language using AI"
+                                            },
+                                            "actionId": "generateSmartDiagrams"
+                                        },
+                                        {
+                                            "id": "BuildCustomTemplate",
+                                            "type": "button",
+                                            "label": "AI Template Builder",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Template Builder",
+                                                "description": "Create custom templates using AI analysis"
+                                            },
+                                            "actionId": "buildCustomTemplate"
+                                        },
+                                        {
+                                            "id": "OptimizeDocumentAI",
+                                            "type": "button",
+                                            "label": "AI Optimization",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Optimization",
+                                                "description": "Optimize document structure and readability with AI"
+                                            },
+                                            "actionId": "optimizeDocumentAI"
                                         }
                                     ]
                                 }

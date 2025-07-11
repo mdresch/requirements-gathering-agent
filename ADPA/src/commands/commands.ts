@@ -6,7 +6,11 @@ import {
   convertBusinessReq,
   convertToInDesignLayout,
   generateIllustratorDiagrams,
-  generateMultiFormatPackage
+  generateMultiFormatPackage,
+  analyzeContentWithAI,
+  generateSmartDiagrams,
+  buildCustomTemplate,
+  optimizeDocumentWithAI
 } from "./word";
 
 /* global Office */
@@ -21,4 +25,8 @@ Office.onReady(async () => {
   Office.actions.associate("convertInDesign", convertToInDesignLayout);
   Office.actions.associate("generateDiagrams", generateIllustratorDiagrams);
   Office.actions.associate("multiFormatPackage", generateMultiFormatPackage);
+  Office.actions.associate("analyzeContentAI", analyzeContentWithAI);
+  Office.actions.associate("generateSmartDiagrams", generateSmartDiagrams);
+  Office.actions.associate("buildCustomTemplate", buildCustomTemplate);
+  Office.actions.associate("optimizeDocumentAI", optimizeDocumentWithAI);
 });
