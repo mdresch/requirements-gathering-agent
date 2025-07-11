@@ -10,7 +10,11 @@ import {
   analyzeContentWithAI,
   generateSmartDiagrams,
   buildCustomTemplate,
-  optimizeDocumentWithAI
+  optimizeDocumentWithAI,
+  enableRealTimeCollaboration,
+  shareAIInsightsWithTeam,
+  syncWithProjectManagement,
+  setupDocumentWorkflow
 } from "./word";
 
 /* global Office */
@@ -29,4 +33,8 @@ Office.onReady(async () => {
   Office.actions.associate("generateSmartDiagrams", generateSmartDiagrams);
   Office.actions.associate("buildCustomTemplate", buildCustomTemplate);
   Office.actions.associate("optimizeDocumentAI", optimizeDocumentWithAI);
+  Office.actions.associate("enableCollaboration", enableRealTimeCollaboration);
+  Office.actions.associate("shareAIInsights", shareAIInsightsWithTeam);
+  Office.actions.associate("syncWithProject", syncWithProjectManagement);
+  Office.actions.associate("setupWorkflow", setupDocumentWorkflow);
 });
