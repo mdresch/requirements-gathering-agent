@@ -28,7 +28,8 @@
 - 🌐 **Production-Ready REST API** - TypeSpec-generated OpenAPI specifications
 - 📚 **Confluence Integration** - Direct publishing to Atlassian Confluence
 - 📊 **SharePoint Integration** - Microsoft SharePoint document management
-- 🔧 **CLI & Web Interface** - Multiple interaction modes
+- � **Adobe Document Services** - Professional PDF generation and document intelligence
+- �🔧 **CLI & Web Interface** - Multiple interaction modes
 
 ### **Compliance & Security**
 - 🛡️ **Enterprise-Grade Security** - Production-ready authentication and authorization
@@ -150,7 +151,7 @@ ADPA/
 ├── 📄 Document Generator       # Template-based document creation  
 ├── 🌐 REST API Server         # Express.js with TypeSpec specs
 ├── 💻 CLI Interface           # Yargs-based command line tools
-├── 🔌 Integration Layer       # Confluence, SharePoint, VCS
+├── 🔌 Integration Layer       # Adobe, Confluence, SharePoint, VCS
 ├── 🎛️ Admin Interface        # Next.js web management portal
 └── 📊 Analytics & Reporting   # Usage metrics and insights
 ```
@@ -189,6 +190,11 @@ GET  /api/v1/frameworks                  # List supported frameworks
 
 ### **Integration Examples**
 ```bash
+# Adobe Document Services integration
+npm run adobe:setup                      # Configure Adobe credentials
+npm run adobe:demo-generation           # Run document generation demo
+npm run adobe:example-basic             # Basic PDF generation example
+
 # Confluence integration
 adpa confluence oauth2 login
 adpa confluence publish --document ./docs/project-charter.md

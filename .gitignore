@@ -15,6 +15,13 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.adobe
+
+# Adobe credentials (contains sensitive API keys)
+adobe-credentials/
+*.p12
+*.key
+*.pem
 
 # Generated documentation (users will generate their own)
 PMBOK_Documents/

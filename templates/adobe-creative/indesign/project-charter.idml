@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Project Charter Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Professional template for project charter documents</Description>
+  </Properties>
+  <Spreads>
+    <Spread>
+      <Pages>
+        <Page>
+          <TextFrames>
+            <TextFrame id="title">
+              <GeometryBounds>72 72 144 540</GeometryBounds>
+              <Content>
+                <h1>${title}</h1>
+              </Content>
+            </TextFrame>
+            <TextFrame id="metadata">
+              <GeometryBounds>144 72 216 540</GeometryBounds>
+              <Content>
+                <p><strong>Project ID:</strong> ${projectId}</p>
+                <p><strong>Sponsor:</strong> ${sponsor}</p>
+                <p><strong>Date:</strong> ${date}</p>
+              </Content>
+            </TextFrame>
+            <TextFrame id="main-content">
+              <GeometryBounds>216 72 680 540</GeometryBounds>
+              <Content>${content}</Content>
+            </TextFrame>
+          </TextFrames>
+        </Page>
+      </Pages>
+    </Spread>
+  </Spreads>
+  <Styles>
+    <ParagraphStyle id="heading1">
+      <Properties>
+        <BasedOn>$ID/[No paragraph style]</BasedOn>
+        <Name>Heading 1</Name>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>24</FontSize>
+        <FontWeight>Bold</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="72" b="153" />
+        <SpaceBefore>24</SpaceBefore>
+        <SpaceAfter>12</SpaceAfter>
+      </Properties>
+    </ParagraphStyle>
+    <ParagraphStyle id="heading2">
+      <Properties>
+        <BasedOn>$ID/[No paragraph style]</BasedOn>
+        <Name>Heading 2</Name>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>18</FontSize>
+        <FontWeight>Bold</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="72" b="153" />
+        <SpaceBefore>18</SpaceBefore>
+        <SpaceAfter>9</SpaceAfter>
+      </Properties>
+    </ParagraphStyle>
+    <ParagraphStyle id="body">
+      <Properties>
+        <BasedOn>$ID/[No paragraph style]</BasedOn>
+        <Name>Body</Name>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>11</FontSize>
+        <FontWeight>Normal</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="0" b="0" />
+        <SpaceBefore>0</SpaceBefore>
+        <SpaceAfter>12</SpaceAfter>
+        <LineSpacing>14</LineSpacing>
+      </Properties>
+    </ParagraphStyle>
+  </Styles>
+  <MasterSpreads>
+    <MasterSpread>
+      <Pages>
+        <Page>
+          <TextFrames>
+            <TextFrame id="header">
+              <GeometryBounds>36 72 72 540</GeometryBounds>
+              <Content>
+                <p>${companyName} - Project Charter</p>
+              </Content>
+            </TextFrame>
+            <TextFrame id="footer">
+              <GeometryBounds>720 72 756 540</GeometryBounds>
+              <Content>
+                <p>Page ${pageNumber} of ${pageCount} | Generated: ${generationDate}</p>
+              </Content>
+            </TextFrame>
+          </TextFrames>
+          <GraphicFrames>
+            <GraphicFrame id="logo">
+              <GeometryBounds>36 540 72 612</GeometryBounds>
+              <Image href="${logoPath}" />
+            </GraphicFrame>
+          </GraphicFrames>
+        </Page>
+      </Pages>
+    </MasterSpread>
+  </MasterSpreads>
+</Document>

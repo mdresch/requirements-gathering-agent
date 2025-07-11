@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Generic Document Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Generic template for all document types</Description>
+  </Properties>
+  <Spreads>
+    <Spread>
+      <Pages>
+        <Page>
+          <TextFrames>
+            <TextFrame id="title">
+              <GeometryBounds>72 72 144 540</GeometryBounds>
+              <Content>
+                <h1>${title}</h1>
+              </Content>
+            </TextFrame>
+            <TextFrame id="metadata">
+              <GeometryBounds>144 72 216 540</GeometryBounds>
+              <Content>
+                <p><strong>Document ID:</strong> ${documentId}</p>
+                <p><strong>Date:</strong> ${date}</p>
+              </Content>
+            </TextFrame>
+            <TextFrame id="main-content">
+              <GeometryBounds>216 72 680 540</GeometryBounds>
+              <Content>${content}</Content>
+            </TextFrame>
+          </TextFrames>
+        </Page>
+      </Pages>
+    </Spread>
+  </Spreads>
+</Document>

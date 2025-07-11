@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- InDesign Template: Project Charter -->
+<!-- Variables: project_name, project_manager, start_date, end_date, budget -->
+<idml:Document xmlns:idml="http://ns.adobe.com/AdobeInDesign/idml/1.0">
+  <idml:Story>
+    <idml:ParagraphStyleRange>
+      <idml:Content>Project Charter Template - Professional Layout</idml:Content>
+    </idml:ParagraphStyleRange>
+  </idml:Story>
+</idml:Document>

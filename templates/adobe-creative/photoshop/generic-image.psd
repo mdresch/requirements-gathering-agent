@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Generic Image Enhancement Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Generic template for enhancing any image type</Description>
+    <Width>1200</Width>
+    <Height>800</Height>
+    <Resolution>72</Resolution>
+    <ColorMode>RGB</ColorMode>
+  </Properties>
+  <Layers>
+    <Layer id="background" name="Background" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+        <FillColor colorSpace="RGB" r="255" g="255" b="255" />
+      </Properties>
+    </Layer>
+    <Layer id="image" name="Image" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+      </Properties>
+      <Content>
+        <Image path="${imagePath}" />
+      </Content>
+    </Layer>
+    <Layer id="overlay" name="Overlay" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+      </Properties>
+    </Layer>
+  </Layers>
+</Document>

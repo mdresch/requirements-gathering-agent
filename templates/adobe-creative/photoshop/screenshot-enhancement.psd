@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Screenshot Enhancement Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Professional template for enhancing screenshots and diagrams</Description>
+    <Width>1200</Width>
+    <Height>800</Height>
+    <Resolution>72</Resolution>
+    <ColorMode>RGB</ColorMode>
+  </Properties>
+  <Layers>
+    <Layer id="background" name="Background" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+        <FillColor colorSpace="RGB" r="255" g="255" b="255" />
+      </Properties>
+    </Layer>
+    <Layer id="image" name="Screenshot" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+      </Properties>
+      <Content>
+        <Image path="${imagePath}" />
+      </Content>
+    </Layer>
+    <Layer id="shadow" name="Drop Shadow" visible="true">
+      <Properties>
+        <BlendMode>Multiply</BlendMode>
+        <Opacity>30</Opacity>
+        <Effects>
+          <DropShadow>
+            <Distance>5</Distance>
+            <Spread>0</Spread>
+            <Size>10</Size>
+            <Angle>135</Angle>
+            <Color colorSpace="RGB" r="0" g="0" b="0" />
+          </DropShadow>
+        </Effects>
+      </Properties>
+    </Layer>
+    <Layer id="border" name="Border" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+        <Effects>
+          <Stroke>
+            <Size>1</Size>
+            <Position>Inside</Position>
+            <Color colorSpace="RGB" r="200" g="200" b="200" />
+          </Stroke>
+        </Effects>
+      </Properties>
+    </Layer>
+    <Layer id="overlay" name="Branding Overlay" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>100</Opacity>
+      </Properties>
+      <Content>
+        <Text x="20" y="20" font-family="Segoe UI" font-size="14" font-weight="Bold" color="RGB(0,72,153)">${caption}</Text>
+      </Content>
+    </Layer>
+    <Layer id="logo" name="Logo" visible="true">
+      <Properties>
+        <BlendMode>Normal</BlendMode>
+        <Opacity>70</Opacity>
+      </Properties>
+      <Content>
+        <Image path="${logoPath}" x="20" y="760" width="100" height="20" />
+      </Content>
+    </Layer>
+  </Layers>
+  <Adjustments>
+    <Adjustment type="Levels">
+      <Properties>
+        <Shadows>10</Shadows>
+        <Midtones>1.0</Midtones>
+        <Highlights>245</Highlights>
+      </Properties>
+    </Adjustment>
+    <Adjustment type="Sharpen">
+      <Properties>
+        <Amount>30</Amount>
+      </Properties>
+    </Adjustment>
+    <Adjustment type="ColorBalance">
+      <Properties>
+        <Shadows>
+          <Red>0</Red>
+          <Green>0</Green>
+          <Blue>0</Blue>
+        </Shadows>
+        <Midtones>
+          <Red>0</Red>
+          <Green>0</Green>
+          <Blue>5</Blue>
+        </Midtones>
+        <Highlights>
+          <Red>0</Red>
+          <Green>0</Green>
+          <Blue>0</Blue>
+        </Highlights>
+      </Properties>
+    </Adjustment>
+  </Adjustments>
+</Document>

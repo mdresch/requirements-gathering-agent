@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Requirements Specification Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Professional template for requirements specification documents</Description>
+  </Properties>
+  <DocumentTemplate>
+    <Header>
+      <Logo src="${logoUrl}" width="150" height="50" align="left" />
+      <Text align="right" fontSize="9" fontFamily="Segoe UI" color="#666666">
+        ${companyName} | Confidential
+      </Text>
+      <Line color="#0070C0" thickness="1" />
+    </Header>
+    
+    <TitlePage>
+      <Title fontSize="28" fontFamily="Segoe UI" color="#0070C0" align="center" marginTop="200">
+        ${documentTitle}
+      </Title>
+      <Subtitle fontSize="18" fontFamily="Segoe UI" color="#333333" align="center" marginTop="20">
+        ${documentSubtitle}
+      </Subtitle>
+      <MetadataTable marginTop="100" width="400" align="center">
+        <MetadataRow>
+          <MetadataLabel>Project Name:</MetadataLabel>
+          <MetadataValue>${projectName}</MetadataValue>
+        </MetadataRow>
+        <MetadataRow>
+          <MetadataLabel>Document ID:</MetadataLabel>
+          <MetadataValue>${documentId}</MetadataValue>
+        </MetadataRow>
+        <MetadataRow>
+          <MetadataLabel>Version:</MetadataLabel>
+          <MetadataValue>${version}</MetadataValue>
+        </MetadataRow>
+        <MetadataRow>
+          <MetadataLabel>Date:</MetadataLabel>
+          <MetadataValue>${date}</MetadataValue>
+        </MetadataRow>
+        <MetadataRow>
+          <MetadataLabel>Status:</MetadataLabel>
+          <MetadataValue>${status}</MetadataValue>
+        </MetadataRow>
+        <MetadataRow>
+          <MetadataLabel>Classification:</MetadataLabel>
+          <MetadataValue>${classification}</MetadataValue>
+        </MetadataRow>
+      </MetadataTable>
+    </TitlePage>
+    
+    <TableOfContents title="Table of Contents" levelDepth="3" />
+    
+    <Content>
+      <Section title="Document Information">
+        <Subsection title="Document History">
+          <Table>
+            <TableHeader>
+              <TableCell>Version</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Author</TableCell>
+            </TableHeader>
+            <TableRows data="${documentHistory}" />
+          </Table>
+        </Subsection>
+        <Subsection title="Document Approvals">
+          <Table>
+            <TableHeader>
+              <TableCell>Role</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Signature</TableCell>
+              <TableCell>Date</TableCell>
+            </TableHeader>
+            <TableRows data="${approvals}" />
+          </Table>
+        </Subsection>
+      </Section>
+      
+      <Section title="Introduction">
+        <Subsection title="Purpose">
+          <Paragraph>${purpose}</Paragraph>
+        </Subsection>
+        <Subsection title="Scope">
+          <Paragraph>${scope}</Paragraph>
+        </Subsection>
+        <Subsection title="Definitions and Acronyms">
+          <Table>
+            <TableHeader>
+              <TableCell>Term</TableCell>
+              <TableCell>Definition</TableCell>
+            </TableHeader>
+            <TableRows data="${termsAndAcronyms}" />
+          </Table>
+        </Subsection>
+        <Subsection title="References">
+          <OrderedList data="${references}" />
+        </Subsection>
+      </Section>
+      
+      <Section title="Requirements">
+        <Subsection title="Functional Requirements">
+          <ForEach data="${functionalRequirements}">
+            <RequirementBlock>
+              <RequirementID>${item.id}</RequirementID>
+              <RequirementTitle>${item.title}</RequirementTitle>
+              <RequirementDescription>${item.description}</RequirementDescription>
+              <RequirementPriority>${item.priority}</RequirementPriority>
+            </RequirementBlock>
+          </ForEach>
+        </Subsection>
+        <Subsection title="Non-Functional Requirements">
+          <ForEach data="${nonFunctionalRequirements}">
+            <RequirementBlock>
+              <RequirementID>${item.id}</RequirementID>
+              <RequirementTitle>${item.title}</RequirementTitle>
+              <RequirementDescription>${item.description}</RequirementDescription>
+              <RequirementType>${item.type}</RequirementType>
+              <RequirementMetric>${item.metric}</RequirementMetric>
+            </RequirementBlock>
+          </ForEach>
+        </Subsection>
+      </Section>
+      
+      <!-- Additional sections based on document type -->
+      <DynamicSections data="${additionalSections}" />
+      
+      <Section title="Appendices">
+        <ForEach data="${appendices}">
+          <Appendix title="${item.title}">
+            <Content>${item.content}</Content>
+          </Appendix>
+        </ForEach>
+      </Section>
+    </Content>
+    
+    <Footer>
+      <Line color="#0070C0" thickness="1" />
+      <Text align="left" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        ${companyName} - Confidential
+      </Text>
+      <Text align="center" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        ${documentTitle} - v${version}
+      </Text>
+      <Text align="right" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        Page ${pageNumber} of ${pageCount}
+      </Text>
+    </Footer>
+  </DocumentTemplate>
+  
+  <Styles>
+    <Style name="Title" element="h1">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>24</FontSize>
+      <Color>#0070C0</Color>
+      <MarginTop>24</MarginTop>
+      <MarginBottom>12</MarginBottom>
+    </Style>
+    <Style name="Heading1" element="h1">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>18</FontSize>
+      <Color>#0070C0</Color>
+      <MarginTop>18</MarginTop>
+      <MarginBottom>9</MarginBottom>
+    </Style>
+    <Style name="Heading2" element="h2">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>14</FontSize>
+      <Color>#0070C0</Color>
+      <MarginTop>14</MarginTop>
+      <MarginBottom>7</MarginBottom>
+    </Style>
+    <Style name="Heading3" element="h3">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>12</FontSize>
+      <FontWeight>Bold</FontWeight>
+      <Color>#333333</Color>
+      <MarginTop>12</MarginTop>
+      <MarginBottom>6</MarginBottom>
+    </Style>
+    <Style name="Normal" element="p">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>11</FontSize>
+      <Color>#333333</Color>
+      <LineHeight>1.4</LineHeight>
+      <MarginTop>0</MarginTop>
+      <MarginBottom>10</MarginBottom>
+    </Style>
+    <Style name="Table" element="table">
+      <BorderCollapse>collapse</BorderCollapse>
+      <Width>100%</Width>
+    </Style>
+    <Style name="TableHeader" element="th">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>11</FontSize>
+      <FontWeight>Bold</FontWeight>
+      <Color>#FFFFFF</Color>
+      <BackgroundColor>#0070C0</BackgroundColor>
+      <Padding>6</Padding>
+      <Border>1px solid #0070C0</Border>
+    </Style>
+    <Style name="TableCell" element="td">
+      <FontFamily>Segoe UI</FontFamily>
+      <FontSize>11</FontSize>
+      <Color>#333333</Color>
+      <Padding>6</Padding>
+      <Border>1px solid #DDDDDD</Border>
+    </Style>
+    <Style name="RequirementBlock" element="div">
+      <BackgroundColor>#F5F5F5</BackgroundColor>
+      <Padding>12</Padding>
+      <MarginBottom>12</MarginBottom>
+      <Border>1px solid #DDDDDD</Border>
+      <BorderRadius>4</BorderRadius>
+    </Style>
+  </Styles>
+</Document>

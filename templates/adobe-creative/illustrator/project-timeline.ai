@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Project Timeline Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Professional template for project timeline visualization</Description>
+    <ArtboardWidth>800</ArtboardWidth>
+    <ArtboardHeight>600</ArtboardHeight>
+    <ColorMode>RGB</ColorMode>
+  </Properties>
+  <GraphicStyles>
+    <GraphicStyle id="milestone">
+      <Properties>
+        <FillColor colorSpace="RGB" r="0" g="112" b="192" />
+        <StrokeColor colorSpace="RGB" r="0" g="72" b="153" />
+        <StrokeWidth>1</StrokeWidth>
+      </Properties>
+    </GraphicStyle>
+    <GraphicStyle id="phase">
+      <Properties>
+        <FillColor colorSpace="RGB" r="198" g="224" b="255" />
+        <StrokeColor colorSpace="RGB" r="0" g="112" b="192" />
+        <StrokeWidth>1</StrokeWidth>
+      </Properties>
+    </GraphicStyle>
+    <GraphicStyle id="critical">
+      <Properties>
+        <FillColor colorSpace="RGB" r="255" g="127" b="127" />
+        <StrokeColor colorSpace="RGB" r="192" g="0" b="0" />
+        <StrokeWidth>1</StrokeWidth>
+      </Properties>
+    </GraphicStyle>
+  </GraphicStyles>
+  <TextStyles>
+    <TextStyle id="title">
+      <Properties>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>24</FontSize>
+        <FontWeight>Bold</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="72" b="153" />
+      </Properties>
+    </TextStyle>
+    <TextStyle id="label">
+      <Properties>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>10</FontSize>
+        <FontWeight>Normal</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="0" b="0" />
+      </Properties>
+    </TextStyle>
+  </TextStyles>
+  <TimelineSettings>
+    <StartDate format="YYYY-MM-DD">${startDate}</StartDate>
+    <EndDate format="YYYY-MM-DD">${endDate}</EndDate>
+    <MilestonesData>
+      ${milestones}
+    </MilestonesData>
+    <PhasesData>
+      ${phases}
+    </PhasesData>
+  </TimelineSettings>
+  <ChartSettings>
+    <ChartType>Timeline</ChartType>
+    <ShowToday>true</ShowToday>
+    <ShowGrid>true</ShowGrid>
+    <ShowLegend>true</ShowLegend>
+  </ChartSettings>
+  <BrandingSettings>
+    <LogoPath>${logoPath}</LogoPath>
+    <CompanyName>${companyName}</CompanyName>
+    <PrimaryColor colorSpace="RGB" r="0" g="112" b="192" />
+    <SecondaryColor colorSpace="RGB" r="0" g="72" b="153" />
+    <AccentColor colorSpace="RGB" r="255" g="127" b="0" />
+  </BrandingSettings>
+</Document>

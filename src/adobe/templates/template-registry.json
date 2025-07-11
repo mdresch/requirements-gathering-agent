@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-07-11T15:00:00.000Z",
+  "templates": [
+    {
+      "id": "project-charter-indesign",
+      "name": "Project Charter (InDesign)",
+      "file": "indesign/project-charter.idml",
+      "type": "indesign"
+    },
+    {
+      "id": "requirements-spec-indesign",
+      "name": "Requirements Specification (InDesign)",
+      "file": "indesign/requirements-specification-enhanced.idml",
+      "type": "indesign",
+      "description": "IEEE 830 compliant software requirements specification template with comprehensive section structure",
+      "category": "technical",
+      "compatibility": ["pdf-services", "indesign"],
+      "tags": ["requirements", "specification", "ieee-830", "srs", "software"]
+    },
+    {
+      "id": "technical-design-indesign",
+      "name": "Technical Design Document (InDesign)",
+      "file": "indesign/technical-design-document.idml",
+      "type": "indesign"
+    },
+    {
+      "id": "project-timeline-illustrator",
+      "name": "Project Timeline (Illustrator)",
+      "file": "illustrator/project-timeline.ai",
+      "type": "illustrator"
+    },
+    {
+      "id": "screenshot-enhancement-photoshop",
+      "name": "Screenshot Enhancement (Photoshop)",
+      "file": "photoshop/screenshot-enhancement.psd",
+      "type": "photoshop"
+    },
+    {
+      "id": "business-report-docgen",
+      "name": "Business Report (Document Generation)",
+      "file": "document-generation/business-report.xml",
+      "type": "document-generation"
+    }
+  ]
+}

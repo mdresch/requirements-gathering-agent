@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Generic Graphic Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Generic template for all graphic types</Description>
+    <ArtboardWidth>800</ArtboardWidth>
+    <ArtboardHeight>600</ArtboardHeight>
+    <ColorMode>RGB</ColorMode>
+  </Properties>
+  <GraphicStyles>
+    <GraphicStyle id="default">
+      <Properties>
+        <FillColor colorSpace="RGB" r="255" g="255" b="255" />
+        <StrokeColor colorSpace="RGB" r="0" g="0" b="0" />
+        <StrokeWidth>1</StrokeWidth>
+      </Properties>
+    </GraphicStyle>
+  </GraphicStyles>
+  <TextStyles>
+    <TextStyle id="title">
+      <Properties>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>24</FontSize>
+        <FontWeight>Bold</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="72" b="153" />
+      </Properties>
+    </TextStyle>
+    <TextStyle id="body">
+      <Properties>
+        <FontFamily>Segoe UI</FontFamily>
+        <FontSize>12</FontSize>
+        <FontWeight>Normal</FontWeight>
+        <TextColor colorSpace="RGB" r="0" g="0" b="0" />
+      </Properties>
+    </TextStyle>
+  </TextStyles>
+</Document>

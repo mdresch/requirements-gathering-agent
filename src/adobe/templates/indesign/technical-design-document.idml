@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://ns.adobe.com/indesign/idml/2.0" DOMVersion="13.1">
+    <!-- IDML Template: Technical Design Document -->
+    <!-- This template creates professional technical design documents -->
+    
+    <Spreads>
+        <spread Self="spread_u139" FlattenerOverride="true" AllowPageShuffle="true" BindingLocation="1" PageCount="1">
+            <!-- Title Page -->
+            <page Self="page_u13a" Name="1" OverrideList="">
+                <Properties>
+                    <Descriptor type="list">
+                        <ListItem type="record">
+                            <Property type="enumeration" name="position">1</Property>
+                        </ListItem>
+                    </Descriptor>
+                </Properties>
+                
+                <!-- Title Block -->
+                <TextFrame Self="textframe_title" ParentStory="story_title" NextTextFrame="n" PreviousTextFrame="n" 
+                          ContentType="TextType" GeometricBounds="72 72 150 468">
+                    <Properties>
+                        <PathGeometry>
+                            <GeometryPathType PathOpen="false">
+                                <PathPointArray>
+                                    <PathPoint Anchor="72 72" LeftDirection="72 72" RightDirection="72 72"/>
+                                    <PathPoint Anchor="72 468" LeftDirection="72 468" RightDirection="72 468"/>
+                                    <PathPoint Anchor="150 468" LeftDirection="150 468" RightDirection="150 468"/>
+                                    <PathPoint Anchor="150 72" LeftDirection="150 72" RightDirection="150 72"/>
+                                </PathPointArray>
+                            </GeometryPathType>
+                        </PathGeometry>
+                    </Properties>
+                </TextFrame>
+                
+                <!-- Subtitle Block -->
+                <TextFrame Self="textframe_subtitle" ParentStory="story_subtitle" NextTextFrame="n" PreviousTextFrame="n" 
+                          ContentType="TextType" GeometricBounds="160 72 190 468">
+                    <Properties>
+                        <PathGeometry>
+                            <GeometryPathType PathOpen="false">
+                                <PathPointArray>
+                                    <PathPoint Anchor="160 72" LeftDirection="160 72" RightDirection="160 72"/>
+                                    <PathPoint Anchor="160 468" LeftDirection="160 468" RightDirection="160 468"/>
+                                    <PathPoint Anchor="190 468" LeftDirection="190 468" RightDirection="190 468"/>
+                                    <PathPoint Anchor="190 72" LeftDirection="190 72" RightDirection="190 72"/>
+                                </PathPointArray>
+                            </GeometryPathType>
+                        </PathGeometry>
+                    </Properties>
+                </TextFrame>
+                
+                <!-- Metadata Block -->
+                <TextFrame Self="textframe_metadata" ParentStory="story_metadata" NextTextFrame="n" PreviousTextFrame="n" 
+                          ContentType="TextType" GeometricBounds="200 72 250 468">
+                    <Properties>
+                        <PathGeometry>
+                            <GeometryPathType PathOpen="false">
+                                <PathPointArray>
+                                    <PathPoint Anchor="200 72" LeftDirection="200 72" RightDirection="200 72"/>
+                                    <PathPoint Anchor="200 468" LeftDirection="200 468" RightDirection="200 468"/>
+                                    <PathPoint Anchor="250 468" LeftDirection="250 468" RightDirection="250 468"/>
+                                    <PathPoint Anchor="250 72" LeftDirection="250 72" RightDirection="250 72"/>
+                                </PathPointArray>
+                            </GeometryPathType>
+                        </PathGeometry>
+                    </Properties>
+                </TextFrame>
+                
+                <!-- Main Content Area -->
+                <TextFrame Self="textframe_main" ParentStory="story_main" NextTextFrame="n" PreviousTextFrame="n" 
+                          ContentType="TextType" GeometricBounds="280 72 660 468">
+                    <Properties>
+                        <PathGeometry>
+                            <GeometryPathType PathOpen="false">
+                                <PathPointArray>
+                                    <PathPoint Anchor="280 72" LeftDirection="280 72" RightDirection="280 72"/>
+                                    <PathPoint Anchor="280 468" LeftDirection="280 468" RightDirection="280 468"/>
+                                    <PathPoint Anchor="660 468" LeftDirection="660 468" RightDirection="660 468"/>
+                                    <PathPoint Anchor="660 72" LeftDirection="660 72" RightDirection="660 72"/>
+                                </PathPointArray>
+                            </GeometryPathType>
+                        </PathGeometry>
+                    </Properties>
+                </TextFrame>
+                
+                <!-- Architecture Diagram Area -->
+                <Rectangle Self="rectangle_diagram" ContentType="GraphicType" 
+                          GeometricBounds="280 480 450 720">
+                    <Properties>
+                        <PathGeometry>
+                            <GeometryPathType PathOpen="false">
+                                <PathPointArray>
+                                    <PathPoint Anchor="280 480" LeftDirection="280 480" RightDirection="280 480"/>
+                                    <PathPoint Anchor="280 720" LeftDirection="280 720" RightDirection="280 720"/>
+                                    <PathPoint Anchor="450 720" LeftDirection="450 720" RightDirection="450 720"/>
+                                    <PathPoint Anchor="450 480" LeftDirection="450 480" RightDirection="450 480"/>
+                                </PathPointArray>
+                            </GeometryPathType>
+                        </PathGeometry>
+                    </Properties>
+                </Rectangle>
+            </page>
+        </spread>
+    </Spreads>
+    
+    <Stories>
+        <!-- Title Story -->
+        <Story Self="story_title" TrackChanges="false" StoryTitle="Title" AppliedTOCStyle="n">
+            <StoryPreference OpticalMarginAlignment="true" OpticalMarginSize="12"/>
+            <InCopyExportOption IncludeGraphicProxies="true" IncludeAllResources="false"/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/title">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/title">
+                    <Content>{{systemName}} Technical Design Document</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+        </Story>
+        
+        <!-- Subtitle Story -->
+        <Story Self="story_subtitle" TrackChanges="false" StoryTitle="Subtitle" AppliedTOCStyle="n">
+            <StoryPreference OpticalMarginAlignment="true" OpticalMarginSize="12"/>
+            <InCopyExportOption IncludeGraphicProxies="true" IncludeAllResources="false"/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/subtitle">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/subtitle">
+                    <Content>System Architecture and Technical Specifications</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+        </Story>
+        
+        <!-- Metadata Story -->
+        <Story Self="story_metadata" TrackChanges="false" StoryTitle="Metadata" AppliedTOCStyle="n">
+            <StoryPreference OpticalMarginAlignment="true" OpticalMarginSize="12"/>
+            <InCopyExportOption IncludeGraphicProxies="true" IncludeAllResources="false"/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/metadata">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/metadata">
+                    <Content>Version: {{version}}</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/metadata">
+                    <Content>Date: {{date}}</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/metadata">
+                    <Content>Author: {{author}}</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/metadata">
+                    <Content>Status: {{status}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+        </Story>
+        
+        <!-- Main Content Story -->
+        <Story Self="story_main" TrackChanges="false" StoryTitle="Main Content" AppliedTOCStyle="n">
+            <StoryPreference OpticalMarginAlignment="true" OpticalMarginSize="12"/>
+            <InCopyExportOption IncludeGraphicProxies="true" IncludeAllResources="false"/>
+            
+            <!-- Table of Contents -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>Table of Contents</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/toc">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>1. Executive Summary</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>2. System Overview</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>3. Architecture Design</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>4. Component Specifications</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>5. Data Design</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>6. Interface Design</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>7. Security Design</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>8. Performance Considerations</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>9. Implementation Plan</Content>
+                </CharacterStyleRange>
+                <Br/>
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/toc">
+                    <Content>10. Appendices</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Executive Summary -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>1. Executive Summary</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{executiveSummary}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- System Overview -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>2. System Overview</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading2">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading2">
+                    <Content>2.1 Purpose and Scope</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{systemPurpose}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading2">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading2">
+                    <Content>2.2 System Context</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{systemContext}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Architecture Design -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>3. Architecture Design</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading2">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading2">
+                    <Content>3.1 High-Level Architecture</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{architectureOverview}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading2">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading2">
+                    <Content>3.2 Technology Stack</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{technologyStack}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Component Specifications -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>4. Component Specifications</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{componentSpecs}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Data Design -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>5. Data Design</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{dataDesign}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Interface Design -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>6. Interface Design</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{interfaceDesign}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Security Design -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>7. Security Design</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{securityDesign}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Performance Considerations -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>8. Performance Considerations</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{performanceConsiderations}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            
+            <!-- Implementation Plan -->
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/heading1">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/heading1">
+                    <Content>9. Implementation Plan</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <Br/>
+            <ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/body">
+                <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/body">
+                    <Content>{{implementationPlan}}</Content>
+                </CharacterStyleRange>
+            </ParagraphStyleRange>
+        </Story>
+    </Stories>
+    
+    <!-- Paragraph Styles -->
+    <RootParagraphStyleGroup Self="paragraph_styles">
+        <ParagraphStyle Self="ParagraphStyle/title" Name="Title" 
+                       SpaceBefore="0" SpaceAfter="24" 
+                       FontStyle="Bold" PointSize="24" 
+                       FillColor="Color/ADPA_Primary"/>
+        <ParagraphStyle Self="ParagraphStyle/subtitle" Name="Subtitle" 
+                       SpaceBefore="12" SpaceAfter="18" 
+                       FontStyle="Regular" PointSize="16" 
+                       FillColor="Color/ADPA_Secondary"/>
+        <ParagraphStyle Self="ParagraphStyle/metadata" Name="Metadata" 
+                       SpaceBefore="6" SpaceAfter="6" 
+                       FontStyle="Regular" PointSize="10" 
+                       FillColor="Color/ADPA_Accent"/>
+        <ParagraphStyle Self="ParagraphStyle/heading1" Name="Heading 1" 
+                       SpaceBefore="18" SpaceAfter="12" 
+                       FontStyle="Bold" PointSize="18" 
+                       FillColor="Color/ADPA_Primary"/>
+        <ParagraphStyle Self="ParagraphStyle/heading2" Name="Heading 2" 
+                       SpaceBefore="15" SpaceAfter="9" 
+                       FontStyle="Bold" PointSize="14" 
+                       FillColor="Color/ADPA_Secondary"/>
+        <ParagraphStyle Self="ParagraphStyle/body" Name="Body Text" 
+                       SpaceBefore="0" SpaceAfter="12" 
+                       FontStyle="Regular" PointSize="11" 
+                       FillColor="Color/Black"/>
+        <ParagraphStyle Self="ParagraphStyle/toc" Name="Table of Contents" 
+                       SpaceBefore="3" SpaceAfter="3" 
+                       FontStyle="Regular" PointSize="11" 
+                       FillColor="Color/ADPA_Accent"/>
+    </RootParagraphStyleGroup>
+    
+    <!-- Character Styles -->
+    <RootCharacterStyleGroup Self="character_styles">
+        <CharacterStyle Self="CharacterStyle/title" Name="Title" 
+                       FontStyle="Bold" PointSize="24" 
+                       FillColor="Color/ADPA_Primary"/>
+        <CharacterStyle Self="CharacterStyle/subtitle" Name="Subtitle" 
+                       FontStyle="Regular" PointSize="16" 
+                       FillColor="Color/ADPA_Secondary"/>
+        <CharacterStyle Self="CharacterStyle/metadata" Name="Metadata" 
+                       FontStyle="Regular" PointSize="10" 
+                       FillColor="Color/ADPA_Accent"/>
+        <CharacterStyle Self="CharacterStyle/heading1" Name="Heading 1" 
+                       FontStyle="Bold" PointSize="18" 
+                       FillColor="Color/ADPA_Primary"/>
+        <CharacterStyle Self="CharacterStyle/heading2" Name="Heading 2" 
+                       FontStyle="Bold" PointSize="14" 
+                       FillColor="Color/ADPA_Secondary"/>
+        <CharacterStyle Self="CharacterStyle/body" Name="Body Text" 
+                       FontStyle="Regular" PointSize="11" 
+                       FillColor="Color/Black"/>
+        <CharacterStyle Self="CharacterStyle/toc" Name="Table of Contents" 
+                       FontStyle="Regular" PointSize="11" 
+                       FillColor="Color/ADPA_Accent"/>
+    </RootCharacterStyleGroup>
+    
+    <!-- Color Swatches -->
+    <RootColorGroup Self="color_group">
+        <ColorGroup Self="adpa_colors" Name="ADPA Brand Colors">
+            <Color Self="Color/ADPA_Primary" Model="RGB" 
+                   ColorValue="46 134 171" Name="ADPA Primary"/>
+            <Color Self="Color/ADPA_Secondary" Model="RGB" 
+                   ColorValue="162 59 114" Name="ADPA Secondary"/>
+            <Color Self="Color/ADPA_Accent" Model="RGB" 
+                   ColorValue="241 143 1" Name="ADPA Accent"/>
+            <Color Self="Color/Black" Model="RGB" 
+                   ColorValue="0 0 0" Name="Black"/>
+        </ColorGroup>
+    </RootColorGroup>
+</Package>

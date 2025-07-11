@@ -12,6 +12,7 @@ import {
   BABOKComplianceResult,
   PMBOKComplianceResult,
   DMBOKComplianceResult,
+  ISO15408ComplianceResult,
   DeviationAnalysis,
   ExecutiveSummary,
   IntelligentDeviation,
@@ -24,10 +25,18 @@ import {
   IntelligentDeviationCategory,
   RiskLevel,
   ComplianceStatus,
-  Impact
+  Impact,
+  ComplianceIssue,
+  ComplianceRecommendation,
+  DeviationSeverity,
+  EffortEstimate,
+  ResourceRequirement,
+  Priority,
+  ProjectComplexity
 } from '../../types/standardsCompliance.js';
 
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
+import { ISO15408Validator } from './ISO15408Validator.js';
 import { logger } from '../../config/logger.js';
 
 /**
@@ -35,11 +44,13 @@ import { logger } from '../../config/logger.js';
  */
 export class StandardsComplianceAnalysisEngine implements StandardsComplianceEngine {
   private pmbokValidator: PMBOKValidator;
+  private iso15408Validator: ISO15408Validator;
   private config: StandardsComplianceConfig;
 
   constructor(config: StandardsComplianceConfig) {
     this.config = config;
     this.pmbokValidator = new PMBOKValidator('generated-documents');
+    this.iso15408Validator = new ISO15408Validator('generated-documents');
     logger.info('🎯 Standards Compliance Analysis Engine initialized');
   }
 
@@ -69,6 +80,11 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
       if (this.config.enabledStandards.includes('DMBOK_2')) {
         const dmbokResult = await this.validateAgainstDMBOK(request.projectData);
         complianceResults.push(dmbokResult);
+      }
+
+      if (this.config.enabledStandards.includes('ISO_15408')) {
+        const iso15408Result = await this.validateAgainstISO15408(request.projectData);
+        complianceResults.push(iso15408Result);
       }
 
       // Generate comprehensive deviation analysis
@@ -175,18 +191,23 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
     const complianceStatus = this.determineComplianceStatus(overallScore);
 
     // Generate findings based on existing validation
-    const criticalIssues = pmbokValidation.findings.critical.map(issue => ({
-      issueId: this.generateId(),
-      severity: 'HIGH' as const,
+    const criticalIssues: ComplianceIssue[] = pmbokValidation.findings.critical.map(issue => ({
+      id: this.generateId(),
+      severity: 'HIGH' as DeviationSeverity,
       category: 'PMBOK Compliance',
       description: issue,
-      standardReference: 'PMBOK 7th Edition',
+      requirement: 'PMBOK 7th Edition compliance',
       currentState: 'Non-compliant',
-      requiredState: 'Compliant',
-      impact: 'May affect project success',
-      remediation: 'Review and align with PMBOK standards',
-      effort: { hours: 8, cost: 1000, resources: ['Project Manager'], duration: '1 week', complexity: 'MEDIUM' as const },
-      priority: 'HIGH' as const
+      expectedState: 'Compliant',
+      impact: 'MODERATE' as Impact,
+      recommendation: 'Review and align with PMBOK standards',
+      effort: { 
+        hours: 8, 
+        cost: 1000, 
+        resources: [{ type: 'PERSONNEL', skill: 'Project Manager', quantity: 1, duration: '1 week' }], 
+        duration: '1 week', 
+        complexity: 'MEDIUM' as ProjectComplexity 
+      }
     }));
 
     return {
@@ -199,15 +220,22 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
       warnings: [],
       strengths: [],
       recommendations: pmbokValidation.findings.recommendations.map(rec => ({
-        recommendationId: this.generateId(),
-        type: 'SHORT_TERM' as const,
-        priority: 'MEDIUM' as const,
+        id: this.generateId(),
+        priority: 'MEDIUM' as Priority,
+        category: 'PMBOK Compliance',
         description: rec,
         rationale: 'PMBOK 7th Edition compliance',
-        expectedBenefit: 'Improved project management practices',
-        effort: { hours: 4, cost: 500, resources: ['Team'], duration: '2 weeks', complexity: 'LOW' as const },
-        dependencies: [],
-        risks: []
+        implementation: ['Review current practices', 'Implement PMBOK standards', 'Train team'],
+        benefits: ['Improved project management practices'],
+        risks: [],
+        effort: { 
+          hours: 4, 
+          cost: 500, 
+          resources: [{ type: 'PERSONNEL', skill: 'Team', quantity: 1, duration: '2 weeks' }], 
+          duration: '2 weeks', 
+          complexity: 'LOW' as ProjectComplexity 
+        },
+        timeline: '2 weeks'
       })),
       performanceDomains,
       principles,
@@ -251,6 +279,116 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
       dataMaturity,
       dataGovernanceFramework
     };
+  }
+
+  /**
+   * Validate project against ISO 15408 standards
+   */
+  public async validateAgainstISO15408(projectData: ProjectData): Promise<ISO15408ComplianceResult> {
+    logger.info('🔒 Validating against ISO 15408 Common Criteria standards...');
+
+    try {
+      // Use the ISO 15408 validator
+      const result = await this.iso15408Validator.validateCompliance(projectData);
+      
+      logger.info(`✅ ISO 15408 validation completed. Score: ${result.overallScore}%, Status: ${result.complianceStatus}`);
+      return result;
+
+    } catch (error) {
+      logger.error('❌ ISO 15408 validation failed:', error);
+      
+      // Return a fallback result
+      return {
+        standard: 'ISO_15408',
+        overallScore: 0,
+        complianceStatus: 'NON_COMPLIANT',
+        assessmentDate: new Date(),
+        assessmentVersion: '1.0.0',
+        criticalIssues: [{
+          id: 'ISO15408_FATAL_001',
+          severity: 'CRITICAL' as DeviationSeverity,
+          category: 'VALIDATION_ERROR',
+          description: 'ISO 15408 validation failed due to system error',
+          requirement: 'ISO 15408',
+          currentState: 'Error state',
+          expectedState: 'Successful validation',
+          impact: 'MAJOR' as Impact,
+          recommendation: 'Contact system administrator',
+          effort: { 
+            hours: 4, 
+            cost: 500, 
+            resources: [{ type: 'PERSONNEL', skill: 'Admin', quantity: 1, duration: '1 day' }], 
+            duration: '1 day', 
+            complexity: 'LOW' as ProjectComplexity 
+          }
+        }],
+        warnings: [],
+        strengths: [],
+        recommendations: [],
+        evaluationAssuranceLevels: {
+          eal1: { level: 1, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal2: { level: 2, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal3: { level: 3, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal4: { level: 4, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal5: { level: 5, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal6: { level: 6, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] },
+          eal7: { level: 7, achieved: false, score: 0, requirements: [], gaps: ['Validation error'], evidence: [], recommendations: [] }
+        },
+        securityFunctionalRequirements: [],
+        securityAssuranceRequirements: [],
+        protectionProfiles: [],
+        securityTargets: [],
+        evaluationResults: [],
+        vulnerabilityAssessment: {
+          scope: { components: [], interfaces: [], dataFlows: [], exclusions: [], rationale: 'Error state' },
+          methodology: [],
+          tools: [],
+          findings: [],
+          riskAnalysis: { overallRisk: 'VERY_HIGH', riskFactors: [], riskMatrix: [], treatmentOptions: [] },
+          recommendations: []
+        },
+        riskAssessment: {
+          scope: { boundaries: [], assets: [], processes: [], interfaces: [], exclusions: [] },
+          methodology: 'Error state',
+          threatLandscape: { threatActors: [], threatIntelligence: [], emergingThreats: [], threatTrends: [] },
+          assetInventory: { assets: [], classification: [], dependencies: [], criticality: [] },
+          riskAnalysis: {
+            risks: [],
+            riskMatrix: { matrix: [], scale: { likelihood: [], impact: [] }, tolerance: { acceptable: [], tolerable: [], unacceptable: [] } },
+            aggregatedRisk: { 
+              overallRisk: 'VERY_HIGH', 
+              riskByCategory: {
+                OPERATIONAL: 'HIGH',
+                TECHNICAL: 'MEDIUM',
+                FINANCIAL: 'LOW',
+                REGULATORY: 'VERY_HIGH',
+                STRATEGIC: 'MEDIUM',
+                REPUTATIONAL: 'HIGH',
+                SECURITY: 'VERY_HIGH',
+                PRIVACY: 'HIGH',
+                COMPLIANCE: 'HIGH'
+              }, 
+              riskByAsset: {}, 
+              riskTrends: [] 
+            },
+            scenarioAnalysis: []
+          },
+          riskTreatment: {
+            strategy: { approach: 'Error state', principles: [], objectives: [], constraints: [] },
+            treatments: [],
+            plan: { phases: [], milestones: [], dependencies: [], resources: [] },
+            monitoring: {
+              kpis: [],
+              reporting: [],
+              review: { frequency: 'ANNUALLY', participants: [], agenda: [], decisions: [] },
+              escalation: []
+            }
+          },
+          monitoringPlan: { objectives: [], scope: [], metrics: [], indicators: [], thresholds: [], procedures: [] }
+        },
+        complianceGaps: []
+      };
+    }
   }
 
   /**
@@ -313,31 +451,58 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
   public async generateExecutiveSummary(analysis: DeviationAnalysis): Promise<ExecutiveSummary> {
     logger.info('📊 Generating executive summary...');
 
-    const overallAssessment = {
-      complianceScore: 100 - analysis.overallDeviationScore,
-      deviationScore: analysis.overallDeviationScore,
-      riskLevel: analysis.riskLevel,
-      recommendation: this.getOverallRecommendation(analysis),
-      executiveSummary: this.generateExecutiveText(analysis)
-    };
-
     const keyFindings = await this.extractKeyFindings(analysis);
-    const criticalDeviations = await this.summarizeCriticalDeviations(analysis.standardDeviations);
-    const intelligentDeviations = await this.summarizeIntelligentDeviations(analysis.intelligentDeviations);
-    const riskProfile = await this.createRiskProfile(analysis.riskAssessment);
-    const recommendations = await this.createExecutiveRecommendations(analysis.recommendations);
     const nextSteps = await this.generateNextSteps(analysis);
-    const approvalRequired = await this.identifyApprovalRequirements(analysis.intelligentDeviations);
 
     return {
-      overallAssessment,
+      overallAssessment: {
+        complianceScore: 100 - analysis.overallDeviationScore,
+        deviationScore: analysis.overallDeviationScore,
+        riskLevel: analysis.riskLevel,
+        recommendation: this.getOverallRecommendation(analysis),
+        executiveSummary: this.generateExecutiveText(analysis)
+      },
       keyFindings,
-      criticalDeviations,
-      intelligentDeviations,
-      riskProfile,
-      recommendations,
+      criticalDeviations: await this.summarizeCriticalDeviations(analysis.standardDeviations),
+      intelligentDeviations: await this.summarizeIntelligentDeviations(analysis.intelligentDeviations),
+      riskProfile: await this.createRiskProfile(analysis.riskAssessment),
+      recommendations: await this.createExecutiveRecommendations(analysis.recommendations),
       nextSteps,
-      approvalRequired
+      approvalRequired: await this.identifyApprovalRequirements(analysis.intelligentDeviations),
+      projectOverview: {
+        projectName: 'Current Project',
+        industry: 'TECHNOLOGY',
+        complexity: 'MEDIUM',
+        duration: '6 months',
+        budget: '$500,000',
+        teamSize: 10,
+        keyObjectives: ['Standards compliance', 'Risk mitigation']
+      },
+      complianceStatus: {
+        overallScore: 100 - analysis.overallDeviationScore,
+        standardScores: [],
+        trend: 'IMPROVING',
+        keyIssues: [],
+        strengths: []
+      },
+      riskAssessment: {
+        overallRisk: analysis.riskLevel,
+        keyRisks: [],
+        mitigationStatus: 'In progress',
+        residualRisk: 'LOW'
+      },
+      timeline: {
+        phases: [],
+        keyMilestones: [],
+        criticalPath: []
+      },
+      resources: {
+        totalBudget: 500000,
+        currency: 'USD',
+        keyResources: [],
+        skillGaps: [],
+        externalSupport: []
+      }
     };
   }
 
@@ -515,94 +680,81 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
   }
 
   private async identifyIntelligentDeviations(results: ComplianceResult[]): Promise<IntelligentDeviation[]> {
+    // Return simplified example for now - full implementation would analyze actual deviations
     return [
-      {        deviationId: 'INT-DEV-001',
+      {
+        deviationId: 'INT-DEV-001',
         deviationType: 'METHODOLOGY',
         category: 'EFFICIENCY_IMPROVEMENT',
         standardApproach: {
           approach: 'Traditional waterfall requirements gathering per BABOK 6.1',
-          rationale: 'Sequential approach for regulated industry',          
-          benefits: ['Comprehensive documentation', 'Formal sign-off process', 'Audit trail']
+          rationale: 'Sequential approach for regulated industry',
+          benefits: ['Comprehensive documentation', 'Formal sign-off process', 'Audit trail'],
+          requirements: ['Formal documentation', 'Sequential phases'],
+          assumptions: ['Stable requirements', 'Predictable environment']
         },
         projectApproach: {
           approach: 'Hybrid agile-waterfall requirements elicitation with parallel discovery',
           rationale: 'Custom methodology balances agility with regulatory compliance',
-          benefits: ['Faster delivery', 'Stakeholder engagement', 'Living documentation']
+          benefits: ['Faster delivery', 'Stakeholder engagement', 'Living documentation'],
+          implementation: ['Iterative workshops', 'Continuous validation', 'Parallel documentation'],
+          constraints: ['Regulatory requirements', 'Audit trail needs']
         },
         reasoning: {
+          primary: 'Complex regulatory environment requires iterative discovery',
+          supporting: ['Regulatory requirements change frequently', 'Stakeholders prefer interactive sessions'],
+          evidence: ['Historical project data', 'Stakeholder feedback'],
+          alternatives: [],
+          decisionCriteria: [],
           primaryReason: 'Complex regulatory environment requires iterative discovery with formal documentation',
-          supportingReasons: [
-            'Regulatory requirements change frequently',
-            'Stakeholders prefer interactive sessions',
-            'Development team benefits from early involvement'
-          ],
-          contextualFactors: [            { factor: 'Regulatory Complexity', impact: 'HIGH', weight: 0.8 },
+          supportingReasons: ['Regulatory requirements change frequently', 'Stakeholders prefer interactive sessions'],
+          contextualFactors: [
+            { factor: 'Regulatory Complexity', impact: 'HIGH', weight: 0.8 },
             { factor: 'Stakeholder Availability', impact: 'MODERATE', weight: 0.6 }
           ],
-          industryConsiderations: [
-            'Financial services regulatory requirements',
-            'Audit trail requirements',
-            'Change management complexity'
-          ],
-          regulatoryDrivers: ['Basel III compliance', 'MiFID II requirements'],
-          businessDrivers: ['Faster time to market', 'Improved stakeholder satisfaction'],
-          technicalDrivers: ['Agile development practices', 'Continuous integration']
+          industryConsiderations: ['Financial services regulatory requirements'],
+          regulatoryDrivers: ['Basel III compliance'],
+          businessDrivers: ['Faster time to market'],
+          technicalDrivers: ['Agile development practices']
         },
         benefits: [
           {
-            benefitType: 'TIME_SAVINGS',
+            benefit: '40% faster requirements discovery',
             description: '40% faster requirements discovery',
+            benefitType: 'TIME_SAVINGS',
+            category: 'TIME_SAVINGS',
+            quantified: true,
             quantifiedValue: { amount: 2, unit: 'weeks', confidence: 'HIGH', source: 'Historical project data' },
+            timeframe: 'Immediate',
             timeline: 'Immediate',
             stakeholders: ['Project Team', 'Business Stakeholders'],
-            evidence: [
-              {
-                evidenceType: 'QUANTITATIVE',
-                source: 'Previous project metrics',
-                description: 'Average discovery time reduced from 6 to 3.6 weeks',
-                reliability: 'HIGH'
-              }
-            ]
-          },
-          {
-            benefitType: 'QUALITY_IMPROVEMENT',
-            description: '25% reduction in late-stage changes',
-            quantifiedValue: { amount: 25, unit: 'percent', confidence: 'MEDIUM', source: 'Change request analysis' },
-            timeline: 'Throughout project',
-            stakeholders: ['Development Team', 'Project Manager'],
-            evidence: [
-              {
-                evidenceType: 'HISTORICAL',
-                source: 'Change request logs',
-                description: 'Fewer scope changes after requirements freeze',
-                reliability: 'MEDIUM'
-              }
-            ]
+            evidence: [{ evidenceType: 'QUANTITATIVE', source: 'Previous project metrics', description: 'Average discovery time reduced', reliability: 'HIGH' }]
           }
-        ],        risks: [
+        ],
+        risks: [
           {
+            risk: 'Potential documentation gaps for audit purposes',
             riskType: 'COMPLIANCE',
-            description: 'Potential documentation gaps for audit purposes',
+            category: 'COMPLIANCE',
             probability: 'LOW',
             impact: 'MODERATE',
+            riskLevel: 'MEDIUM',
             severity: 'MEDIUM',
             timeframe: 'During audit period',
+            indicators: ['Missing documentation', 'Audit findings'],
             affectedStakeholders: ['Compliance Team', 'External Auditors']
-          },
-          {
-            riskType: 'OPERATIONAL',
-            description: 'Team coordination complexity in hybrid approach',
-            probability: 'MEDIUM',
-            impact: 'MINOR',
-            severity: 'LOW',
-            timeframe: 'Throughout project',
-            affectedStakeholders: ['Development Team', 'Business Analysts']
           }
-        ],        mitigations: [
+        ],
+        mitigations: [
           {
-            riskId: 'COMP-001',
-            strategy: 'Enhanced documentation templates',
-            actions: ['Create audit-ready documentation from agile artifacts', 'Implement template library', 'Train team on usage']
+            risk: 'COMP-001',
+            strategy: 'MITIGATE',
+            actions: ['Create audit-ready documentation', 'Implement template library'],
+            owner: 'Business Analyst',
+            timeline: '2 weeks',
+            cost: 5000,
+            effectiveness: 90,
+            monitoring: ['Documentation coverage', 'Template usage']
           }
         ],
         evidenceScore: 92,
@@ -610,32 +762,35 @@ export class StandardsComplianceAnalysisEngine implements StandardsComplianceEng
         businessJustification: {
           strategicAlignment: 'Supports digital transformation initiative',
           businessValue: 'Faster delivery with maintained quality',
-          competitiveAdvantage: 'Increased responsiveness to market changes',
-          stakeholderBenefit: 'Improved engagement and satisfaction',
-          roi: {
-            investment: 5000,
-            expectedReturn: 25000,
-            roiPercentage: 400,
-            paybackPeriod: '3 months',
-            npv: 20000,
-            irr: 45
-          },          timeline: {
+          objectives: ['Improve efficiency', 'Maintain compliance'],
+          benefits: [],
+          costs: [],
+          roi: 400,
+          paybackPeriod: '3 months',
+          npv: 20000,
+          sensitivity: [],
+          timeline: {
             phases: ['Discovery', 'Implementation', 'Validation'],
-            milestones: [
-              new Date('2025-07-15'), // Requirements complete
-              new Date('2025-08-01'), // Development started  
-              new Date('2025-10-01')  // User acceptance
-            ],
-            dependencies: ['Stakeholder availability', 'Technical infrastructure', 'Regulatory approval']
+            milestones: [new Date('2025-07-15'), new Date('2025-08-01'), new Date('2025-10-01')],
+            dependencies: ['Stakeholder availability', 'Technical infrastructure']
           }
         },
         technicalJustification: {
           technicalSuperiority: 'Better integration with agile development practices',
-          performanceImprovement: 'Faster feedback loops and iteration',
-          maintainabilityBenefit: 'Living documentation stays current',
-          scalabilityAdvantage: 'Approach scales to larger requirements sets',
-          integrationBenefit: 'Seamless integration with development workflow',
-          securityImprovement: 'Continuous security review throughout discovery'
+          performanceImprovement: 'Faster feedback loops',
+          requirements: [],
+          constraints: [],
+          dependencies: [],
+          alternatives: [],
+          feasibility: {
+            technical: 'HIGH',
+            economic: 'HIGH',
+            operational: 'HIGH',
+            schedule: 'HIGH',
+            overall: 'HIGH',
+            risks: [],
+            assumptions: []
+          }
         },
         recommendation: 'STRONGLY_APPROVE',
         approvalStatus: 'PENDING',

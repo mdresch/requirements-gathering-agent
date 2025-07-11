@@ -1,0 +1,9 @@
+<!-- Adobe Illustrator Template: Project Timeline -->
+<!-- Variables: phases, milestones, dates, resources -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <title>Project Timeline Template</title>
+  <text x="50" y="50" font-family="Arial" font-size="16">
+    Project Timeline - Visual Timeline Template
+  </text>
+  <rect x="50" y="100" width="700" height="400" fill="none" stroke="#ccc"/>
+</svg>

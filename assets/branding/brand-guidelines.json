@@ -1,0 +1,294 @@
+{
+  "version": "1.0",
+  "brandName": "Professional Document Suite",
+  "colors": {
+    "primary": "#2E86AB",
+    "primaryLight": "#4DA3C7",
+    "primaryDark": "#1E5F7A",
+    "secondary": "#A23B72",
+    "secondaryLight": "#B85590",
+    "secondaryDark": "#7A2B54",
+    "accent": "#F18F01",
+    "accentLight": "#F4A632",
+    "accentDark": "#C76F00",
+    "neutral": {
+      "50": "#FAFAFA",
+      "100": "#F5F5F5",
+      "200": "#EEEEEE",
+      "300": "#E0E0E0",
+      "400": "#BDBDBD",
+      "500": "#9E9E9E",
+      "600": "#757575",
+      "700": "#616161",
+      "800": "#424242",
+      "900": "#212121"
+    },
+    "semantic": {
+      "success": "#4CAF50",
+      "warning": "#FF9800",
+      "error": "#F44336",
+      "info": "#2196F3"
+    }
+  },
+  "typography": {
+    "headings": {
+      "fontFamily": "Segoe UI, system-ui, sans-serif",
+      "fontWeight": "600",
+      "lineHeight": 1.2,
+      "letterSpacing": "-0.02em"
+    },
+    "body": {
+      "fontFamily": "Segoe UI, system-ui, sans-serif",
+      "fontWeight": "400",
+      "lineHeight": 1.6,
+      "letterSpacing": "0"
+    },
+    "monospace": {
+      "fontFamily": "Consolas, 'Courier New', monospace",
+      "fontWeight": "400",
+      "lineHeight": 1.4,
+      "letterSpacing": "0"
+    },
+    "sizes": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem",
+      "4xl": "2.25rem",
+      "5xl": "3rem",
+      "6xl": "3.75rem"
+    }
+  },
+  "spacing": {
+    "xs": "0.25rem",
+    "sm": "0.5rem",
+    "md": "1rem",
+    "lg": "1.5rem",
+    "xl": "2rem",
+    "2xl": "3rem",
+    "3xl": "4rem"
+  },
+  "layout": {
+    "margins": {
+      "page": "2.5cm",
+      "section": "1.5rem",
+      "paragraph": "1rem"
+    },
+    "columns": {
+      "default": 1,
+      "wide": 2,
+      "newsletter": 3
+    },
+    "paperSizes": {
+      "a4": {
+        "width": "210mm",
+        "height": "297mm"
+      },
+      "letter": {
+        "width": "8.5in",
+        "height": "11in"
+      }
+    }
+  },
+  "assets": {
+    "logoPath": "assets/branding/logo.svg",
+    "logoVariants": {
+      "primary": "assets/branding/logo-primary.svg",
+      "white": "assets/branding/logo-white.svg",
+      "monochrome": "assets/branding/logo-mono.svg"
+    },
+    "watermark": "assets/branding/watermark.png",
+    "backgrounds": {
+      "header": "assets/branding/header-bg.svg",
+      "footer": "assets/branding/footer-bg.svg",
+      "cover": "assets/branding/cover-bg.svg"
+    }
+  },
+  "documentStyles": {
+    "headers": {
+      "h1": {
+        "fontSize": "3rem",
+        "fontWeight": "600",
+        "color": "#2E86AB",
+        "marginTop": "2rem",
+        "marginBottom": "1rem",
+        "textTransform": "none"
+      },
+      "h2": {
+        "fontSize": "2.25rem",
+        "fontWeight": "600",
+        "color": "#2E86AB",
+        "marginTop": "1.5rem",
+        "marginBottom": "0.75rem"
+      },
+      "h3": {
+        "fontSize": "1.875rem",
+        "fontWeight": "600",
+        "color": "#1E5F7A",
+        "marginTop": "1.25rem",
+        "marginBottom": "0.5rem"
+      },
+      "h4": {
+        "fontSize": "1.5rem",
+        "fontWeight": "500",
+        "color": "#1E5F7A",
+        "marginTop": "1rem",
+        "marginBottom": "0.5rem"
+      },
+      "h5": {
+        "fontSize": "1.25rem",
+        "fontWeight": "500",
+        "color": "#424242",
+        "marginTop": "0.75rem",
+        "marginBottom": "0.25rem"
+      },
+      "h6": {
+        "fontSize": "1.125rem",
+        "fontWeight": "500",
+        "color": "#424242",
+        "marginTop": "0.5rem",
+        "marginBottom": "0.25rem"
+      }
+    },
+    "body": {
+      "paragraph": {
+        "fontSize": "1rem",
+        "lineHeight": 1.6,
+        "color": "#424242",
+        "marginBottom": "1rem"
+      },
+      "listItem": {
+        "fontSize": "1rem",
+        "lineHeight": 1.6,
+        "color": "#424242",
+        "marginBottom": "0.5rem"
+      }
+    },
+    "code": {
+      "inline": {
+        "fontFamily": "Consolas, 'Courier New', monospace",
+        "fontSize": "0.875rem",
+        "backgroundColor": "#F5F5F5",
+        "color": "#A23B72",
+        "padding": "0.125rem 0.25rem",
+        "borderRadius": "0.25rem"
+      },
+      "block": {
+        "fontFamily": "Consolas, 'Courier New', monospace",
+        "fontSize": "0.875rem",
+        "backgroundColor": "#FAFAFA",
+        "color": "#424242",
+        "padding": "1rem",
+        "borderRadius": "0.5rem",
+        "border": "1px solid #E0E0E0",
+        "marginBottom": "1rem"
+      }
+    },
+    "tables": {
+      "header": {
+        "backgroundColor": "#2E86AB",
+        "color": "#FFFFFF",
+        "fontWeight": "600",
+        "padding": "0.75rem"
+      },
+      "cell": {
+        "padding": "0.5rem 0.75rem",
+        "borderColor": "#E0E0E0",
+        "borderWidth": "1px"
+      },
+      "alternatingRow": {
+        "backgroundColor": "#FAFAFA"
+      }
+    },
+    "borders": {
+      "default": {
+        "width": "1px",
+        "style": "solid",
+        "color": "#E0E0E0"
+      },
+      "accent": {
+        "width": "2px",
+        "style": "solid",
+        "color": "#F18F01"
+      },
+      "primary": {
+        "width": "2px",
+        "style": "solid",
+        "color": "#2E86AB"
+      }
+    }
+  },
+  "templates": {
+    "projectCharter": {
+      "coverPage": {
+        "backgroundColor": "#2E86AB",
+        "titleColor": "#FFFFFF",
+        "subtitleColor": "#4DA3C7"
+      },
+      "sectionHeaders": {
+        "backgroundColor": "#F5F5F5",
+        "borderColor": "#2E86AB",
+        "textColor": "#2E86AB"
+      }
+    },
+    "requirementsDoc": {
+      "coverPage": {
+        "backgroundColor": "#A23B72",
+        "titleColor": "#FFFFFF",
+        "subtitleColor": "#B85590"
+      },
+      "requirementBlocks": {
+        "backgroundColor": "#FAFAFA",
+        "borderColor": "#A23B72",
+        "textColor": "#424242"
+      }
+    },
+    "technicalSpec": {
+      "coverPage": {
+        "backgroundColor": "#424242",
+        "titleColor": "#FFFFFF",
+        "subtitleColor": "#757575"
+      },
+      "codeBlocks": {
+        "backgroundColor": "#F5F5F5",
+        "borderColor": "#9E9E9E",
+        "textColor": "#212121"
+      }
+    }
+  },
+  "visualizations": {
+    "charts": {
+      "colorPalette": ["#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#FF9800"],
+      "gridColor": "#E0E0E0",
+      "textColor": "#424242",
+      "backgroundColor": "#FFFFFF"
+    },
+    "timelines": {
+      "milestoneColor": "#2E86AB",
+      "phaseColors": ["#4DA3C7", "#A23B72", "#F18F01", "#4CAF50"],
+      "connectionColor": "#BDBDBD",
+      "textColor": "#424242"
+    },
+    "infographics": {
+      "primaryIcon": "#2E86AB",
+      "secondaryIcon": "#A23B72",
+      "accentIcon": "#F18F01",
+      "backgroundColor": "#FFFFFF"
+    }
+  },
+  "accessibility": {
+    "contrastRatios": {
+      "primaryOnWhite": 4.8,
+      "secondaryOnWhite": 6.2,
+      "bodyTextOnWhite": 9.1,
+      "whiteOnPrimary": 4.8
+    },
+    "fontSize": {
+      "minimum": "0.875rem",
+      "recommended": "1rem"
+    }
+  }
+}

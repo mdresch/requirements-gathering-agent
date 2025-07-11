@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Document Generation Template: Business Report -->
+<!-- Variables: report_title, author, date, data_sources -->
+<template>
+  <metadata>
+    <name>Business Report Template</name>
+    <description>Professional business report with data integration</description>
+  </metadata>
+  <variables>
+    <variable name="report_title"/>
+    <variable name="author"/>
+    <variable name="date"/>
+    <variable name="data_sources"/>
+  </variables>
+  <content>
+    <section>Business Report Template Content</section>
+  </content>
+</template>

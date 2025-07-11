@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global Office Word console fetch setTimeout */
+/* global Office Word console fetch setTimeout Blob FormData */
 
 // Document generation interfaces
 interface DocumentSection {
@@ -1280,7 +1280,7 @@ export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
 
       // Get document content
       const body = context.document.body;
-      context.load(body, 'text');
+      context.load(body, "text");
       await context.sync();
 
       const content = body.text;
@@ -1302,7 +1302,7 @@ export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
       await context.sync();
     });
   } catch (error) {
-    console.error('Adobe PDF conversion failed:', error);
+    console.error("Adobe PDF conversion failed:", error);
 
     // Show error message in document
     await Word.run(async (context) => {
@@ -1325,7 +1325,7 @@ export async function convertToAdobePDF(event: Office.AddinCommands.Event) {
  */
 export async function convertToAdobePDFWithTemplate(
   event: Office.AddinCommands.Event,
-  templateName: string = 'project-charter'
+  templateName: string = "project-charter"
 ) {
   try {
     await Word.run(async (context) => {
@@ -1340,7 +1340,7 @@ export async function convertToAdobePDFWithTemplate(
 
       // Get document content
       const body = context.document.body;
-      context.load(body, 'text');
+      context.load(body, "text");
       await context.sync();
 
       const content = body.text;
@@ -1362,7 +1362,7 @@ export async function convertToAdobePDFWithTemplate(
       await context.sync();
     });
   } catch (error) {
-    console.error('Adobe PDF conversion with template failed:', error);
+    console.error("Adobe PDF conversion with template failed:", error);
 
     // Show error message in document
     await Word.run(async (context) => {
@@ -1384,23 +1384,29 @@ export async function convertToAdobePDFWithTemplate(
  * Implementation from ADOBE-IMMEDIATE-START-GUIDE.md
  */
 async function callAdobePDFAPI(markdownContent: string): Promise<string> {
-  // Adobe.io credentials - Get from configuration
-  // TODO: Replace these with your actual Adobe.io credentials from Adobe Developer Console
+  // Adobe.io credentials - Get from environment variables
+  // Set up your credentials in .env file:
+  // ADOBE_CLIENT_ID=your_client_id_here
+  // ADOBE_CLIENT_SECRET=your_client_secret_here
   // Get your credentials from: https://developer.adobe.com/console
-  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
-  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+  const ADOBE_CLIENT_ID = process.env.ADOBE_CLIENT_ID || "";
+  const ADOBE_CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET || "";
+
+  if (!ADOBE_CLIENT_ID || !ADOBE_CLIENT_SECRET) {
+    throw new Error("Adobe credentials not configured. Please set ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET environment variables.");
+  }
 
   try {
     // Step 1: Get Adobe access token
-    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
+    const tokenResponse = await fetch("https://ims-na1.adobelogin.com/ims/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: JSON.stringify({
+        grant_type: "client_credentials",
         client_id: ADOBE_CLIENT_ID,
         client_secret: ADOBE_CLIENT_SECRET,
-        scope: 'openid,AdobeID,session'
-      })
+        scope: "openid,AdobeID,session",
+      }),
     });
 
     if (!tokenResponse.ok) {
@@ -1410,7 +1416,7 @@ async function callAdobePDFAPI(markdownContent: string): Promise<string> {
     const { access_token } = await tokenResponse.json();
 
     if (!access_token) {
-      throw new Error('Failed to get Adobe access token');
+      throw new Error("Failed to get Adobe access token");
     }
 
     // Step 2: Convert content to professional HTML using template system
@@ -1426,7 +1432,6 @@ async function callAdobePDFAPI(markdownContent: string): Promise<string> {
     const resultUrl = await pollForPDF(pdfResponse.jobID, access_token, ADOBE_CLIENT_ID);
 
     return resultUrl;
-
   } catch (error) {
     throw new Error(`Adobe PDF conversion failed: ${error.message}`);
   }
@@ -1438,7 +1443,7 @@ async function callAdobePDFAPI(markdownContent: string): Promise<string> {
 async function markdownToHTML(markdown: string): Promise<string> {
   try {
     // Try to use the professional template engine
-    const { generateProfessionalDocument } = await import('../templates/template-engine');
+    const { generateProfessionalDocument } = await import("../templates/template-engine");
 
     // Detect document type from content
     const documentType = detectDocumentType(markdown);
@@ -1448,9 +1453,8 @@ async function markdownToHTML(markdown: string): Promise<string> {
 
     // Generate professional HTML using template system
     return await generateProfessionalDocument(markdown, documentType, variables);
-
   } catch (error) {
-    console.warn('Template engine not available, falling back to basic conversion:', error);
+    console.warn("Template engine not available, falling back to basic conversion:", error);
 
     // Fallback to basic conversion if template system fails
     return generateBasicHTML(markdown);
@@ -1464,28 +1468,34 @@ function detectDocumentType(markdown: string): string {
   const content = markdown.toLowerCase();
 
   // Check for project charter indicators
-  if (content.includes('project charter') ||
-      content.includes('project objectives') ||
-      content.includes('project scope')) {
-    return 'project-charter';
+  if (
+    content.includes("project charter") ||
+    content.includes("project objectives") ||
+    content.includes("project scope")
+  ) {
+    return "project-charter";
   }
 
   // Check for technical specification indicators
-  if (content.includes('technical specification') ||
-      content.includes('system architecture') ||
-      content.includes('api specification')) {
-    return 'technical-specification';
+  if (
+    content.includes("technical specification") ||
+    content.includes("system architecture") ||
+    content.includes("api specification")
+  ) {
+    return "technical-specification";
   }
 
   // Check for business requirements indicators
-  if (content.includes('business requirements') ||
-      content.includes('functional requirements') ||
-      content.includes('business objectives')) {
-    return 'business-requirements';
+  if (
+    content.includes("business requirements") ||
+    content.includes("functional requirements") ||
+    content.includes("business objectives")
+  ) {
+    return "business-requirements";
   }
 
   // Default to project charter
-  return 'project-charter';
+  return "project-charter";
 }
 
 /**
@@ -1498,7 +1508,7 @@ function extractDocumentVariables(markdown: string): Record<string, string> {
   const frontmatterMatch = markdown.match(/^---\n([\s\S]*?)\n---/);
   if (frontmatterMatch) {
     const frontmatter = frontmatterMatch[1];
-    const lines = frontmatter.split('\n');
+    const lines = frontmatter.split("\n");
 
     for (const line of lines) {
       const match = line.match(/^(\w+):\s*(.+)$/);
@@ -1516,9 +1526,9 @@ function extractDocumentVariables(markdown: string): Record<string, string> {
   }
 
   // Set default values
-  variables.author = variables.author || 'ADPA System';
-  variables.version = variables.version || '1.0';
-  variables.date = variables.date || new Date().toISOString().split('T')[0];
+  variables.author = variables.author || "ADPA System";
+  variables.version = variables.version || "1.0";
+  variables.date = variables.date || new Date().toISOString().split("T")[0];
 
   return variables;
 }
@@ -1530,12 +1540,15 @@ function generateBasicHTML(markdown: string): string {
   let html = markdown;
 
   // Basic markdown conversion with ADPA styling
-  html = html.replace(/^# (.*$)/gim, '<h1 style="color: #2E86AB; border-bottom: 2px solid #2E86AB; padding-bottom: 10px;">$1</h1>');
+  html = html.replace(
+    /^# (.*$)/gim,
+    '<h1 style="color: #2E86AB; border-bottom: 2px solid #2E86AB; padding-bottom: 10px;">$1</h1>'
+  );
   html = html.replace(/^## (.*$)/gim, '<h2 style="color: #A23B72; margin-top: 30px;">$1</h2>');
   html = html.replace(/^### (.*$)/gim, '<h3 style="color: #F18F01; margin-top: 25px;">$1</h3>');
-  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-  html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-  html = html.replace(/\n/gim, '<br>');
+  html = html.replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>");
+  html = html.replace(/\*(.*?)\*/gim, "<em>$1</em>");
+  html = html.replace(/\n/gim, "<br>");
 
   return `
 <!DOCTYPE html>
@@ -1604,17 +1617,17 @@ function generateBasicHTML(markdown: string): string {
  * Upload HTML content to Adobe for processing
  */
 async function uploadToAdobe(htmlContent: string, accessToken: string, clientId: string): Promise<any> {
-  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const blob = new Blob([htmlContent], { type: "text/html" });
   const formData = new FormData();
-  formData.append('file', blob, 'document.html');
+  formData.append("file", blob, "document.html");
 
-  const response = await fetch('https://pdf-services.adobe.io/assets', {
-    method: 'POST',
+  const response = await fetch("https://pdf-services.adobe.io/assets", {
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': clientId
+      Authorization: `Bearer ${accessToken}`,
+      "x-api-key": clientId,
     },
-    body: formData
+    body: formData,
   });
 
   if (!response.ok) {
@@ -1628,17 +1641,17 @@ async function uploadToAdobe(htmlContent: string, accessToken: string, clientId:
  * Create PDF generation job in Adobe
  */
 async function createPDFJob(assetID: string, accessToken: string, clientId: string): Promise<any> {
-  const response = await fetch('https://pdf-services.adobe.io/operation/createpdf', {
-    method: 'POST',
+  const response = await fetch("https://pdf-services.adobe.io/operation/createpdf", {
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'x-api-key': clientId,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${accessToken}`,
+      "x-api-key": clientId,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       assetID: assetID,
-      outputFormat: 'pdf'
-    })
+      outputFormat: "pdf",
+    }),
   });
 
   if (!response.ok) {
@@ -1657,11 +1670,11 @@ async function pollForPDF(jobID: string, accessToken: string, clientId: string):
 
   while (attempts < maxAttempts) {
     const response = await fetch(`https://pdf-services.adobe.io/operation/${jobID}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'x-api-key': clientId
-      }
+        Authorization: `Bearer ${accessToken}`,
+        "x-api-key": clientId,
+      },
     });
 
     if (!response.ok) {
@@ -1670,17 +1683,17 @@ async function pollForPDF(jobID: string, accessToken: string, clientId: string):
 
     const jobStatus = await response.json();
 
-    if (jobStatus.status === 'done') {
+    if (jobStatus.status === "done") {
       return jobStatus.downloadUri;
-    } else if (jobStatus.status === 'failed') {
-      throw new Error('Adobe PDF generation failed');
+    } else if (jobStatus.status === "failed") {
+      throw new Error("Adobe PDF generation failed");
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds
     attempts++;
   }
 
-  throw new Error('Adobe PDF generation timed out');
+  throw new Error("Adobe PDF generation timed out");
 }
 
 /**
@@ -1916,21 +1929,25 @@ async function pollIllustratorJob(jobId: string, accessToken: string, clientId: 
  * Adobe.io API call with specific template
  */
 async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName: string): Promise<string> {
-  // Adobe.io credentials - Get from configuration
-  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
-  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+  // Adobe.io credentials - Get from environment variables
+  const ADOBE_CLIENT_ID = process.env.ADOBE_CLIENT_ID || "";
+  const ADOBE_CLIENT_SECRET = process.env.ADOBE_CLIENT_SECRET || "";
+
+  if (!ADOBE_CLIENT_ID || !ADOBE_CLIENT_SECRET) {
+    throw new Error("Adobe credentials not configured. Please set ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET environment variables.");
+  }
 
   try {
     // Step 1: Get Adobe access token
-    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
+    const tokenResponse = await fetch("https://ims-na1.adobelogin.com/ims/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: JSON.stringify({
+        grant_type: "client_credentials",
         client_id: ADOBE_CLIENT_ID,
         client_secret: ADOBE_CLIENT_SECRET,
-        scope: 'openid,AdobeID,session'
-      })
+        scope: "openid,AdobeID,session",
+      }),
     });
 
     if (!tokenResponse.ok) {
@@ -1940,7 +1957,7 @@ async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName
     const { access_token } = await tokenResponse.json();
 
     if (!access_token) {
-      throw new Error('Failed to get Adobe access token');
+      throw new Error("Failed to get Adobe access token");
     }
 
     // Step 2: Convert content to professional HTML using specific template
@@ -1956,7 +1973,6 @@ async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName
     const resultUrl = await pollForPDF(pdfResponse.jobID, access_token, ADOBE_CLIENT_ID);
 
     return resultUrl;
-
   } catch (error) {
     throw new Error(`Adobe PDF conversion failed: ${error.message}`);
   }
@@ -1968,14 +1984,13 @@ async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName
 async function generateTemplatedHTML(markdownContent: string, templateName: string): Promise<string> {
   try {
     // Try to use the professional template engine with specific template
-    const { generateProfessionalDocument } = await import('../templates/template-engine');
+    const { generateProfessionalDocument } = await import("../templates/template-engine");
 
     // Extract variables from content
     const variables = extractDocumentVariables(markdownContent);
 
     // Generate professional HTML using specified template
     return await generateProfessionalDocument(markdownContent, templateName, variables);
-
   } catch (error) {
     console.warn(`Template ${templateName} not available, falling back to auto-detection:`, error);
 
@@ -2157,21 +2172,21 @@ async function callMultiFormatAPI(markdownContent: string): Promise<{[format: st
  * Convert to Project Charter PDF
  */
 export async function convertProjectCharter(event: Office.AddinCommands.Event) {
-  await convertToAdobePDFWithTemplate(event, 'project-charter');
+  await convertToAdobePDFWithTemplate(event, "project-charter");
 }
 
 /**
  * Convert to Technical Specification PDF
  */
 export async function convertTechnicalSpec(event: Office.AddinCommands.Event) {
-  await convertToAdobePDFWithTemplate(event, 'technical-specification');
+  await convertToAdobePDFWithTemplate(event, "technical-specification");
 }
 
 /**
  * Convert to Business Requirements PDF
  */
 export async function convertBusinessReq(event: Office.AddinCommands.Event) {
-  await convertToAdobePDFWithTemplate(event, 'business-requirements');
+  await convertToAdobePDFWithTemplate(event, "business-requirements");
 }
 
 /**

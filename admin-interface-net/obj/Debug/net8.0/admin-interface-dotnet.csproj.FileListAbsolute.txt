@@ -1,0 +1,7 @@
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.csproj.AssemblyReference.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.csproj.CoreCompileInputs.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.RazorAssemblyInfo.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.RazorAssemblyInfo.cs
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-net\obj\Debug\net8.0\admin-interface-dotnet.sourcelink.json

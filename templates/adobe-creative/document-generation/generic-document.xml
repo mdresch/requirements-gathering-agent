@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Properties>
+    <DocumentTitle>Generic Document Generation Template</DocumentTitle>
+    <Author>Requirements Gathering Agent</Author>
+    <Description>Generic template for any document type</Description>
+  </Properties>
+  <DocumentTemplate>
+    <Header>
+      <Logo src="${logoUrl}" width="150" height="50" align="left" />
+      <Text align="right" fontSize="9" fontFamily="Segoe UI" color="#666666">
+        ${companyName} | Confidential
+      </Text>
+      <Line color="#0070C0" thickness="1" />
+    </Header>
+    
+    <TitlePage>
+      <Title fontSize="28" fontFamily="Segoe UI" color="#0070C0" align="center" marginTop="200">
+        ${documentTitle}
+      </Title>
+      <Subtitle fontSize="18" fontFamily="Segoe UI" color="#333333" align="center" marginTop="20">
+        ${documentSubtitle}
+      </Subtitle>
+    </TitlePage>
+    
+    <TableOfContents title="Table of Contents" levelDepth="3" />
+    
+    <Content>
+      <Section title="Introduction">
+        <Paragraph>${introduction}</Paragraph>
+      </Section>
+      
+      <Section title="Content">
+        <Paragraph>${mainContent}</Paragraph>
+      </Section>
+      
+      <Section title="Summary">
+        <Paragraph>${summary}</Paragraph>
+      </Section>
+    </Content>
+    
+    <Footer>
+      <Line color="#0070C0" thickness="1" />
+      <Text align="left" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        ${companyName} - Confidential
+      </Text>
+      <Text align="center" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        ${documentTitle}
+      </Text>
+      <Text align="right" fontSize="8" fontFamily="Segoe UI" color="#666666">
+        Page ${pageNumber} of ${pageCount}
+      </Text>
+    </Footer>
+  </DocumentTemplate>
+</Document>

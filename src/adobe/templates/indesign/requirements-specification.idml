@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- InDesign Template: Requirements Specification -->
+<!-- Variables: system_name, version, author, stakeholders -->
+<idml:Document xmlns:idml="http://ns.adobe.com/AdobeInDesign/idml/1.0">
+  <idml:Story>
+    <idml:ParagraphStyleRange>
+      <idml:Content>Requirements Specification Template - Technical Layout</idml:Content>
+    </idml:ParagraphStyleRange>
+  </idml:Story>
+</idml:Document>
