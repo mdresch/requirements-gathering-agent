@@ -18,7 +18,11 @@ import {
   enableMobileCollaboration,
   setupProgressiveWebApp,
   enableCrossPlatformSync,
-  optimizeForMobileDevices
+  optimizeForMobileDevices,
+  generateAdvancedAnalytics,
+  monitorPerformanceMetrics,
+  generatePredictiveInsights,
+  createAnalyticsDashboard
 } from "./word";
 
 /* global Office */
@@ -45,4 +49,8 @@ Office.onReady(async () => {
   Office.actions.associate("setupPWA", setupProgressiveWebApp);
   Office.actions.associate("enableCrossPlatformSync", enableCrossPlatformSync);
   Office.actions.associate("optimizeForMobile", optimizeForMobileDevices);
+  Office.actions.associate("generateAdvancedAnalytics", generateAdvancedAnalytics);
+  Office.actions.associate("monitorPerformance", monitorPerformanceMetrics);
+  Office.actions.associate("generatePredictiveInsights", generatePredictiveInsights);
+  Office.actions.associate("createAnalyticsDashboard", createAnalyticsDashboard);
 });
