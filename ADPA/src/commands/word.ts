@@ -1684,6 +1684,235 @@ async function pollForPDF(jobID: string, accessToken: string, clientId: string):
 }
 
 /**
+ * Prepare document data for InDesign processing
+ */
+async function prepareDocumentForInDesign(markdownContent: string): Promise<any> {
+  try {
+    // Use template engine to structure content
+    const { generateProfessionalDocument } = await import('../templates/template-engine');
+
+    // Detect document type
+    const documentType = detectDocumentType(markdownContent);
+    const variables = extractDocumentVariables(markdownContent);
+
+    // Parse content into sections
+    const sections = parseContentIntoSections(markdownContent);
+
+    return {
+      title: variables.projectName || variables.title || 'Professional Document',
+      sections: sections,
+      metadata: {
+        author: variables.author || 'ADPA System',
+        version: variables.version || '1.0',
+        date: variables.date || new Date().toISOString().split('T')[0],
+        projectName: variables.projectName || 'ADPA Project',
+        documentType: documentType
+      },
+      branding: {
+        colors: {
+          primary: '#2E86AB',
+          secondary: '#A23B72',
+          accent: '#F18F01'
+        },
+        fonts: {
+          primary: 'Arial',
+          secondary: 'Times New Roman'
+        }
+      }
+    };
+
+  } catch (error) {
+    // Fallback to basic structure
+    return {
+      title: 'Professional Document',
+      content: markdownContent,
+      metadata: {
+        author: 'ADPA System',
+        date: new Date().toISOString().split('T')[0]
+      }
+    };
+  }
+}
+
+/**
+ * Parse content into structured sections
+ */
+function parseContentIntoSections(markdownContent: string): any[] {
+  const sections = [];
+  const lines = markdownContent.split('\n');
+  let currentSection = null;
+
+  for (const line of lines) {
+    const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
+
+    if (headerMatch) {
+      // Save previous section
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+
+      // Start new section
+      currentSection = {
+        id: `section-${sections.length + 1}`,
+        title: headerMatch[2].trim(),
+        content: [],
+        type: 'text',
+        styling: {
+          headerLevel: headerMatch[1].length,
+          color: headerMatch[1].length === 1 ? '#2E86AB' : '#A23B72',
+          fontSize: `${2.5 - (headerMatch[1].length * 0.3)}rem`,
+          fontWeight: 'bold'
+        }
+      };
+    } else if (currentSection) {
+      currentSection.content.push(line);
+    }
+  }
+
+  // Add final section
+  if (currentSection) {
+    sections.push(currentSection);
+  }
+
+  return sections.map(section => ({
+    ...section,
+    content: section.content.join('\n').trim()
+  }));
+}
+
+/**
+ * Extract diagrams from markdown content
+ */
+async function extractDiagramsFromContent(markdownContent: string): Promise<any[]> {
+  try {
+    // Use diagram parser
+    const { createDiagramParser } = await import('../adobe/diagram-parser');
+    const parser = createDiagramParser();
+
+    return parser.parseDiagramsFromMarkdown(markdownContent);
+
+  } catch (error) {
+    console.warn('Diagram parser not available, using fallback:', error);
+
+    // Fallback: look for simple diagram indicators
+    const diagrams = [];
+    const lines = markdownContent.split('\n');
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase();
+
+      if (line.includes('flowchart') || line.includes('process flow') ||
+          line.includes('workflow') || line.includes('steps')) {
+
+        diagrams.push({
+          type: 'flowchart',
+          title: lines[i].replace(/^#+\s*/, ''),
+          nodes: [
+            {
+              id: 'start',
+              label: 'Start',
+              type: 'start',
+              position: { x: 50, y: 50 },
+              size: { width: 100, height: 60 }
+            },
+            {
+              id: 'process',
+              label: 'Process',
+              type: 'process',
+              position: { x: 200, y: 50 },
+              size: { width: 100, height: 60 }
+            },
+            {
+              id: 'end',
+              label: 'End',
+              type: 'end',
+              position: { x: 350, y: 50 },
+              size: { width: 100, height: 60 }
+            }
+          ],
+          connections: [
+            { from: 'start', to: 'process', type: 'solid', color: '#2E86AB' },
+            { from: 'process', to: 'end', type: 'solid', color: '#2E86AB' }
+          ]
+        });
+      }
+    }
+
+    return diagrams;
+  }
+}
+
+/**
+ * Poll InDesign job for completion
+ */
+async function pollInDesignJob(jobId: string, accessToken: string, clientId: string): Promise<string> {
+  const maxAttempts = 30;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    try {
+      const response = await fetch(`https://indesign-api.adobe.io/jobs/${jobId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'x-api-key': clientId
+        }
+      });
+
+      const jobStatus = await response.json();
+
+      if (jobStatus.status === 'completed') {
+        return jobStatus.outputUrl;
+      } else if (jobStatus.status === 'failed') {
+        throw new Error(`InDesign job failed: ${jobStatus.error}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+      attempts++;
+
+    } catch (error) {
+      throw new Error(`Failed to poll InDesign job: ${error.message}`);
+    }
+  }
+
+  throw new Error('InDesign job timed out');
+}
+
+/**
+ * Poll Illustrator job for completion
+ */
+async function pollIllustratorJob(jobId: string, accessToken: string, clientId: string): Promise<string> {
+  const maxAttempts = 20;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    try {
+      const response = await fetch(`https://illustrator-api.adobe.io/jobs/${jobId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'x-api-key': clientId
+        }
+      });
+
+      const jobStatus = await response.json();
+
+      if (jobStatus.status === 'completed') {
+        return jobStatus.outputUrl;
+      } else if (jobStatus.status === 'failed') {
+        throw new Error(`Illustrator job failed: ${jobStatus.error}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      attempts++;
+
+    } catch (error) {
+      throw new Error(`Failed to poll Illustrator job: ${error.message}`);
+    }
+  }
+
+  throw new Error('Illustrator job timed out');
+}
+
+/**
  * Adobe.io API call with specific template
  */
 async function callAdobePDFAPIWithTemplate(markdownContent: string, templateName: string): Promise<string> {
@@ -1756,6 +1985,175 @@ async function generateTemplatedHTML(markdownContent: string, templateName: stri
 }
 
 /**
+ * Call Adobe InDesign API for professional layout
+ */
+async function callInDesignAPI(markdownContent: string): Promise<string> {
+  // Adobe Creative Suite credentials
+  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
+  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+
+  try {
+    // Step 1: Authenticate with Creative Cloud
+    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: ADOBE_CLIENT_ID,
+        client_secret: ADOBE_CLIENT_SECRET,
+        scope: 'creative_sdk,indesign_api'
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Creative Cloud authentication failed: ${tokenResponse.status}`);
+    }
+
+    const { access_token } = await tokenResponse.json();
+
+    // Step 2: Prepare document data
+    const documentData = await prepareDocumentForInDesign(markdownContent);
+
+    // Step 3: Call InDesign API
+    const indesignResponse = await fetch('https://indesign-api.adobe.io/documents/create', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Content-Type': 'application/json',
+        'x-api-key': ADOBE_CLIENT_ID
+      },
+      body: JSON.stringify({
+        template: 'professional-document',
+        content: documentData,
+        options: {
+          pageSize: 'A4',
+          orientation: 'portrait',
+          outputFormat: 'pdf',
+          colorProfile: 'CMYK'
+        }
+      })
+    });
+
+    if (!indesignResponse.ok) {
+      throw new Error(`InDesign API failed: ${indesignResponse.status}`);
+    }
+
+    const result = await indesignResponse.json();
+
+    // Step 4: Poll for completion
+    return await pollInDesignJob(result.jobId, access_token, ADOBE_CLIENT_ID);
+
+  } catch (error) {
+    throw new Error(`InDesign layout generation failed: ${error.message}`);
+  }
+}
+
+/**
+ * Call Adobe Illustrator API for diagram generation
+ */
+async function callIllustratorAPI(markdownContent: string): Promise<string[]> {
+  // Adobe Creative Suite credentials
+  const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
+  const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+
+  try {
+    // Step 1: Authenticate with Creative Cloud
+    const tokenResponse = await fetch('https://ims-na1.adobelogin.com/ims/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: ADOBE_CLIENT_ID,
+        client_secret: ADOBE_CLIENT_SECRET,
+        scope: 'creative_sdk,illustrator_api'
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error(`Creative Cloud authentication failed: ${tokenResponse.status}`);
+    }
+
+    const { access_token } = await tokenResponse.json();
+
+    // Step 2: Extract diagrams from content
+    const diagrams = await extractDiagramsFromContent(markdownContent);
+
+    if (diagrams.length === 0) {
+      return [];
+    }
+
+    // Step 3: Generate diagrams with Illustrator
+    const diagramUrls: string[] = [];
+
+    for (const diagram of diagrams) {
+      const illustratorResponse = await fetch('https://illustrator-api.adobe.io/diagrams/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+          'x-api-key': ADOBE_CLIENT_ID
+        },
+        body: JSON.stringify({
+          diagramType: diagram.type,
+          title: diagram.title,
+          nodes: diagram.nodes,
+          connections: diagram.connections,
+          styling: {
+            style: 'corporate',
+            colorScheme: 'primary',
+            brandColors: {
+              primary: '#2E86AB',
+              secondary: '#A23B72',
+              accent: '#F18F01'
+            }
+          },
+          output: {
+            format: 'svg',
+            size: 'medium',
+            resolution: 300
+          }
+        })
+      });
+
+      if (illustratorResponse.ok) {
+        const result = await illustratorResponse.json();
+        const diagramUrl = await pollIllustratorJob(result.jobId, access_token, ADOBE_CLIENT_ID);
+        diagramUrls.push(diagramUrl);
+      }
+    }
+
+    return diagramUrls;
+
+  } catch (error) {
+    throw new Error(`Illustrator diagram generation failed: ${error.message}`);
+  }
+}
+
+/**
+ * Call Multi-Format API for comprehensive output
+ */
+async function callMultiFormatAPI(markdownContent: string): Promise<{[format: string]: string}> {
+  try {
+    // Generate all formats in parallel
+    const [pdfUrl, indesignUrl, diagramUrls] = await Promise.allSettled([
+      callAdobePDFAPI(markdownContent),
+      callInDesignAPI(markdownContent),
+      callIllustratorAPI(markdownContent)
+    ]);
+
+    return {
+      pdf: pdfUrl.status === 'fulfilled' ? pdfUrl.value : 'Failed',
+      indesign: indesignUrl.status === 'fulfilled' ? indesignUrl.value : 'Failed',
+      diagrams: diagramUrls.status === 'fulfilled' ? diagramUrls.value.join(', ') : 'Failed',
+      web: 'Coming soon'
+    };
+
+  } catch (error) {
+    throw new Error(`Multi-format generation failed: ${error.message}`);
+  }
+}
+
+/**
  * Convert to Project Charter PDF
  */
 export async function convertProjectCharter(event: Office.AddinCommands.Event) {
@@ -1774,4 +2172,186 @@ export async function convertTechnicalSpec(event: Office.AddinCommands.Event) {
  */
 export async function convertBusinessReq(event: Office.AddinCommands.Event) {
   await convertToAdobePDFWithTemplate(event, 'business-requirements');
+}
+
+/**
+ * Convert to Professional InDesign Layout
+ * Uses Adobe InDesign API for print-ready professional documents
+ */
+export async function convertToInDesignLayout(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      // Show progress message
+      const progressParagraph = context.document.body.insertParagraph(
+        "🎨 Creating professional InDesign layout...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, 'text');
+      await context.sync();
+
+      const content = body.text;
+
+      // Convert to InDesign layout
+      const layoutUrl = await callInDesignAPI(content);
+
+      // Remove progress message
+      progressParagraph.delete();
+
+      // Show success message
+      const successParagraph = context.document.body.insertParagraph(
+        `✅ Professional InDesign Layout Created! Download: ${layoutUrl}`,
+        Word.InsertLocation.end
+      );
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+
+      await context.sync();
+    });
+  } catch (error) {
+    console.error('InDesign layout creation failed:', error);
+
+    await Word.run(async (context) => {
+      const errorParagraph = context.document.body.insertParagraph(
+        `❌ InDesign layout failed: ${error.message}`,
+        Word.InsertLocation.end
+      );
+      errorParagraph.font.color = "red";
+      errorParagraph.font.bold = true;
+      await context.sync();
+    });
+  }
+
+  event.completed();
+}
+
+/**
+ * Generate Diagrams with Adobe Illustrator
+ * Extracts diagrams from content and creates professional visualizations
+ */
+export async function generateIllustratorDiagrams(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      // Show progress message
+      const progressParagraph = context.document.body.insertParagraph(
+        "🎨 Generating professional diagrams with Adobe Illustrator...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, 'text');
+      await context.sync();
+
+      const content = body.text;
+
+      // Generate diagrams
+      const diagramUrls = await callIllustratorAPI(content);
+
+      // Remove progress message
+      progressParagraph.delete();
+
+      if (diagramUrls.length > 0) {
+        // Show success message
+        const successParagraph = context.document.body.insertParagraph(
+          `✅ ${diagramUrls.length} Professional Diagrams Generated! URLs: ${diagramUrls.join(', ')}`,
+          Word.InsertLocation.end
+        );
+        successParagraph.font.color = "green";
+        successParagraph.font.bold = true;
+      } else {
+        // No diagrams found
+        const infoParagraph = context.document.body.insertParagraph(
+          "ℹ️ No diagrams detected in document content. Add flowcharts, process descriptions, or mermaid diagrams.",
+          Word.InsertLocation.end
+        );
+        infoParagraph.font.color = "orange";
+        infoParagraph.font.bold = true;
+      }
+
+      await context.sync();
+    });
+  } catch (error) {
+    console.error('Illustrator diagram generation failed:', error);
+
+    await Word.run(async (context) => {
+      const errorParagraph = context.document.body.insertParagraph(
+        `❌ Diagram generation failed: ${error.message}`,
+        Word.InsertLocation.end
+      );
+      errorParagraph.font.color = "red";
+      errorParagraph.font.bold = true;
+      await context.sync();
+    });
+  }
+
+  event.completed();
+}
+
+/**
+ * Generate Multi-Format Output Package
+ * Creates PDF, InDesign, and Illustrator outputs in one operation
+ */
+export async function generateMultiFormatPackage(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      // Show progress message
+      const progressParagraph = context.document.body.insertParagraph(
+        "📦 Creating multi-format document package (PDF + InDesign + Diagrams)...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, 'text');
+      await context.sync();
+
+      const content = body.text;
+
+      // Generate multi-format package
+      const packageUrls = await callMultiFormatAPI(content);
+
+      // Remove progress message
+      progressParagraph.delete();
+
+      // Show success message with all formats
+      const successParagraph = context.document.body.insertParagraph(
+        `✅ Multi-Format Package Created!\n` +
+        `📄 PDF: ${packageUrls.pdf || 'N/A'}\n` +
+        `🎨 InDesign: ${packageUrls.indesign || 'N/A'}\n` +
+        `📊 Diagrams: ${packageUrls.diagrams || 'N/A'}\n` +
+        `🌐 Web: ${packageUrls.web || 'N/A'}`,
+        Word.InsertLocation.end
+      );
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+
+      await context.sync();
+    });
+  } catch (error) {
+    console.error('Multi-format package generation failed:', error);
+
+    await Word.run(async (context) => {
+      const errorParagraph = context.document.body.insertParagraph(
+        `❌ Multi-format package failed: ${error.message}`,
+        Word.InsertLocation.end
+      );
+      errorParagraph.font.color = "red";
+      errorParagraph.font.bold = true;
+      await context.sync();
+    });
+  }
+
+  event.completed();
 }
