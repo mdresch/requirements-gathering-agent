@@ -1,0 +1,831 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+  "id": "8ce95c00-2628-4340-8d39-61d5ce6dd2ae",
+  "manifestVersion": "devPreview",      "version": "6.0.0",
+  "name": {
+    "short": "ADPA Groups",
+    "full": "ADPA - Automated Document Processing Assistant (Grouped)"
+  },
+  "description": {
+    "short": "Professional document processing for Word",
+    "full": "ADPA provides professional document processing, formatting, and Adobe integration for Microsoft Word."
+  },
+  "developer": {
+    "name": "ADPA Development Team",
+    "websiteUrl": "https://localhost:3000",
+    "privacyUrl": "https://localhost:3000/privacy",
+    "termsOfUseUrl": "https://localhost:3000/terms"
+  },
+  "icons": {
+    "outline": "assets/outline.png",
+    "color": "assets/color.png"
+  },
+  "accentColor": "#230201",
+  "localizationInfo": {
+    "defaultLanguageTag": "en-us",
+    "additionalLanguages": []
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "Document.ReadWrite.User",
+          "type": "Delegated"
+        }
+      ]
+    }
+  },
+  "validDomains": [
+    "localhost"
+  ],
+  "extensions": [
+    {
+      "requirements": {
+        "scopes": [
+          "document"
+        ],
+        "capabilities": [
+          {
+            "name": "AddinCommands",
+            "minVersion": "1.1"
+          }
+        ]
+      },
+      "runtimes": [
+        {
+          "requirements": {
+            "capabilities": [
+              {
+                "name": "AddinCommands",
+                "minVersion": "1.1"
+              }
+            ]
+          },
+          "id": "TaskPaneRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://localhost:3000/taskpane.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "TaskPaneRuntimeShow",
+              "type": "openPage",
+              "pinnable": false,
+              "view": "dashboard"
+            }
+          ]
+        },
+        {
+          "id": "CommandsRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://localhost:3000/commands.html",
+            "script": "https://localhost:3000/commands.js"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "action",
+              "type": "executeFunction",
+              "displayName": "action"
+            },
+            {
+              "id": "convertToAdobePDF",
+              "type": "executeFunction",
+              "displayName": "convertToAdobePDF"
+            },
+            {
+              "id": "convertProjectCharter",
+              "type": "executeFunction",
+              "displayName": "convertProjectCharter"
+            },
+            {
+              "id": "convertTechnicalSpec",
+              "type": "executeFunction",
+              "displayName": "convertTechnicalSpec"
+            },
+            {
+              "id": "convertBusinessReq",
+              "type": "executeFunction",
+              "displayName": "convertBusinessReq"
+            },
+            {
+              "id": "convertInDesign",
+              "type": "executeFunction",
+              "displayName": "convertInDesign"
+            },
+            {
+              "id": "generateDiagrams",
+              "type": "executeFunction",
+              "displayName": "generateDiagrams"
+            },
+            {
+              "id": "multiFormatPackage",
+              "type": "executeFunction",
+              "displayName": "multiFormatPackage"
+            },
+            {
+              "id": "analyzeContentAI",
+              "type": "executeFunction",
+              "displayName": "analyzeContentAI"
+            },
+            {
+              "id": "generateSmartDiagrams",
+              "type": "executeFunction",
+              "displayName": "generateSmartDiagrams"
+            },
+            {
+              "id": "buildCustomTemplate",
+              "type": "executeFunction",
+              "displayName": "buildCustomTemplate"
+            },
+            {
+              "id": "optimizeDocumentAI",
+              "type": "executeFunction",
+              "displayName": "optimizeDocumentAI"
+            },
+            {
+              "id": "enableCollaboration",
+              "type": "executeFunction",
+              "displayName": "enableCollaboration"
+            },
+            {
+              "id": "shareAIInsights",
+              "type": "executeFunction",
+              "displayName": "shareAIInsights"
+            },
+            {
+              "id": "syncWithProject",
+              "type": "executeFunction",
+              "displayName": "syncWithProject"
+            },
+            {
+              "id": "setupWorkflow",
+              "type": "executeFunction",
+              "displayName": "setupWorkflow"
+            },
+            {
+              "id": "generateAdvancedAnalytics",
+              "type": "executeFunction",
+              "displayName": "generateAdvancedAnalytics"
+            },
+            {
+              "id": "monitorPerformance",
+              "type": "executeFunction",
+              "displayName": "monitorPerformance"
+            },
+            {
+              "id": "createAnalyticsDashboard",
+              "type": "executeFunction",
+              "displayName": "createAnalyticsDashboard"
+            },
+            {
+              "id": "enableAutomationEngine",
+              "type": "executeFunction",
+              "displayName": "enableAutomationEngine"
+            }
+          ]
+        }
+      ],
+      "ribbons": [
+        {
+          "contexts": [
+            "default"
+          ],
+          "tabs": [
+            {
+              "builtInTabId": "TabHome",
+              "groups": [
+                {
+                  "id": "adpaMainGroup",
+                  "label": "ADPA Tools",
+                  "icons": [
+                    {
+                      "size": 16,
+                      "url": "https://localhost:3000/assets/icon-16.png"
+                    },
+                    {
+                      "size": 32,
+                      "url": "https://localhost:3000/assets/icon-32.png"
+                    },
+                    {
+                      "size": 80,
+                      "url": "https://localhost:3000/assets/icon-80.png"
+                    }
+                  ],
+                  "controls": [
+                    {
+                      "id": "showTaskPaneButton",
+                      "type": "button",
+                      "label": "Show ADPA",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "ADPA Assistant",
+                        "description": "Open the ADPA task pane for document processing"
+                      },
+                      "actionId": "TaskPaneRuntimeShow"
+                    },
+                    {
+                      "id": "formatDocumentButton",
+                      "type": "button",
+                      "label": "Format Document",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "Document Formatting",
+                        "description": "Apply professional formatting to the document"
+                      },
+                      "actionId": "action"
+                    },
+                    {
+                      "id": "pdfConversionMenu",
+                      "type": "menu",
+                      "label": "PDF & Export",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "PDF & Export Tools",
+                        "description": "Convert documents to PDF and other formats"
+                      },
+                      "items": [
+                        {
+                          "id": "convertToPDFMenuItem",
+                          "type": "menuItem",
+                          "label": "Adobe PDF",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Adobe PDF",
+                            "description": "Convert current document to PDF using Adobe services"
+                          },
+                          "actionId": "convertToAdobePDF"
+                        },
+                        {
+                          "id": "projectCharterMenuItem",
+                          "type": "menuItem",
+                          "label": "Project Charter PDF",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Project Charter PDF",
+                            "description": "Convert to PDF with project charter formatting"
+                          },
+                          "actionId": "convertProjectCharter"
+                        },
+                        {
+                          "id": "technicalSpecMenuItem",
+                          "type": "menuItem",
+                          "label": "Technical Specification",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Technical Specification",
+                            "description": "Convert to technical specification format"
+                          },
+                          "actionId": "convertTechnicalSpec"
+                        },
+                        {
+                          "id": "businessReqMenuItem",
+                          "type": "menuItem",
+                          "label": "Business Requirements",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Business Requirements",
+                            "description": "Convert to business requirements format"
+                          },
+                          "actionId": "convertBusinessReq"
+                        },
+                        {
+                          "id": "inDesignMenuItem",
+                          "type": "menuItem",
+                          "label": "InDesign Layout",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "InDesign Layout",
+                            "description": "Convert to Adobe InDesign format"
+                          },
+                          "actionId": "convertInDesign"
+                        },
+                        {
+                          "id": "multiFormatMenuItem",
+                          "type": "menuItem",
+                          "label": "Multi-Format Package",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Multi-Format Package",
+                            "description": "Export document in multiple formats"
+                          },
+                          "actionId": "multiFormatPackage"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "aiToolsMenu",
+                      "type": "menu",
+                      "label": "AI & Smart Tools",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "AI & Smart Tools",
+                        "description": "AI-powered content analysis, optimization, and diagram generation"
+                      },
+                      "items": [
+                        {
+                          "id": "aiAnalysisMenuItem",
+                          "type": "menuItem",
+                          "label": "AI Content Analysis",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "AI Content Analysis",
+                            "description": "Analyze document content using AI"
+                          },
+                          "actionId": "analyzeContentAI"
+                        },
+                        {
+                          "id": "optimizeDocumentMenuItem",
+                          "type": "menuItem",
+                          "label": "AI Document Optimization",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "AI Document Optimization",
+                            "description": "Optimize document structure and content using AI"
+                          },
+                          "actionId": "optimizeDocumentAI"
+                        },
+                        {
+                          "id": "generateDiagramsMenuItem",
+                          "type": "menuItem",
+                          "label": "Generate Diagrams",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Generate Diagrams",
+                            "description": "Create professional diagrams from content"
+                          },
+                          "actionId": "generateDiagrams"
+                        },
+                        {
+                          "id": "smartDiagramsMenuItem",
+                          "type": "menuItem",
+                          "label": "Smart Diagrams",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Smart Diagrams",
+                            "description": "Generate intelligent, context-aware diagrams"
+                          },
+                          "actionId": "generateSmartDiagrams"
+                        },
+                        {
+                          "id": "buildTemplateMenuItem",
+                          "type": "menuItem",
+                          "label": "Build Custom Template",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Build Custom Template",
+                            "description": "Create custom document templates"
+                          },
+                          "actionId": "buildCustomTemplate"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "collaborationMenu",
+                      "type": "menu",
+                      "label": "Collaboration",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "Collaboration Tools",
+                        "description": "Enable collaboration, sharing, and project integration"
+                      },
+                      "items": [
+                        {
+                          "id": "enableCollaborationMenuItem",
+                          "type": "menuItem",
+                          "label": "Enable Collaboration",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Enable Collaboration",
+                            "description": "Enable real-time collaboration features"
+                          },
+                          "actionId": "enableCollaboration"
+                        },
+                        {
+                          "id": "shareInsightsMenuItem",
+                          "type": "menuItem",
+                          "label": "Share AI Insights",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Share AI Insights",
+                            "description": "Share AI analysis and insights with team"
+                          },
+                          "actionId": "shareAIInsights"
+                        },
+                        {
+                          "id": "syncProjectMenuItem",
+                          "type": "menuItem",
+                          "label": "Sync with Project",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Sync with Project",
+                            "description": "Synchronize document with project management tools"
+                          },
+                          "actionId": "syncWithProject"
+                        },
+                        {
+                          "id": "setupWorkflowMenuItem",
+                          "type": "menuItem",
+                          "label": "Setup Workflow",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Setup Workflow",
+                            "description": "Configure automated document workflows"
+                          },
+                          "actionId": "setupWorkflow"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "analyticsMenu",
+                      "type": "menu",
+                      "label": "Analytics & Automation",
+                      "icons": [
+                        {
+                          "size": 16,
+                          "url": "https://localhost:3000/assets/icon-16.png"
+                        },
+                        {
+                          "size": 32,
+                          "url": "https://localhost:3000/assets/icon-32.png"
+                        },
+                        {
+                          "size": 80,
+                          "url": "https://localhost:3000/assets/icon-80.png"
+                        }
+                      ],
+                      "supertip": {
+                        "title": "Analytics & Automation",
+                        "description": "Advanced analytics, monitoring, and automation features"
+                      },
+                      "items": [
+                        {
+                          "id": "advancedAnalyticsMenuItem",
+                          "type": "menuItem",
+                          "label": "Advanced Analytics",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Advanced Analytics",
+                            "description": "Generate advanced document analytics"
+                          },
+                          "actionId": "generateAdvancedAnalytics"
+                        },
+                        {
+                          "id": "monitorPerformanceMenuItem",
+                          "type": "menuItem",
+                          "label": "Monitor Performance",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Monitor Performance",
+                            "description": "Monitor document processing performance"
+                          },
+                          "actionId": "monitorPerformance"
+                        },
+                        {
+                          "id": "analyticsDashboardMenuItem",
+                          "type": "menuItem",
+                          "label": "Analytics Dashboard",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Analytics Dashboard",
+                            "description": "Create comprehensive analytics dashboard"
+                          },
+                          "actionId": "createAnalyticsDashboard"
+                        },
+                        {
+                          "id": "automationEngineMenuItem",
+                          "type": "menuItem",
+                          "label": "Automation Engine",
+                          "icons": [
+                            {
+                              "size": 16,
+                              "url": "https://localhost:3000/assets/icon-16.png"
+                            },
+                            {
+                              "size": 32,
+                              "url": "https://localhost:3000/assets/icon-32.png"
+                            },
+                            {
+                              "size": 80,
+                              "url": "https://localhost:3000/assets/icon-80.png"
+                            }
+                          ],
+                          "supertip": {
+                            "title": "Automation Engine",
+                            "description": "Enable advanced document automation"
+                          },
+                          "actionId": "enableAutomationEngine"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

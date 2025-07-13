@@ -570,7 +570,7 @@ export const BUSINESS_REQUIREMENTS_TEMPLATE: DocumentTemplate = {
 export const TECHNICAL_DESIGN_TEMPLATE: DocumentTemplate = {
   name: 'Technical Design Document',
   description: 'Comprehensive technical design document following IEEE standards',
-  category: 'technical-design',
+  category: 'technical',
   layout: 'standard-portrait',
   sections: [
     {
@@ -943,6 +943,347 @@ export const REQUIREMENTS_SPECIFICATION_TEMPLATE: DocumentTemplate = {
 };
 
 /**
+ * Status Report Template - Project Management Style
+ * Professional status report for executive briefings and project updates
+ */
+export const STATUS_REPORT_TEMPLATE: DocumentTemplate = {
+  name: "Status Report",
+  description: "Executive status report for project progress and milestone tracking",
+  category: "project-management",
+  layout: "standard-portrait",
+  sections: [
+    {
+      id: "title-page",
+      name: "Title Page",
+      required: true,
+      order: 1,
+      styling: {
+        headerLevel: 1,
+        color: ADPA_BRAND_GUIDELINES.colors.primary,
+        spacing: { before: "0", after: "2rem" },
+        pageBreak: "after",
+      },
+      content: {
+        placeholder: "Project Status Report: {{projectName}} - {{reportPeriod}}",
+        format: "html",
+      },
+    },
+    {
+      id: "executive-summary",
+      name: "Executive Summary",
+      required: true,
+      order: 2,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto",
+      },
+      content: {
+        placeholder: `## Executive Summary
+
+**Project Status:** {{overallStatus}}
+**Report Period:** {{reportPeriod}}
+**Next Milestone:** {{nextMilestone}}
+
+### Key Highlights
+- {{keyHighlight1}}
+- {{keyHighlight2}}
+- {{keyHighlight3}}
+
+### Critical Issues
+{{criticalIssues}}`,
+        format: "markdown",
+      },
+    },
+    {
+      id: "project-overview",
+      name: "Project Overview",
+      required: true,
+      order: 3,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Project Overview
+
+**Project Name:** {{projectName}}
+**Project Manager:** {{projectManager}}
+**Start Date:** {{startDate}}
+**Planned End Date:** {{plannedEndDate}}
+**Current Phase:** {{currentPhase}}
+
+### Scope Summary
+{{scopeSummary}}
+
+### Budget Summary
+- **Total Budget:** {{totalBudget}}
+- **Spent to Date:** {{spentToDate}}
+- **Remaining Budget:** {{remainingBudget}}
+- **Budget Status:** {{budgetStatus}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "progress-summary",
+      name: "Progress Summary",
+      required: true,
+      order: 4,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Progress Summary
+
+### Overall Progress: {{overallProgress}}%
+
+### Milestone Status
+| Milestone | Planned Date | Actual Date | Status |
+|-----------|-------------|-------------|---------|
+{{milestoneTable}}
+
+### Work Package Status
+| Work Package | Progress | Status | Owner |
+|-------------|----------|---------|-------|
+{{workPackageTable}}
+
+### Deliverables Status
+{{deliverablesStatus}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "accomplishments",
+      name: "Accomplishments This Period",
+      required: true,
+      order: 5,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Accomplishments This Period
+
+### Major Achievements
+{{majorAchievements}}
+
+### Completed Deliverables
+- {{completedDeliverable1}}
+- {{completedDeliverable2}}
+- {{completedDeliverable3}}
+
+### Key Performance Indicators
+| KPI | Target | Actual | Status |
+|-----|--------|--------|---------|
+{{kpiTable}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "issues-risks",
+      name: "Issues and Risks",
+      required: true,
+      order: 6,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.accent,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Issues and Risks
+
+### Current Issues
+| Issue ID | Description | Impact | Status | Owner | Due Date |
+|----------|-------------|---------|---------|-------|----------|
+{{issueTable}}
+
+### Risk Assessment
+| Risk ID | Description | Probability | Impact | Mitigation | Owner |
+|---------|-------------|-------------|---------|------------|-------|
+{{riskTable}}
+
+### Escalations Required
+{{escalationsRequired}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "upcoming-activities",
+      name: "Upcoming Activities",
+      required: true,
+      order: 7,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Upcoming Activities
+
+### Next Period Focus
+{{nextPeriodFocus}}
+
+### Planned Activities
+| Activity | Start Date | End Date | Owner | Dependencies |
+|----------|------------|----------|-------|--------------|
+{{plannedActivitiesTable}}
+
+### Resource Requirements
+{{resourceRequirements}}
+
+### Dependencies and Blockers
+{{dependenciesBlockers}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "financial-summary",
+      name: "Financial Summary",
+      required: false,
+      order: 8,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Financial Summary
+
+### Budget Performance
+- **Original Budget:** {{originalBudget}}
+- **Approved Changes:** {{approvedChanges}}
+- **Current Budget:** {{currentBudget}}
+- **Expenditures to Date:** {{expendituresToDate}}
+- **Committed Costs:** {{committedCosts}}
+- **Remaining Budget:** {{remainingBudget}}
+
+### Cost Variance Analysis
+{{costVarianceAnalysis}}
+
+### Forecast to Completion
+{{forecastToCompletion}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "resource-utilization",
+      name: "Resource Utilization",
+      required: false,
+      order: 9,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Resource Utilization
+
+### Team Performance
+| Team Member | Role | Allocation | Utilization | Performance |
+|-------------|------|------------|-------------|-------------|
+{{teamPerformanceTable}}
+
+### Resource Availability
+{{resourceAvailability}}
+
+### Capacity Planning
+{{capacityPlanning}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "stakeholder-communications",
+      name: "Stakeholder Communications",
+      required: false,
+      order: 10,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "auto"
+      },
+      content: {
+        placeholder: `## Stakeholder Communications
+
+### Key Stakeholder Updates
+{{stakeholderUpdates}}
+
+### Communication Schedule
+| Stakeholder Group | Communication Type | Frequency | Next Update |
+|-------------------|-------------------|-----------|-------------|
+{{communicationSchedule}}
+
+### Feedback and Concerns
+{{feedbackConcerns}}`,
+        format: "markdown"
+      }
+    },
+    {
+      id: "appendices",
+      name: "Appendices",
+      required: false,
+      order: 11,
+      styling: {
+        headerLevel: 2,
+        color: ADPA_BRAND_GUIDELINES.colors.secondary,
+        spacing: { before: "1.5rem", after: "1rem" },
+        pageBreak: "before"
+      },
+      content: {
+        placeholder: `## Appendices
+
+### Appendix A: Detailed Metrics
+{{detailedMetrics}}
+
+### Appendix B: Change Requests
+{{changeRequests}}
+
+### Appendix C: Supporting Documentation
+{{supportingDocumentation}}`,
+        format: "markdown"
+      }
+    }
+  ],
+  styling: {
+    colors: {
+      primary: ADPA_BRAND_GUIDELINES.colors.primary,
+      secondary: ADPA_BRAND_GUIDELINES.colors.secondary,
+      accent: ADPA_BRAND_GUIDELINES.colors.accent
+    },
+    typography: ADPA_BRAND_GUIDELINES.typography,
+    spacing: ADPA_BRAND_GUIDELINES.spacing,
+    layout: {
+      columns: 1,
+      pageBreaks: true,
+      headerFooter: true
+    }
+  },
+  metadata: {
+    version: "1.0",
+    author: "ADPA Template System",
+    created: "2024-01-01",
+    updated: "2024-01-01",
+    tags: ["status-report", "project-management", "executive", "progress-tracking"],
+    compatibility: {
+      adobe: ["pdf-services", "indesign"],
+      office: ["word", "powerpoint"]
+    }
+  }
+};
+
+/**
  * Template Registry - All available templates
  */
 export const DOCUMENT_TEMPLATES = {
@@ -950,7 +1291,8 @@ export const DOCUMENT_TEMPLATES = {
   'technical-specification': TECHNICAL_SPECIFICATION_TEMPLATE,
   'business-requirements': BUSINESS_REQUIREMENTS_TEMPLATE,
   'technical-design': TECHNICAL_DESIGN_TEMPLATE,
-  'requirements-specification': REQUIREMENTS_SPECIFICATION_TEMPLATE
+  'requirements-specification': REQUIREMENTS_SPECIFICATION_TEMPLATE,
+  'status-report': STATUS_REPORT_TEMPLATE
 };
 
 /**

@@ -1,6 +1,3 @@
-<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
-<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
-
 <!DOCTYPE html>
 <html>
 
@@ -8,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Contoso Task Pane Add-in</title>
+    <title>ADPA - Automated Document Processing Assistant</title>
 
     <!-- Office JavaScript API -->
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
@@ -22,33 +19,150 @@
 
 <body class="ms-font-m ms-welcome ms-Fabric">
     <header class="ms-welcome__header ms-bgColor-neutralLighter">
-        <img width="90" height="90" src="../../assets/logo-filled.png" alt="Contoso" title="Contoso" />
-        <h1 class="ms-font-su">Welcome</h1>
+        <img width="60" height="60" src="../../assets/logo-filled.png" alt="ADPA" title="ADPA" />
+        <h1 class="ms-font-xl">ADPA Assistant</h1>
+        <p class="ms-font-s">Automated Document Processing</p>
     </header>
     <section id="sideload-msg" class="ms-welcome__main">
-        <h2 class="ms-font-xl">Please <a target="_blank" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> your add-in to see app body.</h2>
+        <h2 class="ms-font-xl">Please <a target="_blank" rel="noopener" href="https://learn.microsoft.com/office/dev/add-ins/testing/test-debug-office-add-ins#sideload-an-office-add-in-for-testing">sideload</a> your add-in to see app body.</h2>
     </section>
     <main id="app-body" class="ms-welcome__main" style="display: none;">
-        <h2 class="ms-font-xl"> Discover what Office Add-ins can do for you today! </h2>
-        <ul class="ms-List ms-welcome__features">
-            <li class="ms-ListItem">
-                <i class="ms-Icon ms-Icon--Ribbon ms-font-xl"></i>
-                <span class="ms-font-m">Achieve more with Office integration</span>
-            </li>
-            <li class="ms-ListItem">
-                <i class="ms-Icon ms-Icon--Unlock ms-font-xl"></i>
-                <span class="ms-font-m">Unlock features and functionality</span>
-            </li>
-            <li class="ms-ListItem">
-                <i class="ms-Icon ms-Icon--Design ms-font-xl"></i>
-                <span class="ms-font-m">Create and visualize like a pro</span>
-            </li>
-        </ul>
-        <p class="ms-font-l">Modify the source files, then click <b>Run</b>.</p>
-        <div role="button" id="run" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-            <span class="ms-Button-label">Run</span>
+        
+        <!-- Core Functions Section -->
+        <div class="adpa-section">
+            <h3 class="ms-font-l adpa-section-title">
+                <i class="ms-Icon ms-Icon--EditNote"></i>
+                Core Functions
+            </h3>
+            <div class="adpa-button-grid">
+                <button id="formatDocument" class="adpa-button ms-Button ms-Button--primary">
+                    <i class="ms-Icon ms-Icon--TextDocument"></i>
+                    <span>Format Document</span>
+                </button>
+            </div>
         </div>
-        <p><label id="item-subject"></label></p>
+
+        <!-- PDF & Export Section -->
+        <div class="adpa-section">
+            <h3 class="ms-font-l adpa-section-title">
+                <i class="ms-Icon ms-Icon--PDF"></i>
+                PDF & Export Tools
+            </h3>
+            <div class="adpa-button-grid">
+                <button id="convertToAdobePDF" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--FilePDB"></i>
+                    <span>Adobe PDF</span>
+                </button>
+                <button id="convertProjectCharter" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--ProjectDocument"></i>
+                    <span>Project Charter</span>
+                </button>
+                <button id="convertTechnicalSpec" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Code"></i>
+                    <span>Technical Spec</span>
+                </button>
+                <button id="convertBusinessReq" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--BusinessHoursSign"></i>
+                    <span>Business Req</span>
+                </button>
+                <button id="convertInDesign" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Design"></i>
+                    <span>InDesign Layout</span>
+                </button>
+                <button id="multiFormatPackage" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Package"></i>
+                    <span>Multi-Format</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- AI & Smart Tools Section -->
+        <div class="adpa-section">
+            <h3 class="ms-font-l adpa-section-title">
+                <i class="ms-Icon ms-Icon--Robot"></i>
+                AI & Smart Tools
+            </h3>
+            <div class="adpa-button-grid">
+                <button id="analyzeContentAI" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--AnalyticsReport"></i>
+                    <span>AI Analysis</span>
+                </button>
+                <button id="optimizeDocumentAI" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Processing"></i>
+                    <span>AI Optimization</span>
+                </button>
+                <button id="generateDiagrams" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--FlowChart"></i>
+                    <span>Generate Diagrams</span>
+                </button>
+                <button id="generateSmartDiagrams" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Relationship"></i>
+                    <span>Smart Diagrams</span>
+                </button>
+                <button id="buildCustomTemplate" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--Template"></i>
+                    <span>Custom Template</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Collaboration Section -->
+        <div class="adpa-section">
+            <h3 class="ms-font-l adpa-section-title">
+                <i class="ms-Icon ms-Icon--People"></i>
+                Collaboration Tools
+            </h3>
+            <div class="adpa-button-grid">
+                <button id="enableCollaboration" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--ShareiOS"></i>
+                    <span>Enable Collaboration</span>
+                </button>
+                <button id="shareAIInsights" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--CloudSearch"></i>
+                    <span>Share AI Insights</span>
+                </button>
+                <button id="syncWithProject" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--SyncOccurence"></i>
+                    <span>Sync Project</span>
+                </button>
+                <button id="setupWorkflow" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--WorkFlow"></i>
+                    <span>Setup Workflow</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Analytics & Automation Section -->
+        <div class="adpa-section">
+            <h3 class="ms-font-l adpa-section-title">
+                <i class="ms-Icon ms-Icon--BarChartVertical"></i>
+                Analytics & Automation
+            </h3>
+            <div class="adpa-button-grid">
+                <button id="generateAdvancedAnalytics" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--AnalyticsLogo"></i>
+                    <span>Advanced Analytics</span>
+                </button>
+                <button id="monitorPerformance" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--SpeedHigh"></i>
+                    <span>Monitor Performance</span>
+                </button>
+                <button id="createAnalyticsDashboard" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--ViewDashboard"></i>
+                    <span>Analytics Dashboard</span>
+                </button>
+                <button id="enableAutomationEngine" class="adpa-button ms-Button">
+                    <i class="ms-Icon ms-Icon--AutoEnhanceOn"></i>
+                    <span>Automation Engine</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div class="adpa-status">
+            <p id="status-message" class="ms-font-s">Ready to process documents</p>
+        </div>
+
     </main>
 </body>
 

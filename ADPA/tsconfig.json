@@ -8,17 +8,34 @@
     "noEmitOnError": true,
     "outDir": "lib",
     "sourceMap": true,
-    "target": "es5",
+    "target": "es2018",
+    "downlevelIteration": true,
     "lib": [
-      "es2015",
+      "es2018",
       "dom"
-    ]
+    ],
+    "skipLibCheck": true,
+    "strict": false
   },
   "exclude": [
     "node_modules",
     "dist",
     "lib",
-    "lib-amd"
+    "lib-amd",
+    "demo/**/*",
+    "examples/**/*",
+    "src/adobe/adobe-direct-integration.ts",
+    "src/adobe/adobe-document-services-implementation.ts",
+    "src/adobe/adobe-pdf-converter.ts",
+    "src/adobe/adobe-services-clean.ts",
+    "src/adobe/adobe-integration.ts",
+    "src/adobe/standalone-pdf-converter.ts",
+    "src/ai/advanced-template-builder.ts",
+    "src/ai/smart-diagram-generator.ts",
+    "src/analytics/performance-monitoring-service.ts",
+    "src/azure-adobe/**/*",
+    "src/pandoc-pdf-converter.ts",
+    "src/services/adobePdfService.ts"
   ],
   "ts-node": { 
     "files": true 

@@ -3,8 +3,13 @@
  * Creates custom templates based on content analysis and user requirements
  */
 
-import { DocumentTemplate, TemplateSection, BrandGuidelines, ADPA_BRAND_GUIDELINES } from '../templates/brand-guidelines';
-import { ContentAnalysis } from './intelligent-content-analyzer';
+import {
+  DocumentTemplate,
+  TemplateSection,
+  BrandGuidelines,
+  ADPA_BRAND_GUIDELINES,
+} from "../templates/brand-guidelines";
+import { ContentAnalysis } from "./intelligent-content-analyzer";
 
 /**
  * Template Building Request
@@ -12,14 +17,14 @@ import { ContentAnalysis } from './intelligent-content-analyzer';
 export interface TemplateRequest {
   name: string;
   description: string;
-  category: 'project-management' | 'technical' | 'business' | 'presentation' | 'custom';
-  targetAudience: 'executives' | 'technical' | 'general' | 'clients' | 'internal';
-  complexity: 'simple' | 'standard' | 'comprehensive';
+  category: "project-management" | "technical" | "business" | "presentation" | "custom";
+  targetAudience: "executives" | "technical" | "general" | "clients" | "internal";
+  complexity: "simple" | "standard" | "comprehensive";
   sampleContent?: string;
   requiredSections?: string[];
   optionalSections?: string[];
   brandCustomizations?: Partial<BrandGuidelines>;
-  outputFormats?: ('pdf' | 'indesign' | 'web' | 'powerpoint')[];
+  outputFormats?: ("pdf" | "indesign" | "web" | "powerpoint")[];
 }
 
 /**
@@ -35,8 +40,8 @@ export interface TemplateGenerationResult {
 }
 
 export interface TemplateRecommendation {
-  type: 'section' | 'styling' | 'layout' | 'branding';
-  priority: 'high' | 'medium' | 'low';
+  type: "section" | "styling" | "layout" | "branding";
+  priority: "high" | "medium" | "low";
   description: string;
   implementation: string;
   benefit: string;
@@ -49,17 +54,17 @@ interface SectionAnalysis {
   name: string;
   importance: number;
   frequency: number;
-  complexity: 'low' | 'medium' | 'high';
+  complexity: "low" | "medium" | "high";
   suggestedOrder: number;
   dependencies: string[];
   styling: SectionStylingRecommendation;
 }
 
 interface SectionStylingRecommendation {
-  headerLevel: number;
+  headerLevel: 1 | 2 | 3 | 4;
   color: string;
   spacing: { before: string; after: string };
-  pageBreak: 'auto' | 'before' | 'after' | 'avoid';
+  pageBreak: "auto" | "before" | "after" | "avoid";
   specialFormatting?: string[];
 }
 
@@ -82,7 +87,6 @@ export class AdvancedTemplateBuilder {
     request: TemplateRequest,
     contentAnalysis?: ContentAnalysis
   ): Promise<TemplateGenerationResult> {
-    
     // Step 1: Analyze requirements and content
     const sectionAnalysis = await this.analyzeSectionRequirements(request, contentAnalysis);
     
@@ -109,18 +113,14 @@ export class AdvancedTemplateBuilder {
       reasoning,
       recommendations,
       variations,
-      previewHtml
+      previewHtml,
     };
   }
 
   /**
    * Optimize existing template based on usage patterns
    */
-  async optimizeTemplate(
-    template: DocumentTemplate,
-    usageData: any,
-    feedback: any
-  ): Promise<DocumentTemplate> {
+  async optimizeTemplate(template: DocumentTemplate, usageData: any, feedback: any): Promise<DocumentTemplate> {
     const optimizedTemplate = { ...template };
     
     // Analyze usage patterns
@@ -132,7 +132,7 @@ export class AdvancedTemplateBuilder {
     
     // Update metadata
     optimizedTemplate.metadata.version = this.incrementVersion(template.metadata.version);
-    optimizedTemplate.metadata.updated = new Date().toISOString().split('T')[0];
+    optimizedTemplate.metadata.updated = new Date().toISOString().split("T")[0];
     
     return optimizedTemplate;
   }
@@ -161,33 +161,27 @@ export class AdvancedTemplateBuilder {
   /**
    * Create industry-specific template
    */
-  async createIndustryTemplate(
-    industry: string,
-    documentType: string,
-    requirements: any
-  ): Promise<DocumentTemplate> {
-    
-    const industryPatterns = this.industryPatterns.get(industry) || [];
+  async createIndustryTemplate(industry: string, documentType: string, _requirements: any): Promise<DocumentTemplate> {
     const baseSections = this.getIndustryBaseSections(industry, documentType);
     
     const template: DocumentTemplate = {
       name: `${industry} ${documentType}`,
       description: `Industry-specific template for ${industry} ${documentType}`,
       category: this.mapIndustryToCategory(industry),
-      layout: 'standard-portrait',
+      layout: "standard-portrait",
       sections: baseSections,
       styling: this.getIndustryStyling(industry),
       metadata: {
-        version: '1.0',
-        author: 'ADPA AI Template Builder',
-        created: new Date().toISOString().split('T')[0],
-        updated: new Date().toISOString().split('T')[0],
-        tags: [industry, documentType, 'ai-generated'],
+        version: "1.0",
+        author: "ADPA AI Template Builder",
+        created: new Date().toISOString().split("T")[0],
+        updated: new Date().toISOString().split("T")[0],
+        tags: [industry, documentType, "ai-generated"],
         compatibility: {
-          adobe: ['pdf-services', 'indesign', 'illustrator'],
-          office: ['word', 'powerpoint']
-        }
-      }
+          adobe: ["pdf-services", "indesign", "illustrator"],
+          office: ["word", "powerpoint"],
+        },
+      },
     };
     
     return template;
@@ -201,32 +195,32 @@ export class AdvancedTemplateBuilder {
     this.audiencePreferences = new Map();
     
     // Initialize common sections
-    this.sectionLibrary.set('common', [
-      this.createSection('title-page', 'Title Page', true, 1),
-      this.createSection('executive-summary', 'Executive Summary', true, 2),
-      this.createSection('introduction', 'Introduction', false, 3),
-      this.createSection('conclusion', 'Conclusion', false, 98),
-      this.createSection('appendices', 'Appendices', false, 99)
+    this.sectionLibrary.set("common", [
+      this.createSection("title-page", "Title Page", true, 1),
+      this.createSection("executive-summary", "Executive Summary", true, 2),
+      this.createSection("introduction", "Introduction", false, 3),
+      this.createSection("conclusion", "Conclusion", false, 98),
+      this.createSection("appendices", "Appendices", false, 99),
     ]);
     
     // Initialize industry patterns
-    this.industryPatterns.set('technology', ['agile', 'scrum', 'devops', 'api', 'microservices']);
-    this.industryPatterns.set('finance', ['compliance', 'risk', 'audit', 'regulatory']);
-    this.industryPatterns.set('healthcare', ['hipaa', 'patient', 'clinical', 'medical']);
+    this.industryPatterns.set("technology", ["agile", "scrum", "devops", "api", "microservices"]);
+    this.industryPatterns.set("finance", ["compliance", "risk", "audit", "regulatory"]);
+    this.industryPatterns.set("healthcare", ["hipaa", "patient", "clinical", "medical"]);
     
     // Initialize audience preferences
-    this.audiencePreferences.set('executives', {
-      preferredSections: ['executive-summary', 'key-metrics', 'recommendations'],
+    this.audiencePreferences.set("executives", {
+      preferredSections: ["executive-summary", "key-metrics", "recommendations"],
       maxSections: 8,
       visualElements: true,
-      detailLevel: 'high-level'
+      detailLevel: "high-level",
     });
-    
-    this.audiencePreferences.set('technical', {
-      preferredSections: ['technical-details', 'implementation', 'architecture'],
+
+    this.audiencePreferences.set("technical", {
+      preferredSections: ["technical-details", "implementation", "architecture"],
       maxSections: 15,
       visualElements: true,
-      detailLevel: 'detailed'
+      detailLevel: "detailed",
     });
   }
 
@@ -268,8 +262,8 @@ export class AdvancedTemplateBuilder {
     
     // Add standard sections based on category and audience
     const standardSections = this.getStandardSections(request.category, request.targetAudience);
-    standardSections.forEach(section => {
-      if (!sectionAnalyses.find(s => s.name === section.name)) {
+    standardSections.forEach((section) => {
+      if (!sectionAnalyses.find((s) => s.name === section.name)) {
         sectionAnalyses.push(section);
       }
     });
@@ -280,40 +274,36 @@ export class AdvancedTemplateBuilder {
     return sectionAnalyses;
   }
 
-  private generateTemplateStructure(
-    request: TemplateRequest,
-    sectionAnalyses: SectionAnalysis[]
-  ): DocumentTemplate {
-    
+  private generateTemplateStructure(request: TemplateRequest, sectionAnalyses: SectionAnalysis[]): DocumentTemplate {
     const sections: TemplateSection[] = [];
-    
+
     // Always start with title page
     sections.push(this.createTitlePageSection(request));
-    
+
     // Add analyzed sections
     sectionAnalyses.forEach((analysis, index) => {
       const section = this.createSectionFromAnalysis(analysis, index + 2);
       sections.push(section);
     });
-    
+
     const template: DocumentTemplate = {
       name: request.name,
       description: request.description,
-      category: request.category,
+      category: request.category === "custom" ? "business" : request.category,
       layout: this.determineOptimalLayout(request),
       sections,
       styling: this.generateTemplateStyling(request),
       metadata: {
-        version: '1.0',
-        author: 'ADPA AI Template Builder',
-        created: new Date().toISOString().split('T')[0],
-        updated: new Date().toISOString().split('T')[0],
-        tags: [request.category, request.targetAudience, 'ai-generated'],
+        version: "1.0",
+        author: "ADPA AI Template Builder",
+        created: new Date().toISOString().split("T")[0],
+        updated: new Date().toISOString().split("T")[0],
+        tags: [request.category, request.targetAudience, "ai-generated"],
         compatibility: {
-          adobe: request.outputFormats?.includes('indesign') ? ['pdf-services', 'indesign'] : ['pdf-services'],
-          office: ['word']
-        }
-      }
+          adobe: request.outputFormats?.includes("indesign") ? ["pdf-services", "indesign"] : ["pdf-services"],
+          office: ["word"],
+        },
+      },
     };
     
     return template;
@@ -335,36 +325,31 @@ export class AdvancedTemplateBuilder {
     this.applyComplexityStyling(template, request.complexity);
   }
 
-  private calculateTemplateConfidence(
-    template: DocumentTemplate,
-    request: TemplateRequest,
-    sectionAnalyses: SectionAnalysis[]
-  ): number {
+  private calculateTemplateConfidence(template: DocumentTemplate, request: TemplateRequest, _sectionAnalyses: SectionAnalysis[]): number {
     let confidence = 0.7; // Base confidence
-    
+
     // Boost confidence based on section coverage
     if (template.sections.length >= 5) confidence += 0.1;
     if (template.sections.length >= 8) confidence += 0.1;
-    
+
     // Boost confidence based on requirement fulfillment
     if (request.requiredSections) {
-      const fulfillmentRatio = request.requiredSections.filter(req => 
-        template.sections.some(sec => sec.name.toLowerCase().includes(req.toLowerCase()))
-      ).length / request.requiredSections.length;
+      const fulfillmentRatio =
+        request.requiredSections.filter((req) =>
+          template.sections.some((sec) => sec.name.toLowerCase().includes(req.toLowerCase()))
+        ).length / request.requiredSections.length;
       confidence += fulfillmentRatio * 0.1;
     }
-    
+
     return Math.min(confidence, 0.95);
   }
 
-  private generateTemplateReasoning(
-    template: DocumentTemplate,
-    request: TemplateRequest,
-    confidence: number
-  ): string {
-    return `Generated ${template.name} template with ${Math.round(confidence * 100)}% confidence. ` +
-           `Template includes ${template.sections.length} sections optimized for ${request.targetAudience} audience ` +
-           `with ${request.complexity} complexity level.`;
+  private generateTemplateReasoning(template: DocumentTemplate, request: TemplateRequest, confidence: number): string {
+    return (
+      `Generated ${template.name} template with ${Math.round(confidence * 100)}% confidence. ` +
+      `Template includes ${template.sections.length} sections optimized for ${request.targetAudience} audience ` +
+      `with ${request.complexity} complexity level.`
+    );
   }
 
   private generateTemplateRecommendations(

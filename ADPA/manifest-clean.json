@@ -1,0 +1,446 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "id": "8ce95c00-2628-4340-8d39-61d5ce6dd2ab",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "name": {
+        "short": "ADPA",
+        "full": "ADPA - Automated Document Processing Assistant"
+    },
+    "description": {
+        "short": "Professional document automation and analytics platform",
+        "full": "ADPA provides professional document creation, Adobe Creative Suite integration, and advanced analytics for enterprise productivity."
+    },
+    "developer": {
+        "name": "ADPA Team",
+        "websiteUrl": "https://github.com/mdresch/requirements-gathering-agent",
+        "privacyUrl": "https://github.com/mdresch/requirements-gathering-agent/blob/main/PRIVACY.md",
+        "termsOfUseUrl": "https://github.com/mdresch/requirements-gathering-agent/blob/main/LICENSE"
+    },
+    "icons": {
+        "outline": "assets/outline.png",
+        "color": "assets/color.png"
+    },
+    "accentColor": "#2E86AB",
+    "localizationInfo": {
+        "defaultLanguageTag": "en-us",
+        "additionalLanguages": []
+    },
+    "authorization": {
+        "permissions": {
+            "resourceSpecific": [
+                {
+                    "name": "Document.ReadWrite.User",
+                    "type": "Delegated"
+                }
+            ]
+        }
+    },
+    "validDomains": [
+        "localhost:3000"
+    ],
+    "extensions": [
+        {
+            "requirements": {
+                "scopes": [
+                    "document"
+                ],
+                "capabilities": [
+                    {
+                        "name": "AddinCommands",
+                        "minVersion": "1.3"
+                    }
+                ]
+            },
+            "runtimes": [
+                {
+                    "id": "TaskPaneRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "https://localhost:3000/taskpane.html"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "TaskPaneRuntimeShow",
+                            "type": "openPage",
+                            "pinnable": false,
+                            "view": "dashboard"
+                        }
+                    ]
+                },
+                {
+                    "id": "CommandsRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "https://localhost:3000/commands.html",
+                        "script": "https://localhost:3000/commands.js"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "action",
+                            "type": "executeFunction",
+                            "displayName": "action"
+                        },
+                        {
+                            "id": "convertToAdobePDF",
+                            "type": "executeFunction",
+                            "displayName": "convertToAdobePDF"
+                        },
+                        {
+                            "id": "convertProjectCharter",
+                            "type": "executeFunction",
+                            "displayName": "convertProjectCharter"
+                        },
+                        {
+                            "id": "convertTechnicalSpec",
+                            "type": "executeFunction",
+                            "displayName": "convertTechnicalSpec"
+                        },
+                        {
+                            "id": "convertBusinessReq",
+                            "type": "executeFunction",
+                            "displayName": "convertBusinessReq"
+                        },
+                        {
+                            "id": "generateAdvancedAnalytics",
+                            "type": "executeFunction",
+                            "displayName": "generateAdvancedAnalytics"
+                        },
+                        {
+                            "id": "monitorPerformance",
+                            "type": "executeFunction",
+                            "displayName": "monitorPerformance"
+                        },
+                        {
+                            "id": "generatePredictiveInsights",
+                            "type": "executeFunction",
+                            "displayName": "generatePredictiveInsights"
+                        },
+                        {
+                            "id": "createAnalyticsDashboard",
+                            "type": "executeFunction",
+                            "displayName": "createAnalyticsDashboard"
+                        }
+                    ]
+                }
+            ],
+            "ribbons": [
+                {
+                    "contexts": [
+                        "default"
+                    ],
+                    "tabs": [
+                        {
+                            "id": "ADPATab",
+                            "label": "ADPA",
+                            "groups": [
+                                {
+                                    "id": "coreGroup",
+                                    "label": "Core Features",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "https://localhost:3000/assets/icon-16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "https://localhost:3000/assets/icon-32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "https://localhost:3000/assets/icon-80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "showTaskpane",
+                                            "type": "button",
+                                            "label": "Show ADPA",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Show ADPA Dashboard",
+                                                "description": "Opens the ADPA task pane with all features and analytics."
+                                            },
+                                            "actionId": "TaskPaneRuntimeShow"
+                                        },
+                                        {
+                                            "id": "insertBlueText",
+                                            "type": "button",
+                                            "label": "Insert Blue Text",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Insert Blue Text",
+                                                "description": "Insert formatted blue text into the document."
+                                            },
+                                            "actionId": "action"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "adobeGroup",
+                                    "label": "Adobe Creative Suite",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "https://localhost:3000/assets/icon-16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "https://localhost:3000/assets/icon-32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "https://localhost:3000/assets/icon-80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "convertToAdobePDFBtn",
+                                            "type": "button",
+                                            "label": "Adobe PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Adobe PDF",
+                                                "description": "Convert document to professional PDF using Adobe.io"
+                                            },
+                                            "actionId": "convertToAdobePDF"
+                                        },
+                                        {
+                                            "id": "convertProjectCharterBtn",
+                                            "type": "button",
+                                            "label": "Project Charter",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Project Charter PDF",
+                                                "description": "Convert to professional Project Charter PDF using PMBOK template"
+                                            },
+                                            "actionId": "convertProjectCharter"
+                                        },
+                                        {
+                                            "id": "convertTechnicalSpecBtn",
+                                            "type": "button",
+                                            "label": "Technical Spec",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Technical Specification PDF",
+                                                "description": "Convert to professional Technical Specification PDF"
+                                            },
+                                            "actionId": "convertTechnicalSpec"
+                                        },
+                                        {
+                                            "id": "convertBusinessReqBtn",
+                                            "type": "button",
+                                            "label": "Business Req",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Business Requirements PDF",
+                                                "description": "Convert to professional Business Requirements PDF using BABOK template"
+                                            },
+                                            "actionId": "convertBusinessReq"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "analyticsGroup",
+                                    "label": "Advanced Analytics",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "https://localhost:3000/assets/icon-16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "https://localhost:3000/assets/icon-32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "https://localhost:3000/assets/icon-80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "generateAdvancedAnalyticsBtn",
+                                            "type": "button",
+                                            "label": "Advanced Analytics",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Advanced Analytics",
+                                                "description": "Generate comprehensive analytics with performance monitoring and user insights"
+                                            },
+                                            "actionId": "generateAdvancedAnalytics"
+                                        },
+                                        {
+                                            "id": "monitorPerformanceBtn",
+                                            "type": "button",
+                                            "label": "Performance Monitor",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Performance Monitor",
+                                                "description": "Real-time performance monitoring with optimization recommendations"
+                                            },
+                                            "actionId": "monitorPerformance"
+                                        },
+                                        {
+                                            "id": "generatePredictiveInsightsBtn",
+                                            "type": "button",
+                                            "label": "Predictive Insights",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Predictive Insights",
+                                                "description": "Machine learning-powered predictions and intelligent recommendations"
+                                            },
+                                            "actionId": "generatePredictiveInsights"
+                                        },
+                                        {
+                                            "id": "createAnalyticsDashboardBtn",
+                                            "type": "button",
+                                            "label": "Analytics Dashboard",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Analytics Dashboard",
+                                                "description": "Create real-time dashboard with comprehensive metrics and visualizations"
+                                            },
+                                            "actionId": "createAnalyticsDashboard"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

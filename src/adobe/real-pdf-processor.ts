@@ -38,21 +38,24 @@ export class RealAdobePDFProcessor {
   private async initialize(): Promise<void> {
     try {
       // For now, always use real API since we have credentials configured
-      if (config.clientId && config.clientSecret && config.privateKey) {
-        // Note: The Adobe PDF Services SDK API may have changed
-        // This is a simplified initialization for type compatibility
+      if (config.clientId && config.clientSecret && config.privateKey && config.organizationId) {
+        // Initialize Adobe PDF Services with proper credentials
         try {
+          // Note: Adobe PDF Services SDK v4+ uses different initialization
+          // Check official documentation for the correct approach
           this.pdfServices = new PDFServices({
             credentials: {
               clientId: config.clientId,
               clientSecret: config.clientSecret,
-              privateKey: config.privateKey
+              privateKey: config.privateKey,
+              organizationId: config.organizationId
             }
           });
           this.isInitialized = true;
           logger.info('Adobe PDF Services initialized successfully');
         } catch (sdkError) {
           logger.warn('Adobe PDF Services SDK initialization failed, using mock mode:', sdkError);
+          logger.error('SDK Error details:', sdkError);
           this.isInitialized = false;
         }
       } else {
@@ -79,12 +82,23 @@ export class RealAdobePDFProcessor {
           contentLength: request.content?.length || 0
         });
 
-        // Create PDF from HTML or other formats - simplified for type compatibility
+        // Add startTime for processing time calculation
+        const startTime = Date.now();
+        request.startTime = startTime;
+
+        // Create PDF from HTML or other formats
         const createPDFJob = new CreatePDFJob({
           inputAsset: request.inputAsset || this.createInputAsset(request)
         });
 
-        const result = await this.pdfServices!.submit({ job: createPDFJob });
+        // Add timeout for PDF generation
+        const result = await Promise.race([
+          this.pdfServices!.submit({ job: createPDFJob }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('PDF generation timeout')), 60000)
+          )
+        ]) as any;
+
         const resultAsset = await this.pdfServices!.getContent({ asset: result });
 
         // Convert ReadableStream to Buffer for compatibility
@@ -97,7 +111,8 @@ export class RealAdobePDFProcessor {
           content: contentBuffer,
           metadata: {
             title: request.template,
-            author: 'Adobe Creative Suite'
+            author: 'Adobe Creative Suite',
+            ...extendedMetadata
           },
           format: 'pdf',
           size: contentBuffer.length,
@@ -106,7 +121,8 @@ export class RealAdobePDFProcessor {
 
         logger.info('PDF generated successfully', {
           size: pdfDocument.size,
-          title: pdfDocument.metadata.title
+          title: pdfDocument.metadata.title,
+          processingTime: Date.now() - startTime
         });
 
         return pdfDocument;
@@ -160,34 +176,47 @@ export class RealAdobePDFProcessor {
   }
 
   private async streamToBuffer(stream: any): Promise<Buffer> {
-    // Handle different stream types from Adobe SDK
-    if (stream.getReader) {
-      const reader = stream.getReader();
-      const chunks: Uint8Array[] = [];
-      
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
+    try {
+      // Handle different stream types from Adobe SDK
+      if (stream && stream.getReader) {
+        const reader = stream.getReader();
+        const chunks: Uint8Array[] = [];
+        
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) {
+              chunks.push(value);
+            }
+          }
+        } finally {
+          reader.releaseLock();
         }
-      } finally {
-        reader.releaseLock();
+        
+        const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+        const result = new Uint8Array(totalLength);
+        let offset = 0;
+        
+        for (const chunk of chunks) {
+          result.set(chunk, offset);
+          offset += chunk.length;
+        }
+        
+        return Buffer.from(result);
+      } else if (Buffer.isBuffer(stream)) {
+        return stream;
+      } else if (stream instanceof ArrayBuffer) {
+        return Buffer.from(stream);
+      } else if (typeof stream === 'string') {
+        return Buffer.from(stream);
+      } else {
+        // Fallback: attempt to convert to buffer
+        return Buffer.from(stream);
       }
-      
-      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      const result = new Uint8Array(totalLength);
-      let offset = 0;
-      
-      for (const chunk of chunks) {
-        result.set(chunk, offset);
-        offset += chunk.length;
-      }
-      
-      return Buffer.from(result);
-    } else {
-      // If it's already a buffer or similar, convert accordingly
-      return Buffer.from(stream);
+    } catch (error) {
+      logger.error('Error converting stream to buffer:', error);
+      throw new Error(`Failed to convert stream to buffer: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

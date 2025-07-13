@@ -111,6 +111,7 @@
   "homepage": "https://github.com/mdresch/requirements-gathering-agent#readme",
   "license": "MIT",
   "dependencies": {
+    "@adobe/pdfservices-node-sdk": "^4.1.0",
     "@azure-rest/ai-inference": "^1.0.0-beta.6",
     "@azure/identity": "^4.10.1",
     "@azure/msal-node": "^2.13.0",
@@ -167,7 +168,8 @@
     "jest": "^29.7.0",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.3.4",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "webpack-cli": "^6.0.1"
   },
   "files": [
     "dist/**/*",

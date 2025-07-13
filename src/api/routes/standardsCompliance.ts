@@ -11,29 +11,66 @@ import { StandardsComplianceAnalysisEngine } from '../../modules/standardsCompli
 import { 
   AnalysisRequest, 
   AnalysisResponse, 
-  DeviationApprovalRequest,
   StandardsComplianceConfig,
-  ComplianceDashboardData,
   ProjectData
 } from '../../types/standardsCompliance.js';
 import { logger } from '../../config/logger.js';
+
+// Additional type definitions for the API
+interface DeviationApprovalRequest {
+  approver: string;
+  decision: 'APPROVE' | 'REJECT' | 'REQUEST_CHANGES';
+  comments: string;
+  conditions?: string[];
+}
+
+interface ComplianceDashboardData {
+  projectSummary: {
+    projectId: string;
+    projectName: string;
+    status: string;
+    lastAnalyzed: Date;
+    nextReview: Date;
+    overallScore: number;
+    trendDirection: 'IMPROVING' | 'DECLINING' | 'STABLE';
+  };
+  complianceOverview: {
+    standards: {
+      babok: { score: number; trend: string; status: string };
+      pmbok: { score: number; trend: string; status: string };
+      dmbok: { score: number; trend: string; status: string };
+      iso: { score: number; trend: string; status: string };
+    };
+  };
+  recentDeviations: Array<{
+    id: string;
+    title: string;
+    severity: string;
+    status: string;
+    createdAt: Date;
+  }>;
+  actionItems: Array<{
+    id: string;
+    title: string;
+    priority: string;
+    dueDate: Date;
+    assignee: string;
+  }>;
+  // Allow for additional properties that might be present
+  [key: string]: any;
+}
 
 const router = express.Router();
 
 // Default configuration for standards compliance analysis
 const DEFAULT_CONFIG: StandardsComplianceConfig = {
   enabledStandards: ['BABOK_V3', 'PMBOK_7', 'DMBOK_2'],
-  deviationThresholds: {
-    critical: 70,
-    warning: 85,
-    acceptable: 95
-  },
   analysisDepth: 'COMPREHENSIVE',
-  autoApprovalThreshold: 90,
-  reportFormats: ['JSON', 'PDF', 'HTML'],
-  includeExecutiveSummary: true,
-  includeDetailedAnalysis: true,
-  includeRecommendations: true
+  intelligentDeviationThreshold: 85,
+  riskToleranceLevel: 'MEDIUM',
+  includeRecommendations: true,
+  generateExecutiveSummary: true,
+  outputFormat: 'JSON'
 };
 
 // Initialize the analysis engine
@@ -78,11 +115,18 @@ router.post('/analyze',
 
       // Create analysis request
       const analysisRequest: AnalysisRequest = {
-        projectData: projectData as ProjectData,
-        config: { ...DEFAULT_CONFIG, ...config },
         requestId: `REQ-${Date.now()}`,
-        requestedBy,
-        analysisType
+        projectData: projectData as ProjectData,
+        enabledStandards: DEFAULT_CONFIG.enabledStandards,
+        analysisOptions: {
+          includeIntelligentDeviations: true,
+          includeCrossStandardAnalysis: true,
+          generateExecutiveSummary: DEFAULT_CONFIG.generateExecutiveSummary,
+          detailLevel: 'COMPREHENSIVE',
+          riskAssessmentLevel: 'COMPREHENSIVE'
+        },
+        requestDate: new Date(),
+        requestor: requestedBy
       };
 
       // Perform analysis
@@ -107,7 +151,8 @@ router.post('/analyze',
           processingTime: analysisResponse.processingTime,
           results: analysisResponse.results,
           summary: {
-            overallScore: analysisResponse.results?.complianceMatrix?.overallScore || 0,
+            overallScore: analysisResponse.results?.complianceMatrix?.standards ? 
+              analysisResponse.results.complianceMatrix.standards.reduce((sum, std) => sum + std.overallScore, 0) / analysisResponse.results.complianceMatrix.standards.length : 0,
             deviationCount: (analysisResponse.results?.standardDeviations?.length || 0) + 
                            (analysisResponse.results?.intelligentDeviations?.length || 0),
             riskLevel: analysisResponse.results?.riskLevel || 'UNKNOWN',
@@ -158,12 +203,8 @@ router.get('/dashboard',
           standards: {
             babok: { score: 94, trend: '+2%', status: 'FULLY_COMPLIANT' },
             pmbok: { score: 89, trend: '+5%', status: 'MOSTLY_COMPLIANT' },
-            dmbok: { score: 78, trend: 'stable', status: 'PARTIALLY_COMPLIANT' }
-          },
-          overall: {
-            score: 87,
-            grade: 'B+',
-            certification: 'Standards Compliant'
+            dmbok: { score: 78, trend: 'stable', status: 'PARTIALLY_COMPLIANT' },
+            iso: { score: 85, trend: '+1%', status: 'MOSTLY_COMPLIANT' }
           }
         },
         deviationSummary: {
@@ -241,26 +282,36 @@ router.get('/dashboard',
           ],
           period: timeframe as string
         },
-        actionItems: [
+        recentDeviations: [
           {
-            actionId: 'ACT-001',
-            type: 'DEVIATION',
-            priority: 'HIGH',
-            description: 'Review and approve intelligent methodology deviation',
-            owner: 'Project Manager',
-            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            status: 'OPEN',
-            dependencies: []
+            id: 'DEV-001',
+            title: 'Intelligent methodology deviation',
+            severity: 'MEDIUM',
+            status: 'APPROVED',
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
           },
           {
-            actionId: 'ACT-002',
-            type: 'COMPLIANCE',
+            id: 'DEV-002',
+            title: 'Process adaptation for agile framework',
+            severity: 'LOW',
+            status: 'PENDING',
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+          }
+        ],
+        actionItems: [
+          {
+            id: 'ACT-001',
+            title: 'Review and approve intelligent methodology deviation',
+            priority: 'HIGH',
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            assignee: 'Project Manager'
+          },
+          {
+            id: 'ACT-002',
+            title: 'Update DMBOK compliance documentation',
             priority: 'MEDIUM',
-            description: 'Update DMBOK compliance documentation',
-            owner: 'Data Architect',
             dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-            status: 'IN_PROGRESS',
-            dependencies: ['ACT-001']
+            assignee: 'Data Architect'
           }
         ],
         recentActivity: [

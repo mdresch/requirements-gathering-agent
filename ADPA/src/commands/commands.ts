@@ -1,32 +1,25 @@
-import { insertBlueParagraphInWord } from "./word-production";
 import {
+  insertBlueParagraphInWord,
   convertToAdobePDF,
   convertProjectCharter,
   convertTechnicalSpec,
   convertBusinessReq,
-  convertToInDesignLayout,
-  generateIllustratorDiagrams,
-  generateMultiFormatPackage,
-  analyzeContentWithAI,
+  convertInDesign,
+  generateDiagrams,
+  multiFormatPackage,
+  analyzeContentAI,
   generateSmartDiagrams,
   buildCustomTemplate,
-  optimizeDocumentWithAI,
-  enableRealTimeCollaboration,
-  shareAIInsightsWithTeam,
-  syncWithProjectManagement,
-  setupDocumentWorkflow,
-  enableMobileCollaboration,
-  setupProgressiveWebApp,
-  enableCrossPlatformSync,
-  optimizeForMobileDevices,
+  optimizeDocumentAI,
+  enableCollaboration,
+  shareAIInsights,
+  syncWithProject,
+  setupWorkflow,
   generateAdvancedAnalytics,
-  monitorPerformanceMetrics,
+  monitorPerformance,
   generatePredictiveInsights,
   createAnalyticsDashboard,
-  deployEnterpriseIntelligence,
   enableAutomationEngine,
-  integrateBusinessIntelligence,
-  createEnterpriseDashboard
 } from "./word";
 
 /* global Office */
@@ -38,27 +31,20 @@ Office.onReady(async () => {
   Office.actions.associate("convertProjectCharter", convertProjectCharter);
   Office.actions.associate("convertTechnicalSpec", convertTechnicalSpec);
   Office.actions.associate("convertBusinessReq", convertBusinessReq);
-  Office.actions.associate("convertInDesign", convertToInDesignLayout);
-  Office.actions.associate("generateDiagrams", generateIllustratorDiagrams);
-  Office.actions.associate("multiFormatPackage", generateMultiFormatPackage);
-  Office.actions.associate("analyzeContentAI", analyzeContentWithAI);
+  Office.actions.associate("convertInDesign", convertInDesign);
+  Office.actions.associate("generateDiagrams", generateDiagrams);
+  Office.actions.associate("multiFormatPackage", multiFormatPackage);
+  Office.actions.associate("analyzeContentAI", analyzeContentAI);
   Office.actions.associate("generateSmartDiagrams", generateSmartDiagrams);
   Office.actions.associate("buildCustomTemplate", buildCustomTemplate);
-  Office.actions.associate("optimizeDocumentAI", optimizeDocumentWithAI);
-  Office.actions.associate("enableCollaboration", enableRealTimeCollaboration);
-  Office.actions.associate("shareAIInsights", shareAIInsightsWithTeam);
-  Office.actions.associate("syncWithProject", syncWithProjectManagement);
-  Office.actions.associate("setupWorkflow", setupDocumentWorkflow);
-  Office.actions.associate("enableMobileCollaboration", enableMobileCollaboration);
-  Office.actions.associate("setupPWA", setupProgressiveWebApp);
-  Office.actions.associate("enableCrossPlatformSync", enableCrossPlatformSync);
-  Office.actions.associate("optimizeForMobile", optimizeForMobileDevices);
+  Office.actions.associate("optimizeDocumentAI", optimizeDocumentAI);
+  Office.actions.associate("enableCollaboration", enableCollaboration);
+  Office.actions.associate("shareAIInsights", shareAIInsights);
+  Office.actions.associate("syncWithProject", syncWithProject);
+  Office.actions.associate("setupWorkflow", setupWorkflow);
   Office.actions.associate("generateAdvancedAnalytics", generateAdvancedAnalytics);
-  Office.actions.associate("monitorPerformance", monitorPerformanceMetrics);
+  Office.actions.associate("monitorPerformance", monitorPerformance);
   Office.actions.associate("generatePredictiveInsights", generatePredictiveInsights);
   Office.actions.associate("createAnalyticsDashboard", createAnalyticsDashboard);
-  Office.actions.associate("deployEnterpriseIntelligence", deployEnterpriseIntelligence);
   Office.actions.associate("enableAutomationEngine", enableAutomationEngine);
-  Office.actions.associate("integrateBusinessIntelligence", integrateBusinessIntelligence);
-  Office.actions.associate("createEnterpriseDashboard", createEnterpriseDashboard);
 });

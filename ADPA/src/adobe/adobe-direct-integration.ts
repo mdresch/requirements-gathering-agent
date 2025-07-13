@@ -1,11 +1,44 @@
 /*
  * Direct Adobe.io Integration for ADPA
- * No Azure services required - works with your existing Adobe.io console access
+ * No Azure services required - works with your existing Adobe.io c      },
+    } catch (error) {
+      console.error("Adobe PDF conversion failed:", error);
+      return {
+        success: false,
+        error: error?.toString() || "Unknown error",
+        jobId: null,
+        processingTime: 0,
+      };
+    }ss
  *
  * This integrates Adobe PDF Services directly into your Office Add-in
  */
 
-/* global Office Word console fetch URLSearchParams FormData Blob */
+/* global Office Word console fetch URLSearchParams FormData Blob setTimeout */
+
+// Type definitions for missing Office.js types
+declare global {
+  namespace Office {
+    namespace AddinCommands {
+      interface Event {
+        completed(): void;
+      }
+    }
+  }
+  
+  namespace Word {
+    function run<T>(callback: (context: any) => Promise<T>): Promise<T>;
+  }
+}
+
+// Type definitions
+interface AdobePDFResult {
+  success: boolean;
+  downloadUrl?: string;
+  error?: string;
+  jobId: string | null;
+  processingTime: number;
+}
 
 /**
  * Adobe.io Direct Integration Manager
@@ -53,7 +86,11 @@ class AdobeDirectIntegration {
 
       const tokenData = await response.json();
       this.accessToken = tokenData.access_token;
-      this.tokenExpiry = Date.now() + (tokenData.expires_in * 1000) - 60000; // Refresh 1 min early
+      this.tokenExpiry = Date.now() + tokenData.expires_in * 1000 - 60000; // Refresh 1 min early
+
+      if (!this.accessToken) {
+        throw new Error("Failed to get access token from Adobe response");
+      }
 
       return this.accessToken;
     } catch (error) {
@@ -81,16 +118,16 @@ class AdobeDirectIntegration {
         success: true,
         downloadUrl: pdfResult.downloadUrl,
         jobId: jobResult.jobID,
-        processingTime: pdfResult.processingTime
+        processingTime: pdfResult.processingTime,
       };
 
     } catch (error) {
-      console.error('Adobe PDF conversion failed:', error);
+      console.error("Adobe PDF conversion failed:", error);
       return {
         success: false,
-        error: error.toString(),
+        error: error?.toString() || "Unknown error",
         jobId: null,
-        processingTime: 0
+        processingTime: 0,
       };
     }
   }
@@ -103,18 +140,18 @@ class AdobeDirectIntegration {
     const htmlContent = this.markdownToHTML(content);
     
     // Create blob from HTML content
-    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const blob = new Blob([htmlContent], { type: "text/html" });
     
     const formData = new FormData();
-    formData.append('file', blob, `${fileName}.html`);
+    formData.append("file", blob, `${fileName}.html`);
 
-    const response = await fetch('https://pdf-services.adobe.io/assets', {
-      method: 'POST',
+    const response = await fetch("https://pdf-services.adobe.io/assets", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'x-api-key': this.clientId
+        Authorization: `Bearer ${accessToken}`,
+        "x-api-key": this.clientId,
       },
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -128,17 +165,17 @@ class AdobeDirectIntegration {
    * Create PDF conversion job
    */
   private async createPDFJob(assetID: string, accessToken: string): Promise<any> {
-    const response = await fetch('https://pdf-services.adobe.io/operation/createpdf', {
-      method: 'POST',
+    const response = await fetch("https://pdf-services.adobe.io/operation/createpdf", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'x-api-key': this.clientId,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${accessToken}`,
+        "x-api-key": this.clientId,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         assetID: assetID,
-        outputFormat: 'pdf'
-      })
+        outputFormat: "pdf",
+      }),
     });
 
     if (!response.ok) {
@@ -157,11 +194,11 @@ class AdobeDirectIntegration {
 
     while (attempts < maxAttempts) {
       const response = await fetch(`https://pdf-services.adobe.io/operation/${jobID}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'x-api-key': this.clientId
-        }
+          Authorization: `Bearer ${accessToken}`,
+          "x-api-key": this.clientId,
+        },
       });
 
       if (!response.ok) {
@@ -170,21 +207,21 @@ class AdobeDirectIntegration {
 
       const jobStatus = await response.json();
 
-      if (jobStatus.status === 'done') {
+      if (jobStatus.status === "done") {
         return {
           downloadUrl: jobStatus.downloadUri,
-          processingTime: jobStatus.processingTime || 0
+          processingTime: jobStatus.processingTime || 0,
         };
-      } else if (jobStatus.status === 'failed') {
+      } else if (jobStatus.status === "failed") {
         throw new Error(`PDF generation failed: ${jobStatus.error}`);
       }
 
       // Wait 10 seconds before next check
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      await new Promise((resolve) => setTimeout(resolve, 10000));
       attempts++;
     }
 
-    throw new Error('PDF generation timed out');
+    throw new Error("PDF generation timed out");
   }
 
   /**
@@ -194,18 +231,18 @@ class AdobeDirectIntegration {
     let html = markdown;
 
     // Convert headers
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
+    html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
+    html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
 
     // Convert bold
-    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    html = html.replace(/\*\*(.*?)\*\*/gim, "<strong>$1</strong>");
 
     // Convert italic
-    html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+    html = html.replace(/\*(.*?)\*/gim, "<em>$1</em>");
 
     // Convert line breaks
-    html = html.replace(/\n/gim, '<br>');
+    html = html.replace(/\n/gim, "<br>");
 
     // Wrap in basic HTML structure
     return `
@@ -384,11 +421,13 @@ export async function batchConvertToAdobePDF(event: Office.AddinCommands.Event):
     }
 
     const successCount = results.filter(r => r.success).length;
-    await showSuccess(`Batch conversion completed! ${successCount}/${results.length} documents converted successfully.`);
+    await showSuccess(
+      `Batch conversion completed! ${successCount}/${results.length} documents converted successfully.`
+    );
 
   } catch (error) {
-    console.error('Batch conversion failed:', error);
-    await showError('Batch conversion failed. Please try again.');
+    console.error("Batch conversion failed:", error);
+    await showError("Batch conversion failed. Please try again.");
   }
 
   event.completed();
@@ -399,7 +438,7 @@ async function getCurrentDocumentAsMarkdown(): Promise<string> {
   return new Promise((resolve) => {
     Word.run(async (context) => {
       const body = context.document.body;
-      context.load(body, 'text');
+      context.load(body, "text");
       await context.sync();
       resolve(body.text);
     });
@@ -420,21 +459,3 @@ async function showError(message: string): Promise<void> {
   console.error(`Error: ${message}`);
   // In a real implementation, you'd show this in your add-in UI
 }
-
-// Type definitions
-interface AdobePDFResult {
-  success: boolean;
-  downloadUrl?: string;
-  error?: string;
-  jobId: string | null;
-  processingTime: number;
-}
-
-// Clean exports without duplicates
-export {
-  AdobeDirectIntegration,
-  initializeAdobeIntegration,
-  convertCurrentDocumentToAdobePDF,
-  convertMarkdownFileToAdobePDF,
-  batchConvertToAdobePDF
-};
