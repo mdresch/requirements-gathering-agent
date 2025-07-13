@@ -3,7 +3,26 @@
  * Solves manifest 20-item limitation by grouping features into logical hubs
  */
 
-/* global Office Word console */
+/* global Office Word console setTimeout */
+
+// Type definitions for hub system
+interface MenuItem {
+  id: string;
+  label: string;
+  description: string;
+  action: string;
+  icon: string;
+  category: string;
+  featured?: boolean;
+}
+
+interface HubConfiguration {
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  menuItems: MenuItem[];
+}
 
 // Import existing command functions that are actually available
 import {
@@ -31,6 +50,42 @@ import {
   generateInteractiveGantt,
   enableInteractiveDiagrams,
 } from "./word";
+
+// Placeholder functions for missing collaboration features
+async function enableMobileCollaboration(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Mobile collaboration feature coming soon");
+  event.completed();
+}
+
+async function setupPWA(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Progressive Web App setup coming soon");
+  event.completed();
+}
+
+async function enableCrossPlatformSync(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Cross-platform sync feature coming soon");
+  event.completed();
+}
+
+async function optimizeForMobile(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Mobile optimization feature coming soon");
+  event.completed();
+}
+
+async function automateBusinessProcesses(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Business process automation coming soon");
+  event.completed();
+}
+
+async function integrateBusinessIntelligence(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Business intelligence integration coming soon");
+  event.completed();
+}
+
+async function createEnterpriseDashboard(event: Office.AddinCommands.Event): Promise<void> {
+  console.log("🚧 Enterprise dashboard feature coming soon");
+  event.completed();
+}
 
 /**
  * Document Conversion Hub - Consolidates all Adobe and document conversion features
@@ -246,23 +301,23 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         action: "convertToAdobePDF",
         icon: "📄",
         category: "conversion",
-        featured: true
+        featured: true,
       },
       {
-        id: "inDesignLayout", 
+        id: "inDesignLayout",
         label: "InDesign Layout",
         description: "Create print-ready InDesign document",
         action: "convertInDesign",
         icon: "🎨",
-        category: "conversion"
+        category: "conversion",
       },
       {
         id: "projectCharter",
         label: "Project Charter",
         description: "Generate formatted project charter",
-        action: "convertProjectCharter", 
+        action: "convertProjectCharter",
         icon: "📋",
-        category: "templates"
+        category: "templates",
       },
       {
         id: "technicalSpec",
@@ -270,7 +325,7 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         description: "Create technical documentation",
         action: "convertTechnicalSpec",
         icon: "⚙️",
-        category: "templates"
+        category: "templates",
       },
       {
         id: "businessReq",
@@ -278,7 +333,7 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         description: "Format business requirements document",
         action: "convertBusinessReq",
         icon: "💼",
-        category: "templates"
+        category: "templates",
       },
       {
         id: "multiFormat",
@@ -287,9 +342,9 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         action: "multiFormatPackage",
         icon: "📦",
         category: "conversion",
-        featured: true
-      }
-    ]
+        featured: true,
+      },
+    ],
   },
   
   diagramGeneration: {
@@ -305,16 +360,16 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         action: "generateInteractiveTimeline",
         icon: "🕒",
         category: "interactive",
-        featured: true
+        featured: true,
       },
       {
         id: "interactiveGantt",
-        label: "Interactive Gantt Chart", 
+        label: "Interactive Gantt Chart",
         description: "Project management with task dependencies",
         action: "generateInteractiveGantt",
         icon: "📊",
         category: "interactive",
-        featured: true
+        featured: true,
       },
       {
         id: "enableInteractive",
@@ -323,7 +378,7 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         action: "enableInteractiveDiagrams",
         icon: "⚡",
         category: "interactive",
-        featured: true
+        featured: true,
       },
       {
         id: "smartDiagrams",
@@ -331,7 +386,7 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         description: "AI-powered diagram generation from content",
         action: "generateSmartDiagrams",
         icon: "🤖",
-        category: "ai"
+        category: "ai",
       },
       {
         id: "basicDiagrams",
@@ -339,7 +394,7 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         description: "Create basic diagrams from document content",
         action: "generateDiagrams",
         icon: "📈",
-        category: "basic"
+        category: "basic",
       },
       {
         id: "customTemplate",
@@ -347,9 +402,9 @@ export const HubConfigurations: Record<string, HubConfiguration> = {
         description: "Build reusable diagram templates",
         action: "buildCustomTemplate",
         icon: "🏗️",
-        category: "templates"
-      }
-    ]
+        category: "templates",
+      },
+    ],
   },
   
   aiIntelligence: {
@@ -540,9 +595,11 @@ function getActionFunction(actionName: string): ((event: Office.AddinCommands.Ev
     automateBusinessProcesses,
     integrateBusinessIntelligence,
     createEnterpriseDashboard,
+    createAnalyticsDashboard,
+    enableAutomationEngine,
     generateInteractiveTimeline,
     generateInteractiveGantt,
-    enableInteractiveDiagrams
+    enableInteractiveDiagrams,
   };
   
   return actionMap[actionName] || null;

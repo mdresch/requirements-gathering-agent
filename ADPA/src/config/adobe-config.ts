@@ -75,10 +75,17 @@ export function getAdobeCredentialsForClient(): { clientId: string; clientSecret
   // Only use for development/testing purposes
   // In production, make Adobe API calls from a server endpoint
   
+  // STEP 1: Replace these with your actual Adobe.io credentials
+  // Get them from: https://developer.adobe.com/console
+  const clientId = 'your_adobe_client_id_here';  // Your Adobe.io Client ID
+  const clientSecret = 'your_adobe_client_secret_here';  // Your Adobe.io Client Secret
+  const organizationId = 'your_adobe_organization_id_here';  // Your Adobe.io Organization ID
+
+  // STEP 2: If you have environment variables set, they will override the above
   return {
-    clientId: 'your_adobe_client_id_here', // Replace with your actual Client ID
-    clientSecret: 'your_adobe_client_secret_here', // Replace with your actual Client Secret  
-    organizationId: 'your_adobe_organization_id_here' // Replace with your actual Organization ID
+    clientId: process.env.ADOBE_CLIENT_ID || clientId,
+    clientSecret: process.env.ADOBE_CLIENT_SECRET || clientSecret,
+    organizationId: process.env.ADOBE_ORGANIZATION_ID || organizationId
   };
 }
 

@@ -7,23 +7,28 @@
 1. **Go to Adobe Developer Console**: https://developer.adobe.com/console
 2. **Sign in** with your Adobe ID
 3. **Find your existing project** or create a new one
-4. **Copy these 2 values:**
+4. **Copy these 3 values:**
    - **Client ID** (looks like: `1234567890abcdef1234567890abcdef`)
    - **Client Secret** (looks like: `p8e-AbCdEfGhIjKlMnOpQrStUvWxYz`)
+   - **Organization ID** (looks like: `ABCDEF1234567890FEDCBA@AdobeOrg`)
 
 ### Step 2: Add Your Credentials to the Code (1 minute)
 
-1. **Open**: `ADPA/src/commands/word.ts`
-2. **Find lines around 1330** that look like:
+1. **Open**: `ADPA/src/config/adobe-config.ts`
+2. **Find lines around 15** that look like:
    ```typescript
-   const ADOBE_CLIENT_ID = 'your-adobe-client-id-here';
-   const ADOBE_CLIENT_SECRET = 'your-adobe-client-secret-here';
+   const clientId = 'your_adobe_client_id_here';
+   const clientSecret = 'your_adobe_client_secret_here';
+   const organizationId = 'your_adobe_organization_id_here';
    ```
 3. **Replace** with your actual credentials:
    ```typescript
-   const ADOBE_CLIENT_ID = '1234567890abcdef1234567890abcdef';
-   const ADOBE_CLIENT_SECRET = 'p8e-AbCdEfGhIjKlMnOpQrStUvWxYz';
+   const clientId = '1234567890abcdef1234567890abcdef';
+   const clientSecret = 'p8e-AbCdEfGhIjKlMnOpQrStUvWxYz';
+   const organizationId = 'ABCDEF1234567890FEDCBA@AdobeOrg';
    ```
+
+**Note**: You'll also need your Organization ID from the Adobe Developer Console. It looks like `ABCDEF1234567890FEDCBA@AdobeOrg`.
 
 ### Step 3: Test Your Integration (2 minutes)
 
@@ -37,15 +42,21 @@
 
 3. **Load your add-in** (sideload if needed)
 
-4. **Look for the "Adobe PDF" button** in the ribbon
+4. **Look for the "InDesign Layout" button** in the ribbon (NEW!)
 
-5. **Click "Adobe PDF"** to convert your document!
+5. **Click "InDesign Layout"** to convert your document to professional print-ready format!
+
+6. **Try other creative features:**
+   - **Generate Diagrams** - Extract flowcharts and diagrams from your content
+   - **Multi-Format Package** - Create PDF + InDesign + Diagrams all at once
 
 ## What You'll See
 
 ✅ **Success**: Document converts to professional PDF with ADPA branding  
-✅ **Download link**: Appears in your document  
+✅ **InDesign Layout**: Print-ready PDF with professional typography and CMYK colors  
 ✅ **Professional formatting**: Corporate colors and styling applied  
+✅ **Diagram extraction**: Automatic flowchart and diagram generation from content
+✅ **Multi-format output**: PDF, InDesign, and diagrams generated simultaneously  
 
 ## Troubleshooting
 
