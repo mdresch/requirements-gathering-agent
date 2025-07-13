@@ -1,0 +1,1051 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "id": "8ce95c00-2628-4340-8d39-61d5ce6dd2ab",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "name": {
+        "short": "ADPA",
+        "full": "Contoso Task Pane Add-in"
+    },
+    "description": {
+        "short": "A template to get started.",
+        "full": "This is the template to get started."
+    },
+    "developer": {
+        "name": "Contoso",
+        "websiteUrl": "https://www.contoso.com",
+        "privacyUrl": "https://www.contoso.com/privacy",
+        "termsOfUseUrl": "https://www.contoso.com/servicesagreement"
+    },
+    "icons": {
+        "outline": "assets/outline.png",
+        "color": "assets/color.png"
+    },
+    "accentColor": "#230201",
+    "localizationInfo": {
+        "defaultLanguageTag": "en-us",
+        "additionalLanguages": []
+    },
+    "authorization": {
+        "permissions": {
+            "resourceSpecific": [
+                {
+                    "name": "Document.ReadWrite.User",
+                    "type": "Delegated"
+                }
+            ]
+        }
+    },
+    "validDomains": [
+        "contoso.com"
+    ],
+    "extensions": [
+        {
+            "requirements": {
+                "scopes": [
+                    "document"
+                ],
+                "capabilities": [
+                    {
+                        "name": "AddinCommands",
+                        "minVersion": "1.1"
+                    }
+                ]
+            },
+            "runtimes": [
+                {
+                    "requirements": {
+                        "capabilities": [
+                            {
+                                "name": "AddinCommands",
+                                "minVersion": "1.1"
+                            }
+                        ]
+                    },
+                    "id": "TaskPaneRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "https://localhost:3000/taskpane.html"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "TaskPaneRuntimeShow",
+                            "type": "openPage",
+                            "pinnable": false,
+                            "view": "dashboard"
+                        }
+                    ]
+                },
+                {
+                    "id": "CommandsRuntime",
+                    "type": "general",
+                    "code": {
+                        "page": "https://localhost:3000/commands.html",
+                        "script": "https://localhost:3000/commands.js"
+                    },
+                    "lifetime": "short",
+                    "actions": [
+                        {
+                            "id": "action",
+                            "type": "executeFunction",
+                            "displayName": "action"
+                        },
+                        {
+                            "id": "convertToAdobePDF",
+                            "type": "executeFunction",
+                            "displayName": "convertToAdobePDF"
+                        },
+                        {
+                            "id": "convertProjectCharter",
+                            "type": "executeFunction",
+                            "displayName": "convertProjectCharter"
+                        },
+                        {
+                            "id": "convertTechnicalSpec",
+                            "type": "executeFunction",
+                            "displayName": "convertTechnicalSpec"
+                        },
+                        {
+                            "id": "convertBusinessReq",
+                            "type": "executeFunction",
+                            "displayName": "convertBusinessReq"
+                        },
+                        {
+                            "id": "convertInDesign",
+                            "type": "executeFunction",
+                            "displayName": "convertInDesign"
+                        },
+                        {
+                            "id": "generateDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "generateDiagrams"
+                        },
+                        {
+                            "id": "multiFormatPackage",
+                            "type": "executeFunction",
+                            "displayName": "multiFormatPackage"
+                        },
+                        {
+                            "id": "analyzeContentAI",
+                            "type": "executeFunction",
+                            "displayName": "analyzeContentAI"
+                        },
+                        {
+                            "id": "generateSmartDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "generateSmartDiagrams"
+                        },
+                        {
+                            "id": "buildCustomTemplate",
+                            "type": "executeFunction",
+                            "displayName": "buildCustomTemplate"
+                        },
+                        {
+                            "id": "optimizeDocumentAI",
+                            "type": "executeFunction",
+                            "displayName": "optimizeDocumentAI"
+                        },
+                        {
+                            "id": "enableCollaboration",
+                            "type": "executeFunction",
+                            "displayName": "enableCollaboration"
+                        },
+                        {
+                            "id": "shareAIInsights",
+                            "type": "executeFunction",
+                            "displayName": "shareAIInsights"
+                        },
+                        {
+                            "id": "syncWithProject",
+                            "type": "executeFunction",
+                            "displayName": "syncWithProject"
+                        },
+                        {
+                            "id": "setupWorkflow",
+                            "type": "executeFunction",
+                            "displayName": "setupWorkflow"
+                        },
+                        {
+                            "id": "enableMobileCollaboration",
+                            "type": "executeFunction",
+                            "displayName": "enableMobileCollaboration"
+                        },
+                        {
+                            "id": "setupPWA",
+                            "type": "executeFunction",
+                            "displayName": "setupPWA"
+                        },
+                        {
+                            "id": "enableCrossPlatformSync",
+                            "type": "executeFunction",
+                            "displayName": "enableCrossPlatformSync"
+                        },
+                        {
+                            "id": "optimizeForMobile",
+                            "type": "executeFunction",
+                            "displayName": "optimizeForMobile"
+                        },
+                        {
+                            "id": "generateAdvancedAnalytics",
+                            "type": "executeFunction",
+                            "displayName": "generateAdvancedAnalytics"
+                        },
+                        {
+                            "id": "monitorPerformance",
+                            "type": "executeFunction",
+                            "displayName": "monitorPerformance"
+                        },
+                        {
+                            "id": "generatePredictiveInsights",
+                            "type": "executeFunction",
+                            "displayName": "generatePredictiveInsights"
+                        },
+                        {
+                            "id": "createAnalyticsDashboard",
+                            "type": "executeFunction",
+                            "displayName": "createAnalyticsDashboard"
+                        },
+                        {
+                            "id": "deployEnterpriseIntelligence",
+                            "type": "executeFunction",
+                            "displayName": "deployEnterpriseIntelligence"
+                        },
+                        {
+                            "id": "enableAutomationEngine",
+                            "type": "executeFunction",
+                            "displayName": "enableAutomationEngine"
+                        },
+                        {
+                            "id": "integrateBusinessIntelligence",
+                            "type": "executeFunction",
+                            "displayName": "integrateBusinessIntelligence"
+                        },
+                        {
+                            "id": "createEnterpriseDashboard",
+                            "type": "executeFunction",
+                            "displayName": "createEnterpriseDashboard"
+                        },
+                        {
+                            "id": "generateInteractiveTimeline",
+                            "type": "executeFunction",
+                            "displayName": "generateInteractiveTimeline"
+                        },
+                        {
+                            "id": "generateInteractiveGantt",
+                            "type": "executeFunction",
+                            "displayName": "generateInteractiveGantt"
+                        },
+                        {
+                            "id": "enableInteractiveDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "enableInteractiveDiagrams"
+                        }
+                    ]
+                }
+            ],
+            "ribbons": [
+                {
+                    "contexts": [
+                        "default"
+                    ],
+                    "tabs": [
+                        {
+                            "builtInTabId": "TabHome",
+                            "groups": [
+                                {
+                                    "id": "msgReadGroup",
+                                    "label": "Contoso Add-in",
+                                    "icons": [
+                                        {
+                                            "size": 16,
+                                            "url": "https://localhost:3000/assets/icon-16.png"
+                                        },
+                                        {
+                                            "size": 32,
+                                            "url": "https://localhost:3000/assets/icon-32.png"
+                                        },
+                                        {
+                                            "size": 80,
+                                            "url": "https://localhost:3000/assets/icon-80.png"
+                                        }
+                                    ],
+                                    "controls": [
+                                        {
+                                            "id": "msgReadOpenPaneButton",
+                                            "type": "button",
+                                            "label": "Show Taskpane",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Show Taskpane",
+                                                "description": "Opens a pane displaying all available properties."
+                                            },
+                                            "actionId": "TaskPaneRuntimeShow"
+                                        },
+                                        {
+                                            "id": "ActionButton",
+                                            "type": "button",
+                                            "label": "Perform an action",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Perform an action",
+                                                "description": "Perform an action when clicked."
+                                            },
+                                            "actionId": "action"
+                                        },
+                                        {
+                                            "id": "ConvertToAdobePDF",
+                                            "type": "button",
+                                            "label": "Adobe PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Adobe PDF",
+                                                "description": "Convert document to professional PDF using Adobe.io"
+                                            },
+                                            "actionId": "convertToAdobePDF"
+                                        },
+                                        {
+                                            "id": "ConvertProjectCharter",
+                                            "type": "button",
+                                            "label": "Project Charter PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Project Charter PDF",
+                                                "description": "Convert to professional Project Charter PDF using PMBOK template"
+                                            },
+                                            "actionId": "convertProjectCharter"
+                                        },
+                                        {
+                                            "id": "ConvertTechnicalSpec",
+                                            "type": "button",
+                                            "label": "Technical Spec PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Technical Spec PDF",
+                                                "description": "Convert to professional Technical Specification PDF"
+                                            },
+                                            "actionId": "convertTechnicalSpec"
+                                        },
+                                        {
+                                            "id": "ConvertBusinessReq",
+                                            "type": "button",
+                                            "label": "Business Req PDF",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Business Requirements PDF",
+                                                "description": "Convert to professional Business Requirements PDF using BABOK template"
+                                            },
+                                            "actionId": "convertBusinessReq"
+                                        },
+                                        {
+                                            "id": "ConvertInDesign",
+                                            "type": "button",
+                                            "label": "InDesign Layout",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "InDesign Layout",
+                                                "description": "Create professional print-ready layout using Adobe InDesign"
+                                            },
+                                            "actionId": "convertInDesign"
+                                        },
+                                        {
+                                            "id": "GenerateDiagrams",
+                                            "type": "button",
+                                            "label": "Generate Diagrams",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Generate Diagrams",
+                                                "description": "Create professional diagrams using Adobe Illustrator"
+                                            },
+                                            "actionId": "generateDiagrams"
+                                        },
+                                        {
+                                            "id": "MultiFormatPackage",
+                                            "type": "button",
+                                            "label": "Multi-Format Package",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Multi-Format Package",
+                                                "description": "Generate PDF, InDesign, and Diagrams in one package"
+                                            },
+                                            "actionId": "multiFormatPackage"
+                                        },
+                                        {
+                                            "id": "AnalyzeContentAI",
+                                            "type": "button",
+                                            "label": "AI Content Analysis",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Content Analysis",
+                                                "description": "Analyze document with AI for intelligent recommendations"
+                                            },
+                                            "actionId": "analyzeContentAI"
+                                        },
+                                        {
+                                            "id": "GenerateSmartDiagrams",
+                                            "type": "button",
+                                            "label": "Smart Diagrams",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Smart Diagrams",
+                                                "description": "Generate diagrams from natural language using AI"
+                                            },
+                                            "actionId": "generateSmartDiagrams"
+                                        },
+                                        {
+                                            "id": "BuildCustomTemplate",
+                                            "type": "button",
+                                            "label": "AI Template Builder",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Template Builder",
+                                                "description": "Create custom templates using AI analysis"
+                                            },
+                                            "actionId": "buildCustomTemplate"
+                                        },
+                                        {
+                                            "id": "OptimizeDocumentAI",
+                                            "type": "button",
+                                            "label": "AI Optimization",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "AI Optimization",
+                                                "description": "Optimize document structure and readability with AI"
+                                            },
+                                            "actionId": "optimizeDocumentAI"
+                                        },
+                                        {
+                                            "id": "EnableCollaboration",
+                                            "type": "button",
+                                            "label": "Enable Collaboration",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enable Collaboration",
+                                                "description": "Start real-time collaboration with AI team assistance"
+                                            },
+                                            "actionId": "enableCollaboration"
+                                        },
+                                        {
+                                            "id": "ShareAIInsights",
+                                            "type": "button",
+                                            "label": "Share AI Insights",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Share AI Insights",
+                                                "description": "Share AI analysis and recommendations with team"
+                                            },
+                                            "actionId": "shareAIInsights"
+                                        },
+                                        {
+                                            "id": "SyncWithProject",
+                                            "type": "button",
+                                            "label": "Sync with Project",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Sync with Project",
+                                                "description": "Connect document to project management system"
+                                            },
+                                            "actionId": "syncWithProject"
+                                        },
+                                        {
+                                            "id": "SetupWorkflow",
+                                            "type": "button",
+                                            "label": "Setup Workflow",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Setup Workflow",
+                                                "description": "Create automated document approval workflow"
+                                            },
+                                            "actionId": "setupWorkflow"
+                                        },
+                                        {
+                                            "id": "EnableMobileCollaboration",
+                                            "type": "button",
+                                            "label": "Mobile Collaboration",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Mobile Collaboration",
+                                                "description": "Enable cross-platform mobile collaboration with offline support"
+                                            },
+                                            "actionId": "enableMobileCollaboration"
+                                        },
+                                        {
+                                            "id": "SetupPWA",
+                                            "type": "button",
+                                            "label": "Setup PWA",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Setup PWA",
+                                                "description": "Enable Progressive Web App with offline capabilities"
+                                            },
+                                            "actionId": "setupPWA"
+                                        },
+                                        {
+                                            "id": "EnableCrossPlatformSync",
+                                            "type": "button",
+                                            "label": "Cross-Platform Sync",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Cross-Platform Sync",
+                                                "description": "Enable seamless sync across all devices and platforms"
+                                            },
+                                            "actionId": "enableCrossPlatformSync"
+                                        },
+                                        {
+                                            "id": "OptimizeForMobile",
+                                            "type": "button",
+                                            "label": "Mobile Optimization",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Mobile Optimization",
+                                                "description": "Optimize document and interface for mobile devices"
+                                            },
+                                            "actionId": "optimizeForMobile"
+                                        },
+                                        {
+                                            "id": "GenerateAdvancedAnalytics",
+                                            "type": "button",
+                                            "label": "Advanced Analytics",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Advanced Analytics",
+                                                "description": "Generate comprehensive analytics with performance monitoring"
+                                            },
+                                            "actionId": "generateAdvancedAnalytics"
+                                        },
+                                        {
+                                            "id": "MonitorPerformance",
+                                            "type": "button",
+                                            "label": "Performance Monitor",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Performance Monitor",
+                                                "description": "Real-time performance monitoring with optimization recommendations"
+                                            },
+                                            "actionId": "monitorPerformance"
+                                        },
+                                        {
+                                            "id": "GeneratePredictiveInsights",
+                                            "type": "button",
+                                            "label": "Predictive Insights",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Predictive Insights",
+                                                "description": "Machine learning-powered predictions and intelligent recommendations"
+                                            },
+                                            "actionId": "generatePredictiveInsights"
+                                        },
+                                        {
+                                            "id": "CreateAnalyticsDashboard",
+                                            "type": "button",
+                                            "label": "Analytics Dashboard",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Analytics Dashboard",
+                                                "description": "Create real-time dashboard with comprehensive metrics"
+                                            },
+                                            "actionId": "createAnalyticsDashboard"
+                                        },
+                                        {
+                                            "id": "DeployEnterpriseIntelligence",
+                                            "type": "button",
+                                            "label": "Enterprise Intelligence",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enterprise Intelligence",
+                                                "description": "Deploy advanced AI models with deep learning and autonomous systems"
+                                            },
+                                            "actionId": "deployEnterpriseIntelligence"
+                                        },
+                                        {
+                                            "id": "EnableAutomationEngine",
+                                            "type": "button",
+                                            "label": "Automation Engine",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Automation Engine",
+                                                "description": "Enable self-healing systems and adaptive automation"
+                                            },
+                                            "actionId": "enableAutomationEngine"
+                                        },
+                                        {
+                                            "id": "IntegrateBusinessIntelligence",
+                                            "type": "button",
+                                            "label": "Business Intelligence",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Business Intelligence",
+                                                "description": "Integrate with enterprise BI platforms and data warehouses"
+                                            },
+                                            "actionId": "integrateBusinessIntelligence"
+                                        },
+                                        {
+                                            "id": "CreateEnterpriseDashboard",
+                                            "type": "button",
+                                            "label": "Enterprise Dashboard",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enterprise Dashboard",
+                                                "description": "Create advanced visualization with AR/VR analytics"
+                                            },
+                                            "actionId": "createEnterpriseDashboard"
+                                        },
+                                        {
+                                            "id": "InteractiveTimeline",
+                                            "type": "button",
+                                            "label": "Interactive Timeline",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Interactive Timeline",
+                                                "description": "Generate clickable, zoomable timeline with drag-and-drop features"
+                                            },
+                                            "actionId": "generateInteractiveTimeline"
+                                        },
+                                        {
+                                            "id": "InteractiveGantt",
+                                            "type": "button",
+                                            "label": "Interactive Gantt",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Interactive Gantt Chart",
+                                                "description": "Create interactive project timelines with task dependencies and progress tracking"
+                                            },
+                                            "actionId": "generateInteractiveGantt"
+                                        },
+                                        {
+                                            "id": "EnableInteractiveDiagrams",
+                                            "type": "button",
+                                            "label": "Enable Interactive Mode",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enable Interactive Diagrams",
+                                                "description": "Turn on advanced interactivity for all diagrams and charts"
+                                            },
+                                            "actionId": "enableInteractiveDiagrams"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

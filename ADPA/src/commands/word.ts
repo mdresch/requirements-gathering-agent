@@ -1867,3 +1867,6 @@ export async function enableInteractiveDiagrams(event: Office.AddinCommands.Even
 
   event.completed();
 }
+
+// Export hub command functions for manifest compatibility
+export { documentConversionHub, diagramGenerationHub, aiIntelligenceHub, collaborationHub } from "./command-hubs";
