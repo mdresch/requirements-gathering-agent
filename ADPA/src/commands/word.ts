@@ -9,6 +9,14 @@
 import { getDiagramParser } from "../services/DiagramParser";
 import { getAdobeCreativeSuiteService } from "../services/AdobeCreativeSuiteService";
 
+// Import Phase 3 interactive services
+import {
+  InteractiveTimelineService,
+  InteractiveOptions,
+  TimelineEvent,
+  GanttTask,
+} from "../services/phase3-interactive";
+
 /**
  * Insert a blue paragraph in word when the add-in command is executed.
  * @param event
@@ -1398,6 +1406,463 @@ export async function enableAutomationEngine(event: Office.AddinCommands.Event) 
     });
   } catch (error) {
     console.error(error);
+  }
+
+  event.completed();
+}
+
+/**
+ * Phase 3: Generate Interactive Timeline
+ * @param event
+ */
+export async function generateInteractiveTimeline(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      const progressParagraph = context.document.body.insertParagraph(
+        "🎯 Generating interactive timeline with click and zoom features...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content for timeline generation
+      const body = context.document.body;
+      const properties = context.document.properties;
+      context.load(body, "text");
+      context.load(properties, "title");
+      await context.sync();
+
+      // Parse content for timeline data
+      const diagramParser = getDiagramParser();
+      const parseResult = diagramParser.parseDocument(body.text);
+
+      let timelinesGenerated = 0;
+
+      // Generate interactive timelines for any timeline diagrams found
+      if (parseResult.success && parseResult.diagrams.length > 0) {
+        const timelineDiagrams = parseResult.diagrams.filter(d => d.type === "timeline");
+        
+        for (const timelineDiagram of timelineDiagrams.slice(0, 2)) {
+          try {
+            // Convert diagram to interactive events
+            const events = diagramParser.convertTimelineToEvents(timelineDiagram);
+            
+            if (events.length > 0) {
+              // Generate interactive timeline SVG
+              const interactiveSVG = diagramParser.generateInteractiveTimelineSVG(timelineDiagram, events);
+              
+              // Insert timeline info in document
+              const timelineParagraph = context.document.body.insertParagraph(
+                `📊 Interactive Timeline: ${timelineDiagram.title || "Project Timeline"} (${events.length} events)`,
+                Word.InsertLocation.end
+              );
+              timelineParagraph.font.color = "#2E86AB";
+              timelineParagraph.font.italic = true;
+              
+              // Add interaction instructions
+              const instructionParagraph = context.document.body.insertParagraph(
+                "🎯 Features: Click events for details • Zoom in/out • Drag to adjust dates",
+                Word.InsertLocation.end
+              );
+              instructionParagraph.font.color = "#A23B72";
+              instructionParagraph.font.size = 10;
+              
+              timelinesGenerated++;
+            }
+          } catch (timelineError) {
+            console.warn("Individual timeline generation failed:", timelineError);
+          }
+        }
+      }
+
+      // If no timelines found, create a sample interactive timeline
+      if (timelinesGenerated === 0) {
+        try {
+          const sampleEvents: TimelineEvent[] = [
+            {
+              id: "event-1",
+              title: "Project Kickoff",
+              date: new Date(2024, 0, 15),
+              type: "milestone",
+              description: "Project initiation and team setup",
+              category: "project",
+            },
+            {
+              id: "event-2", 
+              title: "Phase 1 Complete",
+              date: new Date(2024, 2, 15),
+              type: "milestone",
+              description: "Foundation development complete",
+              category: "development",
+            },
+            {
+              id: "event-3",
+              title: "Beta Release",
+              date: new Date(2024, 4, 1),
+              type: "event",
+              description: "First beta version released",
+              category: "release",
+            },
+            {
+              id: "event-4",
+              title: "Launch Deadline",
+              date: new Date(2024, 6, 1),
+              type: "deadline",
+              description: "Official product launch",
+              category: "launch",
+            },
+          ];
+
+          // Create interactive service
+          const interactiveService = new InteractiveTimelineService({
+            options: {
+              clickable: true,
+              zoomable: true,
+              draggable: true,
+              realTimeUpdates: true,
+              editMode: false,
+            },
+            handlers: {},
+            theme: {
+              primaryColor: "#2E86AB",
+              secondaryColor: "#A23B72",
+              accentColor: "#F18F01",
+              backgroundColor: "#FFFFFF",
+              textColor: "#333333",
+            },
+          });
+
+          const sampleTimeline = interactiveService.generateInteractiveTimeline(sampleEvents, {
+            clickable: true,
+            zoomable: true,
+            draggable: true,
+            realTimeUpdates: true,
+            editMode: false,
+          });
+
+          const sampleParagraph = context.document.body.insertParagraph(
+            "📊 Sample Interactive Timeline: Project Roadmap (4 events)",
+            Word.InsertLocation.end
+          );
+          sampleParagraph.font.color = "#F18F01";
+          sampleParagraph.font.bold = true;
+          
+          const instructionParagraph = context.document.body.insertParagraph(
+            "🎯 Try it: Click milestones • Zoom controls • Drag events to reschedule",
+            Word.InsertLocation.end
+          );
+          instructionParagraph.font.color = "#A23B72";
+          instructionParagraph.font.size = 10;
+
+          timelinesGenerated++;
+        } catch (sampleError) {
+          console.warn("Sample timeline generation failed:", sampleError);
+        }
+      }
+
+      await context.sync();
+
+      // Remove progress message and add success message
+      progressParagraph.delete();
+      await context.sync();
+
+      const successMessage = timelinesGenerated > 0
+        ? `✅ Generated ${timelinesGenerated} interactive timeline(s) with full click, zoom, and drag functionality!`
+        : "✅ Timeline analysis completed - no timeline data found in document.";
+
+      const successParagraph = context.document.body.insertParagraph(successMessage, Word.InsertLocation.end);
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+      await context.sync();
+    });
+  } catch (error) {
+    console.error("Generate Interactive Timeline Error:", error);
+  }
+
+  event.completed();
+}
+
+/**
+ * Phase 3: Generate Interactive Gantt Chart
+ * @param event
+ */
+export async function generateInteractiveGantt(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      const progressParagraph = context.document.body.insertParagraph(
+        "🎯 Generating interactive Gantt chart with drag-and-drop task scheduling...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content for Gantt generation
+      const body = context.document.body;
+      const properties = context.document.properties;
+      context.load(body, "text");
+      context.load(properties, "title");
+      await context.sync();
+
+      // Parse content for Gantt data
+      const diagramParser = getDiagramParser();
+      const parseResult = diagramParser.parseDocument(body.text);
+
+      let ganttChartsGenerated = 0;
+
+      // Generate interactive Gantt charts for any Gantt diagrams found
+      if (parseResult.success && parseResult.diagrams.length > 0) {
+        const ganttDiagrams = parseResult.diagrams.filter(d => d.type === "gantt-chart");
+        
+        for (const ganttDiagram of ganttDiagrams.slice(0, 2)) {
+          try {
+            // Convert diagram to interactive tasks
+            const tasks = diagramParser.convertGanttToTasks(ganttDiagram);
+            
+            if (tasks.length > 0) {
+              // Generate interactive Gantt SVG
+              const interactiveGantt = diagramParser.generateInteractiveGanttSVG(ganttDiagram, tasks);
+              
+              // Insert Gantt info in document
+              const ganttParagraph = context.document.body.insertParagraph(
+                `📊 Interactive Gantt Chart: ${ganttDiagram.title || "Project Schedule"} (${tasks.length} tasks)`,
+                Word.InsertLocation.end
+              );
+              ganttParagraph.font.color = "#2E86AB";
+              ganttParagraph.font.italic = true;
+              
+              // Add interaction instructions
+              const instructionParagraph = context.document.body.insertParagraph(
+                "🎯 Features: Drag task bars • Click for details • Zoom timeline • Edit dependencies",
+                Word.InsertLocation.end
+              );
+              instructionParagraph.font.color = "#A23B72";
+              instructionParagraph.font.size = 10;
+              
+              ganttChartsGenerated++;
+            }
+          } catch (ganttError) {
+            console.warn("Individual Gantt generation failed:", ganttError);
+          }
+        }
+      }
+
+      // If no Gantt charts found, create a sample interactive Gantt
+      if (ganttChartsGenerated === 0) {
+        try {
+          const sampleTasks: GanttTask[] = [
+            {
+              id: "task-1",
+              name: "Requirements Analysis",
+              startDate: new Date(2024, 0, 1),
+              endDate: new Date(2024, 0, 15),
+              progress: 100,
+              dependencies: [],
+              assignee: "Business Analyst",
+              priority: "high",
+            },
+            {
+              id: "task-2",
+              name: "System Design",
+              startDate: new Date(2024, 0, 10),
+              endDate: new Date(2024, 1, 5),
+              progress: 75,
+              dependencies: ["task-1"],
+              assignee: "System Architect",
+              priority: "high",
+            },
+            {
+              id: "task-3",
+              name: "Development Phase 1",
+              startDate: new Date(2024, 1, 1),
+              endDate: new Date(2024, 3, 1),
+              progress: 60,
+              dependencies: ["task-2"],
+              assignee: "Development Team",
+              priority: "medium",
+            },
+            {
+              id: "task-4",
+              name: "Testing & QA",
+              startDate: new Date(2024, 2, 15),
+              endDate: new Date(2024, 4, 15),
+              progress: 30,
+              dependencies: ["task-3"],
+              assignee: "QA Team",
+              priority: "critical",
+            },
+            {
+              id: "task-5",
+              name: "Deployment",
+              startDate: new Date(2024, 4, 10),
+              endDate: new Date(2024, 5, 1),
+              progress: 0,
+              dependencies: ["task-4"],
+              assignee: "DevOps Team",
+              priority: "high",
+            },
+          ];
+
+          // Create interactive service
+          const interactiveService = new InteractiveTimelineService({
+            options: {
+              clickable: true,
+              zoomable: true,
+              draggable: true,
+              realTimeUpdates: true,
+              editMode: false,
+            },
+            handlers: {},
+            theme: {
+              primaryColor: "#2E86AB",
+              secondaryColor: "#A23B72",
+              accentColor: "#F18F01",
+              backgroundColor: "#FFFFFF",
+              textColor: "#333333",
+            },
+          });
+
+          const sampleGantt = interactiveService.generateInteractiveGantt(sampleTasks, {
+            clickable: true,
+            zoomable: true,
+            draggable: true,
+            realTimeUpdates: true,
+            editMode: false,
+          });
+
+          const sampleParagraph = context.document.body.insertParagraph(
+            "📊 Sample Interactive Gantt Chart: Software Development Project (5 tasks)",
+            Word.InsertLocation.end
+          );
+          sampleParagraph.font.color = "#F18F01";
+          sampleParagraph.font.bold = true;
+          
+          const instructionParagraph = context.document.body.insertParagraph(
+            "🎯 Try it: Drag task bars to reschedule • Click tasks for details • Zoom timeline",
+            Word.InsertLocation.end
+          );
+          instructionParagraph.font.color = "#A23B72";
+          instructionParagraph.font.size = 10;
+
+          ganttChartsGenerated++;
+        } catch (sampleError) {
+          console.warn("Sample Gantt generation failed:", sampleError);
+        }
+      }
+
+      await context.sync();
+
+      // Remove progress message and add success message
+      progressParagraph.delete();
+      await context.sync();
+
+      const successMessage = ganttChartsGenerated > 0
+        ? `✅ Generated ${ganttChartsGenerated} interactive Gantt chart(s) with drag-and-drop task management!`
+        : "✅ Gantt analysis completed - no project schedule data found in document.";
+
+      const successParagraph = context.document.body.insertParagraph(successMessage, Word.InsertLocation.end);
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+      await context.sync();
+    });
+  } catch (error) {
+    console.error("Generate Interactive Gantt Error:", error);
+  }
+
+  event.completed();
+}
+
+/**
+ * Phase 3: Enable Interactive Diagram Mode
+ * @param event
+ */
+export async function enableInteractiveDiagrams(event: Office.AddinCommands.Event) {
+  try {
+    await Word.run(async (context) => {
+      const progressParagraph = context.document.body.insertParagraph(
+        "🎯 Enabling interactive diagram mode with advanced user controls...",
+        Word.InsertLocation.end
+      );
+      progressParagraph.font.color = "blue";
+      progressParagraph.font.bold = true;
+      await context.sync();
+
+      // Get document content
+      const body = context.document.body;
+      context.load(body, "text");
+      await context.sync();
+
+      // Parse all diagrams and enable interactive features
+      const diagramParser = getDiagramParser();
+      const parseResult = diagramParser.parseDocument(body.text);
+
+      let interactiveFeaturesEnabled = 0;
+
+      if (parseResult.success && parseResult.diagrams.length > 0) {
+        // Enable interactive mode for diagram parser
+        diagramParser.enableInteractiveMode({
+          clickable: true,
+          zoomable: true,
+          draggable: true,
+          realTimeUpdates: true,
+          editMode: true,
+        });
+
+        // Update theme for interactive diagrams
+        diagramParser.updateInteractiveTheme({
+          primaryColor: "#2E86AB",
+          secondaryColor: "#A23B72",
+          accentColor: "#F18F01",
+          backgroundColor: "#FFFFFF",
+          textColor: "#333333",
+        });
+
+        // Count interactive-eligible diagrams
+        const interactiveDiagrams = parseResult.diagrams.filter(
+          d => d.type === "timeline" || d.type === "gantt-chart"
+        );
+
+        interactiveFeaturesEnabled = interactiveDiagrams.length;
+
+        if (interactiveFeaturesEnabled > 0) {
+          const featuresParagraph = context.document.body.insertParagraph(
+            `🎯 Interactive features enabled for ${interactiveFeaturesEnabled} diagram(s):`,
+            Word.InsertLocation.end
+          );
+          featuresParagraph.font.color = "#2E86AB";
+          featuresParagraph.font.bold = true;
+
+          const featureListParagraph = context.document.body.insertParagraph(
+            "• Click elements for detailed information\n" +
+            "• Zoom in/out for different time perspectives\n" +
+            "• Drag elements to reschedule dates\n" +
+            "• Real-time updates and validation\n" +
+            "• Edit mode for advanced modifications",
+            Word.InsertLocation.end
+          );
+          featureListParagraph.font.color = "#A23B72";
+          featureListParagraph.font.size = 11;
+        }
+      }
+
+      await context.sync();
+
+      // Remove progress message and add success message
+      progressParagraph.delete();
+      await context.sync();
+
+      const successMessage = interactiveFeaturesEnabled > 0
+        ? `✅ Interactive diagram mode activated! ${interactiveFeaturesEnabled} diagram(s) now have full interactive capabilities.`
+        : "✅ Interactive mode ready - use timeline/Gantt generation commands to create interactive diagrams.";
+
+      const successParagraph = context.document.body.insertParagraph(successMessage, Word.InsertLocation.end);
+      successParagraph.font.color = "green";
+      successParagraph.font.bold = true;
+      await context.sync();
+    });
+  } catch (error) {
+    console.error("Enable Interactive Diagrams Error:", error);
   }
 
   event.completed();

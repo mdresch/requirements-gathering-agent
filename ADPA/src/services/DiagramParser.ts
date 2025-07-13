@@ -1,10 +1,19 @@
 /**
- * Diagram Parser - Enhanced Phase 2 Implementation
+ * Diagram Parser - Enhanced Phase 2 Implementation with Phase 3 Interactive Features
  * Intelligent diagram extraction with timeline and Gantt chart support
+ * Interactive features for timeline and Gantt charts
  */
 
 /* global console */
 import { TimelineGanttParser } from "./phase2-timeline-gantt";
+import { 
+  InteractiveTimelineService, 
+  InteractiveOptions, 
+  InteractiveConfig,
+  TimelineEvent,
+  GanttTask,
+  EventHandlers
+} from "./phase3-interactive";
 
 interface DiagramData {
   type: "mermaid" | "plantuml" | "text-flow" | "org-chart" | "timeline" | "gantt-chart";
@@ -12,12 +21,21 @@ interface DiagramData {
   title?: string;
   position?: number;
   originalText: string;
+  // Phase 3: Interactive properties
+  interactive?: boolean;
+  interactiveOptions?: InteractiveOptions;
 }
 
 interface ParseResult {
   success: boolean;
   diagrams: DiagramData[];
   errors: string[];
+  // Phase 3: Interactive features
+  interactiveFeatures?: {
+    timelineEvents: TimelineEvent[];
+    ganttTasks: GanttTask[];
+    hasInteractive: boolean;
+  };
 }
 
 interface TextFlowData {
@@ -38,12 +56,40 @@ export class DiagramParser {
   private mermaidRegex: RegExp;
   private plantumlRegex: RegExp;
   private codeBlockRegex: RegExp;
+  // Phase 3: Interactive service
+  private interactiveService: InteractiveTimelineService;
 
   constructor() {
     // Regex patterns for different diagram types
     this.mermaidRegex = /```mermaid\s*\n([\s\S]*?)\n```/gi;
     this.plantumlRegex = /```plantuml\s*\n([\s\S]*?)\n```/gi;
     this.codeBlockRegex = /```(\w+)?\s*\n([\s\S]*?)\n```/gi;
+    
+    // Phase 3: Initialize interactive service with default config
+    this.interactiveService = new InteractiveTimelineService({
+      options: {
+        clickable: true,
+        zoomable: true,
+        draggable: true,
+        realTimeUpdates: true,
+        editMode: false,
+      },
+      handlers: {
+        onTimelineEventClick: (event: TimelineEvent) => {
+          console.log("Timeline event clicked:", event);
+        },
+        onGanttTaskDrag: (task: GanttTask) => {
+          console.log("Gantt task dragged:", task);
+        },
+      },
+      theme: {
+        primaryColor: "#2E86AB",
+        secondaryColor: "#A23B72", 
+        accentColor: "#F18F01",
+        backgroundColor: "#FFFFFF",
+        textColor: "#333333",
+      },
+    });
   }
 
   /**
@@ -725,9 +771,154 @@ export class DiagramParser {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
   <rect x="50" y="50" width="200" height="100" fill="${colors.primaryColor}" stroke="${colors.secondaryColor}" stroke-width="2" rx="10"/>
-  <text x="150" y="100" style="font-family: Arial; font-size: 12px; fill: white; text-anchor: middle;">${diagram.title || "Generic Diagram"}</text>
-  <text x="150" y="120" style="font-family: Arial; font-size: 10px; fill: white; text-anchor: middle;">Type: ${diagram.type}</text>
+  <text x="150" y="100" style="font-family: Arial, font-size: 12px; fill: white, text-anchor: middle;">${diagram.title || "Generic Diagram"}</text>
+  <text x="150" y="120" style="font-family: Arial, font-size: 10px; fill: white, text-anchor: middle;">Type: ${diagram.type}</text>
 </svg>`;
+  }
+
+  /**
+   * Phase 3: Generate Interactive Timeline SVG
+   */
+  generateInteractiveTimelineSVG(diagram: DiagramData, events: TimelineEvent[]): string {
+    console.log("🎯 Generating interactive timeline SVG...");
+    
+    return this.interactiveService.generateInteractiveTimeline(events, {
+      clickable: true,
+      zoomable: true,
+      draggable: true,
+      realTimeUpdates: true,
+      editMode: false,
+    });
+  }
+
+  /**
+   * Phase 3: Generate Interactive Gantt Chart SVG
+   */
+  generateInteractiveGanttSVG(diagram: DiagramData, tasks: GanttTask[]): string {
+    console.log("🎯 Generating interactive Gantt chart SVG...");
+    
+    return this.interactiveService.generateInteractiveGantt(tasks, {
+      clickable: true,
+      zoomable: true,
+      draggable: true,
+      realTimeUpdates: true,
+      editMode: false,
+    });
+  }
+
+  /**
+   * Phase 3: Convert timeline to interactive events
+   */
+  convertTimelineToEvents(timelineDiagram: DiagramData): TimelineEvent[] {
+    const events: TimelineEvent[] = [];
+    const timelineGanttParser = new TimelineGanttParser();
+    
+    try {
+      const timelineData = timelineGanttParser.parseTimelineData(timelineDiagram.content);
+      
+      timelineData.events.forEach((event, index) => {
+        events.push({
+          id: `event-${index}`,
+          title: event.title,
+          date: event.date,
+          type: this.determineEventType(event.title),
+          description: event.description,
+          category: "timeline",
+        });
+      });
+    } catch (error) {
+      console.warn("Failed to convert timeline to events:", error);
+    }
+    
+    return events;
+  }
+
+  /**
+   * Phase 3: Convert Gantt chart to interactive tasks
+   */
+  convertGanttToTasks(ganttDiagram: DiagramData): GanttTask[] {
+    const tasks: GanttTask[] = [];
+    const timelineGanttParser = new TimelineGanttParser();
+    
+    try {
+      const ganttData = timelineGanttParser.parseGanttData(ganttDiagram.content);
+      
+      ganttData.tasks.forEach((task, index) => {
+        tasks.push({
+          id: `task-${index}`,
+          name: task.name,
+          startDate: task.startDate,
+          endDate: task.endDate,
+          progress: task.progress || 0,
+          dependencies: task.dependencies || [],
+          assignee: task.assignee,
+          priority: this.determinePriority(task.name),
+        });
+      });
+    } catch (error) {
+      console.warn("Failed to convert Gantt to tasks:", error);
+    }
+    
+    return tasks;
+  }
+
+  /**
+   * Phase 3: Determine event type from title
+   */
+  private determineEventType(title: string): "milestone" | "event" | "deadline" {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes("milestone") || lowerTitle.includes("release") || lowerTitle.includes("launch")) {
+      return "milestone";
+    }
+    if (lowerTitle.includes("deadline") || lowerTitle.includes("due") || lowerTitle.includes("finish")) {
+      return "deadline";
+    }
+    return "event";
+  }
+
+  /**
+   * Phase 3: Determine task priority from name
+   */
+  private determinePriority(name: string): "low" | "medium" | "high" | "critical" {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes("critical") || lowerName.includes("urgent") || lowerName.includes("high priority")) {
+      return "critical";
+    }
+    if (lowerName.includes("high") || lowerName.includes("important")) {
+      return "high";
+    }
+    if (lowerName.includes("low") || lowerName.includes("minor")) {
+      return "low";
+    }
+    return "medium";
+  }
+
+  /**
+   * Phase 3: Enable interactive mode for timeline/Gantt diagrams
+   */
+  enableInteractiveMode(options: InteractiveOptions): void {
+    this.interactiveService.updateConfig({
+      options,
+      handlers: this.interactiveService.getConfig().handlers,
+      theme: this.interactiveService.getConfig().theme,
+    });
+  }
+
+  /**
+   * Phase 3: Update interactive theme colors
+   */
+  updateInteractiveTheme(colors: any): void {
+    this.interactiveService.updateConfig({
+      options: this.interactiveService.getConfig().options,
+      handlers: this.interactiveService.getConfig().handlers,
+      theme: {
+        primaryColor: colors.primaryColor,
+        secondaryColor: colors.secondaryColor,
+        accentColor: colors.accentColor,
+        backgroundColor: colors.backgroundColor || "#FFFFFF",
+        textColor: colors.textColor || "#333333",
+      },
+    });
   }
 }
 
