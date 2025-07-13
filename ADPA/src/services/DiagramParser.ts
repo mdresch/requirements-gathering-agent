@@ -1,12 +1,13 @@
 /**
- * Diagram Parser - Phase 1 Core Infrastructure
- * Intelligent diagram extraction and parsing for ADPA
+ * Diagram Parser - Enhanced Phase 2 Implementation
+ * Intelligent diagram extraction with timeline and Gantt chart support
  */
 
 /* global console */
+import { TimelineGanttParser } from "./phase2-timeline-gantt";
 
 interface DiagramData {
-  type: "mermaid" | "plantuml" | "text-flow" | "org-chart";
+  type: "mermaid" | "plantuml" | "text-flow" | "org-chart" | "timeline" | "gantt-chart";
   content: string;
   title?: string;
   position?: number;
@@ -70,6 +71,14 @@ export class DiagramParser {
       // Extract organization charts
       const orgChartDiagrams = this.extractOrgCharts(content);
       diagrams.push(...orgChartDiagrams);
+
+      // Extract timelines
+      const timelineDiagrams = this.extractTimelineDiagrams(content);
+      diagrams.push(...timelineDiagrams);
+
+      // Extract Gantt charts
+      const ganttCharts = this.extractGanttCharts(content);
+      diagrams.push(...ganttCharts);
 
       console.log(`✅ Found ${diagrams.length} diagrams in document`);
 
@@ -212,6 +221,69 @@ export class DiagramParser {
     }
 
     return diagrams;
+  }    /**
+     * Extract timeline diagrams from document content
+     */
+    private extractTimelineDiagrams(content: string): DiagramData[] {
+        const timelineDiagrams: DiagramData[] = [];
+        
+        // Pattern for timeline markers: dates + events
+        const timelinePatterns = [
+            /timeline\s*:?\s*([\s\S]+?)(?=\n\s*\n|\n\s*[A-Z]|$)/gi,
+            /(\d{4}[-/]\d{1,2}[-/]\d{1,2})\s*[-:]\s*([^\n]+)/gi,
+            /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s*(\d{4})\s*[-:]\s*([^\n]+)/gi,
+            /milestone\s*:?\s*([^\n]+)/gi,
+        ];
+        
+        for (const pattern of timelinePatterns) {
+            let match;
+            while ((match = pattern.exec(content)) !== null) {
+                const events = TimelineGanttParser.parseTimelineEvents(match[0]);
+                if (events.length > 0) {
+                    timelineDiagrams.push({
+                        type: "timeline",
+                        content: match[0],
+                        title: this.extractTitle(match[0]) || "Project Timeline",
+                        position: match.index,
+                        originalText: match[0],
+                    });
+                }
+            }
+        }
+        
+        return timelineDiagrams;
+    }
+
+  /**
+   * Extract Gantt chart diagrams from document content
+   */
+  private extractGanttCharts(content: string): DiagramData[] {
+    const ganttCharts: DiagramData[] = [];
+    
+    // Pattern for Gantt chart structures: tasks, dependencies, dates
+    const ganttPatterns = [
+      /gantt\s*chart?\s*:?\s*([\s\S]+?)(?=\n\s*\n|\n\s*[A-Z]|$)/gi,
+      /task\s*:?\s*([^\n]+)\s*(?:start|from)\s*:?\s*([^\n]+)\s*(?:end|to|duration)\s*:?\s*([^\n]+)/gi,
+      /(\w+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|\n]+)/gi, // Table format
+    ];
+    
+    for (const pattern of ganttPatterns) {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const { tasks, milestones } = TimelineGanttParser.parseGanttTasks(match[0]);
+        if (tasks.length > 0) {
+          ganttCharts.push({
+            type: "gantt-chart",
+            content: match[0],
+            title: this.extractTitle(match[0]) || "Project Gantt Chart",
+            position: match.index,
+            originalText: match[0],
+          });
+        }
+      }
+    }
+    
+    return ganttCharts;
   }
 
   /**
@@ -265,6 +337,18 @@ export class DiagramParser {
     }
     
     return `${type.charAt(0).toUpperCase() + type.slice(1)} Diagram`;
+  }  /**
+   * Extract title from diagram content
+   */
+  private extractTitle(content: string): string | null {
+    const lines = content.split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.match(/^\d|^timeline|^gantt|^mermaid|^plantuml/i)) {
+        return trimmed.replace(/[:#-]+\s*/, "").trim();
+      }
+    }
+    return null;
   }
 
   /**
@@ -379,9 +463,109 @@ export class DiagramParser {
         return this.generateTextFlowSVG(diagram, colors);
       case "org-chart":
         return this.generateOrgChartSVG(diagram, colors);
+      case "timeline":
+        return this.generateTimelineSVG(diagram, colors);
+      case "gantt-chart":
+        return this.generateGanttChartSVG(diagram, colors);
       default:
         return this.generateGenericSVG(diagram, colors);
     }
+  }
+
+  /**
+   * Generate Timeline SVG - Phase 2 Implementation
+   */
+  private generateTimelineSVG(diagram: DiagramData, colors: any): string {
+    const events = TimelineGanttParser.parseTimelineEvents(diagram.content);
+    const svgHeight = Math.max(200, events.length * 60 + 100);
+    
+    let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .timeline-line { stroke: ${colors.primaryColor}; stroke-width: 3; }
+    .timeline-event { fill: ${colors.secondaryColor}; stroke: ${colors.accentColor}; stroke-width: 2; }
+    .timeline-milestone { fill: ${colors.accentColor}; stroke: ${colors.primaryColor}; stroke-width: 2; }
+    .timeline-text { font-family: Arial, sans-serif; font-size: 11px; fill: #333; }
+    .timeline-date { font-family: Arial, sans-serif; font-size: 9px; fill: #666; }
+  </style>
+  
+  <text x="300" y="20" style="font-family: Arial; font-size: 14px; font-weight: bold; text-anchor: middle;">${diagram.title || "Project Timeline"}</text>
+  
+  <!-- Timeline line -->
+  <line x1="100" y1="50" x2="100" y2="${svgHeight - 30}" class="timeline-line"/>`;
+
+    events.forEach((event, index) => {
+      const y = 60 + index * 50;
+      const ismilestone = event.milestone;
+      const eventClass = ismilestone ? "timeline-milestone" : "timeline-event";
+      const shape = ismilestone ? "polygon" : "circle";
+      
+      if (ismilestone) {
+        svgContent += `
+  <polygon points="90,${y} 100,${y-10} 110,${y} 100,${y+10}" class="${eventClass}"/>`;
+      } else {
+        svgContent += `
+  <circle cx="100" cy="${y}" r="8" class="${eventClass}"/>`;
+      }
+      
+      svgContent += `
+  <text x="120" y="${y+4}" class="timeline-text">${event.title}</text>
+  <text x="120" y="${y+16}" class="timeline-date">${event.date}</text>`;
+    });
+
+    svgContent += "\n</svg>";
+    return svgContent;
+  }
+
+  /**
+   * Generate Gantt Chart SVG - Phase 2 Implementation
+   */
+  private generateGanttChartSVG(diagram: DiagramData, colors: any): string {
+    const { tasks, milestones } = TimelineGanttParser.parseGanttTasks(diagram.content);
+    const svgHeight = Math.max(300, (tasks.length + milestones.length) * 40 + 100);
+    const svgWidth = 800;
+    
+    let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .gantt-task { fill: ${colors.primaryColor}; stroke: ${colors.secondaryColor}; stroke-width: 1; }
+    .gantt-milestone { fill: ${colors.accentColor}; stroke: ${colors.primaryColor}; stroke-width: 2; }
+    .gantt-text { font-family: Arial, sans-serif; font-size: 10px; fill: #333; }
+    .gantt-header { font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; fill: #333; }
+  </style>
+  
+  <text x="400" y="20" style="font-family: Arial; font-size: 14px; font-weight: bold; text-anchor: middle;">${diagram.title || "Project Gantt Chart"}</text>
+  
+  <!-- Headers -->
+  <text x="20" y="45" class="gantt-header">Task</text>
+  <text x="200" y="45" class="gantt-header">Timeline</text>`;
+
+    let currentY = 60;
+    
+    // Draw tasks
+    tasks.forEach((task, index) => {
+      const taskWidth = 100; // Simplified fixed width
+      const taskHeight = 20;
+      
+      svgContent += `
+  <text x="20" y="${currentY + 15}" class="gantt-text">${task.name}</text>
+  <rect x="200" y="${currentY}" width="${taskWidth}" height="${taskHeight}" class="gantt-task" rx="3"/>
+  <text x="205" y="${currentY + 15}" class="gantt-text" style="fill: white; font-size: 9px;">${task.start}</text>`;
+      
+      currentY += 35;
+    });
+    
+    // Draw milestones
+    milestones.forEach((milestone, index) => {
+      svgContent += `
+  <text x="20" y="${currentY + 15}" class="gantt-text">${milestone.name}</text>
+  <polygon points="200,${currentY+10} 210,${currentY} 220,${currentY+10} 210,${currentY+20}" class="gantt-milestone"/>`;
+      
+      currentY += 35;
+    });
+
+    svgContent += "\n</svg>";
+    return svgContent;
   }
 
   /**
