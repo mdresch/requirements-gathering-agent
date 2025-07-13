@@ -225,6 +225,21 @@
                             "id": "createEnterpriseDashboard",
                             "type": "executeFunction",
                             "displayName": "createEnterpriseDashboard"
+                        },
+                        {
+                            "id": "generateInteractiveTimeline",
+                            "type": "executeFunction",
+                            "displayName": "generateInteractiveTimeline"
+                        },
+                        {
+                            "id": "generateInteractiveGantt",
+                            "type": "executeFunction",
+                            "displayName": "generateInteractiveGantt"
+                        },
+                        {
+                            "id": "enableInteractiveDiagrams",
+                            "type": "executeFunction",
+                            "displayName": "enableInteractiveDiagrams"
                         }
                     ]
                 }
@@ -951,6 +966,78 @@
                                                 "description": "Create advanced visualization with AR/VR analytics"
                                             },
                                             "actionId": "createEnterpriseDashboard"
+                                        },
+                                        {
+                                            "id": "InteractiveTimeline",
+                                            "type": "button",
+                                            "label": "Interactive Timeline",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Interactive Timeline",
+                                                "description": "Generate clickable, zoomable timeline with drag-and-drop features"
+                                            },
+                                            "actionId": "generateInteractiveTimeline"
+                                        },
+                                        {
+                                            "id": "InteractiveGantt",
+                                            "type": "button",
+                                            "label": "Interactive Gantt",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Interactive Gantt Chart",
+                                                "description": "Create interactive project timelines with task dependencies and progress tracking"
+                                            },
+                                            "actionId": "generateInteractiveGantt"
+                                        },
+                                        {
+                                            "id": "EnableInteractiveDiagrams",
+                                            "type": "button",
+                                            "label": "Enable Interactive Mode",
+                                            "icons": [
+                                                {
+                                                    "size": 16,
+                                                    "url": "https://localhost:3000/assets/icon-16.png"
+                                                },
+                                                {
+                                                    "size": 32,
+                                                    "url": "https://localhost:3000/assets/icon-32.png"
+                                                },
+                                                {
+                                                    "size": 80,
+                                                    "url": "https://localhost:3000/assets/icon-80.png"
+                                                }
+                                            ],
+                                            "supertip": {
+                                                "title": "Enable Interactive Diagrams",
+                                                "description": "Turn on advanced interactivity for all diagrams and charts"
+                                            },
+                                            "actionId": "enableInteractiveDiagrams"
                                         }
                                     ]
                                 }
