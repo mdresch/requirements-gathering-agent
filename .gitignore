@@ -72,3 +72,7 @@ demo-enhanced-context.mjs
 tests/
 __tests__/
 test/
+
+# Ignore Next.js build output
+admin-interface/.next/
+

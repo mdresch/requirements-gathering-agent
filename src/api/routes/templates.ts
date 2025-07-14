@@ -13,6 +13,13 @@ import {
 
 const router = Router();
 
+// Template overall stats route (must come before any /:templateId route)
+router.get(
+  '/stats',
+  requirePermission('read'),
+  TemplateController.getOverallTemplateStats
+);
+
 // Template CRUD operations
 router.post(
   '/',

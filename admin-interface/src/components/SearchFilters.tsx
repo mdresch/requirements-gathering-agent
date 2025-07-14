@@ -13,7 +13,7 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
   const [filters, setFilters] = useState<TemplateSearchParams>(initialParams);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: keyof TemplateSearchParams, value: string | number | string[] | undefined) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     onSearch(newFilters);
@@ -29,10 +29,9 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
   };
 
   const hasActiveFilters = Boolean(
-    filters.query || 
+    filters.search || 
     filters.category || 
-    filters.framework || 
-    filters.complexity ||
+    filters.templateType ||
     (filters.tags && filters.tags.length > 0)
   );
 
@@ -70,8 +69,8 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
           </div>
           <input
             type="text"
-            value={filters.query || ''}
-            onChange={(e) => handleFilterChange('query', e.target.value)}
+            value={filters.search || ''}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Search templates by name, description, or content..."
           />
@@ -92,29 +91,14 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Framework</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Template Type</label>
           <input
             type="text"
-            value={filters.framework || ''}
-            onChange={(e) => handleFilterChange('framework', e.target.value)}
+            value={filters.templateType || ''}
+            onChange={(e) => handleFilterChange('templateType', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Filter by framework"
+            placeholder="Filter by template type"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Complexity</label>
-          <select
-            value={filters.complexity || ''}
-            onChange={(e) => handleFilterChange('complexity', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            title="Select complexity level"
-          >
-            <option value="">All Complexity Levels</option>
-            <option value="simple">Simple</option>
-            <option value="moderate">Moderate</option>
-            <option value="advanced">Advanced</option>
-          </select>
         </div>
       </div>
 
@@ -165,11 +149,11 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
         <div className="mt-4 pt-4 border-t border-gray-200">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Active Filters:</h3>
           <div className="flex flex-wrap gap-2">
-            {filters.query && (
+            {filters.search && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Search: {filters.query}
+                Search: {filters.search}
                 <button
-                  onClick={() => handleFilterChange('query', undefined)}
+                  onClick={() => handleFilterChange('search', undefined)}
                   className="ml-1 text-blue-600 hover:text-blue-800"
                 >
                   ×
@@ -187,23 +171,12 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
                 </button>
               </span>
             )}
-            {filters.framework && (
+            {filters.templateType && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                Framework: {filters.framework}
+                Type: {filters.templateType}
                 <button
-                  onClick={() => handleFilterChange('framework', undefined)}
+                  onClick={() => handleFilterChange('templateType', undefined)}
                   className="ml-1 text-purple-600 hover:text-purple-800"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {filters.complexity && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                Complexity: {filters.complexity}
-                <button
-                  onClick={() => handleFilterChange('complexity', undefined)}
-                  className="ml-1 text-orange-600 hover:text-orange-800"
                 >
                   ×
                 </button>

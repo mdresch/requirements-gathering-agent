@@ -5,6 +5,11 @@
  * InDesign Server, Illustrator, Photoshop, and Document Generation APIs.
  */
 
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
 export interface CreativeSuiteConfig {
     authentication: {
         clientId: string;
@@ -57,8 +62,8 @@ export class CreativeSuiteConfigManager {
     private loadConfiguration(): CreativeSuiteConfig {
         return {
             authentication: {
-                clientId: process.env.ADOBE_CREATIVE_CLIENT_ID || '',
-                clientSecret: process.env.ADOBE_CREATIVE_CLIENT_SECRET || '',
+                clientId: process.env.ADOBE_CLIENT_ID || '',
+                clientSecret: process.env.ADOBE_CLIENT_SECRET || '',
                 scopes: [
                     'creative_sdk',
                     'indesign_api',

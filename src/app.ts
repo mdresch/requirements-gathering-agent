@@ -38,11 +38,39 @@ app.use(helmet({
   },
 }));
 
+// --- GUARANTEED DEV CORS CONFIG ---
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:8080'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:8080'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
+
+// Explicit OPTIONS handler for all routes (for CORS preflight)
+app.options('*', cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3003',
+    'http://127.0.0.1:8080'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  optionsSuccessStatus: 204
 }));
 
 // Rate limiting - More generous for API development
