@@ -1,4 +1,4 @@
-import { AIProcessor } from '../../ai/AIProcessor.js';
+import { getAIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
 import { PersonasassessmotivationsTemplate } from '../basic-docs/PersonasassessmotivationsTemplate.js';
@@ -14,11 +14,7 @@ class ExpectedError extends Error {
  * Processor for the Personasassessmotivations document.
  */
 export class PersonasassessmotivationsProcessor implements DocumentProcessor {
-  private aiProcessor: AIProcessor;
-
-  constructor() {
-    this.aiProcessor = AIProcessor.getInstance();
-  }
+  private aiProcessor = getAIProcessor();
   async process(context: ProjectContext): Promise<DocumentOutput> {
     try {
       const prompt = this.createPrompt(context);

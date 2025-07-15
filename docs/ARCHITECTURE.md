@@ -108,13 +108,15 @@ src/
 ## Implementation Notes
 
 ### Setup and Configuration
-- **Environment Variables**: AI provider API keys and configuration
-- **Package Dependencies**: Managed through npm/package.json
-- **Cross-Platform Support**: Windows and Unix-like systems
 
-### Development Workflow
-- **TypeScript Compilation**: Source code compilation and type checking
-- **Testing Strategy**: Unit tests, integration tests, and validation scripts
+### Data Governance Framework (DMBOK)
+- **Data Governance Framework Processor**: Implements the DMBOK-aligned governance framework document type.
+- **Location**: `src/modules/documentTemplates/dmbok/`
+- **Registration**: Registered in `processor-config.json` and `generationTasks.ts`.
+- **Testing**: Unit and integration tests in the same directory.
+- **Checklist**: See `NEW-DOCUMENT-DATA-GOVERNANCE-FRAMEWORK-CHECKLIST.md` for implementation steps.
+
+
 - **Documentation Generation**: Automated documentation updates
 
 ### Deployment Considerations

@@ -141,7 +141,7 @@ ADPA supports multiple AI providers with automatic failover:
 
 ### **DMBOK 2.0 (Data Management)**
 🚧 **In Progress**
-- Data Governance Frameworks
+- Data Governance Frameworks (see `data-governance-framework` document type)
 - Data Architecture & Quality
 - Master Data Management
 - Data Security & Privacy
@@ -180,6 +180,9 @@ adpa generate --category project-charter --output ./project-docs
 
 # Generate stakeholder analysis
 adpa generate --key stakeholder-analysis --format json
+
+# Generate Data Governance Framework (DMBOK)
+adpa generate --key data-governance-framework --format markdown
 ```
 
 ### **API Usage**

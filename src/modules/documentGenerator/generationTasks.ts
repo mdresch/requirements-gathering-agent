@@ -8,6 +8,16 @@ import { GenerationTask } from './types';
  * All available document generation tasks with proper organization and priorities
  */
 export const GENERATION_TASKS: GenerationTask[] = [
+  // DMBOK Data Governance Framework
+  {
+    key: 'data-governance-framework',
+    name: 'Data Governance Framework',
+    category: 'dmbok',
+    func: 'generateDataGovernanceFramework',
+    emoji: '🏛️',
+    priority: 10,
+    pmbokRef: 'Chapter 3: Data Governance'
+  },
   // Technical Design Documents
   {
     key: 'architecture-design',
@@ -602,6 +612,10 @@ export const GENERATION_TASKS: GenerationTask[] = [
  * Document configuration
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
+    'data-governance-framework': {
+        filename: 'dmbok/data-governance-framework.md',
+        title: 'Data Governance Framework'
+    },
     'personas-assess-motivations': { filename: 'basic-docs/personas-assess-motivations.md', title: 'PersonasAssessMotivations' },
 
     // DMBOK Data Management Documents

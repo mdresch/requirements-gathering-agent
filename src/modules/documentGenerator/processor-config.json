@@ -542,5 +542,10 @@
     "dependencies": [],
     "priority": 2
   },
+  "data-governance-framework": {
+    "module": "../documentTemplates/dmbok/DataGovernanceFrameworkProcessor.ts#DataGovernanceFrameworkProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
   "lastSetup": "2025-07-14T03:21:13.851Z"
 }

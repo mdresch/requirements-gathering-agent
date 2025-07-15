@@ -1,3 +1,6 @@
+// ...existing code...
+
+// ...existing code...
 /**
  * Document Generator Module for Requirements Gathering Agent
  * 
@@ -45,6 +48,7 @@ import {
     GenerationTask,
     ValidationResult
 } from './types';
+import { ProjectContext } from '../ai/types';
 import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
 import { createProcessor } from './ProcessorFactory.js';
 
@@ -57,14 +61,10 @@ export class DocumentGenerator {
     private results: GenerationResult;
     private aiProcessor: AIProcessor;
     private configManager: ConfigurationManager;
-
-    /**
-     * Create a new document generator
-     * @param context Project context for document generation
-     * @param options Options for document generation
-     */    constructor(
-        context: string, 
-        options: GenerationOptions = {},
+    // ...existing code...
+    constructor(
+        context: string,
+        options: Partial<GenerationOptions> = {},
         aiProcessor?: AIProcessor,
         configManager?: ConfigurationManager
     ) {
@@ -82,7 +82,6 @@ export class DocumentGenerator {
             outputDir: options.outputDir || 'generated-documents', // Default output directory
             format: options.format || 'markdown' // Default format
         };
-        
         this.results = {
             success: false,
             message: 'Document generation starting...',
@@ -93,11 +92,38 @@ export class DocumentGenerator {
             errors: [],
             duration: 0
         };
-    }    /**
-     * Delegate to appropriate processor functions instead of hardcoded AI calls
-     */    async getAiSummaryAndGoals(context: string): Promise<string> {
-        return await processors.getAiSummaryAndGoals(context) ?? '';
     }
+
+    /**
+     * Generate Data Governance Framework document
+     * @param context Project context
+     */
+    public async generateDataGovernanceFramework(context: ProjectContext): Promise<boolean> {
+        // Find the task by key
+        const taskKey = 'data-governance-framework';
+        const task = getTaskByKey(taskKey);
+        if (!task) {
+            console.error(`❌ Unknown document key: ${taskKey}`);
+            return false;
+        }
+        // Setup directory structure if needed
+        createDirectoryStructure();
+        console.log(`🚀 Generating single document: ${task.name}...`);
+        try {
+            const success = await this.generateSingleDocument(task);
+            if (success) {
+                console.log(`✅ Successfully generated: ${task.name}`);
+            } else {
+                console.log(`❌ Failed to generate: ${task.name}`);
+            }
+            return success;
+        } catch (error: any) {
+            console.error(`❌ Error generating ${task.name}: ${error.message}`);
+            return false;
+        }
+    }
+
+    // ...rest of the class methods...
 
     async getAiUserStories(context: string): Promise<string> {
         return await processors.getAiUserStories(context) ?? '';
@@ -150,7 +176,7 @@ export class DocumentGenerator {
         try {
             const { DataManagementStrategyTemplate } = await import('../documentTemplates/dmbok/dataManagementStrategyTemplate.js');
             const template = new DataManagementStrategyTemplate();
-            return template.generateContent({ projectName: context });
+            return template.buildPrompt({ projectName: context });
         } catch {
             return '';
         }

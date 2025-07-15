@@ -150,6 +150,6 @@ const dmbokDataManagementStrategyProcessor = new DataManagementStrategyProcessor
 export const getAiDmbokDataManagementStrategy = async (context: string): Promise<string> => {
     // If context is a string, wrap as ProjectContext
     const projectContext = typeof context === 'string' ? { projectName: context } : context;
-    const output = dmbokDataManagementStrategyProcessor.process(projectContext);
+    const output = await dmbokDataManagementStrategyProcessor.process(projectContext);
     return output.content ?? '';
 };

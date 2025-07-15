@@ -108,6 +108,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'personas-assess-motivations': { title: 'PersonasAssessMotivations', filename: 'basic-docs/personas-assess-motivations.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Assessment of user personas and their motivations for project engagement.', generatedAt: '' },
 
     // DMBOK Data Management Documents
+    'data-governance-framework': {
+        title: 'Data Governance Framework',
+        filename: 'dmbok/data-governance-framework.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the structure, roles, policies, and processes for data governance in the ADPA project.',
+        generatedAt: ''
+    },
     'dmbok-data-management-strategy': {
         title: 'Data Management Strategy',
         filename: 'dmbok/data-management-strategy.md',
