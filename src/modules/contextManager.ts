@@ -172,6 +172,8 @@ export class ContextManager {
         this.documentRelationships.set('mission-vision-core-values', ['project-charter', 'summary', 'stakeholder-register']);
         this.documentRelationships.set('project-purpose', ['project-charter', 'summary', 'business-case']);
         this.documentRelationships.set('project-kickoff-preparations-checklist', ['project-charter', 'stakeholder-register', 'resource-management-plan']);
+        // DMBOK Data Management Strategy relationships
+        this.documentRelationships.set('dmbok-data-management-strategy', ['project-charter', 'quality-management-plan']);
     }
 
     private estimateTokens(text: string): number {

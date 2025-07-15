@@ -99,12 +99,22 @@ export const DOCUMENT_CATEGORIES = {
     TECHNICAL_ANALYSIS: 'technical-analysis',
     QUALITY_ASSURANCE: 'quality-assurance',
     IMPLEMENTATION_GUIDES: 'implementation-guides',
+    DMBOK: 'dmbok',
     UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'personas-assess-motivations': { title: 'PersonasAssessMotivations', filename: 'basic-docs/personas-assess-motivations.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Assessment of user personas and their motivations for project engagement.', generatedAt: '' },
+
+    // DMBOK Data Management Documents
+    'dmbok-data-management-strategy': {
+        title: 'Data Management Strategy',
+        filename: 'dmbok/data-management-strategy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the organization\'s approach to data management, governance, and strategy in alignment with DMBOK best practices.',
+        generatedAt: ''
+    },
     'persona-utilize-app': { title: 'PersonaUtilizeApp', filename: 'basic-docs/persona-utilize-app.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Describes how different personas interact with and utilize the application.', generatedAt: '' },
     'technology-comfort-user-personas': { title: 'TechnologyComfortUserPersonas', filename: 'basic-docs/technology-comfort-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Analysis of user personas’ comfort level with technology.', generatedAt: '' },
     'common-challenges-user-personas': { title: 'CommonChallengesUserPersonas', filename: 'basic-docs/common-challenges-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Common challenges faced by user personas in the project context.', generatedAt: '' },

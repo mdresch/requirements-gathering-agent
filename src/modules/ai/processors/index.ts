@@ -142,3 +142,14 @@ export const getAiRiskAnalysis = async (context: string): Promise<string> => awa
 export const getAiAcceptanceCriteria = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getAcceptanceCriteria(context));
 export const getAiComplianceConsiderations = async (context: string): Promise<string> => await safeProcessorCall(technicalProcessor.getComplianceConsiderations(context));
 export const getAiUiUxConsiderations = async (context: string): Promise<string> => await safeProcessorCall(technicalProcessor.getUiUxConsiderations(context));
+
+
+// DMBOK Data Management Strategy
+import { DataManagementStrategyProcessor } from '../../documentTemplates/dmbok/dataManagementStrategyProcessor.js';
+const dmbokDataManagementStrategyProcessor = new DataManagementStrategyProcessor();
+export const getAiDmbokDataManagementStrategy = async (context: string): Promise<string> => {
+    // If context is a string, wrap as ProjectContext
+    const projectContext = typeof context === 'string' ? { projectName: context } : context;
+    const output = dmbokDataManagementStrategyProcessor.process(projectContext);
+    return output.content ?? '';
+};

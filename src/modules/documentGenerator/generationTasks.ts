@@ -26,6 +26,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '📐',
     pmbokRef: '',
   },
+  // DMBOK Data Management Documents
+  {
+    key: 'dmbok-data-management-strategy',
+    name: 'Data Management Strategy',
+    category: 'dmbok',
+    func: 'generateDmbokDataManagementStrategy',
+    priority: 2,
+    emoji: '📊',
+    pmbokRef: '',
+  },
   {
     key: 'database-schema',
     name: 'Database Schema Design',
@@ -593,6 +603,12 @@ export const GENERATION_TASKS: GenerationTask[] = [
  */
 export const DOCUMENT_CONFIG: Record<string, { filename: string; title: string; description?: string }> = {
     'personas-assess-motivations': { filename: 'basic-docs/personas-assess-motivations.md', title: 'PersonasAssessMotivations' },
+
+    // DMBOK Data Management Documents
+    'dmbok-data-management-strategy': {
+        filename: 'dmbok/data-management-strategy.md',
+        title: 'Data Management Strategy'
+    },
 
     'persona-utilize-app': { filename: 'basic-docs/persona-utilize-app.md', title: 'PersonaUtilizeApp' },
 

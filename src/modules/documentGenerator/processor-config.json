@@ -537,5 +537,10 @@
     "dependencies": [],
     "priority": 999
   },
+  "dmbok-data-management-strategy": {
+    "module": "../documentTemplates/dmbok/dataManagementStrategyProcessor.ts#DataManagementStrategyProcessor",
+    "dependencies": [],
+    "priority": 2
+  },
   "lastSetup": "2025-07-14T03:21:13.851Z"
 }

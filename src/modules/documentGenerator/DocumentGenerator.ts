@@ -142,7 +142,19 @@ export class DocumentGenerator {
     async getAiPerformIntegratedChangeControlProcess(context: string): Promise<string> {
         return await processors.getAiPerformIntegratedChangeControlProcess(context) ?? '';
     }
-
+    async getAiDmbokDataManagementStrategy(context: string): Promise<string> {
+        if (processors.getAiDmbokDataManagementStrategy) {
+            return await processors.getAiDmbokDataManagementStrategy(context) ?? '';
+        }
+        // Fallback: try to use the template processor directly
+        try {
+            const { DataManagementStrategyTemplate } = await import('../documentTemplates/dmbok/dataManagementStrategyTemplate.js');
+            const template = new DataManagementStrategyTemplate();
+            return template.generateContent({ projectName: context });
+        } catch {
+            return '';
+        }
+    }
     async getAiCloseProjectOrPhaseProcess(context: string): Promise<string> {
         return await processors.getAiCloseProjectOrPhaseProcess(context) ?? '';
     }
