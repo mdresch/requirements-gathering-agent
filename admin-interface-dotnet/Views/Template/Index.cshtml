@@ -1,42 +1,91 @@
 @model IEnumerable<admin_interface_dotnet.Models.Template>
+@using admin_interface_dotnet.Models;
 @{
     ViewData["Title"] = "Templates";
+    var templateCount = Model?.Count() ?? 0;
+    var stats = ViewBag.TemplateStats as ExtendedTemplateStats;
+    var statsError = ViewBag.TemplateStatsError as string;
 }
 <h1>Templates</h1>
 <p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
+    <a class="btn btn-primary" asp-action="Create">Create New Template</a>
 </p>
-<table class="table">
+<p><strong>Total templates:</strong> @templateCount</p>
+@if (templateCount == 0)
+{
+    <div class="alert alert-info">No templates found.</div>
+}
+@if (Model != null)
+{
+<table class="table table-striped" @(templateCount == 0 ? "style='display:none;'" : "")>
     <thead>
         <tr>
             <th>Name</th>
             <th>Description</th>
             <th>Tags</th>
-            <th>UserId</th>
-            <th>Created At</th>
-            <th>Updated At</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-@if (Model != null)
-{
-    foreach (var item in Model)
+    @foreach (var item in Model)
     {
         <tr>
-            <td>@Html.DisplayFor(modelItem => item.Name)</td>
-            <td>@Html.DisplayFor(modelItem => item.Description)</td>
+            <td>@item.Name</td>
+            <td>@item.Description</td>
             <td>@(item.Tags != null ? string.Join(", ", item.Tags) : "")</td>
-            <td>@Html.DisplayFor(modelItem => item.UserId)</td>
-            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
-            <td>@Html.DisplayFor(modelItem => item.UpdatedAt)</td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
             </td>
         </tr>
     }
-}
     </tbody>
 </table>
+}
+@if (!string.IsNullOrEmpty(statsError))
+{
+    <div class="alert alert-danger">
+        <strong>Error loading statistics:</strong> @statsError
+        <br />
+        <span class="text-muted">Possible reasons: The stats endpoint URL is incorrect, the API key is missing or invalid, the endpoint does not exist, or the backend returned a 400 Bad Request. Please check the API and configuration.</span>
+    </div>
+}
+@if (stats != null)
+{
+    <div class="card mb-4 p-3 bg-light border">
+        <div class="row text-center">
+            <div class="col">
+                <div class="fw-bold">Total Templates</div>
+                <div class="display-6">@stats.TotalTemplates</div>
+            </div>
+            <div class="col">
+                <div class="fw-bold">Categories</div>
+                <div class="display-6">@stats.CategoriesCount</div>
+            </div>
+            <div class="col">
+                <div class="fw-bold">Template Types</div>
+                <div class="display-6">@stats.TopTags.Count</div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <div class="fw-bold">Top Categories</div>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var cat in stats.TopCategories.Take(5))
+                    {
+                        <li>@cat.Category (@cat.Count)</li>
+                    }
+                </ul>
+            </div>
+            <div class="col">
+                <div class="fw-bold">Top Types</div>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var tag in stats.TopTags.Take(5))
+                    {
+                        <li>@tag.Tag (@tag.Count)</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}

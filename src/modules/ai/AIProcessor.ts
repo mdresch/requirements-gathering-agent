@@ -41,18 +41,7 @@ export class AIProcessor {
         this.retryManager = RetryManager.getInstance();
         this.config = ConfigurationManager.getInstance();
         this.providerManager = new ProviderManager();
-        this.initializationPromise = this.initializeProviderManager();
-    }    private async initializeProviderManager(): Promise<void> {
-        const results = await this.providerManager.validateConfigurations();
-        
-        // Debug output disabled - uncomment if needed for troubleshooting
-        // console.log('Provider validation results:', results);
-        
-        // Sync the active provider with ConfigurationManager
-        const activeProvider = this.providerManager.getActiveProvider();
-        if (activeProvider) {
-            this.config.setProvider(activeProvider as AIProvider);
-        }
+        this.initializationPromise = this.providerManager.validateConfigurations().then(() => {});
     }
 
     private async ensureInitialized(): Promise<void> {
@@ -67,33 +56,46 @@ export class AIProcessor {
             AIProcessor.instance = new AIProcessor();
         }
         return AIProcessor.instance;
-    }    async processAIRequest<T>(
+    }
+
+    async processAIRequest<T>(
         operation: () => Promise<T>,
         operationName: string
     ): Promise<T> {
         await this.ensureInitialized();
         
-        const activeProvider = this.providerManager.getActiveProvider();
-        if (!activeProvider) {
-            throw new Error('No active AI provider available');
+        // Always use provider from config unless fallback is required
+        let provider = this.config.getAIProvider();
+        if (!provider) {
+            throw new Error('No AI provider configured');
         }
 
-        // Ensure the client for the active provider is initialized
-        if (!this.clientManager.getClient(activeProvider as AIProvider)) {
-            console.log(`🔧 Initializing client for active provider: ${activeProvider}`);
-            await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
+        // Ensure the client for the provider is initialized
+        if (!this.clientManager.getClient(provider as AIProvider)) {
+            console.log(`🔧 Initializing client for provider: ${provider}`);
+            await this.clientManager.initializeSpecificProvider(provider as AIProvider);
         }
 
-        const status = this.providerManager.getProviderStatus(activeProvider);
+        let status = this.providerManager.getProviderStatus(provider);
         if (!status.available || !status.withinRateLimit || !status.withinQuota) {
+            // Try fallback only if the configured provider is unavailable
             if (await this.providerManager.switchProvider()) {
-                console.log(`Switched to fallback provider: ${this.providerManager.getActiveProvider()}`);
+                const fallbackProvider = this.providerManager.getActiveProvider();
+                if (fallbackProvider && fallbackProvider !== provider) {
+                    console.log(`Switched to fallback provider: ${fallbackProvider}`);
+                    provider = fallbackProvider as AIProvider;
+                    this.config.setProvider(provider); // update config for this session
+                    if (!this.clientManager.getClient(provider)) {
+                        await this.clientManager.initializeSpecificProvider(provider);
+                    }
+                    status = this.providerManager.getProviderStatus(provider);
+                }
             } else {
                 throw new Error('No available AI providers');
             }
         }
 
-        return this.retryManager.executeWithRetry(operation, operationName, activeProvider);
+        return this.retryManager.executeWithRetry(operation, operationName, provider);
     }
 
     createMessages(systemPrompt: string, userPrompt: string): ChatMessage[] {
@@ -101,59 +103,61 @@ export class AIProcessor {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
         ];
-    }    async makeAICall(messages: ChatMessage[], maxTokens?: number): Promise<AIResponse> {
+    }
+
+    async makeAICall(messages: ChatMessage[], maxTokens?: number): Promise<AIResponse> {
         await this.ensureInitialized();
         
         const defaultTokens = this.config.getMaxResponseTokens();
         maxTokens = maxTokens ?? defaultTokens;
-        const activeProvider = this.providerManager.getActiveProvider();
+        // Always use provider from config unless fallback is required
+        let provider = this.config.getAIProvider();
         
-        if (!activeProvider) {
-            throw new Error('No active AI provider available');
+        if (!provider) {
+            throw new Error('No AI provider configured');
         }
 
-        // Ensure the client for the active provider is initialized
-        if (!this.clientManager.getClient(activeProvider as AIProvider)) {
-            console.log(`🔧 Initializing client for active provider: ${activeProvider}`);
-            await this.clientManager.initializeSpecificProvider(activeProvider as AIProvider);
+        // Ensure the client for the provider is initialized
+        if (!this.clientManager.getClient(provider as AIProvider)) {
+            console.log(`🔧 Initializing client for provider: ${provider}`);
+            await this.clientManager.initializeSpecificProvider(provider as AIProvider);
         }
 
-        const status = this.providerManager.getProviderStatus(activeProvider);
+        let status = this.providerManager.getProviderStatus(provider);
         if (!status.withinRateLimit) {
-            throw new Error(`Rate limit exceeded for provider ${activeProvider}`);
+            throw new Error(`Rate limit exceeded for provider ${provider}`);
         }
         if (!status.withinQuota) {
             if (await this.providerManager.switchProvider()) {
-                // Sync the new active provider with ConfigurationManager
-                const newActiveProvider = this.providerManager.getActiveProvider();
-                if (newActiveProvider) {
-                    this.config.setProvider(newActiveProvider as AIProvider);
+                const fallbackProvider = this.providerManager.getActiveProvider();
+                if (fallbackProvider && fallbackProvider !== provider) {
+                    this.config.setProvider(fallbackProvider as AIProvider); // update config for this session
+                    return this.makeAICall(messages, maxTokens); // Retry with new provider
                 }
-                return this.makeAICall(messages, maxTokens); // Retry with new provider
             }
-            throw new Error(`Quota exceeded for provider ${activeProvider}`);
+            throw new Error(`Quota exceeded for provider ${provider}`);
         }
 
-        const client = this.clientManager.getClient(activeProvider as AIProvider);
+        const client = this.clientManager.getClient(provider as AIProvider);
         if (!client) {
-            throw new Error(`No client available for provider: ${activeProvider}`);
+            throw new Error(`No client available for provider: ${provider}`);
         }
 
         const startTime = Date.now();
 
         try {
-            const result = await this.routeProviderCall(activeProvider as AIProvider, client, messages, maxTokens);
+            const result = await this.routeProviderCall(provider as AIProvider, client, messages, maxTokens);
             const endTime = Date.now();
             const responseTime = endTime - startTime;
             const tokensUsed = this.estimateTokens(result);
 
             // Update provider metrics
-            this.providerManager.updateMetrics(activeProvider, true, responseTime, tokensUsed);
+            this.providerManager.updateMetrics(provider, true, responseTime, tokensUsed);
             
             return {
                 content: result,
                 metadata: {
-                    provider: activeProvider as AIProvider,
+                    provider: provider as AIProvider,
                     responseTime,
                     tokensUsed
                 }
@@ -163,7 +167,7 @@ export class AIProcessor {
             const responseTime = endTime - startTime;
             
             // Update provider metrics on failure
-            this.providerManager.updateMetrics(activeProvider, false, responseTime, 0, error);
+            this.providerManager.updateMetrics(provider, false, responseTime, 0, error);
             
             // Try fallback provider
             if (await this.providerManager.switchProvider()) {

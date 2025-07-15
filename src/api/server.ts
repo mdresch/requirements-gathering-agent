@@ -10,6 +10,46 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
 
+// In-memory project database (sample data)
+const projects = [
+  {
+    id: '1',
+    name: 'Financial Services Digital Transformation',
+    description: 'Comprehensive requirements gathering for digital banking platform',
+    status: 'active',
+    framework: 'babok',
+    complianceScore: 94,
+    createdAt: '2025-01-10',
+    updatedAt: '2025-01-13',
+    documents: 12,
+    stakeholders: 8
+  },
+  {
+    id: '2',
+    name: 'Healthcare Management System',
+    description: 'HIPAA-compliant patient management system requirements',
+    status: 'review',
+    framework: 'pmbok',
+    complianceScore: 87,
+    createdAt: '2025-01-08',
+    updatedAt: '2025-01-12',
+    documents: 9,
+    stakeholders: 12
+  },
+  {
+    id: '3',
+    name: 'E-commerce Platform Redesign',
+    description: 'Modern e-commerce platform with AI-powered recommendations',
+    status: 'completed',
+    framework: 'multi',
+    complianceScore: 96,
+    createdAt: '2024-12-15',
+    updatedAt: '2025-01-05',
+    documents: 18,
+    stakeholders: 15
+  }
+];
+
 const require = createRequire(import.meta.url);
 const express = require('express');
 const cors = require('cors');
@@ -63,6 +103,21 @@ app.use(requestLogger);
 // API key authentication for protected endpoints
 app.use('/api/v1/documents', apiKeyAuth);
 app.use('/api/v1/templates', apiKeyAuth);
+
+// --- Project Management Endpoints ---
+// List all projects
+app.get('/api/v1/projects', (req: Request, res: Response) => {
+  res.json({ success: true, projects });
+});
+
+// Get project by ID
+app.get('/api/v1/projects/:id', (req: Request, res: Response) => {
+  const project = projects.find(p => p.id === req.params.id);
+  if (!project) {
+    return res.status(404).json({ error: 'Not Found', message: `Project with id ${req.params.id} not found` });
+  }
+  res.json({ success: true, project });
+});
 
 // Health check routes (public)
 app.get('/api/v1/health', HealthController.getHealth);

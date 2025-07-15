@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -99,10 +100,9 @@ export default function ProjectManager() {
     setShowCreateModal(true);
   };
 
+  const router = useRouter();
   const handleViewProject = (project: Project) => {
-    setSelectedProject(project);
-    // Navigate to project detail view
-    toast.success(`Opening project: ${project.name}`);
+    router.push(`/projects/${project.id}`);
   };
 
   const handleEditProject = (project: Project) => {

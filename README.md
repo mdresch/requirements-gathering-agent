@@ -1,4 +1,8 @@
+
 # ADPA - Advanced Document Processing & Automation Framework
+
+[![CI](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml)
+[![Vercel](https://vercelbadge.vercel.app/api/project/prj_TVNBBugHdRQTvaVpBFt37qdO8hn6)](https://vercel.com/team_iwZkbWCdspuARj0t8dUyo90z/requirements-gathering-agent)
 
 [![npm version](https://badge.fury.io/js/adpa-enterprise-framework-automation.svg)](https://badge.fury.io/js/adpa-enterprise-framework-automation)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)

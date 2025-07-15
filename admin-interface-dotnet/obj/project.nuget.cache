@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "R3kbZL601VE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\menno\\Source\\Repos\\requirements-gathering-agent\\admin-interface-dotnet\\admin-interface-dotnet.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\menno\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.15\\microsoft.netcore.app.ref.8.0.15.nupkg.sha512",
+    "C:\\Users\\menno\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.15\\microsoft.windowsdesktop.app.ref.8.0.15.nupkg.sha512",
+    "C:\\Users\\menno\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.15\\microsoft.aspnetcore.app.ref.8.0.15.nupkg.sha512",
+    "C:\\Users\\menno\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.15\\microsoft.netcore.app.host.win-x64.8.0.15.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -247,7 +247,8 @@ export async function checkApiHealth(): Promise<{ success: boolean; message: str
   }
 }
 
-// Projects API endpoints (placeholder for future implementation)
+
+// Projects API endpoints
 export async function getProjects(params?: any): Promise<any> {
   // This would connect to a future projects API endpoint
   return Promise.resolve({
@@ -257,6 +258,19 @@ export async function getProjects(params?: any): Promise<any> {
       totalPages: 1
     }
   });
+}
+
+// Fetch a single project by ID
+export async function getProjectById(id: string): Promise<any> {
+  try {
+    const response = await request(`/projects/${id}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
 }
 
 export async function createProject(projectData: any): Promise<any> {
@@ -318,6 +332,7 @@ export const apiClient = {
 
   // Project management endpoints
   getProjects,
+  getProjectById,
   createProject,
   updateProject,
   deleteProject,

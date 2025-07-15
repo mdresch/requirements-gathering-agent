@@ -8,6 +8,7 @@ yarn-error.log*
 dist/
 build/
 *.tsbuildinfo
+.next/
 
 # Environment variables (contains sensitive tokens)
 .env
@@ -16,6 +17,8 @@ build/
 .env.test.local
 .env.production.local
 .env.adobe
+(2).env
+(3).env
 
 # Adobe credentials (contains sensitive API keys)
 adobe-credentials/

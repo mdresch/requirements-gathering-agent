@@ -71,8 +71,10 @@ export async function handleGenerateCommand(key: string, options: GenerateOption
     // Generate the document with retry logic
     const generator = new DocumentGenerator(projectContext);
     
+    let success = false;
     if (retries > 0) {
-      await generateDocumentsWithRetry(
+      // If using retry logic, treat any successful document as success
+      const result = await generateDocumentsWithRetry(
         projectContext,
         {
           maxRetries: retries,
@@ -81,12 +83,18 @@ export async function handleGenerateCommand(key: string, options: GenerateOption
           outputDir
         }
       );
+      success = result && result.success;
     } else {
       // Use the generateOne method which exists on DocumentGenerator
-      await generator.generateOne(key);
+      success = await generator.generateOne(key);
     }
 
-    logSuccess(`Document generated successfully: ${key}`, options.quiet);
+    if (success) {
+      logSuccess(`Document generated successfully: ${key}`, options.quiet);
+    } else {
+      console.error(`❌ Document generation failed: ${key}`);
+      process.exit(1);
+    }
   } catch (error) {
     if (error instanceof ValidationError) {
       console.error(`❌ Validation Error: ${error.message}`);

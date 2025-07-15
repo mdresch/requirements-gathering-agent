@@ -7,7 +7,7 @@
     "defaultOutputDir": "Default directory for generated documents.",
     "preferredFormat": "Default output format for generated documents (markdown, json, yaml, etc.)."
   },
-  "currentProvider": "github-ai",
+  "currentProvider": "azure-openai-key",
   "defaultOutputDir": "generated-documents",
   "preferredFormat": "markdown",
   "showMetrics": true,

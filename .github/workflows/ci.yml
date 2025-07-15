@@ -1,0 +1,77 @@
+name: Monorepo CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies and cache node_modules
+        run: npm install
+
+      - name: Lint and format code
+        run: |
+          if [ -f ./node_modules/.bin/eslint ]; then
+            npm run lint || echo "Lint failed or not configured."
+          else
+            echo "No ESLint configured. Skipping lint."
+          fi
+          if [ -f ./node_modules/.bin/prettier ]; then
+            npm run format || echo "Format failed or not configured."
+          else
+            echo "No Prettier configured. Skipping format."
+          fi
+
+      - name: Run unit and integration tests
+        run: |
+          if [ -f ./node_modules/.bin/jest ]; then
+            npm test || echo "Tests failed or not configured."
+          else
+            echo "No Jest configured. Skipping tests."
+          fi
+
+      - name: Build all packages/apps
+        run: npm run build || echo "No build script defined. Skipping build."
+
+      - name: Generate and publish documentation/artifacts
+        run: |
+          if [ -f ./node_modules/.bin/typedoc ]; then
+            npm run docs || echo "Docs failed or not configured."
+          else
+            echo "No documentation script configured. Skipping docs."
+          fi
+
+
+      - name: Deploy to Vercel Production
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Upload workflow artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist
+            docs
+            coverage

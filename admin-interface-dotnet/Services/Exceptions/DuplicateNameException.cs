@@ -1,6 +1,6 @@
 using System;
 
-namespace AdminInterface.Services.Exceptions
+namespace admin_interface_dotnet.Services.Exceptions
 {
     public class DuplicateNameException : Exception
     {
