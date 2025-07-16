@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CreateProjectModal from './CreateProjectModal';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -96,8 +97,31 @@ export default function ProjectManager() {
     return matchesSearch && matchesStatus && matchesFramework;
   });
 
+
   const handleCreateProject = () => {
     setShowCreateModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowCreateModal(false);
+  };
+
+  const handleProjectCreate = (data: { name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
+    const newProject = {
+      id: (projects.length + 1).toString(),
+      name: data.name,
+      description: data.description,
+      status: 'draft' as const,
+      framework: data.framework,
+      complianceScore: 0,
+      createdAt: new Date().toISOString().slice(0, 10),
+      updatedAt: new Date().toISOString().slice(0, 10),
+      documents: 0,
+      stakeholders: 0
+    };
+    setProjects([newProject, ...projects]);
+    setShowCreateModal(false);
+    toast.success('Project created successfully');
   };
 
   const router = useRouter();
@@ -124,6 +148,11 @@ export default function ProjectManager() {
 
   return (
     <div className="space-y-6">
+      <CreateProjectModal
+        open={showCreateModal}
+        onClose={handleModalClose}
+        onCreate={handleProjectCreate}
+      />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

@@ -49,7 +49,8 @@ import {
     ValidationResult
 } from './types';
 import { ProjectContext } from '../ai/types';
-import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
+import { DOCUMENT_CONFIG } from '../fileManager.js';
+import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
 import { createProcessor } from './ProcessorFactory.js';
 
 /**
@@ -101,6 +102,64 @@ export class DocumentGenerator {
     public async generateDataGovernanceFramework(context: ProjectContext): Promise<boolean> {
         // Find the task by key
         const taskKey = 'data-governance-framework';
+        const task = getTaskByKey(taskKey);
+        if (!task) {
+            console.error(`❌ Unknown document key: ${taskKey}`);
+            return false;
+        }
+        // Setup directory structure if needed
+        createDirectoryStructure();
+        console.log(`🚀 Generating single document: ${task.name}...`);
+        try {
+            const success = await this.generateSingleDocument(task);
+            if (success) {
+                console.log(`✅ Successfully generated: ${task.name}`);
+            } else {
+                console.log(`❌ Failed to generate: ${task.name}`);
+            }
+            return success;
+        } catch (error: any) {
+            console.error(`❌ Error generating ${task.name}: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * Generate Data Governance Plan document
+     * @param context Project context
+     */
+    public async generateDataGovernancePlan(context: ProjectContext): Promise<boolean> {
+        // Find the task by key
+        const taskKey = 'data-governance-plan';
+        const task = getTaskByKey(taskKey);
+        if (!task) {
+            console.error(`❌ Unknown document key: ${taskKey}`);
+            return false;
+        }
+        // Setup directory structure if needed
+        createDirectoryStructure();
+        console.log(`🚀 Generating single document: ${task.name}...`);
+        try {
+            const success = await this.generateSingleDocument(task);
+            if (success) {
+                console.log(`✅ Successfully generated: ${task.name}`);
+            } else {
+                console.log(`❌ Failed to generate: ${task.name}`);
+            }
+            return success;
+        } catch (error: any) {
+            console.error(`❌ Error generating ${task.name}: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * Generate Master Data Management Strategy document
+     * @param context Project context
+     */
+    public async generateMasterDataManagementStrategy(context: ProjectContext): Promise<boolean> {
+        // Find the task by key
+        const taskKey = 'master-data-management-strategy';
         const task = getTaskByKey(taskKey);
         if (!task) {
             console.error(`❌ Unknown document key: ${taskKey}`);

@@ -10,7 +10,7 @@ import {
   getIllustratorTemplate,
   getPhotoshopTemplate,
   getDocumentGenerationTemplate 
-} from './src/adobe/creative-suite/template-selector.js';
+} from '../src/adobe/creative-suite/template-selector.js';
 
 console.log('✅ Template selector imports successful!');
 

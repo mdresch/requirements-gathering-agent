@@ -115,6 +115,7 @@ Context: ${input.contextBundle}
 
 // Type definitions
 export interface ProjectContext {
+  projectName: string;
   businessProblem: string;
   technologyStack: string[];
   contextBundle: string;

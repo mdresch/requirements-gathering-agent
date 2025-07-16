@@ -53,6 +53,7 @@
     "dependencies": [],
     "priority": 10
   },
+
   "test-strategy": {
     "module": "../documentTemplates/quality-assurance/TestStrategyProcessor.ts#TestStrategyProcessor",
     "dependencies": [],
@@ -546,6 +547,39 @@
     "module": "../documentTemplates/dmbok/DataGovernanceFrameworkProcessor.ts#DataGovernanceFrameworkProcessor",
     "dependencies": [],
     "priority": 10
+  },
+  "data-governance-plan": {
+    "module": "../documentTemplates/dmbok/DataGovernancePlanProcessor.ts#DataGovernancePlanProcessor",
+    "dependencies": ["dmbok-data-management-strategy", "project-charter", "stakeholder-register", "compliance-considerations"],
+    "priority": 11
+  },
+  "master-data-management-strategy": {
+    "module": "../documentTemplates/dmbok/MasterDataManagementStrategyProcessor.ts#MasterDataManagementStrategyProcessor",
+    "dependencies": [
+      "data-governance-plan"
+    ],
+    "priority": 2
+  },
+  "data-architecture-modeling-guide": {
+    "module": "../documentTemplates/dmbok/DataArchitectureModelingGuideProcessor.ts#DataArchitectureModelingGuideProcessor",
+    "dependencies": [
+      "data-governance-plan"
+    ],
+    "priority": 4
+  },
+  "metadata-management-framework": {
+    "module": "../documentTemplates/dmbok/MetadataManagementFrameworkProcessor.ts#MetadataManagementFrameworkProcessor",
+    "dependencies": [
+      "data-governance-framework"
+    ],
+    "priority": 5
+  },
+  "data-quality-management-plan": {
+    "module": "../documentTemplates/planning/DataQualityManagementPlanProcessor.ts#DataQualityManagementPlanProcessor",
+    "dependencies": [
+      "data-governance-plan"
+    ],
+    "priority": 3
   },
   "lastSetup": "2025-07-14T03:21:13.851Z"
 }

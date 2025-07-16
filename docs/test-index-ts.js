@@ -2,7 +2,7 @@
  * Test script to verify index.ts compiles and works correctly
  */
 
-import { adobeCreativeSuite } from './src/adobe/creative-suite/index.js';
+import { adobeCreativeSuite } from '../src/adobe/creative-suite/index.js';
 
 console.log('✅ Adobe Creative Suite index.ts imports successful!');
 

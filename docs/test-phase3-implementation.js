@@ -21,7 +21,7 @@ async function testPhase3() {
     console.log('');
     
     // Test import
-    const { adobeCreativeSuite } = await import('./dist/adobe/creative-suite/index.js');
+    const { adobeCreativeSuite } = await import('../dist/adobe/creative-suite/index.js');
     
     // Test configuration
     console.log('📋 Testing Configuration...');

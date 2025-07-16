@@ -3,7 +3,8 @@
  * Exports functionality for generating project documentation
  */
 import { DocumentGenerator, documentGeneratorVersion } from './DocumentGenerator.js';
-import { GENERATION_TASKS, DOCUMENT_CONFIG, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
+import { DOCUMENT_CONFIG } from '../fileManager.js';
+import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
 import { withRetry } from '../../utils/retry.js';
 // ProcessorFactory is internal—no public export needed
 import type { GenerationTask, GenerationOptions, GenerationResult, DocumentConfig, ValidationResult } from './types';

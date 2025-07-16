@@ -4,7 +4,7 @@
  */
 
 // Import the completed Adobe Creative Suite service
-const { AdobeCreativeSuiteService } = require('./ADPA/src/services/AdobeCreativeSuiteService');
+const { AdobeCreativeSuiteService } = require('../ADPA/src/services/AdobeCreativeSuiteService');
 const fs = require('fs');
 const path = require('path');
 

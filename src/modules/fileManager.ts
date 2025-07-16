@@ -115,11 +115,39 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Defines the structure, roles, policies, and processes for data governance in the ADPA project.',
         generatedAt: ''
     },
-    'dmbok-data-management-strategy': {
-        title: 'Data Management Strategy',
-        filename: 'dmbok/data-management-strategy.md',
+    'data-governance-plan': {
+        title: 'Data Governance Plan',
+        filename: 'dmbok/data-governance-plan.md',
         category: DOCUMENT_CATEGORIES.DMBOK,
-        description: 'Defines the organization\'s approach to data management, governance, and strategy in alignment with DMBOK best practices.',
+        description: 'Comprehensive plan outlining data governance objectives, principles, roles, responsibilities, and processes in alignment with DMBOK best practices.',
+        generatedAt: ''
+    },
+    'data-quality-management-plan': {
+        title: 'Data Quality Management Plan',
+        filename: 'dmbok/data-quality-management-plan.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the organization\'s approach to data quality management, including objectives, standards, roles, responsibilities, and processes in alignment with DMBOK best practices.',
+        generatedAt: ''
+    },
+    'master-data-management-strategy': {
+        title: 'Master Data Management Strategy',
+        filename: 'dmbok/master-data-management-strategy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Outlines the strategy for managing master data across the organization, including governance, quality, and architecture.',
+        generatedAt: ''
+    },
+    'data-architecture-modeling-guide': {
+        title: 'Data Architecture & Modeling Guide',
+        filename: 'dmbok/data-architecture-modeling-guide.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Provides target and current state data architecture with modelling standards and roadmap.',
+        generatedAt: ''
+    },
+    'metadata-management-framework': {
+        title: 'Metadata Management Framework',
+        filename: 'dmbok/metadata-management-framework.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the framework for managing metadata, including principles, architecture, standards, and governance.',
         generatedAt: ''
     },
     'persona-utilize-app': { title: 'PersonaUtilizeApp', filename: 'basic-docs/persona-utilize-app.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Describes how different personas interact with and utilize the application.', generatedAt: '' },

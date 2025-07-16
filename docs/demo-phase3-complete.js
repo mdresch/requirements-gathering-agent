@@ -19,7 +19,7 @@ async function demonstratePhase3() {
     
     // Test import
     console.log('📦 Testing Module Import...');
-    const { adobeCreativeSuite } = await import('./dist/adobe/creative-suite/index.js');
+    const { adobeCreativeSuite } = await import('../dist/adobe/creative-suite/index.js');
     console.log('   ✅ Adobe Creative Suite module imported successfully');
     
     // Test configuration (non-auth parts)

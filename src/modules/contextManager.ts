@@ -174,8 +174,20 @@ export class ContextManager {
         this.documentRelationships.set('project-kickoff-preparations-checklist', ['project-charter', 'stakeholder-register', 'resource-management-plan']);
         // DMBOK Data Management Strategy relationships
         this.documentRelationships.set('dmbok-data-management-strategy', ['project-charter', 'quality-management-plan']);
+        // Data Governance Plan relationships (DMBOK)
+        this.documentRelationships.set('data-governance-plan', ['dmbok-data-management-strategy', 'project-charter', 'stakeholder-register', 'compliance-considerations']);
         // Data Governance Framework relationships (DMBOK)
         this.documentRelationships.set('data-governance-framework', ['dmbok-data-management-strategy', 'project-charter']);
+
+        // Data Quality Management Plan relationships (DMBOK)
+        this.documentRelationships.set('data-quality-management-plan', [
+            'dmbok-data-management-strategy',
+            'data-governance-plan',
+            'project-charter',
+            'stakeholder-register',
+            'quality-management-plan',
+            'compliance-considerations'
+        ]);
     }
 
     private estimateTokens(text: string): number {
