@@ -69,24 +69,17 @@ export async function handleGenerateCommand(key: string, options: GenerateOption
     }
 
     // Generate the document with retry logic
-    const generator = new DocumentGenerator(projectContext);
-    
+    const generator = new DocumentGenerator(projectContext, { outputDir });
+
+    // Use the generateOne method, wrapped with retry logic if specified
+    const generateAction = () => generator.generateOne(key);
+
     let success = false;
     if (retries > 0) {
-      // If using retry logic, treat any successful document as success
-      const result = await generateDocumentsWithRetry(
-        projectContext,
-        {
-          maxRetries: retries,
-          retryBackoff: options.retryBackoff,
-          retryMaxDelay: options.retryMaxDelay,
-          outputDir
-        }
-      );
-      success = result && result.success;
+      const { withRetry } = await import('../utils/retry.js');
+      success = await withRetry(generateAction, retries, options.retryBackoff, options.retryMaxDelay);
     } else {
-      // Use the generateOne method which exists on DocumentGenerator
-      success = await generator.generateOne(key);
+      success = await generateAction();
     }
 
     if (success) {

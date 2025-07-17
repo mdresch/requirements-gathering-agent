@@ -29,6 +29,26 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 11,
     pmbokRef: 'DMBOK: Data Governance'
   },
+  // DMBOK Data Security & Privacy Plan
+  {
+    key: 'data-security-privacy-plan',
+    name: 'Data Security & Privacy Plan',
+    category: 'dmbok',
+    func: 'generateDataSecurityPrivacyPlan',
+    emoji: '🛡️',
+    priority: 11.5,
+    pmbokRef: 'DMBOK: Data Security'
+  },
+  // DMBOK Data Lifecycle Management Policy
+  {
+    key: 'data-lifecycle-management',
+    name: 'Data Lifecycle Management Policy',
+    category: 'dmbok',
+    func: 'generateDataLifecycleManagement',
+    emoji: '🔄',
+    priority: 13,
+    pmbokRef: 'DMBOK: Data Lifecycle Management'
+  },
   // DMBOK Data Quality Management Plan
   {
     key: 'data-quality-management-plan',
@@ -36,8 +56,57 @@ export const GENERATION_TASKS: GenerationTask[] = [
     category: 'dmbok',
     func: 'generateDataQualityManagementPlan',
     emoji: '🧪',
-    priority: 12,
+    priority: 14,
     pmbokRef: 'DMBOK: Data Quality Management'
+  },
+  // DMBOK Data Lifecycle Management
+  {
+    key: 'data-lifecycle-management',
+    name: 'Data Lifecycle Management',
+    category: 'dmbok',
+    func: 'generateDataLifecycleManagement',
+    emoji: '🔄',
+    priority: 13,
+    pmbokRef: 'DMBOK: Data Lifecycle Management',
+    dependencies: ['data-governance-plan', 'data-security-privacy-plan']
+  },
+  {
+    key: 'reference-data-management-plan',
+    name: 'Reference Data Management Plan',
+    category: 'dmbok',
+    func: 'generateReferenceDataManagementPlan',
+    emoji: '📚',
+    priority: 13,
+    pmbokRef: 'DMBOK: Reference & Master Data Management'
+  },
+  {
+    key: 'data-storage-operations-handbook',
+    name: 'Data Storage & Operations Handbook',
+    category: 'dmbok',
+    func: 'generateDataStorageOperationsHandbook',
+    emoji: '💾',
+    priority: 14,
+    pmbokRef: 'DMBOK: Data Storage & Operations'
+  },
+  {
+    key: 'data-lifecycle-management',
+    name: 'Data Lifecycle Management Policy',
+    category: 'dmbok',
+    func: 'generateDataLifecycleManagement',
+    emoji: '🔄',
+    priority: 15,
+    pmbokRef: 'DMBOK: Data Lifecycle Management',
+    dependencies: ['data-governance-plan', 'data-security-privacy-plan']
+  },
+  // DMBOK Document & Content Management Framework
+  {
+    key: 'document-content-management',
+    name: 'Document & Content Management Framework',
+    category: 'dmbok',
+    func: 'generateDocumentContentManagement',
+    emoji: '📄',
+    priority: 16,
+    pmbokRef: 'DMBOK: Document & Content Management'
   },
   // DMBOK Data Architecture & Modeling Guide
   {
@@ -46,7 +115,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     category: 'dmbok',
     func: 'generateDataArchitectureModelingGuide',
     emoji: '🏛️',
-    priority: 13,
+    priority: 17,
     pmbokRef: 'DMBOK: Data Architecture'
   },
 
@@ -57,7 +126,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     category: 'dmbok',
     func: 'generateMasterDataManagementStrategy',
     emoji: '👑',
-    priority: 13,
+    priority: 18,
     pmbokRef: 'DMBOK: Master Data Management'
   },
   // DMBOK Metadata Management Framework
@@ -67,8 +136,18 @@ export const GENERATION_TASKS: GenerationTask[] = [
     category: 'dmbok',
     func: 'generateMetadataManagementFramework',
     emoji: '🗂️',
-    priority: 14,
+    priority: 19,
     pmbokRef: 'DMBOK: Metadata Management'
+  },
+  // DMBOK Data Integration & Interoperability Strategy
+  {
+    key: 'data-integration-interoperability-strategy',
+    name: 'Data Integration & Interoperability Strategy',
+    category: 'dmbok',
+    func: 'generateDataIntegrationInteroperabilityStrategy',
+    emoji: '🤝',
+    priority: 20,
+    pmbokRef: 'DMBOK: Data Integration & Interoperability'
   },
   // Technical Design Documents
   {

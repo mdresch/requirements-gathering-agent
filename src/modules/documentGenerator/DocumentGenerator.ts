@@ -27,6 +27,7 @@ import { join } from 'path';
 import process from 'process';
 import { writeFile } from 'fs/promises';
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
+import { createProcessor } from './ProcessorFactory.js';
 import { 
     createDirectoryStructure, 
     saveDocument, 
@@ -51,7 +52,6 @@ import {
 import { ProjectContext } from '../ai/types';
 import { DOCUMENT_CONFIG } from '../fileManager.js';
 import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
-import { createProcessor } from './ProcessorFactory.js';
 
 /**
  * Class responsible for generating project documentation
@@ -129,26 +129,61 @@ export class DocumentGenerator {
      * @param context Project context
      */
     public async generateDataGovernancePlan(context: ProjectContext): Promise<boolean> {
-        // Find the task by key
-        const taskKey = 'data-governance-plan';
-        const task = getTaskByKey(taskKey);
-        if (!task) {
-            console.error(`❌ Unknown document key: ${taskKey}`);
+        try {
+            const processor = await createProcessor('data-governance-plan');
+            const output = await processor.process(context);
+            await saveDocument('data-governance-plan', output);
+            return true;
+        } catch (error) {
+            console.error('Error generating Data Governance Plan:', error);
             return false;
         }
-        // Setup directory structure if needed
-        createDirectoryStructure();
-        console.log(`🚀 Generating single document: ${task.name}...`);
+    }
+
+    /**
+     * Save document output to file
+     * @param output Document output to save
+     * @param fileName Optional custom file name (without extension)
+     */
+    private async saveDocumentOutput(output: any, fileName: string = 'data-lifecycle-management'): Promise<void> {
         try {
-            const success = await this.generateSingleDocument(task);
-            if (success) {
-                console.log(`✅ Successfully generated: ${task.name}`);
-            } else {
-                console.log(`❌ Failed to generate: ${task.name}`);
-            }
-            return success;
+            const fs = await import('fs/promises');
+            const path = await import('path');
+            
+            // Ensure output directory exists
+            await fs.mkdir(this.options.outputDir, { recursive: true });
+            
+            const filePath = path.join(this.options.outputDir, `${fileName}.${this.options.format}`);
+            await fs.writeFile(filePath, output, 'utf-8');
+            
+            // Add to generated files list
+            this.results.generatedFiles.push(filePath);
+            this.results.successCount++;
+            
         } catch (error: any) {
-            console.error(`❌ Error generating ${task.name}: ${error.message}`);
+            console.error(`❌ Error saving document output: ${error.message}`);
+            this.results.failureCount++;
+            this.results.errors.push({
+                task: fileName,
+                error: error.message
+            });
+            throw error; // Re-throw to be caught by the calling method
+        }
+    }
+
+    /**
+     * Generate Data Lifecycle Management document
+     * @param context Project context
+     */
+    public async generateDataLifecycleManagement(context: ProjectContext): Promise<boolean> {
+        try {
+            const processor = new (await import('../documentTemplates/dmbok/DataLifecycleManagementProcessor.js')).DataLifecycleManagementProcessor();
+            const output = await processor.process(context);
+            await this.saveDocumentOutput(output, 'data-lifecycle-management');
+            console.log('✅ Successfully generated Data Lifecycle Management document');
+            return true;
+        } catch (error: any) {
+            console.error('❌ Error generating Data Lifecycle Management document:', error.message);
             return false;
         }
     }

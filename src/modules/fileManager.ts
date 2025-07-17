@@ -150,6 +150,48 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Defines the framework for managing metadata, including principles, architecture, standards, and governance.',
         generatedAt: ''
     },
+    'data-integration-interoperability-strategy': {
+        title: 'Data Integration & Interoperability Strategy',
+        filename: 'dmbok/data-integration-interoperability-strategy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Outlines the strategy for data integration and interoperability, including patterns, standards, and governance.',
+        generatedAt: ''
+    },
+    'data-security-privacy-plan': {
+        title: 'Data Security & Privacy Plan',
+        filename: 'dmbok/data-security-privacy-plan.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the policies, procedures, controls, and responsibilities to protect data assets and ensure privacy compliance.',
+        generatedAt: ''
+    },
+    'reference-data-management-plan': {
+        title: 'Reference Data Management Plan',
+        filename: 'dmbok/reference-data-management-plan.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'A plan for managing reference data across the enterprise.',
+        generatedAt: ''
+    },
+    'data-storage-operations-handbook': {
+        title: 'Data Storage & Operations Handbook',
+        filename: 'dmbok/data-storage-operations-handbook.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Comprehensive guide for database administration, storage management, and data operations following DMBOK standards.',
+        generatedAt: ''
+    },
+    'document-content-management': {
+        title: 'Document & Content Management Framework',
+        filename: 'dmbok/document-content-management-framework.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Comprehensive framework for managing documents and unstructured content across the enterprise, including policies, standards, and best practices.',
+        generatedAt: ''
+    },
+    'data-lifecycle-management': {
+        title: 'Data Lifecycle Management Policy',
+        filename: 'dmbok/data-lifecycle-management-policy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Comprehensive policy for managing data throughout its lifecycle from creation to archival and disposal.',
+        generatedAt: ''
+    },
     'persona-utilize-app': { title: 'PersonaUtilizeApp', filename: 'basic-docs/persona-utilize-app.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Describes how different personas interact with and utilize the application.', generatedAt: '' },
     'technology-comfort-user-personas': { title: 'TechnologyComfortUserPersonas', filename: 'basic-docs/technology-comfort-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Analysis of user personas’ comfort level with technology.', generatedAt: '' },
     'common-challenges-user-personas': { title: 'CommonChallengesUserPersonas', filename: 'basic-docs/common-challenges-user-personas.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Common challenges faced by user personas in the project context.', generatedAt: '' },

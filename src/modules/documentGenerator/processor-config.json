@@ -164,6 +164,13 @@
     "dependencies": [],
     "priority": 10
   },
+  "data-integration-interoperability-strategy": {
+    "module": "../documentTemplates/dmbok/DataIntegrationInteroperabilityStrategyProcessor.ts#DataIntegrationInteroperabilityStrategyProcessor",
+    "dependencies": [
+      "data-architecture-modeling-guide"
+    ],
+    "priority": 6
+  },
   "mission-vision-core-values": {
     "module": "../documentTemplates/strategic-statements/MissionVisionCoreValuesProcessor.ts#MissionVisionCoreValuesProcessor",
     "dependencies": [],
@@ -547,6 +554,41 @@
     "module": "../documentTemplates/dmbok/DataGovernanceFrameworkProcessor.ts#DataGovernanceFrameworkProcessor",
     "dependencies": [],
     "priority": 10
+  },
+  "data-lifecycle-management": {
+    "module": "../documentTemplates/dmbok/DataLifecycleManagementProcessor.ts#DataLifecycleManagementProcessor",
+    "dependencies": ["data-governance-plan", "data-security-privacy-plan"],
+    "priority": 13
+  },
+  "data-security-privacy-plan": {
+    "module": "../documentTemplates/dmbok/DataSecurityPrivacyPlanProcessor.ts#DataSecurityPrivacyPlanProcessor",
+    "dependencies": [
+      "data-governance-plan"
+    ],
+    "priority": 12
+  },
+  "reference-data-management-plan": {
+    "module": "../documentTemplates/dmbok/ReferenceDataManagementPlanProcessor.ts#ReferenceDataManagementPlanProcessor",
+    "dependencies": [
+      "data-governance-plan"
+    ],
+    "priority": 13
+  },
+  "data-storage-operations-handbook": {
+    "module": "../documentTemplates/dmbok/DataStorageOperationsHandbookProcessor.ts#DataStorageOperationsHandbookProcessor",
+    "dependencies": [
+      "data-architecture-modeling-guide",
+      "data-governance-plan"
+    ],
+    "priority": 14
+  },
+  "document-content-management": {
+    "module": "../documentTemplates/dmbok/DocumentContentManagementProcessor.ts#DocumentContentManagementProcessor",
+    "dependencies": [
+      "data-governance-plan",
+      "data-storage-operations-handbook"
+    ],
+    "priority": 15
   },
   "data-governance-plan": {
     "module": "../documentTemplates/dmbok/DataGovernancePlanProcessor.ts#DataGovernancePlanProcessor",
