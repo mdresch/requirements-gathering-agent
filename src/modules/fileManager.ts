@@ -122,6 +122,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Comprehensive plan outlining data governance objectives, principles, roles, responsibilities, and processes in alignment with DMBOK best practices.',
         generatedAt: ''
     },
+    'data-stewardship-roles-responsibilities': {
+        title: 'Data Stewardship and Roles & Responsibilities',
+        filename: 'dmbok/data-stewardship-roles-responsibilities.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Framework defining data stewardship roles, responsibilities, and governance structure.',
+        generatedAt: ''
+    },
     'data-quality-management-plan': {
         title: 'Data Quality Management Plan',
         filename: 'dmbok/data-quality-management-plan.md',

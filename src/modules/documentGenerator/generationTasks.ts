@@ -29,6 +29,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 11,
     pmbokRef: 'DMBOK: Data Governance'
   },
+  // DMBOK Data Stewardship and Roles & Responsibilities
+  {
+    key: 'data-stewardship-roles-responsibilities',
+    name: 'Data Stewardship and Roles & Responsibilities',
+    category: 'dmbok',
+    func: 'generateDataStewardshipRoles',
+    emoji: '👥',
+    priority: 8,
+    pmbokRef: 'DMBOK: Data Governance - Roles & Responsibilities'
+  },
   // DMBOK Data Security & Privacy Plan
   {
     key: 'data-security-privacy-plan',

@@ -623,5 +623,13 @@
     ],
     "priority": 3
   },
+  "data-stewardship-roles-responsibilities": {
+    "module": "../documentTemplates/dmbok/DataStewardshipRolesProcessor.ts#DataStewardshipRolesProcessor",
+    "dependencies": [
+      "data-governance-framework",
+      "data-architecture-modeling-guide"
+    ],
+    "priority": 8
+  },
   "lastSetup": "2025-07-14T03:21:13.851Z"
 }
