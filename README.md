@@ -142,6 +142,7 @@ ADPA supports multiple AI providers with automatic failover:
 ### **DMBOK 2.0 (Data Management)**
 🚧 **In Progress**
 - Data Governance Frameworks (see `data-governance-framework` document type)
+- Data Stewardship & Roles (see `data-stewardship-roles-responsibilities` document type)
 - Data Quality Management (see `data-quality-management-plan` document type)
 - Data Architecture & Quality
 - Data Architecture & Modeling (see `data-architecture-modeling-guide` document type)
@@ -189,6 +190,9 @@ adpa generate --key stakeholder-analysis --format json
 
 # Generate Data Governance Framework (DMBOK)
 adpa generate --key data-governance-framework --format markdown
+
+# Generate Data Stewardship and Roles & Responsibilities (DMBOK)
+adpa generate --key data-stewardship-roles-responsibilities --format markdown
 
 # Generate Data Quality Management Plan (DMBOK)
 adpa generate --key data-quality-management-plan --format markdown
