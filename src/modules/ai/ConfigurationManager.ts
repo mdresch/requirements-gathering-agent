@@ -64,6 +64,12 @@ export class ConfigurationManager {
     private constructor() {
         this.loadUserConfig();
         this.loadConfiguration();
+        
+        // Override with CURRENT_PROVIDER environment variable if set
+        const currentProvider = process.env.CURRENT_PROVIDER;
+        if (currentProvider && this.isValidProvider(currentProvider)) {
+            this.currentProvider = currentProvider as AIProvider;
+        }
     }
 
     static getInstance(): ConfigurationManager {
@@ -122,7 +128,10 @@ export class ConfigurationManager {
             // General Configuration
             'max_retries': parseInt(process.env.AI_MAX_RETRIES || '3'),
             'timeout_ms': parseInt(process.env.AI_TIMEOUT || '60000'),
-            'rate_limit_requests_per_minute': parseInt(process.env.RATE_LIMIT_RPM || '60')
+            'rate_limit_requests_per_minute': parseInt(process.env.RATE_LIMIT_RPM || '60'),
+            
+            // Provider Selection
+            'CURRENT_PROVIDER': process.env.CURRENT_PROVIDER
         };        // Set all configuration at once (including lowercase versions for compatibility)
         Object.entries(envVars).forEach(([key, value]) => {
             this.config.set(key, value);
@@ -292,6 +301,18 @@ export class ConfigurationManager {
     // Clear validation cache if configuration changes
     clearValidationCache(): void {
         this.validationCache.clear();
+    }
+
+    private isValidProvider(provider: string): boolean {
+        const validProviders: AIProvider[] = [
+            'google-ai', 
+            'azure-openai', 
+            'azure-openai-key', 
+            'azure-ai-studio', 
+            'github-ai', 
+            'ollama'
+        ];
+        return validProviders.includes(provider as AIProvider);
     }    getConfigSummary(): Record<string, any> {
         const deployment = this.get<string>('deployment_name', '');
         return {
