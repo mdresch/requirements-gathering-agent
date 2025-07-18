@@ -133,6 +133,7 @@ ADPA supports multiple AI providers with automatic failover:
 
 ### **PMBOK 7th Edition (Project Management)**  
 ✅ **Implemented**
+<<<<<<< Updated upstream
 - Project Charter & Scope Management
 - Stakeholder Management Plans
 - Risk & Quality Management
@@ -140,12 +141,18 @@ ADPA supports multiple AI providers with automatic failover:
 - Cost Management & Control
 
 ### **DMBOK 2.0 (Data Management)**
+
 🚧 **In Progress**
 - Data Governance Frameworks (see `data-governance-framework` document type)
 - Data Stewardship & Roles (see `data-stewardship-roles-responsibilities` document type)
+- Data Modeling Standards (see `data-modeling-standards` document type)
 - Data Quality Management (see `data-quality-management-plan` document type)
 - Data Architecture & Quality
 - Data Architecture & Modeling (see `data-architecture-modeling-guide` document type)
+- Business Intelligence & Analytics Strategy (see `business-intelligence-strategy` document type)
+ 
+# Generate Data Modeling Standards Guide (DMBOK)
+adpa generate --key data-modeling-standards --format markdown
 - Master Data Management (see `master-data-management-strategy` document type)
 - Metadata Management (see `metadata-management-framework` document type)
 - Data Security & Privacy (see `data-security-privacy-plan` document type)
@@ -171,6 +178,9 @@ ADPA/
 - **Backend**: Node.js 18+, TypeScript 5.7+, Express.js
 - **AI Integration**: OpenAI, Google AI, GitHub Copilot, Ollama
 - **API**: TypeSpec, OpenAPI 3.0, Swagger UI
+
+# Generate Data Modeling Standards Guide (DMBOK)
+adpa generate --key data-modeling-standards --format markdown
 - **Frontend**: Next.js 14, React 18, Tailwind CSS
 - **Database**: JSON-based configuration, extensible to SQL/NoSQL
 - **Testing**: Jest, TypeScript, comprehensive test coverage
@@ -220,6 +230,9 @@ adpa generate --key data-lifecycle-management --format markdown
 
 # Generate Document & Content Management Framework (DMBOK)
 adpa generate --key document-content-management --format markdown
+
+# Generate Business Intelligence & Analytics Strategy (DMBOK)
+adpa generate --key business-intelligence-strategy --format markdown
 ```
 
 ### **API Usage**

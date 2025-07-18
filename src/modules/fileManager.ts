@@ -105,6 +105,20 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'introduction-data-management-body-of-knowledge': {
+        title: 'Introduction Data Management Body of Knowledge',
+        filename: 'dmbok/INTRODUCTION DATA MANAGEMENT BODY OF KNOWLEDGE.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Provides an overview, checklist, and summary of all DMBOK documents, including coverage gaps and improvement suggestions.',
+        generatedAt: ''
+    },
+    'data-architecture-quality': {
+        title: 'Data Architecture & Quality',
+        filename: 'dmbok/data-architecture-quality.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Defines the standards, principles, and practices for data architecture and quality management.',
+        generatedAt: ''
+    },
     'personas-assess-motivations': { title: 'PersonasAssessMotivations', filename: 'basic-docs/personas-assess-motivations.md', category: DOCUMENT_CATEGORIES.BASIC_DOCS, description: 'Assessment of user personas and their motivations for project engagement.', generatedAt: '' },
 
     // DMBOK Data Management Documents
@@ -150,11 +164,32 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Provides target and current state data architecture with modelling standards and roadmap.',
         generatedAt: ''
     },
+    'data-modeling-standards': {
+        title: 'Data Modeling Standards Guide',
+        filename: 'dmbok/data-modeling-standards.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Comprehensive guide to data modeling standards, conventions, and best practices.',
+        generatedAt: ''
+    },
+    'business-intelligence-strategy': {
+        title: 'Business Intelligence & Analytics Strategy',
+        filename: 'dmbok/business-intelligence-strategy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Strategy for business intelligence, analytics, and data-driven decision making.',
+        generatedAt: ''
+    },
     'metadata-management-framework': {
         title: 'Metadata Management Framework',
         filename: 'dmbok/metadata-management-framework.md',
         category: DOCUMENT_CATEGORIES.DMBOK,
         description: 'Defines the framework for managing metadata, including principles, architecture, standards, and governance.',
+        generatedAt: ''
+    },
+    'enterprise-data-dictionary': {
+        title: 'Enterprise Data Dictionary',
+        filename: 'dmbok/enterprise-data-dictionary.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Centralized repository of business and technical metadata for all enterprise data assets.',
         generatedAt: ''
     },
     'data-integration-interoperability-strategy': {

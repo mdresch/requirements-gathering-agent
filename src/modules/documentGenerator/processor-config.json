@@ -1,5 +1,5 @@
 {
-  "architecture-design": {
+"architecture-design": {
     "module": "../documentTemplates/technical-design/ArchitecturedesignProcessor.ts#ArchitecturedesignProcessor",
     "dependencies": [],
     "priority": 1
@@ -53,7 +53,6 @@
     "dependencies": [],
     "priority": 10
   },
-
   "test-strategy": {
     "module": "../documentTemplates/quality-assurance/TestStrategyProcessor.ts#TestStrategyProcessor",
     "dependencies": [],
@@ -220,6 +219,11 @@
     "module": "../documentTemplates/scope-management/ProjectscopestatementProcessor.ts#ProjectscopestatementProcessor",
     "dependencies": [],
     "priority": 11
+  },
+  "introduction-data-management-body-of-knowledge": {
+    "module": "../documentTemplates/dmbok/IntroductionDataManagementBodyOfKnowledgeProcessor.ts#IntroductionDataManagementBodyOfKnowledgeProcessor",
+    "dependencies": [],
+    "priority": 1
   },
   "scope-statement": {
     "module": "../documentTemplates/scope-management/ScopestatementProcessor.ts#ScopestatementProcessor",
@@ -590,6 +594,14 @@
     ],
     "priority": 15
   },
+    "data-architecture-quality": {
+    "module": "../documentTemplates/dmbok/DataArchitectureQualityProcessor.ts#DataArchitectureQualityProcessor",
+    "dependencies": [
+      "data-architecture-modeling-guide",
+      "data-quality-management-plan"
+    ],
+    "priority": 19
+  },
   "data-governance-plan": {
     "module": "../documentTemplates/dmbok/DataGovernancePlanProcessor.ts#DataGovernancePlanProcessor",
     "dependencies": ["dmbok-data-management-strategy", "project-charter", "stakeholder-register", "compliance-considerations"],
@@ -609,12 +621,35 @@
     ],
     "priority": 4
   },
+  "data-modeling-standards": {
+    "module": "../documentTemplates/dmbok/DataModelingStandardsProcessor.ts#DataModelingStandardsProcessor",
+    "dependencies": [
+      "data-architecture-modeling-guide"
+    ],
+    "priority": 17
+  },
+  "business-intelligence-strategy": {
+    "module": "../documentTemplates/dmbok/BusinessIntelligenceStrategyProcessor.ts#BusinessIntelligenceStrategyProcessor",
+    "dependencies": [
+      "data-architecture-modeling-guide",
+      "data-governance-framework"
+    ],
+    "priority": 16
+  },
   "metadata-management-framework": {
     "module": "../documentTemplates/dmbok/MetadataManagementFrameworkProcessor.ts#MetadataManagementFrameworkProcessor",
     "dependencies": [
       "data-governance-framework"
     ],
     "priority": 5
+  },
+  "enterprise-data-dictionary": {
+    "module": "../documentTemplates/dmbok/EnterpriseDataDictionaryProcessor.ts#EnterpriseDataDictionaryProcessor",
+    "dependencies": [
+      "data-modeling-standards",
+      "metadata-management-framework"
+    ],
+    "priority": 18
   },
   "data-quality-management-plan": {
     "module": "../documentTemplates/planning/DataQualityManagementPlanProcessor.ts#DataQualityManagementPlanProcessor",

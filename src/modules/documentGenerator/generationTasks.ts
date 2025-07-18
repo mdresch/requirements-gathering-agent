@@ -9,6 +9,28 @@ import { DOCUMENT_CONFIG } from '../fileManager.js';
  * All available document generation tasks with proper organization and priorities
  */
 export const GENERATION_TASKS: GenerationTask[] = [
+  // DMBOK Introduction Data Management Body of Knowledge
+  {
+    key: 'introduction-data-management-body-of-knowledge',
+    name: 'Introduction Data Management Body of Knowledge',
+    category: 'dmbok',
+    func: 'generateIntroductionDataManagementBodyOfKnowledge',
+    emoji: '📚',
+    priority: 1,
+    pmbokRef: 'DMBOK: Introduction',
+    dependencies: []
+  },
+  // DMBOK Data Architecture & Quality
+  {
+    key: 'data-architecture-quality',
+    name: 'Data Architecture & Quality',
+    category: 'dmbok',
+    func: 'generateDataArchitectureQuality',
+    emoji: '🏗️',
+    priority: 19,
+    pmbokRef: 'DMBOK: Data Architecture & Quality',
+    dependencies: ['data-architecture-modeling-guide', 'data-quality-management-plan']
+  },
   // DMBOK Data Governance Framework
   {
     key: 'data-governance-framework',
@@ -118,6 +140,18 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 16,
     pmbokRef: 'DMBOK: Document & Content Management'
   },
+
+  // DMBOK Business Intelligence & Analytics Strategy
+  {
+    key: 'business-intelligence-strategy',
+    name: 'Business Intelligence & Analytics Strategy',
+    category: 'dmbok',
+    func: 'generateBusinessIntelligenceStrategy',
+    emoji: '📊',
+    priority: 16,
+    pmbokRef: 'DMBOK: Business Intelligence & Analytics',
+    dependencies: ['data-architecture-modeling-guide', 'data-governance-framework']
+  },
   // DMBOK Data Architecture & Modeling Guide
   {
     key: 'data-architecture-modeling-guide',
@@ -129,6 +163,28 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: 'DMBOK: Data Architecture'
   },
 
+  // DMBOK Data Modeling Standards Guide
+  {
+    key: 'data-modeling-standards',
+    name: 'Data Modeling Standards Guide',
+    category: 'dmbok',
+    func: 'generateDataModelingStandards',
+    emoji: '📐',
+    priority: 17,
+    pmbokRef: 'DMBOK: Data Modeling & Design',
+    dependencies: ['data-architecture-modeling-guide']
+  },
+  // DMBOK Enterprise Data Dictionary
+  {
+    key: 'enterprise-data-dictionary',
+    name: 'Enterprise Data Dictionary',
+    category: 'dmbok',
+    func: 'generateEnterpriseDataDictionary',
+    emoji: '📚',
+    priority: 18,
+    pmbokRef: 'DMBOK: Metadata Management',
+    dependencies: ['data-modeling-standards', 'metadata-management-framework']
+  },
   // DMBOK Master Data Management Strategy
   {
     key: 'master-data-management-strategy',
