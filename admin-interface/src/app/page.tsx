@@ -10,6 +10,7 @@ import TemplateStats from '@/components/TemplateStats';
 import SearchFilters from '@/components/SearchFilters';
 import Navbar from '@/components/Navbar';
 import { Plus, Search, Filter, BarChart3 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function HomePage() {
   console.log('🏠 HomePage component mounted/re-rendered');
@@ -210,109 +211,201 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
+      <motion.div 
+        className="container mx-auto px-4 py-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+        <motion.div 
+          className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <motion.h1 
+              className="text-5xl font-bold gradient-text mb-3"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Template Management
-            </h1>
-            <p className="text-gray-600">
+            </motion.h1>
+            <motion.p 
+              className="text-gray-600 text-xl"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
               Manage your ADPA enterprise framework templates
-            </p>
+            </motion.p>
           </div>
           
-          <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-            <button
+          <motion.div 
+            className="flex items-center space-x-4 mt-6 lg:mt-0"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <motion.button
               onClick={() => setShowStats(!showStats)}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               {showStats ? 'Hide Stats' : 'Show Stats'}
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Filter className="w-4 h-4 mr-2" />
               Filters
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={handleCreateTemplate}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 btn-modern animate-glow"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Plus className="w-4 h-4 mr-2" />
               New Template
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={testApiConnection}
-              className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               🧪 Test API
-            </button>
+            </motion.button>
             
-            <button
+            <motion.button
               onClick={() => loadTemplates()}
-              className="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-orange-600 hover:to-red-700 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
             >
               🔄 Reload Templates
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
         {/* Header with Web Interface Access */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-8 mb-8 shadow-lg">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">ADPA Enterprise Platform</h1>
-              <p className="text-blue-100 text-lg">Requirements Gathering Agent - Complete Web Interface</p>
-              <p className="text-blue-200 text-sm mt-2">✅ API Server Running • ✅ Adobe Integration Active • ✅ Standards Compliance Ready</p>
-            </div>
-            <div className="flex space-x-3">
-              <a
+        <motion.div 
+          className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-2xl p-10 mb-12 shadow-2xl relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+        >
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-float"></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+          </div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
+              <h1 className="text-4xl font-bold mb-3">ADPA Enterprise Platform</h1>
+              <p className="text-blue-100 text-xl mb-2">Requirements Gathering Agent - Complete Web Interface</p>
+              <motion.p 
+                className="text-blue-200 text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
+                ✅ API Server Running • ✅ Adobe Integration Active • ✅ Standards Compliance Ready
+              </motion.p>
+            </motion.div>
+            <motion.div 
+              className="flex space-x-4"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.6 }}
+            >
+              <motion.a
                 href="/web-interface"
-                className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors shadow-md"
+                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300 shadow-xl btn-modern"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 🚀 Launch Full Web Interface
-              </a>
-              <button
+              </motion.a>
+              <motion.button
                 onClick={() => setShowStats(!showStats)}
-                className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-3 rounded-lg transition-colors flex items-center space-x-2"
+                className="bg-blue-500/80 backdrop-blur-sm hover:bg-blue-400 text-white px-6 py-4 rounded-xl transition-all duration-300 flex items-center space-x-2 shadow-lg btn-modern"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <BarChart3 className="w-5 h-5" />
                 <span>{showStats ? 'Hide' : 'Show'} Stats</span>
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Stats Section */}
-        {showStats && (
-          <div className="mb-8">
-            <TemplateStats />
-          </div>
-        )}
+        <AnimatePresence>
+          {showStats && (
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <TemplateStats />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filters Section */}
-        {showFilters && (
-          <div className="mb-8">
-            <SearchFilters
-              onSearch={handleSearch}
-              initialParams={searchParams}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <SearchFilters
+                onSearch={handleSearch}
+                initialParams={searchParams}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <motion.div 
+          className="grid grid-cols-1 lg:grid-cols-3 gap-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           {/* Template List */}
-          <div className="lg:col-span-2">
+          <motion.div 
+            className="lg:col-span-2"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
             <TemplateList
               templates={templates}
               loading={loading}
@@ -322,44 +415,86 @@ export default function HomePage() {
               currentPage={searchParams.page || 1}
               totalPages={totalPages}
             />
-          </div>
+          </motion.div>
 
           {/* Template Editor/Preview */}
-          <div className="lg:col-span-1">
-            {isEditing ? (
-              <TemplateEditor
-                template={selectedTemplate}
-                onSave={handleSaveTemplate}
-                onCancel={() => {
-                  setIsEditing(false);
-                  setSelectedTemplate(null);
-                }}
-              />
-            ) : (
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-                <div className="text-center py-12">
-                  <div className="mx-auto h-12 w-12 text-gray-400">
-                    <Search className="w-full h-full" />
+          <motion.div 
+            className="lg:col-span-1"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+          >
+            <AnimatePresence mode="wait">
+              {isEditing ? (
+                <motion.div
+                  key="editor"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <TemplateEditor
+                    template={selectedTemplate}
+                    onSave={handleSaveTemplate}
+                    onCancel={() => {
+                      setIsEditing(false);
+                      setSelectedTemplate(null);
+                    }}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="placeholder"
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-8"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="text-center py-16">
+                    <motion.div 
+                      className="mx-auto h-16 w-16 text-gray-400 mb-6"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 200 }}
+                    >
+                      <Search className="w-full h-full animate-float" />
+                    </motion.div>
+                    <motion.h3 
+                      className="text-2xl font-semibold text-gray-900 mb-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      No template selected
+                    </motion.h3>
+                    <motion.p 
+                      className="text-gray-500 text-lg mb-6"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      Select a template to view details or create a new one.
+                    </motion.p>
+                    <motion.button
+                      onClick={handleCreateTemplate}
+                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 btn-modern animate-glow"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Create Template
+                    </motion.button>
                   </div>
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">
-                    No template selected
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Select a template to view details or create a new one.
-                  </p>
-                  <button
-                    onClick={handleCreateTemplate}
-                    className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Template
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
