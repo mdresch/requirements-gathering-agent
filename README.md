@@ -1,4 +1,3 @@
-
 # ADPA - Advanced Document Processing & Automation Framework
 
 [![CI](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml)
@@ -99,27 +98,66 @@ npm run admin:serve
 ## 🛠️ **Configuration**
 
 ### **Environment Setup**
-```bash
-# Copy environment template
-cp .env.example .env
 
-# Configure your AI providers
-OPENAI_API_KEY=your_openai_key
-GOOGLE_AI_API_KEY=your_google_ai_key
-AZURE_OPENAI_ENDPOINT=your_azure_endpoint
+1. **Copy the environment template:**
+```bash
+cp .env .env.local  # Create your local configuration
+```
+
+2. **Configure your preferred AI provider:**
+
+#### **Option 1: Google AI Studio (Recommended - Free Tier)**
+```bash
+# Set the active provider
+CURRENT_PROVIDER=google-ai
+
+# Get your API key from: https://makersuite.google.com/app/apikey
+GOOGLE_AI_API_KEY=your-google-ai-api-key-here
+GOOGLE_AI_MODEL=gemini-1.5-flash
+```
+
+#### **Option 2: GitHub AI (Free for GitHub Users)**
+```bash
+# Set the active provider
+CURRENT_PROVIDER=github-ai
+
+# Get your token from: https://github.com/settings/tokens
+GITHUB_TOKEN=your-github-personal-access-token
+GITHUB_ENDPOINT=https://models.github.ai/inference/
+REQUIREMENTS_AGENT_MODEL=gpt-4o-mini
+```
+
+#### **Option 3: Azure OpenAI (Enterprise)**
+```bash
+# Set the active provider
+CURRENT_PROVIDER=azure-openai-key
+
+# Configure Azure OpenAI
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-azure-openai-api-key
+AZURE_OPENAI_DEPLOYMENT_NAME=your-deployment-name
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+```
+
+#### **Option 4: Ollama (Local)**
+```bash
+# Set the active provider
+CURRENT_PROVIDER=ollama
+
+# Configure Ollama (requires local installation)
+OLLAMA_ENDPOINT=http://localhost:11434/api
+OLLAMA_MODEL=deepseek-coder:latest
 ```
 
 ### **AI Provider Configuration**
 ADPA supports multiple AI providers with automatic failover:
 
-```typescript
-// Supported providers
-- OpenAI (GPT-4, GPT-3.5)
-- Google AI (Gemini Pro, Gemini Pro Vision)
-- GitHub Copilot
-- Ollama (Local models)
-- Azure OpenAI
-```
+- **Google AI Studio** - Free tier with generous limits (1M-2M tokens)
+- **GitHub AI** - Free for GitHub users with gpt-4o-mini access
+- **Azure OpenAI** - Enterprise-grade with Entra ID authentication
+- **Ollama** - Local models for privacy-focused deployments
+
+**Provider Priority:** The system will automatically fallback to available providers if the primary provider fails.
 
 ## 📚 **Framework Support**
 
