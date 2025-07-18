@@ -100,6 +100,7 @@ export const DOCUMENT_CATEGORIES = {
     QUALITY_ASSURANCE: 'quality-assurance',
     IMPLEMENTATION_GUIDES: 'implementation-guides',
     DMBOK: 'dmbok',
+    BABOK: 'babok', // Added new category for BABOK
     UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
 
@@ -266,7 +267,8 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
-    'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },    'project-summary': {
+    'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
+    'project-summary': {
         title: 'Project Summary and Goals',
         filename: 'basic-docs/project-summary.md',
         category: DOCUMENT_CATEGORIES.BASIC_DOCS,
@@ -307,7 +309,8 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.BASIC_DOCS,
         description: 'Comprehensive business case and justification',
         generatedAt: ''
-    },'project-charter': {
+    },
+    'project-charter': {
         title: 'Project Charter',
         filename: 'project-charter/project-charter.md',
         category: DOCUMENT_CATEGORIES.PROJECT_CHARTER,
@@ -320,7 +323,15 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.PROJECT_CHARTER,
         description: 'PMBOK Project Management Plan',
         generatedAt: ''
-    },'scope-management-plan': {
+    },
+    'elicitation-and-collaboration': {
+        title: 'Elicitation & Collaboration',
+        filename: 'babok/elicitation-and-collaboration.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Elicitation & Collaboration document',
+        generatedAt: ''
+    },
+    'scope-management-plan': {
         title: 'Scope Management Plan',
         filename: 'scope-management/scope-management-plan.md',
         category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT,
@@ -749,12 +760,69 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
         description: 'Strategic business case and strategic analysis',
         generatedAt: ''
-    },    // BABOK Documents
+    },
+    'introduction-business-analysis-body-of-knowledge': {
+        title: 'Introduction Business Analysis Body of Knowledge',
+        filename: 'babok/INTRODUCTION BUSINESS ANALYSIS BODY OF KNOWLEDGE.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'Provides an overview, checklist, and summary of all BABOK documents, including coverage gaps and improvement suggestions.',
+        generatedAt: ''
+    },
+    // BABOK Documents
+    'business-analysis-planning-and-monitoring': {
+        title: 'Business Analysis Planning & Monitoring',
+        filename: 'babok/business-analysis-planning-and-monitoring.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'Defines the tasks used to organize and coordinate business analysis efforts.',
+        generatedAt: ''
+    },
     'babokintroduction': {
         title: 'BABOK Introduction',
         filename: 'BABOK/babokintroduction.md',
-        category: DOCUMENT_CATEGORIES.REQUIREMENTS,
+        category: DOCUMENT_CATEGORIES.BABOK,
         description: 'Business Analysis Body of Knowledge introduction',
+        generatedAt: ''
+    },
+    'requirements-life-cycle-management': {
+        title: 'Requirements Life Cycle Management',
+        filename: 'babok/requirements-life-cycle-management.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Requirements Life Cycle Management document',
+        generatedAt: ''
+    },
+    'strategy-analysis': {
+        title: 'Strategy Analysis',
+        filename: 'babok/strategy-analysis.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Strategy Analysis document',
+        generatedAt: ''
+    },
+    'requirements-analysis-and-design-definition': {
+        title: 'Requirements Analysis & Design Definition',
+        filename: 'babok/requirements-analysis-and-design-definition.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Requirements Analysis & Design Definition document',
+        generatedAt: ''
+    },
+    'solution-evaluation': {
+        title: 'Solution Evaluation',
+        filename: 'babok/solution-evaluation.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Solution Evaluation document',
+        generatedAt: ''
+    },
+    'underlying-competencies': {
+        title: 'Underlying Competencies',
+        filename: 'babok/underlying-competencies.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Underlying Competencies document',
+        generatedAt: ''
+    },
+    'perspectives': {
+        title: 'Perspectives',
+        filename: 'babok/perspectives.md',
+        category: DOCUMENT_CATEGORIES.BABOK,
+        description: 'BABOK: Perspectives document',
         generatedAt: ''
     },
 };

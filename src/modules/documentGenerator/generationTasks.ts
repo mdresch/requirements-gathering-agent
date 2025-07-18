@@ -20,6 +20,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: 'DMBOK: Introduction',
     dependencies: []
   },
+  // BABOK Business Analysis Planning & Monitoring
+  {
+    key: 'business-analysis-planning-and-monitoring',
+    name: 'Business Analysis Planning & Monitoring',
+    category: 'babok',
+    func: 'generateBusinessAnalysisPlanningAndMonitoring',
+    emoji: '📝',
+    priority: 1,
+    dependencies: []
+  },
   // DMBOK Data Architecture & Quality
   {
     key: 'data-architecture-quality',
@@ -214,6 +224,65 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '🤝',
     priority: 20,
     pmbokRef: 'DMBOK: Data Integration & Interoperability'
+  },
+  {
+    key: 'elicitation-and-collaboration',
+    name: 'Elicitation & Collaboration',
+    func: 'generateElicitationAndCollaboration',
+    emoji: '🤝',
+    category: 'babok',
+    priority: 2
+  },
+  {
+    key: 'requirements-life-cycle-management',
+    name: 'Requirements Life Cycle Management',
+    func: 'generateRequirementsLifeCycleManagement',
+    emoji: '🔄',
+    category: 'babok',
+    priority: 3
+  },
+  {
+    key: 'strategy-analysis',
+    name: 'Strategy Analysis',
+    func: 'generateStrategyAnalysis',
+    emoji: '📊',
+    category: 'babok',
+    priority: 4
+  },
+  {
+    key: 'requirements-analysis-and-design-definition',
+    name: 'Requirements Analysis & Design Definition',
+    func: 'generateRequirementsAnalysisAndDesignDefinition',
+    emoji: '📐',
+    category: 'babok',
+    priority: 5
+  },
+  // BABOK Solution Evaluation
+  {
+    key: 'solution-evaluation',
+    name: 'Solution Evaluation',
+    func: 'generateSolutionEvaluation',
+    emoji: '📈',
+    category: 'babok',
+    priority: 6
+  },
+  // BABOK Underlying Competencies
+  {
+    key: 'underlying-competencies',
+    name: 'Underlying Competencies',
+    func: 'generateUnderlyingCompetencies',
+    emoji: '🧠',
+    category: 'babok',
+    priority: 7
+  },
+  // BABOK Perspectives
+  {
+    key: 'perspectives',
+    name: 'Perspectives',
+    func: 'generatePerspectives',
+    emoji: '🔭',
+    category: 'babok',
+    priority: 8
   },
   // Technical Design Documents
   {
@@ -793,6 +862,15 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 999,
     emoji: '📝',
     pmbokRef: ''
+  },
+  {
+    key: 'introduction-business-analysis-body-of-knowledge',
+    name: 'Introduction Business Analysis Body of Knowledge',
+    category: 'babok',
+    func: 'generateIntroductionBusinessAnalysisBodyOfKnowledge',
+    emoji: '📘',
+    priority: 1,
+    dependencies: []
   },
 ];
 

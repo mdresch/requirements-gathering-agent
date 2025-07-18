@@ -161,13 +161,23 @@ ADPA supports multiple AI providers with automatic failover:
 
 ## 📚 **Framework Support**
 
+
+
+
+
 ### **BABOK v3 (Business Analysis)**
 ✅ **Production Ready**
 - Requirements Elicitation & Analysis
 - Stakeholder Analysis & Management
 - Business Analysis Planning
-- Solution Assessment & Validation
+- Requirements Life Cycle Management
+- Strategy Analysis
+- Requirements Analysis & Design Definition
+- **Solution Evaluation**: Evaluate implemented solutions for business value, performance, and alignment with stakeholder needs. Supports continuous improvement and benefit realization tracking.
+- **Underlying Competencies**: Describes the foundational skills, behaviors, and knowledge areas required for effective business analysis, as defined by BABOK v3.
+- **Perspectives**: Outlines the various perspectives (Agile, BI, IT, Business Architecture, BPM) and how to tailor business analysis practices for each context, as defined by BABOK v3.
 - Enterprise Analysis
+- **Introduction Business Analysis Body of Knowledge**: Provides an overview, checklist, and summary of all BABOK documents, including coverage gaps and improvement suggestions. This document is generated as the starting point for BABOK-based documentation in ADPA.
 
 ### **PMBOK 7th Edition (Project Management)**  
 ✅ **Implemented**
@@ -225,6 +235,7 @@ adpa generate --key data-modeling-standards --format markdown
 
 ## 📖 **Usage Examples**
 
+
 ### **Document Generation**
 ```bash
 # Generate business case document
@@ -235,6 +246,20 @@ adpa generate --category project-charter --output ./project-docs
 
 # Generate stakeholder analysis
 adpa generate --key stakeholder-analysis --format json
+
+
+
+# Generate Solution Evaluation (BABOK)
+adpa generate --key solution-evaluation --format markdown
+
+# Generate Underlying Competencies (BABOK)
+adpa generate --key underlying-competencies --format markdown
+
+# Generate Perspectives (BABOK)
+adpa generate --key perspectives --format markdown
+
+# Generate Introduction Business Analysis Body of Knowledge (BABOK)
+adpa generate --key introduction-business-analysis-body-of-knowledge --format markdown
 
 # Generate Data Governance Framework (DMBOK)
 adpa generate --key data-governance-framework --format markdown
