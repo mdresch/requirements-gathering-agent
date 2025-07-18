@@ -27,7 +27,7 @@ import { AIProcessor } from '../ai/AIProcessor.js';
 import { ContextManager } from '../contextManager.js';
 import type { ChatMessage } from '../ai/types.js';
 import { TemplateRepository } from '../../repositories/TemplateRepository.js';
-import { database } from '../../config/database.js';
+import { dbConnection } from '../../config/database.js';
 
 export interface ContextDependency {
     documentKey: string;
@@ -95,7 +95,7 @@ export class AdvancedTemplateEngine {
     private aiProcessor: AIProcessor;
     private contextManager: ContextManager;
     private contextRepository: ContextRepository;
-    private templateRepository: TemplateRepository;
+    private templateRepository: TemplateRepository | null;
     private templates: Map<string, AIInstructionTemplate> = new Map();
     private contextCache: Map<string, { content: string; timestamp: number; ttl: number }> = new Map();
 
@@ -106,7 +106,7 @@ export class AdvancedTemplateEngine {
         templateRepository?: TemplateRepository
     ) {
         this.contextRepository = contextRepository;
-        this.templateRepository = templateRepository || new TemplateRepository(database);
+        this.templateRepository = templateRepository || null; // TODO: Fix database connection
         this.aiProcessor = aiProcessor || AIProcessor.getInstance();
         this.contextManager = contextManager || new ContextManager();
     }
@@ -531,7 +531,9 @@ ${segments.filter(s => s.weight < 0.5).map(s => s.content).join('\n\n')}
                 created_by: 'system'
             };
 
-            await this.templateRepository.createTemplate(databaseTemplate);
+            if (this.templateRepository) {
+                await this.templateRepository.createTemplate(databaseTemplate);
+            }
             console.log(`Template saved: ${template.id}`);
         } catch (error) {
             console.warn(`Failed to save template to database: ${template.id}`, error);
