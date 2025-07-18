@@ -1,5 +1,5 @@
 {
-"architecture-design": {
+  "architecture-design": {
     "module": "../documentTemplates/technical-design/ArchitecturedesignProcessor.ts#ArchitecturedesignProcessor",
     "dependencies": [],
     "priority": 1
@@ -57,6 +57,16 @@
     "module": "../documentTemplates/quality-assurance/TestStrategyProcessor.ts#TestStrategyProcessor",
     "dependencies": [],
     "priority": 1
+  },
+  "business-analysis-planning-and-monitoring": {
+    "module": "../documentTemplates/babok/BusinessAnalysisPlanningAndMonitoringProcessor.ts#BusinessAnalysisPlanningAndMonitoringProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "elicitation-and-collaboration": {
+    "module": "../documentTemplates/babok/ElicitationAndCollaborationProcessor.ts#ElicitationAndCollaborationProcessor",
+    "dependencies": [],
+    "priority": 2
   },
   "test-plan": {
     "module": "../documentTemplates/quality-assurance/TestPlanProcessor.ts#TestPlanProcessor",
@@ -222,6 +232,11 @@
   },
   "introduction-data-management-body-of-knowledge": {
     "module": "../documentTemplates/dmbok/IntroductionDataManagementBodyOfKnowledgeProcessor.ts#IntroductionDataManagementBodyOfKnowledgeProcessor",
+    "dependencies": [],
+    "priority": 1
+  },
+  "introduction-business-analysis-body-of-knowledge": {
+    "module": "../documentTemplates/babok/IntroductionBusinessAnalysisBodyOfKnowledgeProcessor.ts#IntroductionBusinessAnalysisBodyOfKnowledgeProcessor",
     "dependencies": [],
     "priority": 1
   },
@@ -594,7 +609,7 @@
     ],
     "priority": 15
   },
-    "data-architecture-quality": {
+  "data-architecture-quality": {
     "module": "../documentTemplates/dmbok/DataArchitectureQualityProcessor.ts#DataArchitectureQualityProcessor",
     "dependencies": [
       "data-architecture-modeling-guide",
@@ -665,6 +680,36 @@
       "data-architecture-modeling-guide"
     ],
     "priority": 8
+  },
+  "requirements-life-cycle-management": {
+    "module": "../documentTemplates/babok/RequirementsLifeCycleManagementProcessor.ts#RequirementsLifeCycleManagementProcessor",
+    "dependencies": [],
+    "priority": 3
+  },
+  "strategy-analysis": {
+    "module": "../documentTemplates/babok/StrategyAnalysisProcessor.ts#StrategyAnalysisProcessor",
+    "dependencies": [],
+    "priority": 4
+  },
+  "requirements-analysis-and-design-definition": {
+    "module": "../documentTemplates/babok/RequirementsAnalysisAndDesignDefinitionProcessor.ts#RequirementsAnalysisAndDesignDefinitionProcessor",
+    "dependencies": [],
+    "priority": 5
+  },
+  "solution-evaluation": {
+    "module": "../documentTemplates/babok/SolutionEvaluationProcessor.ts#SolutionEvaluationProcessor",
+    "dependencies": [],
+    "priority": 6
+  },
+  "underlying-competencies": {
+    "module": "../documentTemplates/babok/UnderlyingCompetenciesProcessor.ts#UnderlyingCompetenciesProcessor",
+    "dependencies": [],
+    "priority": 8
+  },
+  "perspectives": {
+    "module": "../documentTemplates/BABOK/PerspectivesProcessor.ts#PerspectivesProcessor",
+    "dependencies": [],
+    "priority": 9
   },
   "lastSetup": "2025-07-14T03:21:13.851Z"
 }
