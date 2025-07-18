@@ -9,6 +9,8 @@ import { HealthController } from './controllers/HealthController.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
+import { dbConnection } from '../config/database.js';
+import projectRoutes from './routes/projects.js';
 
 // In-memory project database (sample data)
 const projects = [
@@ -103,21 +105,10 @@ app.use(requestLogger);
 // API key authentication for protected endpoints
 app.use('/api/v1/documents', apiKeyAuth);
 app.use('/api/v1/templates', apiKeyAuth);
+app.use('/api/v1/projects', apiKeyAuth);
 
-// --- Project Management Endpoints ---
-// List all projects
-app.get('/api/v1/projects', (req: Request, res: Response) => {
-  res.json({ success: true, projects });
-});
-
-// Get project by ID
-app.get('/api/v1/projects/:id', (req: Request, res: Response) => {
-  const project = projects.find(p => p.id === req.params.id);
-  if (!project) {
-    return res.status(404).json({ error: 'Not Found', message: `Project with id ${req.params.id} not found` });
-  }
-  res.json({ success: true, project });
-});
+// Project management routes
+app.use('/api/v1/projects', projectRoutes);
 
 // Health check routes (public)
 app.get('/api/v1/health', HealthController.getHealth);
@@ -172,13 +163,24 @@ app.use(errorHandler);
 // Start server
 if (process.env.NODE_ENV !== 'test') {
     const actualPort = PORT;
-    app.listen(actualPort, () => {
-        console.log(`🚀 ADPA API Server running on port ${actualPort}`);
-        console.log(`📚 API Documentation: http://localhost:${actualPort}/docs/api/`);
-        console.log(`🏥 Health Check: http://localhost:${actualPort}/api/v1/health`);
-        console.log(`🎯 Admin Interface: http://localhost:${actualPort}/admin`);        console.log(`🌐 CORS: Open (Development)`);
-        console.log(`🎯 Ready to process documents via API!`);
-    });
+    
+    // Initialize database connection
+    dbConnection.connect()
+        .then(() => {
+            app.listen(actualPort, () => {
+                console.log(`🚀 ADPA API Server running on port ${actualPort}`);
+                console.log(`📚 API Documentation: http://localhost:${actualPort}/docs/api/`);
+                console.log(`🏥 Health Check: http://localhost:${actualPort}/api/v1/health`);
+                console.log(`🎯 Admin Interface: http://localhost:${actualPort}/admin`);
+                console.log(`🌐 CORS: Open (Development)`);
+                console.log(`📊 Database: ${dbConnection.getConnectionStatus()}`);
+                console.log(`🎯 Ready to process documents via API!`);
+            });
+        })
+        .catch((error) => {
+            console.error('❌ Failed to start server due to database connection error:', error);
+            process.exit(1);
+        });
 }
 
 export { app };
