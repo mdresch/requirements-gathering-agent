@@ -825,6 +825,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'BABOK: Perspectives document',
         generatedAt: ''
     },
+    'portfolio-stakeholder-analysis': {
+        title: 'Portfolio/Program Stakeholder Analysis',
+        filename: 'stakeholder-management/portfolio-stakeholder-analysis.md',
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
+        description: 'Portfolio/Program-level Stakeholder Analysis',
+        generatedAt: ''
+    },
 };
 
 // Create organized directory structure

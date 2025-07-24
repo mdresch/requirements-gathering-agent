@@ -328,6 +328,15 @@ adpa vcs commit --message "Generated project documentation"
 adpa vcs push --remote origin
 ```
 
+### Portfolio/Program Stakeholder Analysis
+Generate a stakeholder analysis at the portfolio or program level (multi-project, business unit, or enterprise-wide):
+
+```bash
+adpa generate --key portfolio-stakeholder-analysis --format markdown
+```
+
+This document provides a comprehensive analysis of stakeholders across multiple projects, programs, or business units, supporting portfolio management best practices.
+
 ## 🧪 **Testing**
 
 ```bash

@@ -872,6 +872,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 1,
     dependencies: []
   },
+  {
+    key: 'portfolio-stakeholder-analysis',
+    name: 'Portfolio/Program Stakeholder Analysis',
+    category: 'stakeholder-management',
+    func: 'getAiPortfolioStakeholderAnalysis',
+    emoji: '🏢',
+    priority: 20,
+    pmbokRef: 'Portfolio/Program Stakeholder Analysis',
+    dependencies: []
+  },
 ];
 
 /**

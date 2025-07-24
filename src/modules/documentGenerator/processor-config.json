@@ -711,5 +711,10 @@
     "dependencies": [],
     "priority": 9
   },
-  "lastSetup": "2025-07-14T03:21:13.851Z"
+  "lastSetup": "2025-07-14T03:21:13.851Z",
+  "portfolio-stakeholder-analysis": {
+    "module": "../documentTemplates/stakeholder-management/PortfolioStakeholderAnalysisProcessor.ts#PortfolioStakeholderAnalysisProcessor",
+    "dependencies": [],
+    "priority": 999
+  }
 }
