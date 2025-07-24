@@ -137,6 +137,7 @@
     "mongoose": "^8.16.4",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
+    "next": "^15.4.1",
     "node-fetch": "^3.3.2",
     "openai": "^5.0.2",
     "puppeteer": "^24.12.1",

@@ -230,6 +230,11 @@
     "dependencies": [],
     "priority": 11
   },
+  "work-breakdown-structure": {
+    "module": "../documentTemplates/pppm/WBSProcessor.ts#WBSProcessor",
+    "dependencies": ["project-scope-statement"],
+    "priority": 11
+  },
   "introduction-data-management-body-of-knowledge": {
     "module": "../documentTemplates/dmbok/IntroductionDataManagementBodyOfKnowledgeProcessor.ts#IntroductionDataManagementBodyOfKnowledgeProcessor",
     "dependencies": [],

@@ -33,12 +33,6 @@ export class JobManager {
         return this.batches.get(batchId) || null;
     }
 
-    /**
-     * Store job
-     */
-    async storeJob(job: DocumentJob): Promise<void> {
-        this.jobs.set(job.id, job);
-    }
 
     /**
      * Store batch
@@ -323,29 +317,36 @@ export class JobManager {
         filename: string;
         size: number;
     }> {
+        const fs = await import('fs/promises');
+        const path = await import('path');
         const job = this.jobs.get(jobId);
-        
         if (!job) {
             throw new Error(`Job with ID ${jobId} not found`);
         }
-
         if (job.status !== ProcessingStatus.completed) {
             throw new Error('Document is not ready for download');
         }
-
-        // Mock file content generation
-        const content = Buffer.from(`Mock ${job.request.outputFormat} content for job ${jobId}`);
+        // Determine file path
+        const outputDir = path.resolve(process.cwd(), 'generated-documents', 'job-output');
+        const filename = job.generatedFilename || `document.${job.request.outputFormat}`;
+        const filePath = path.join(outputDir, `${jobId}-${filename}`);
+        // Read file from disk
+        let content;
+        try {
+            content = await fs.readFile(filePath);
+        } catch (e) {
+            throw new Error(`Generated file not found for job ${jobId}`);
+        }
         const contentTypeMap: Record<string, string> = {
             pdf: 'application/pdf',
             docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             html: 'text/html',
             pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         };
-
         return {
             content,
             contentType: contentTypeMap[job.request.outputFormat] || 'application/octet-stream',
-            filename: job.generatedFilename || `document.${job.request.outputFormat}`,
+            filename,
             size: content.length
         };
     }
@@ -356,11 +357,26 @@ export class JobManager {
     private calculateMedian(numbers: number[]): number {
         const sorted = numbers.slice().sort((a, b) => a - b);
         const middle = Math.floor(sorted.length / 2);
-
         if (sorted.length % 2 === 0) {
             return Math.round((sorted[middle - 1] + sorted[middle]) / 2);
         }
-
         return sorted[middle];
+    }
+
+    /**
+     * Store job
+     */
+    async storeJob(job: DocumentJob): Promise<void> {
+        this.jobs.set(job.id, job);
+        // If job is completed and has output, write file to disk
+        if (job.status === ProcessingStatus.completed && job.generatedContent) {
+            const fs = await import('fs/promises');
+            const path = await import('path');
+            const outputDir = path.resolve(process.cwd(), 'generated-documents', 'job-output');
+            await fs.mkdir(outputDir, { recursive: true });
+            const filename = job.generatedFilename || `document.${job.request.outputFormat}`;
+            const filePath = path.join(outputDir, `${job.id}-${filename}`);
+            await fs.writeFile(filePath, job.generatedContent);
+        }
     }
 }

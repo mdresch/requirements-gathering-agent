@@ -286,9 +286,6 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-red-500">*</span>
-              </label>
               <label htmlFor="category-select" className="block text-sm font-medium text-gray-700 mb-1">
                 Category <span className="text-red-500">*</span>
               </label>

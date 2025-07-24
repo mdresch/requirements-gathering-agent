@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { TemplateRepository } from '../../repositories/TemplateRepository.js';
-import { dbConnection } from '../../config/database.js';
+import { MongoTemplateRepository } from '../../repositories/TemplateRepository.mongo';
+import { connectMongo } from '../../db/mongoose';
 
 /**
  * Template Management API Controller
@@ -10,7 +10,8 @@ import { dbConnection } from '../../config/database.js';
  * with full CRUD operations for document templates.
  */
 export class TemplateController {
-    private static templateRepository: any = null; // TODO: Fix database connection
+    // Use the MongoDB repository
+    static templateRepository: MongoTemplateRepository = new MongoTemplateRepository();
     
     /**
      * Create a new template
@@ -22,50 +23,39 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id || 'api-user';
 
-            // Create template using actual TemplateRepository
+            // Create template using ITemplate interface
             const templateRecord = {
                 name,
                 description: description || `API-created template: ${name}`,
                 category: category || 'api-created',
-                template_type: 'api_created',
-                ai_instructions: templateData?.aiInstructions || `Generate a ${name}`,
-                prompt_template: templateData?.content || `# ${name}\n\n{{content}}`,
-                generation_function: 'getAiGenericDocument',
-                metadata: {
-                    tags: tags || [],
+                tags: tags || [],
+                templateData: {
+                    content: templateData?.content || `# ${name}\n\n{{content}}`,
+                    aiInstructions: templateData?.aiInstructions || `Generate a ${name}`,
                     variables: templateData?.variables || [],
-                    layout: templateData?.layout || {},
-                    emoji: '🆕',
-                    priority: 200,
-                    source: 'api'
+                    layout: templateData?.layout || {}
                 },
-                version: 1,
-                is_active: isActive !== false,
-                is_system: false,
-                created_by: userId
+                isActive: isActive !== false
             };
 
             const createdTemplate = await TemplateController.templateRepository.createTemplate(templateRecord);
 
             // Convert to API format
             const apiTemplate = {
-                id: createdTemplate.id,
+                id: createdTemplate._id?.toString?.() || createdTemplate.id,
                 name: createdTemplate.name,
                 description: createdTemplate.description,
                 category: createdTemplate.category,
-                tags: createdTemplate.metadata?.tags || [],
+                tags: createdTemplate.tags || [],
                 templateData: {
-                    content: createdTemplate.prompt_template,
-                    aiInstructions: createdTemplate.ai_instructions,
-                    variables: createdTemplate.metadata?.variables || [],
-                    layout: createdTemplate.metadata?.layout || {}
+                    content: createdTemplate.templateData?.content,
+                    aiInstructions: createdTemplate.templateData?.aiInstructions,
+                    variables: createdTemplate.templateData?.variables || [],
+                    layout: createdTemplate.templateData?.layout || {}
                 },
-                isActive: createdTemplate.is_active,
-                createdBy: createdTemplate.created_by,
-                createdAt: createdTemplate.created_at,
-                updatedAt: createdTemplate.updated_at,
-                version: createdTemplate.version,
-                templateType: createdTemplate.template_type
+                isActive: createdTemplate.isActive,
+                createdAt: createdTemplate.createdAt,
+                updatedAt: createdTemplate.updatedAt
             };
 
             console.log('Template created:', {
@@ -98,27 +88,25 @@ export class TemplateController {
             const userId = req.user?.id;
 
             // Use the actual TemplateRepository to get template
+
             const template = await TemplateController.templateRepository.getTemplateById(templateId);
-              if (template) {
-                // Convert database template to API format
+            if (template) {
+                // Convert database template to API format (ITemplate)
                 const apiTemplate = {
-                    id: template.id,
+                    id: template._id?.toString?.() || template.id,
                     name: template.name,
                     description: template.description,
                     category: template.category,
-                    tags: template.metadata?.tags || [],
+                    tags: template.tags || [],
                     templateData: {
-                        content: template.prompt_template,
-                        aiInstructions: template.ai_instructions,
-                        variables: template.metadata?.variables || [],
-                        layout: template.metadata?.layout || {}
+                        content: template.templateData?.content,
+                        aiInstructions: template.templateData?.aiInstructions,
+                        variables: template.templateData?.variables || [],
+                        layout: template.templateData?.layout || {}
                     },
-                    isActive: template.is_active,
-                    createdBy: template.created_by,
-                    createdAt: template.created_at,
-                    updatedAt: template.updated_at,
-                    version: template.version,
-                    templateType: template.template_type
+                    isActive: template.isActive,
+                    createdAt: template.createdAt,
+                    updatedAt: template.updatedAt
                 };
 
                 res.json({
@@ -155,26 +143,47 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id;
 
-            // TODO: Implement actual template update in database
-            console.log('Template update requested:', {
-                requestId,
-                templateId,
-                updates: Object.keys(updates),
-                userId,
-                timestamp: new Date().toISOString()
-            });
+            // Only allow updates to fields in ITemplate
+            const allowedUpdates: any = {};
+            if (typeof updates.name !== 'undefined') allowedUpdates.name = updates.name;
+            if (typeof updates.description !== 'undefined') allowedUpdates.description = updates.description;
+            if (typeof updates.category !== 'undefined') allowedUpdates.category = updates.category;
+            if (typeof updates.tags !== 'undefined') allowedUpdates.tags = updates.tags;
+            if (typeof updates.isActive !== 'undefined') allowedUpdates.isActive = updates.isActive;
+            if (typeof updates.templateData !== 'undefined') allowedUpdates.templateData = updates.templateData;
 
-            // Mock successful update
-            const updatedTemplate = {
-                id: templateId,
-                ...updates,
-                updatedAt: new Date().toISOString(),
-                version: 2
+            const updatedTemplate = await TemplateController.templateRepository.updateTemplate(templateId, allowedUpdates);
+            if (!updatedTemplate) {
+                return res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'TEMPLATE_NOT_FOUND',
+                        message: 'Template not found',
+                        timestamp: new Date().toISOString()
+                    },
+                    requestId
+                });
+            }
+            // Convert to API format
+            const apiTemplate = {
+                id: updatedTemplate._id?.toString?.() || updatedTemplate.id,
+                name: updatedTemplate.name,
+                description: updatedTemplate.description,
+                category: updatedTemplate.category,
+                tags: updatedTemplate.tags || [],
+                templateData: {
+                    content: updatedTemplate.templateData?.content,
+                    aiInstructions: updatedTemplate.templateData?.aiInstructions,
+                    variables: updatedTemplate.templateData?.variables || [],
+                    layout: updatedTemplate.templateData?.layout || {}
+                },
+                isActive: updatedTemplate.isActive,
+                createdAt: updatedTemplate.createdAt,
+                updatedAt: updatedTemplate.updatedAt
             };
-
             res.json({
                 success: true,
-                data: updatedTemplate,
+                data: apiTemplate,
                 timestamp: new Date().toISOString(),
                 requestId
             });
@@ -194,14 +203,7 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id;
 
-            // TODO: Implement actual template deletion in database
-            console.log('Template deletion requested:', {
-                requestId,
-                templateId,
-                userId,
-                timestamp: new Date().toISOString()
-            });
-
+            await TemplateController.templateRepository.deleteTemplate(templateId);
             res.json({
                 success: true,
                 message: 'Template deleted successfully',
@@ -238,27 +240,32 @@ export class TemplateController {
             // Use the actual TemplateRepository to get templates
             const searchQuery = {
                 category: category as string,
-                search_text: search as string,
-                is_system: undefined, // Include both system and user templates
+                searchText: search as string,
+                isSystem: undefined, // Include both system and user templates
                 limit: parseInt(limit as string),
                 offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
 
-            const templates = await TemplateController.templateRepository.searchTemplates(searchQuery);
+            const { templates, total } = await TemplateController.templateRepository.listTemplates(searchQuery, { page, limit });
 
             // Convert to API format
             const apiTemplates = templates.map((template: any) => ({
-                id: template.id,
+                id: template._id?.toString?.() || template.id,
                 name: template.name,
                 description: template.description,
                 category: template.category,
-                tags: template.metadata?.tags || [],
-                isActive: template.is_active,
-                createdAt: template.created_at,
-                updatedAt: template.updated_at,
-                templateType: template.template_type,
-                version: template.version
-            }));            console.log('Template list requested:', {
+                tags: template.tags || [],
+                templateData: {
+                    content: template.templateData?.content,
+                    aiInstructions: template.templateData?.aiInstructions,
+                    variables: template.templateData?.variables || [],
+                    layout: template.templateData?.layout || {}
+                },
+                isActive: template.isActive,
+                createdAt: template.createdAt,
+                updatedAt: template.updatedAt
+            }));
+            console.log('Template list requested:', {
                 requestId,
                 filters: { category, tag, search, isActive },
                 pagination: { page, limit, sort, order },
@@ -272,8 +279,8 @@ export class TemplateController {
                 pagination: {
                     page: parseInt(page as string),
                     limit: parseInt(limit as string),
-                    total: apiTemplates.length,
-                    pages: Math.ceil(apiTemplates.length / parseInt(limit as string))
+                    total: total,
+                    pages: Math.ceil(total / parseInt(limit as string))
                 },
                 timestamp: new Date().toISOString(),
                 requestId
@@ -460,7 +467,7 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
             // Get all templates to calculate stats
-            const templates = await TemplateController.templateRepository.getAllTemplates();
+            const { templates } = await TemplateController.templateRepository.listTemplates({}, { page: 1, limit: 1000 });
             
             // Calculate statistics
             const totalTemplates = templates.length;
@@ -531,7 +538,7 @@ export class TemplateController {
         try {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
-            const templates = await TemplateController.templateRepository.getAllTemplates();
+            const { templates } = await TemplateController.templateRepository.listTemplates({}, { page: 1, limit: 1000 });
             const categories = [...new Set(templates.map((t: any) => t.category).filter(Boolean))].sort();
 
             res.json({
@@ -555,17 +562,15 @@ export class TemplateController {
         try {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
-            const templates = await TemplateController.templateRepository.getAllTemplates();
+            // Use listTemplates to get all templates
+            const { templates } = await TemplateController.templateRepository.listTemplates({}, { page: 1, limit: 1000 });
             const tagsSet = new Set<string>();
-            
             templates.forEach((template: any) => {
-                if (template.metadata?.tags && Array.isArray(template.metadata.tags)) {
-                    template.metadata.tags.forEach((tag: string) => tagsSet.add(tag));
+                if (Array.isArray(template.tags)) {
+                    template.tags.forEach((tag: string) => tagsSet.add(tag));
                 }
             });
-
             const tags = [...tagsSet].sort();
-
             res.json({
                 success: true,
                 data: tags,
@@ -642,7 +647,8 @@ export class TemplateController {
                     }
                 }
             } else {
-                templates = await TemplateController.templateRepository.getAllTemplates();
+                const result = await TemplateController.templateRepository.listTemplates({}, { page: 1, limit: 1000 });
+                templates = result.templates;
             }
 
             res.json({
@@ -686,19 +692,14 @@ export class TemplateController {
                         name: templateData.name,
                         description: templateData.description || `Imported template: ${templateData.name}`,
                         category: templateData.category || 'imported',
-                        template_type: 'imported',
-                        ai_instructions: templateData.aiInstructions || `Generate a ${templateData.name}`,
-                        prompt_template: templateData.content || `# ${templateData.name}\n\n{{content}}`,
-                        generation_function: 'getAiGenericDocument',
-                        metadata: {
-                            tags: templateData.tags || [],
+                        tags: templateData.tags || [],
+                        templateData: {
+                            content: templateData.content || `# ${templateData.name}\n\n{{content}}`,
+                            aiInstructions: templateData.aiInstructions || `Generate a ${templateData.name}`,
                             variables: templateData.variables || [],
-                            source: 'import'
+                            layout: templateData.layout || {}
                         },
-                        version: 1,
-                        is_active: true,
-                        is_system: false,
-                        created_by: userId
+                        isActive: true
                     };
 
                     await TemplateController.templateRepository.createTemplate(templateRecord);

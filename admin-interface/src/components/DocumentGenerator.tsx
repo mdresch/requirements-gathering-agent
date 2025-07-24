@@ -4,6 +4,7 @@
 'use client';
 
 import { useState } from 'react';
+import axios from 'axios';
 import { FileText, Download, Eye, Settings, Wand2, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -113,60 +114,78 @@ export default function DocumentGenerator() {
       toast.error('Please select a template first');
       return;
     }
-
     if (!inputData.trim()) {
       toast.error('Please provide input data for document generation');
       return;
     }
+    try {
+      toast.loading('Submitting document generation request...');
+      // Infer inputFormat from template or default to 'markdown'
+      let inputFormat: string = 'markdown';
+      if (selectedTemplate.framework === 'babok' || selectedTemplate.framework === 'multi') {
+        inputFormat = 'markdown';
+      } else if (selectedTemplate.framework === 'pmbok') {
+        inputFormat = 'markdown'; // Adjust if you want to support other formats
+      }
+      const response = await axios.post(
+        '/api/v1/documents/convert',
+        {
+          content: inputData,
+          inputFormat,
+          outputFormat: outputFormat.toLowerCase()
+        },
+        {
+          headers: { 'x-api-key': 'dev-api-key-123' }
+        }
+      );
+      toast.dismiss();
+      if (response.data && (response.data.jobId || response.data.data?.jobId)) {
+        const jobId = response.data.jobId || response.data.data.jobId;
+        const newJob: GenerationJob = {
+          id: jobId,
+          templateName: selectedTemplate.name,
+          status: 'pending',
+          progress: 0,
+          outputFormat: outputFormat,
+          createdAt: new Date().toISOString()
+        };
+        setGenerationJobs(jobs => [newJob, ...jobs]);
+        pollJobStatus(jobId, newJob);
+        toast.success('Document generation started');
+      } else {
+        toast.error('Failed to start document generation');
+      }
+    } catch (err) {
+      toast.dismiss();
+      toast.error('Error submitting document generation request');
+    }
+  };
 
-    const newJob: GenerationJob = {
-      id: Date.now().toString(),
-      templateName: selectedTemplate.name,
-      status: 'pending',
-      progress: 0,
-      outputFormat: outputFormat,
-      createdAt: new Date().toISOString()
+  // Poll job status from backend
+  const pollJobStatus = (jobId: string, job: GenerationJob) => {
+    const poll = async (attempt = 0) => {
+      try {
+        const res = await axios.get(`/api/v1/documents/jobs/${jobId}`,
+          { headers: { 'x-api-key': 'dev-api-key-123' } }
+        );
+        const status = res.data?.status;
+        let progress = res.data?.progress ?? 0;
+        let downloadUrl = res.data?.downloadUrl;
+        setGenerationJobs(jobs => jobs.map(j =>
+          j.id === jobId ? { ...j, status, progress, downloadUrl } : j
+        ));
+        if (status === 'completed' && downloadUrl) {
+          toast.success('Document generated successfully');
+        } else if (status === 'failed') {
+          toast.error('Document generation failed');
+        } else if (attempt < 60) { // poll up to 5 minutes
+          setTimeout(() => poll(attempt + 1), 5000);
+        }
+      } catch (e) {
+        if (attempt < 60) setTimeout(() => poll(attempt + 1), 5000);
+      }
     };
-
-    setGenerationJobs([newJob, ...generationJobs]);
-    toast.success('Document generation started');
-
-    // Simulate generation process
-    setTimeout(() => {
-      setGenerationJobs(jobs => 
-        jobs.map(job => 
-          job.id === newJob.id 
-            ? { ...job, status: 'processing', progress: 25 }
-            : job
-        )
-      );
-    }, 1000);
-
-    setTimeout(() => {
-      setGenerationJobs(jobs => 
-        jobs.map(job => 
-          job.id === newJob.id 
-            ? { ...job, progress: 75 }
-            : job
-        )
-      );
-    }, 3000);
-
-    setTimeout(() => {
-      setGenerationJobs(jobs => 
-        jobs.map(job => 
-          job.id === newJob.id 
-            ? { 
-                ...job, 
-                status: 'completed', 
-                progress: 100,
-                downloadUrl: `/api/v1/documents/download/${newJob.id}`
-              }
-            : job
-        )
-      );
-      toast.success('Document generated successfully');
-    }, 5000);
+    poll();
   };
 
   const handlePreview = () => {
@@ -196,8 +215,30 @@ This is a preview of the document that would be generated using the ${selectedTe
 
   const handleDownload = (job: GenerationJob) => {
     if (job.downloadUrl) {
-      toast.success(`Downloading ${job.templateName}`);
-      // In a real implementation, this would trigger the actual download
+      axios.get(job.downloadUrl, {
+        responseType: 'blob',
+        headers: { 'x-api-key': 'dev-api-key-123' }
+      })
+        .then((response) => {
+          const contentDisposition = response.headers['content-disposition'];
+          let filename = job.templateName + '.' + (job.outputFormat?.toLowerCase() || 'pdf');
+          if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^";]+)"?/);
+            if (match && match[1]) filename = match[1];
+          }
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode?.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success(`Downloading ${filename}`);
+        })
+        .catch(() => {
+          toast.error('Failed to download document');
+        });
     } else {
       toast.error('Download not available yet');
     }

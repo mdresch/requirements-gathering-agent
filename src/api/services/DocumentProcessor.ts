@@ -61,22 +61,30 @@ export class DocumentProcessor {
     private async processDocument(job: DocumentJob): Promise<void> {
         try {
             job.updateStatus(ProcessingStatus.processing);
-            
             // Simulate processing time based on content length
             const processingTime = Math.min(job.request.content.length / 100, 30000);
             job.estimatedCompletion = new Date(Date.now() + processingTime);
-
             // Progress simulation
             for (let progress = 0; progress <= 100; progress += 20) {
                 job.updateProgress(progress);
                 await this.delay(processingTime / 5);
             }
-
             // Simulate conversion based on formats
             const result = await this.performConversion(job.request);
-            
-            job.complete(result.downloadUrl, result.fileSize, result.filename);
-            
+            // Simulate file content (replace with real conversion output in production)
+            let fileContent: Buffer;
+            if (job.request.outputFormat === 'pdf') {
+                fileContent = Buffer.from(`# PDF Document\n\n${job.request.content}`);
+            } else if (job.request.outputFormat === 'docx') {
+                fileContent = Buffer.from(`# DOCX Document\n\n${job.request.content}`);
+            } else if (job.request.outputFormat === 'html') {
+                fileContent = Buffer.from(`<html><body><h1>HTML Document</h1><pre>${job.request.content}</pre></body></html>`);
+            } else {
+                fileContent = Buffer.from(job.request.content);
+            }
+            job.generatedContent = fileContent;
+            job.generatedFilename = result.filename;
+            job.complete(result.downloadUrl, fileContent.length, result.filename);
         } catch (error) {
             job.fail(error instanceof Error ? error.message : 'Unknown error occurred');
         }
@@ -187,6 +195,7 @@ export class DocumentProcessor {
  * Individual document conversion job
  */
 export class DocumentJob {
+    public generatedContent?: Buffer;
     public id: string;
     public request: DocumentConversionRequest;
     public status: ProcessingStatus = ProcessingStatus.queued;

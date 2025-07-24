@@ -86,7 +86,7 @@ export default function TemplateList({
             Try adjusting your search filters or create a new template.
           </motion.p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 

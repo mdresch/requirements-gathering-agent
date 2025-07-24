@@ -9,7 +9,7 @@ import { HealthController } from './controllers/HealthController.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
-import { dbConnection } from '../config/database.js';
+import { connectMongo } from '../db/mongoose';
 import projectRoutes from './routes/projects.js';
 
 // In-memory project database (sample data)
@@ -163,9 +163,7 @@ app.use(errorHandler);
 // Start server
 if (process.env.NODE_ENV !== 'test') {
     const actualPort = PORT;
-    
-    // Initialize database connection
-    dbConnection.connect()
+    connectMongo()
         .then(() => {
             app.listen(actualPort, () => {
                 console.log(`🚀 ADPA API Server running on port ${actualPort}`);
@@ -173,12 +171,12 @@ if (process.env.NODE_ENV !== 'test') {
                 console.log(`🏥 Health Check: http://localhost:${actualPort}/api/v1/health`);
                 console.log(`🎯 Admin Interface: http://localhost:${actualPort}/admin`);
                 console.log(`🌐 CORS: Open (Development)`);
-                console.log(`📊 Database: ${dbConnection.getConnectionStatus()}`);
+                console.log(`📊 Database: MongoDB connected`);
                 console.log(`🎯 Ready to process documents via API!`);
             });
         })
         .catch((error) => {
-            console.error('❌ Failed to start server due to database connection error:', error);
+            console.error('❌ Failed to start server due to MongoDB connection error:', error);
             process.exit(1);
         });
 }

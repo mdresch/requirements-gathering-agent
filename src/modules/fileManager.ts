@@ -101,6 +101,7 @@ export const DOCUMENT_CATEGORIES = {
     IMPLEMENTATION_GUIDES: 'implementation-guides',
     DMBOK: 'dmbok',
     BABOK: 'babok', // Added new category for BABOK
+    PPPM: 'pppm', // Added new category for Portfolio, Program, and Project Management
     UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
 
@@ -400,11 +401,12 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
         description: 'PMBOK Stakeholder Analysis',
         generatedAt: ''
-    },    'work-breakdown-structure': {
+    },
+    'work-breakdown-structure': {
         title: 'Work Breakdown Structure (WBS)',
-        filename: 'planning/work-breakdown-structure.md',
-        category: DOCUMENT_CATEGORIES.PLANNING,
-        description: 'PMBOK Work Breakdown Structure',
+        filename: 'pppm/work-breakdown-structure.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Hierarchical decomposition of project deliverables and work packages.',
         generatedAt: ''
     },
     'wbs-dictionary': {
@@ -1063,7 +1065,8 @@ function getCategoryDescriptions(): Record<string, string> {
         [DOCUMENT_CATEGORIES.RISK_MANAGEMENT]: 'Risk identification, analysis, and mitigation strategies',
         [DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT]: 'Project scope definition, validation, and control processes',
         [DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS]: 'Strategic planning documents including mission, vision, and purpose statements',
-        [DOCUMENT_CATEGORIES.CORE]: 'Core analysis and foundational documents'
+        [DOCUMENT_CATEGORIES.CORE]: 'Core analysis and foundational documents',
+        [DOCUMENT_CATEGORIES.PPPM]: 'Portfolio, Program, and Project Management documents following PMBOK standards'
     };
 }
 

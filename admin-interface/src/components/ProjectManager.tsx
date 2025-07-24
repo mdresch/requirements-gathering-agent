@@ -5,6 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import CreateProjectModal from './CreateProjectModal';
+import EditProjectModal from './EditProjectModal';
+import ProjectComplianceReport from './ProjectComplianceReport';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -67,6 +69,8 @@ export default function ProjectManager() {
   const [frameworkFilter, setFrameworkFilter] = useState<string>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [reportProject, setReportProject] = useState<Project | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -131,8 +135,19 @@ export default function ProjectManager() {
 
   const handleEditProject = (project: Project) => {
     setSelectedProject(project);
-    // Open edit modal
-    toast.success(`Editing project: ${project.name}`);
+    setShowEditModal(true);
+  };
+
+  const handleEditModalClose = () => {
+    setShowEditModal(false);
+    setSelectedProject(null);
+  };
+
+  const handleProjectSave = (updated: { id: string; name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
+    setProjects(projects => projects.map(p => p.id === updated.id ? { ...p, ...updated } : p));
+    setShowEditModal(false);
+    setSelectedProject(null);
+    toast.success('Project updated successfully');
   };
 
   const handleDeleteProject = (project: Project) => {
@@ -143,7 +158,11 @@ export default function ProjectManager() {
   };
 
   const handleGenerateReport = (project: Project) => {
-    toast.success(`Generating compliance report for ${project.name}`);
+    setReportProject(project);
+  };
+
+  const handleCloseReport = () => {
+    setReportProject(null);
   };
 
   return (
@@ -153,6 +172,15 @@ export default function ProjectManager() {
         onClose={handleModalClose}
         onCreate={handleProjectCreate}
       />
+      <EditProjectModal
+        open={showEditModal}
+        onClose={handleEditModalClose}
+        project={selectedProject}
+        onSave={handleProjectSave}
+      />
+      {reportProject && (
+        <ProjectComplianceReport project={reportProject} onClose={handleCloseReport} />
+      )}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
