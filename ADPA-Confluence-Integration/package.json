@@ -29,7 +29,7 @@
     "@azure/msal-node": "^3.6.1",
     "@forge/api": "^3.0.0",
     "@forge/bridge": "^5.0.0",
-    "@forge/react": "^11.2.3",
+    "@forge/react": "^11.2.6",
     "@forge/resolver": "^1.6.12",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "fs-extra": "^11.3.0",
