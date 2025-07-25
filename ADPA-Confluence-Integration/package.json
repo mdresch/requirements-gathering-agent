@@ -27,7 +27,7 @@
     "@azure/core-auth": "^1.9.0",
     "@azure/identity": "^4.10.1",
     "@azure/msal-node": "^3.6.1",
-    "@forge/api": "^3.0.0",
+    "@forge/api": "^6.0.2",
     "@forge/bridge": "^5.0.0",
     "@forge/react": "^11.2.6",
     "@forge/resolver": "^1.6.12",
