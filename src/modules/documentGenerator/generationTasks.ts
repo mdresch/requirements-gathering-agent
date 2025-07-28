@@ -10,6 +10,26 @@ import { DOCUMENT_CONFIG } from '../fileManager.js';
  * All available document generation tasks with proper organization and priorities
  */
 export const GENERATION_TASKS: GenerationTask[] = [
+  {
+    key: 'program-change-request-form',
+    name: 'Program Change Request Form',
+    category: 'pppm',
+    func: 'generateProgramChangeRequestForm',
+    emoji: '📝',
+    priority: 14,
+    pmbokRef: 'PMBOK: Program Change Request Form',
+    dependencies: []
+  },
+  {
+    key: 'program-risk-register',
+    name: 'Program Risk Register',
+    category: 'pppm',
+    func: 'generateProgramRiskRegister',
+    emoji: '📊',
+    priority: 13,
+    pmbokRef: 'PMBOK: Program Risk Register',
+    dependencies: []
+  },
   // DMBOK Introduction Data Management Body of Knowledge
   {
     key: 'introduction-data-management-body-of-knowledge',

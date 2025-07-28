@@ -1,6 +1,8 @@
+
+
 { 
   "project-status-report": {
-    "module": "../documentTemplates/pppm/ProjectStatusReportProcessor.js",
+    "module": "../documentTemplates/pppm/ProjectStatusReportProcessor.ts#ProjectStatusReportProcessor",
     "dependencies": [],
     "priority": 12
   },
@@ -732,5 +734,15 @@
     "module": "../documentTemplates/pppm/WBSProcessor.ts#WBSProcessor",
     "dependencies": [],
     "priority": 11
+  },
+    "program-risk-register": {
+    "module": "../documentTemplates/pppm/ProgramRiskRegisterProcessor.ts#ProgramRiskRegisterProcessor",
+    "dependencies": [],
+    "priority": 13
+  },
+    "program-change-request-form": {
+    "module": "../documentTemplates/pppm/ProgramChangeRequestFormProcessor.ts#ProgramChangeRequestFormProcessor",
+    "dependencies": [],
+    "priority": 14
   }
 }

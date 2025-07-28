@@ -855,6 +855,20 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Tracks project progress, accomplishments, milestones, budget, schedule, issues, risks, action items, and next period focus.',
         generatedAt: ''
     },
+    'program-risk-register': {
+        title: 'Program Risk Register',
+        filename: 'pppm/program-risk-register.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Comprehensive risk register for program-level, cross-project, and strategic risks. PMO/PMBOK-compliant.',
+        generatedAt: ''
+    },
+        'program-change-request-form': {
+        title: 'Program Change Request Form',
+        filename: 'pppm/program-change-request-form.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'PMO/PMBOK-compliant change request form for program-level changes.',
+        generatedAt: ''
+    },
 };
 
 // Create organized directory structure
