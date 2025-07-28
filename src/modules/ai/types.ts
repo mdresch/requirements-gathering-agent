@@ -65,6 +65,7 @@ export interface AIResponse {
 
 export interface ProjectContext {
     projectName: string;
+    programName?: string;
     projectType?: string;
     description?: string;
     // ...other fields...

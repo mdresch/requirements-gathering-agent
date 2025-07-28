@@ -1,3 +1,4 @@
+
 /**
  * Generation Tasks Configuration
  * Defines all available document generation tasks
@@ -577,6 +578,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     
     // Project Charter (Critical)
     { key: 'project-charter', name: 'Project Charter', func: 'getAiProjectCharter', emoji: '📜', category: 'project-charter', priority: 8, pmbokRef: '4.1' },
+    { key: 'program-project-charter', name: 'Program Project Charter', category: 'pppm', func: 'generateProgramProjectCharter', emoji: '📄', priority: 10, pmbokRef: 'PMBOK: Project Charter' },
     { key: 'project-management-plan', name: 'Project Management Plan', func: 'getAiProjectManagementPlan', emoji: '🗂️', category: 'project-charter', priority: 9, pmbokRef: '4.2' },
     { key: 'direct-and-manage-project-work', name: 'Direct and Manage Project Work Process', func: 'getAiDirectAndManageProjectWorkProcess', emoji: '🚦', category: 'management-plans', priority: 9.5, pmbokRef: '4.3' },
     { key: 'perform-integrated-change-control', name: 'Perform Integrated Change Control Process', func: 'getAiPerformIntegratedChangeControlProcess', emoji: '🔄', category: 'management-plans', priority: 9.6, pmbokRef: '4.6' },
@@ -880,6 +882,26 @@ export const GENERATION_TASKS: GenerationTask[] = [
     emoji: '🏢',
     priority: 20,
     pmbokRef: 'Portfolio/Program Stakeholder Analysis',
+    dependencies: []
+  },
+  {
+    key: 'program-work-breakdown-structure',
+    name: 'Program Work Breakdown Structure',
+    category: 'pppm',
+    func: 'generateWBS',
+    emoji: '📊',
+    priority: 21,
+    pmbokRef: 'Program Work Breakdown Structure',
+    dependencies: []
+  },
+  {
+    key: 'project-status-report',
+    name: 'Project Status Report',
+    category: 'pppm',
+    func: 'generateProjectStatusReport',
+    emoji: '📊',
+    priority: 12,
+    pmbokRef: 'PMBOK: Status Report',
     dependencies: []
   },
 ];
