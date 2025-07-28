@@ -1,4 +1,9 @@
-{
+{ 
+  "project-status-report": {
+    "module": "../documentTemplates/pppm/ProjectStatusReportProcessor.js",
+    "dependencies": [],
+    "priority": 12
+  },
   "architecture-design": {
     "module": "../documentTemplates/technical-design/ArchitecturedesignProcessor.ts#ArchitecturedesignProcessor",
     "dependencies": [],
@@ -716,5 +721,16 @@
     "module": "../documentTemplates/stakeholder-management/PortfolioStakeholderAnalysisProcessor.ts#PortfolioStakeholderAnalysisProcessor",
     "dependencies": [],
     "priority": 999
+  }
+  ,
+  "program-project-charter": {
+    "module": "../documentTemplates/pppm/ProgramCharterProcessor.ts#ProgramCharterProcessor",
+    "dependencies": [],
+    "priority": 10
+  },
+  "program-work-breakdown-structure": {
+    "module": "../documentTemplates/pppm/WBSProcessor.ts#WBSProcessor",
+    "dependencies": [],
+    "priority": 11
   }
 }

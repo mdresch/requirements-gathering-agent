@@ -1,3 +1,4 @@
+
 /**
  * File Management and Context Utilities Module for Requirements Gathering Agent
  * 
@@ -100,6 +101,7 @@ export const DOCUMENT_CATEGORIES = {
     QUALITY_ASSURANCE: 'quality-assurance',
     IMPLEMENTATION_GUIDES: 'implementation-guides',
     DMBOK: 'dmbok',
+    PPPM: 'pppm',
     BABOK: 'babok', // Added new category for BABOK
     UNKNOWN: 'unknown' // Added for fallback/validation
 } as const;
@@ -317,6 +319,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'PMBOK Project Charter formally authorizing the project',
         generatedAt: ''
     },
+    'program-project-charter': {
+        title: 'Program/Project Charter',
+        filename: 'pppm/program-charter.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Defines program/project purpose, objectives, scope, stakeholders, and authorization. Generated using ProgramCharterTemplate and ProgramCharterProcessor.',
+        generatedAt: ''
+    },
     'project-management-plan': {
         title: 'Project Management Plan',
         filename: 'project-charter/project-management-plan.md',
@@ -412,6 +421,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         filename: 'planning/wbs-dictionary.md',
         category: DOCUMENT_CATEGORIES.PLANNING,
         description: 'PMBOK WBS Dictionary with detailed descriptions',
+        generatedAt: ''
+    },
+    'program-work-breakdown-structure': {
+        title: 'Program Work Breakdown Structure (WBS)',
+        filename: 'pppm/program-work-breakdown-structure.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'PMBOK Program Work Breakdown Structure',
         generatedAt: ''
     },
     'activity-list': {
@@ -830,6 +846,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         filename: 'stakeholder-management/portfolio-stakeholder-analysis.md',
         category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
         description: 'Portfolio/Program-level Stakeholder Analysis',
+        generatedAt: ''
+    },
+    'project-status-report': {
+        title: 'Project Status Report',
+        filename: 'pppm/project-status-report.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Tracks project progress, accomplishments, milestones, budget, schedule, issues, risks, action items, and next period focus.',
         generatedAt: ''
     },
 };
