@@ -15,14 +15,22 @@ export class ProjectStatusReportProcessor implements DocumentProcessor {
   }
 
   async process(context: ProjectContext): Promise<DocumentOutput> {
-    const prompt = ProjectStatusReportTemplate.buildPrompt(context);
-    const content = await this.aiProcessor.makeAICall([
-      { role: 'system', content: 'You are a senior project manager. Synthesize a comprehensive Project Status Report based on the template and context.' },
-      { role: 'user', content: prompt }
-    ]).then(res => typeof res === 'string' ? res : res.content);
-    return {
-      title: 'Project Status Report',
-      content
-    };
+    try {
+      const prompt = ProjectStatusReportTemplate.buildPrompt(context);
+      const content = await this.aiProcessor.makeAICall([
+        { role: 'system', content: 'You are a senior project manager. Synthesize a comprehensive Project Status Report based on the template and context.' },
+        { role: 'user', content: prompt }
+      ]).then(res => typeof res === 'string' ? res : res.content);
+      return {
+        title: 'Project Status Report',
+        content
+      };
+    } catch (error) {
+      console.error('Error generating Project Status Report:', error);
+      return {
+        title: 'Project Status Report',
+        content: 'An error occurred while generating the Project Status Report. Please try again or check the logs for details.'
+      };
+    }
   }
 }
