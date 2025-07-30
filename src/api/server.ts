@@ -5,6 +5,7 @@ import { createRequire } from 'module';
 import { Request, Response } from 'express';
 import { DocumentController } from './controllers/DocumentController.js';
 import { TemplateController } from './controllers/TemplateController.js';
+import { TemplateRepository } from '../repositories/TemplateRepository.js';
 import { HealthController } from './controllers/HealthController.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -130,21 +131,7 @@ app.post('/api/v1/documents/jobs/:jobId/retry', DocumentController.retryJob);
 app.get('/api/v1/documents/formats', DocumentController.getSupportedFormats);
 
 // Template management routes
-app.post('/api/v1/templates', TemplateController.createTemplate);
-app.get('/api/v1/templates/stats', TemplateController.getOverallTemplateStats);
-app.get('/api/v1/templates/categories', TemplateController.getTemplateCategories);
-app.get('/api/v1/templates/tags', TemplateController.getTemplateTags);
-app.get('/api/v1/templates/export', TemplateController.exportTemplates);
-app.post('/api/v1/templates/import', TemplateController.importTemplates);
-app.post('/api/v1/templates/bulk-delete', TemplateController.bulkDeleteTemplates);
-app.get('/api/v1/templates/:templateId', TemplateController.getTemplate);
-app.put('/api/v1/templates/:templateId', TemplateController.updateTemplate);
-app.delete('/api/v1/templates/:templateId', TemplateController.deleteTemplate);
-app.get('/api/v1/templates', TemplateController.listTemplates);
-app.post('/api/v1/templates/:templateId/preview', TemplateController.previewTemplate);
-app.post('/api/v1/templates/:templateId/clone', TemplateController.cloneTemplate);
-app.get('/api/v1/templates/:templateId/stats', TemplateController.getTemplateStats);
-app.post('/api/v1/templates/:templateId/validate', TemplateController.validateTemplate);
+
 
 // API documentation route
 app.get('/api/docs', (req: Request, res: Response) => {
@@ -160,14 +147,29 @@ app.use(notFoundHandler);
 // Error handling middleware
 app.use(errorHandler);
 
+
 // Start server
 if (process.env.NODE_ENV !== 'test') {
     const actualPort = PORT;
-    
-    // Initialize database connection
     dbConnection.connect()
         .then(() => {
+            console.log('✅ Database connection established.');
+            try {
+                const repo = new TemplateRepository();
+                TemplateController.setTemplateRepository(repo);
+                console.log('✅ TemplateRepository initialized and set on TemplateController.');
+            } catch (err) {
+                console.error('❌ Failed to initialize TemplateRepository:', err);
+            }
+            // Import and register templates router only after repo is set
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const { createTemplatesRouter } = require('./routes/templates.js');
+            const templatesRouter = createTemplatesRouter(TemplateController);
+            app.use('/api/v1/templates', templatesRouter);
             app.listen(actualPort, () => {
+                if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+                    console.warn('⚠️  NODE_ENV is not set to development or test. Some features may not work as expected.');
+                }
                 console.log(`🚀 ADPA API Server running on port ${actualPort}`);
                 console.log(`📚 API Documentation: http://localhost:${actualPort}/docs/api/`);
                 console.log(`🏥 Health Check: http://localhost:${actualPort}/api/v1/health`);

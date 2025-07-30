@@ -187,7 +187,8 @@ export default function HomePage() {
   const testApiConnection = async () => {
     try {
       console.log('🧪 Testing API connection...');
-      const response = await fetch('http://localhost:3000/api/v1/health', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/v1/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -195,18 +196,42 @@ export default function HomePage() {
         },
         mode: 'cors'
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('✅ API Health Test Successful:', data);
         toast.success('API connection successful!');
       } else {
-        console.error('❌ API Health Test Failed:', response.status, response.statusText);
-        toast.error(`API test failed: ${response.status}`);
+        // Incremental diagnostics for failed response
+        let errorDetails = '';
+        try {
+          errorDetails = await response.text();
+        } catch (e) {
+          errorDetails = 'Could not read error body.';
+        }
+        console.error('❌ API Health Test Failed:', response.status, response.statusText, errorDetails);
+        toast.error(`API test failed: ${response.status} ${response.statusText}\nDetails: ${errorDetails}`);
+
+        // Step 1: Check if backend is running
+        if (response.status === 404 || response.status === 502 || response.status === 503) {
+          toast(`Step 1: Is the backend server running and accessible at ${apiUrl}?\nTry: ${apiUrl}/api/v1/health\nOr run: curl -H 'Content-Type: application/json' -H 'X-API-Key: dev-api-key-123' ${apiUrl}/health`);
+        }
+        // Step 2: Check CORS/network issues
+        if (response.status === 0) {
+          toast('Step 2: Possible CORS or network error. Check browser console and backend CORS settings.');
+        }
+        // Step 3: Check API key
+        if (response.status === 401 || response.status === 403) {
+          toast('Step 3: API key may be missing or invalid. Check backend authentication.');
+        }
       }
     } catch (error) {
+      // Incremental diagnostics for fetch/network errors
       console.error('❌ API Connection Error:', error);
       toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast(`Step 1: Is the backend server running and accessible at ${apiUrl}?`);
+      toast('Step 2: Check your network connection and browser console for errors.');
+      toast('Step 3: If using Docker or a remote server, check port mappings and firewall.');
     }
   };
 

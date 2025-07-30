@@ -385,7 +385,8 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'procurement-management-plan': {
         title: 'Procurement Management Plan',
         filename: 'management-plans/procurement-management-plan.md',
-        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,        description: 'PMBOK Procurement Management Plan',
+        category: DOCUMENT_CATEGORIES.MANAGEMENT_PLANS,        
+        description: 'PMBOK Procurement Management Plan',
         generatedAt: ''
     },
     // Stakeholder Management - Fix missing properties

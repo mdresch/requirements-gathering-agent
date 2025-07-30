@@ -10,7 +10,14 @@ import { dbConnection } from '../../config/database.js';
  * with full CRUD operations for document templates.
  */
 export class TemplateController {
-    private static templateRepository: any = null; // TODO: Fix database connection
+    private static templateRepository: any;
+
+    /**
+     * Set the TemplateRepository instance after DB connection is established
+     */
+    static setTemplateRepository(repo: any) {
+        TemplateController.templateRepository = repo;
+    }
     
     /**
      * Create a new template
@@ -97,9 +104,19 @@ export class TemplateController {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id;
 
-            // Use the actual TemplateRepository to get template
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
             const template = await TemplateController.templateRepository.getTemplateById(templateId);
-              if (template) {
+            if (template) {
                 // Convert database template to API format
                 const apiTemplate = {
                     id: template.id,
@@ -235,7 +252,17 @@ export class TemplateController {
                 isActive
             } = req.query;            const requestId = req.headers['x-request-id'] as string || uuidv4();
 
-            // Use the actual TemplateRepository to get templates
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
             const searchQuery = {
                 category: category as string,
                 search_text: search as string,
@@ -243,7 +270,6 @@ export class TemplateController {
                 limit: parseInt(limit as string),
                 offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
-
             const templates = await TemplateController.templateRepository.searchTemplates(searchQuery);
 
             // Convert to API format
@@ -459,6 +485,17 @@ export class TemplateController {
         try {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
             // Get all templates to calculate stats
             const templates = await TemplateController.templateRepository.getAllTemplates();
             
@@ -531,6 +568,17 @@ export class TemplateController {
         try {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
             const templates = await TemplateController.templateRepository.getAllTemplates();
             const categories = [...new Set(templates.map((t: any) => t.category).filter(Boolean))].sort();
 
@@ -555,6 +603,17 @@ export class TemplateController {
         try {
             const requestId = req.headers['x-request-id'] as string || uuidv4();
 
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
             const templates = await TemplateController.templateRepository.getAllTemplates();
             const tagsSet = new Set<string>();
             
@@ -600,6 +659,9 @@ export class TemplateController {
             let deleted = 0;
             for (const id of ids) {
                 try {
+                    if (!TemplateController.templateRepository) {
+                        throw new Error('Template repository is not initialized.');
+                    }
                     await TemplateController.templateRepository.deleteTemplate(id);
                     deleted++;
                 } catch (error) {
@@ -635,13 +697,19 @@ export class TemplateController {
                 templates = [];
                 for (const id of templateIds) {
                     try {
-                        const template = await TemplateController.templateRepository.getTemplateById(id);
+                if (!TemplateController.templateRepository) {
+                    throw new Error('Template repository is not initialized.');
+                }
+                const template = await TemplateController.templateRepository.getTemplateById(id);
                         if (template) templates.push(template);
                     } catch (error) {
                         console.error(`Failed to get template ${id}:`, error);
                     }
                 }
             } else {
+                if (!TemplateController.templateRepository) {
+                    throw new Error('Template repository is not initialized.');
+                }
                 templates = await TemplateController.templateRepository.getAllTemplates();
             }
 
@@ -701,6 +769,9 @@ export class TemplateController {
                         created_by: userId
                     };
 
+                    if (!TemplateController.templateRepository) {
+                        throw new Error('Template repository is not initialized.');
+                    }
                     await TemplateController.templateRepository.createTemplate(templateRecord);
                     imported++;
                 } catch (error) {

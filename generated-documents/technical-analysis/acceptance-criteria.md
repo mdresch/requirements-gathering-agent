@@ -49,6 +49,11 @@
 - End-to-end document generation pipelines must be available, automating multi-step processes (input analysis, template selection, AI processing, output formatting).
 - Batch processing support for CLI and API must be implemented.
 
+2.4 **Enterprise Context Integration (Palantir Foundry)**
+- 2.4.1 Contextual Enrichment: The system must be able to query a configured Palantir Foundry instance to retrieve project-specific context (e.g., risks, milestones, resources, budget data) based on the user's query or document request.
+- 2.4.2 Ontology Alignment: The integration must correctly map ADPA's data needs to the corresponding objects and properties within the Foundry Ontology, ensuring semantic accuracy.
+- 2.4.3 Prompt Injection: The retrieved Foundry context must be intelligently and automatically injected into the prompt sent to the selected AI provider, enriching the context beyond the user's initial input.
+
 ---
 
 ## 3. Interface Acceptance
@@ -93,6 +98,10 @@
 - Where Adobe Creative Suite is enabled, advanced layout (InDesign), visualization (Illustrator), and image enhancement (Photoshop) must be available per the phase 2 architecture.
 - OAuth2 authentication and credential management for Adobe APIs must be implemented.
 
+4.4 **Palantir Foundry Integration**
+- 4.4.1 Authentication: The system must support secure, user-delegated authentication with Palantir Foundry, preferably using OAuth2, to ensure requests are made on behalf of the user.
+- 4.4.2 Data Retrieval: The integration must successfully execute queries against the Foundry API to fetch data from specified objects and datasets.
+- 4.4.3 Configuration: The Admin Web Interface and/or a configuration file must provide a secure mechanism for system administrators to configure the Foundry instance URL and necessary API credentials.
 ---
 
 ## 5. Compliance, Security, and Enterprise Readiness
@@ -100,10 +109,12 @@
 5.1 **Authentication and Authorization**
 - All interfaces (CLI, API, Admin) must support secure authentication methods (API key, JWT, OAuth2).
 - Role-based access control must be enforced for multi-user/admin scenarios.
+- 5.1.3 Inherited Access Control (Foundry): When integrated with Palantir Foundry, the system must honor the user's existing permissions within Foundry. The integration must not allow a user to see or use context from Foundry that they are not already authorized to access directly in the platform.
 
 5.2 **Regulatory Compliance**
 - The system must demonstrate controls supporting regulatory requirements: GDPR, SOX, PCI DSS, Basel III, MiFID II, FINRA, HIPAA, FedRAMP, where applicable.
 - Audit trails must log user actions (creation, modification, publishing, deletion).
+- 5.2.3 Governed Data Usage: All data retrieved from Palantir Foundry for contextual enrichment must be handled in accordance with the data governance classifications and markings (e.g., sensitivity, purpose) defined within Foundry. The audit trail must log which Foundry objects were accessed for a given document generation task.
 
 5.3 **Security Best Practices**
 - Security headers (Helmet), CORS, rate limiting, and input validation must be enabled by default.
@@ -121,6 +132,7 @@
 - Health and readiness endpoints must report accurate system status.
 - AI provider failover must be automatic and transparent to the user.
 - All critical operations (document generation, publishing, uploads) must include proper error handling and retry logic.
+- 6.2.4 Foundry API Error Handling: The integration must include robust error handling for scenarios where the Foundry API is unavailable, returns an error, or a query times out. In such cases, the system should gracefully degrade, notifying the user that enterprise context is unavailable, rather than failing the entire operation.
 
 6.3 **Testing and Quality**
 - Comprehensive unit, integration, and performance test suites must be provided (Jest-based).

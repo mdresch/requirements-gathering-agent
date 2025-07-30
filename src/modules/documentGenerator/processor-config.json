@@ -1,5 +1,3 @@
-
-
 { 
   "project-status-report": {
     "module": "../documentTemplates/pppm/ProjectStatusReportProcessor.ts#ProjectStatusReportProcessor",
@@ -176,9 +174,14 @@
     "priority": 9
   },
   "deployment-guide": {
-    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#DeploymentGuideProcessor",
+    "module": "../documentTemplates/implementation-guides/DeploymentGuideProcessor.ts#DeploymentGuideProcessor",
     "dependencies": [],
     "priority": 10
+  },
+  "implementation-guides": {
+    "module": "../documentTemplates/implementation-guides/implementationGuidesProcessor.ts#ImplementationGuidesProcessor",
+    "dependencies": [],
+    "priority": 11
   },
   "data-integration-interoperability-strategy": {
     "module": "../documentTemplates/dmbok/DataIntegrationInteroperabilityStrategyProcessor.ts#DataIntegrationInteroperabilityStrategyProcessor",
