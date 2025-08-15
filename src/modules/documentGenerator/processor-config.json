@@ -269,6 +269,16 @@
     ],
     "priority": 100
   },
+  "assumptions-log": {
+    "module": "../documentTemplates/project-charter/AssumptionsLogProcessor.ts#AssumptionsLogProcessor",
+    "dependencies": [
+      "business-case",
+      "stakeholder-register",
+      "scope-statement",
+      "risk-register"
+    ],
+    "priority": 95
+  },
   "schedule-management-plan": {
     "module": "../documentTemplates/planning/SchedulemanagementplanProcessor.ts#SchedulemanagementplanProcessor",
     "dependencies": [],

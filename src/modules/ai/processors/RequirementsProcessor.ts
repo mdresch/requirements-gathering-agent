@@ -38,10 +38,13 @@ export class RequirementsProcessor extends BaseAIProcessor {
      * @param {string} context - Project context information
      * @returns {Promise<string|null>} User stories or null if generation fails
      */    async getUserStories(context: string): Promise<string | null> {
-        return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                "You are an expert agile business analyst. Generate comprehensive user stories for a project based on the provided context.",
-                `Based on the comprehensive project context below, generate detailed user stories:
+        return await this.handleAICallWithFallback(
+            'user-stories',
+            context,
+            async () => {
+                const messages = this.createStandardMessages(
+                    "You are an expert agile business analyst. Generate comprehensive user stories for a project based on the provided context.",
+                    `Based on the comprehensive project context below, generate detailed user stories:
 
 Project Context:
 ${context}
@@ -66,10 +69,19 @@ Group stories by user role or feature area. Ensure stories are:
 - Testable
 
 Include stories covering core functionality, edge cases, and non-functional requirements.`
-            );
-            const response = await aiProcessor.makeAICall(messages, 2000);
-            return getAIProcessor().extractContent(response);
-        }, 'User Stories Generation', 'user-stories');
+                );
+                const response = await aiProcessor.makeAICall(messages, 2000);
+                return getAIProcessor().extractContent(response);
+            }, 
+            'User Stories Generation',
+            { 
+                maxResponseTokens: 2500,
+                qualityValidation: {
+                    minLength: 400,
+                    requiredSections: ['As a', 'I want', 'so that']
+                }
+            }
+        );
     }    async getUserPersonas(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             const messages = this.createStandardMessages(
@@ -235,27 +247,15 @@ Format as a well-structured markdown document with clear sections.`
             ]);
             const fullContext = enhancedContext || context;
             
-            const messages = this.createStandardMessages(
-                "You are a PMBOK-certified business analyst. Generate comprehensive Requirements Documentation for a software project, following PMBOK 7th Edition standards.",
-                `Based on the comprehensive project context below, create detailed Requirements Documentation as a markdown document.
-
-Project Context:
-${fullContext}
-
-Your documentation should include (as sections):
-- Introduction and purpose
-- Functional requirements (detailed list)
-- Non-functional requirements (performance, security, usability, etc.)
-- Stakeholder requirements
-- Business requirements
-- Assumptions and constraints
-- Requirements prioritization
-- Requirements traceability (reference to RTM)
-- Approval and sign-off section
-
-Ensure the output is actionable, clear, and tailored to the Requirements Gathering Agent project. Use PMBOK terminology and structure.`
+            // Use enhanced messages with few-shot learning examples
+            const tokenLimit = 2500; // Increased token limit for examples
+            const messages = this.createPMBOKMessages(
+                'requirements-documentation', 
+                fullContext, 
+                ['project-charter', 'user-stories', 'stakeholder-register', 'requirements-management-plan', 'collect-requirements'],
+                tokenLimit
             );
-            const response = await aiProcessor.makeAICall(messages, 1500);
+            const response = await aiProcessor.makeAICall(messages, tokenLimit);
             return getAIProcessor().extractContent(response);
         }, 'Requirements Documentation Generation', 'requirements-documentation');
     }
@@ -273,31 +273,15 @@ Ensure the output is actionable, clear, and tailored to the Requirements Gatheri
             ]);
             const fullContext = enhancedContext || context;
             
-            const messages = this.createStandardMessages(
-                "You are a PMBOK-certified business analyst. Generate a comprehensive Requirements Traceability Matrix (RTM) for a software project, following PMBOK 7th Edition standards.",
-                `Based on the comprehensive project context below, create a detailed Requirements Traceability Matrix (RTM) as a markdown document.
-
-Project Context:
-${fullContext}
-
-Your RTM should include the following columns:
-- Requirement ID
-- Requirement Description
-- Requirement Type (Functional, Non-functional, Business, etc.)
-- Priority
-- Source (Stakeholder, Document, etc.)
-- Success Criteria
-- Test Case Reference
-- Verification Method
-- Status
-
-Format the RTM as a markdown table with proper alignment and organization.
-Include at least 10-15 key requirements to demonstrate the structure and approach.
-Ensure traceability from source to verification is clear and comprehensive.
-
-Follow PMBOK standards and best practices for requirements traceability.`
+            // Use enhanced messages with few-shot learning examples
+            const tokenLimit = 2500; // Increased token limit for examples
+            const messages = this.createPMBOKMessages(
+                'requirements-traceability-matrix', 
+                fullContext, 
+                ['requirements-documentation', 'user-stories', 'acceptance-criteria', 'stakeholder-register', 'requirements-management-plan'],
+                tokenLimit
             );
-            const response = await aiProcessor.makeAICall(messages, 1500);
+            const response = await aiProcessor.makeAICall(messages, tokenLimit);
             return getAIProcessor().extractContent(response);
         }, 'Requirements Traceability Matrix Generation', 'requirements-traceability-matrix');
     }
