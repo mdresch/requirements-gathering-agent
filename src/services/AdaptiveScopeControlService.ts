@@ -130,7 +130,7 @@ export class AdaptiveScopeControlService extends EventEmitter {
 
     } catch (error) {
       logger.error(`Failed to initialize scope control for project ${project._id}:`, error);
-      throw new Error(`Scope control initialization failed: ${error.message}`);
+  throw new Error(`Scope control initialization failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -172,7 +172,7 @@ export class AdaptiveScopeControlService extends EventEmitter {
 
     } catch (error) {
       logger.error(`Failed to submit scope change:`, error);
-      throw new Error(`Scope change submission failed: ${error.message}`);
+  throw new Error(`Scope change submission failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -203,7 +203,7 @@ export class AdaptiveScopeControlService extends EventEmitter {
 
     } catch (error) {
       logger.error(`Failed to approve scope change ${changeId}:`, error);
-      throw new Error(`Scope change approval failed: ${error.message}`);
+  throw new Error(`Scope change approval failed: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 

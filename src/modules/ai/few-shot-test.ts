@@ -114,7 +114,7 @@ export function testProcessorIntegration(): void {
         
     } catch (error) {
         console.log('1. BaseAIProcessor import: ✗');
-        console.log(`   Error: ${error.message}`);
+    console.log(`   Error: ${(error instanceof Error ? error.message : String(error))}`);
     }
     
     console.log('\n=== Processor Integration Test Complete ===\n');

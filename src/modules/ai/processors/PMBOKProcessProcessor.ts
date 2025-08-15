@@ -137,7 +137,7 @@ export class PMBOKProcessProcessor extends BaseAIProcessor {
 
             // Get context manager with error handling
             const contextManager = await getContextManager().catch(error => {
-                throw new Error(`Failed to initialize context manager: ${error.message}`);
+                throw new Error(`Failed to initialize context manager: ${(error instanceof Error ? error.message : String(error))}`);
             });
 
             // Build enhanced context with required documents
@@ -161,18 +161,6 @@ export class PMBOKProcessProcessor extends BaseAIProcessor {
             return await this.handleAICall(async () => {
                 try {
                     // Use enhanced messages with few-shot learning examples
-                    const messages = this.createPMBOKMessages(
-                        'project-charter', 
-                        fullContext, 
-                        ['user-stories', 'stakeholder-register', 'cost-management-plan'],
-                        tokenLimit
-                    );
-
-                    const aiProcessor = getAIProcessor();
-                    if (!aiProcessor) {
-                        throw new Error('Failed to initialize AI processor');
-                    }
-
                     // Determine token limit
                     const calculatedTokenLimit = this.calculateTokenLimit(
                         fullContext,
@@ -185,9 +173,21 @@ export class PMBOKProcessProcessor extends BaseAIProcessor {
                         throw new Error('Token limit must be between 2000 and 8000');
                     }
 
+                    const messages = this.createPMBOKMessages(
+                        'project-charter', 
+                        fullContext, 
+                        ['user-stories', 'stakeholder-register', 'cost-management-plan'],
+                        tokenLimit
+                    );
+
+                    const aiProcessor = getAIProcessor();
+                    if (!aiProcessor) {
+                        throw new Error('Failed to initialize AI processor');
+                    }
+
                     const response: Awaited<ReturnType<AIProcessor["makeAICall"]>> = await (aiProcessor as AIProcessor).makeAICall(messages, tokenLimit)
                         .catch((error: Error) => {
-                            throw new Error(`AI call failed: ${error.message}`);
+                            throw new Error(`AI call failed: ${(error instanceof Error ? error.message : String(error))}`);
                         });
 
                     if (!response) {

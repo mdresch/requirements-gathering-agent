@@ -56,7 +56,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to initialize scope control monitoring',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -115,7 +115,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to submit scope change request',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -151,7 +151,7 @@ export class ScopeControlController {
     } catch (error) {
       logger.error('Failed to approve scope change:', error);
       
-      if (error.message.includes('not found')) {
+      if (error instanceof Error && error.message.includes('not found')) {
         res.status(404).json({
           success: false,
           message: 'Scope change not found',
@@ -161,7 +161,7 @@ export class ScopeControlController {
         res.status(500).json({
           success: false,
           message: 'Failed to approve scope change',
-          error: error.message
+          error: (error instanceof Error ? error.message : String(error))
         });
       }
     }
@@ -203,7 +203,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve scope metrics',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -246,7 +246,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve scope alerts',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -298,7 +298,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to perform scope creep detection',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -339,7 +339,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to stop scope control monitoring',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
@@ -400,7 +400,7 @@ export class ScopeControlController {
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve scope control dashboard data',
-        error: error.message
+        error: (error instanceof Error ? error.message : String(error))
       });
     }
   }
