@@ -46,6 +46,7 @@ import {
 import { getTasksByCategory, getTaskByKey, GENERATION_TASKS } from './modules/documentGenerator/generationTasks.js';
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
+import { createPromptsCommand } from './commands/prompts.js';
 // 4. Constants and configuration
 import { 
   DEFAULT_OUTPUT_DIR, 
@@ -402,6 +403,7 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid vcs command.');
   })
+  .command(createPromptsCommand())
   .option('quiet', {
     alias: 'q',
     type: 'boolean',
