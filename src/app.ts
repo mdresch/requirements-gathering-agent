@@ -16,6 +16,9 @@ const fs = require('fs');
 import documentRoutes from './api/routes/documents.js';
 import healthRoutes from './api/routes/health.js';
 import standardsComplianceRoutes from './api/routes/standardsCompliance.js';
+import reviewRoutes from './api/routes/reviews.js';
+import reviewerRoutes from './api/routes/reviewers.js';
+import documentGenerationRoutes from './api/routes/documentGeneration.js';
 
 // Middleware
 import { errorHandler } from './api/middleware/errorHandler.js';
@@ -131,6 +134,9 @@ app.get('/', (req: Request, res: Response) => {
 // Protected API routes
 app.use('/api/v1/documents', authMiddleware, documentRoutes);
 app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
+app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
+app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
+app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {
@@ -142,6 +148,9 @@ app.use('*', (req: Request, res: Response) => {
       documents: '/api/v1/documents',
       templates: '/api/v1/templates',
       standards: '/api/v1/standards',
+      reviews: '/api/v1/reviews',
+      reviewers: '/api/v1/reviewers',
+      documentGeneration: '/api/v1/document-generation',
       documentation: '/api-docs'
     }
   });
