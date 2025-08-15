@@ -4,7 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, FileText, CheckCircle, AlertTriangle, Users, Settings } from 'lucide-react';
+import { BarChart3, FileText, CheckCircle, AlertTriangle, Users, Settings, MessageSquare, TrendingUp } from 'lucide-react';
 
 interface DashboardProps {
   complianceMetrics: ComplianceMetrics;
@@ -124,7 +124,7 @@ export default function Dashboard() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -158,10 +158,20 @@ export default function Dashboard() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Deviations</p>
-              <p className="text-3xl font-bold text-orange-600">{metrics.deviations}</p>
+              <p className="text-sm font-medium text-gray-600">Feedback Score</p>
+              <p className="text-3xl font-bold text-yellow-600">4.2</p>
             </div>
-            <AlertTriangle className="w-8 h-8 text-orange-600" />
+            <MessageSquare className="w-8 h-8 text-yellow-600" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Quality Trend</p>
+              <p className="text-3xl font-bold text-emerald-600">+15%</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-emerald-600" />
           </div>
         </div>
       </div>

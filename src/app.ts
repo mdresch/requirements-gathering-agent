@@ -19,6 +19,7 @@ import standardsComplianceRoutes from './api/routes/standardsCompliance.js';
 import reviewRoutes from './api/routes/reviews.js';
 import reviewerRoutes from './api/routes/reviewers.js';
 import documentGenerationRoutes from './api/routes/documentGeneration.js';
+import scopeControlRoutes from './api/routes/scopeControl.js';
 
 // Middleware
 import { errorHandler } from './api/middleware/errorHandler.js';
@@ -137,6 +138,7 @@ app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
 app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
 app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
+app.use('/api/v1', authMiddleware, scopeControlRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {

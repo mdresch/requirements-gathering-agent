@@ -77,6 +77,31 @@ export type {
   VcsPushOptions
 } from './vcs.js';
 
+// Business Analysis commands
+export {
+  handleInterviewQuestionsCommand,
+  handleWorkshopPlanCommand,
+  handleRequirementsExtractionCommand,
+  handleProcessModelCommand,
+  handleUseCaseModelCommand,
+  handleBusinessRulesCommand,
+  handleImpactAnalysisCommand,
+  handleQualityAssessmentCommand,
+  handleConsistencyValidationCommand,
+  handleQualityMetricsCommand,
+  displayBusinessAnalysisHelp
+} from './business-analysis.js';
+export type {
+  BusinessAnalysisOptions,
+  ElicitationOptions,
+  AnalysisOptions,
+  QualityOptions
+} from './business-analysis.js';
+// Feedback commands
+export { createFeedbackCommand } from './feedback.js';
+// Prompts commands
+export { createPromptsCommand } from './prompts.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';

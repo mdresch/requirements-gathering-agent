@@ -235,6 +235,11 @@
     "dependencies": [],
     "priority": 10
   },
+  "stakeholder-needs-analysis": {
+    "module": "../documentTemplates/stakeholder-management/StakeholderNeedsAnalysisProcessor.ts#StakeholderNeedsAnalysisProcessor",
+    "dependencies": ["stakeholder-register"],
+    "priority": 16
+  },
   "project-scope-statement": {
     "module": "../documentTemplates/scope-management/ProjectscopestatementProcessor.ts#ProjectscopestatementProcessor",
     "dependencies": [],
@@ -268,6 +273,16 @@
       "risk-register"
     ],
     "priority": 100
+  },
+  "assumptions-log": {
+    "module": "../documentTemplates/project-charter/AssumptionsLogProcessor.ts#AssumptionsLogProcessor",
+    "dependencies": [
+      "business-case",
+      "stakeholder-register",
+      "scope-statement",
+      "risk-register"
+    ],
+    "priority": 95
   },
   "schedule-management-plan": {
     "module": "../documentTemplates/planning/SchedulemanagementplanProcessor.ts#SchedulemanagementplanProcessor",

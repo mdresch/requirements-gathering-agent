@@ -624,6 +624,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'communication-management-plan', name: 'Communication Management Plan', func: 'getAiCommunicationManagementPlan', emoji: '📢', category: 'management-plans', priority: 15, pmbokRef: '10.1.3.1' },
     { key: 'procurement-management-plan', name: 'Procurement Management Plan', func: 'getAiProcurementManagementPlan', emoji: '🛒', category: 'management-plans', priority: 16, pmbokRef: '12.1.3.1' },
       // Stakeholder Management (Updated with proper priority order)
+    { key: 'stakeholder-needs-analysis', name: 'Stakeholder Needs Analysis', func: 'getAiStakeholderNeedsAnalysis', emoji: '🎯', category: 'stakeholder-management', priority: 16, pmbokRef: '13.1.2.1' },
     { key: 'stakeholder-engagement-plan', name: 'Stakeholder Engagement Plan', func: 'getAiStakeholderEngagementPlan', emoji: '🤝', category: 'stakeholder-management', priority: 17, pmbokRef: '13.2.3.1' },
     { key: 'stakeholder-register', name: 'Stakeholder Register', func: 'getAiStakeholderRegister', emoji: '👥', category: 'core-analysis', priority: 7, pmbokRef: '13.1.3.1' },
     { key: 'stakeholder-analysis', name: 'Stakeholder Analysis', func: 'getAiStakeholderAnalysis', emoji: '📈', category: 'stakeholder-management', priority: 19, pmbokRef: '13.1.2.4' },
