@@ -3,6 +3,29 @@
 
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface IScopeBaseline {
+  version: string;
+  description: string;
+  deliverables: string[];
+  acceptanceCriteria: string[];
+  exclusions: string[];
+  assumptions: string[];
+  constraints: string[];
+  approvedBy: string;
+  approvalDate: Date;
+  lastModified: Date;
+}
+
+export interface IScopeMetrics {
+  totalChanges: number;
+  approvedChanges: number;
+  rejectedChanges: number;
+  pendingChanges: number;
+  scopeCreepIndex: number;
+  changeVelocity: number;
+  lastCalculated: Date;
+}
+
 export interface IProject extends Document {
   _id: string;
   name: string;
@@ -19,6 +42,22 @@ export interface IProject extends Document {
   endDate?: Date;
   budget?: number;
   currency?: string;
+  
+  // Scope Control Enhancement
+  scopeBaseline?: IScopeBaseline;
+  scopeMetrics?: IScopeMetrics;
+  scopeControlEnabled?: boolean;
+  scopeControlSettings?: {
+    autoApprovalThreshold: number;
+    escalationThreshold: number;
+    scopeCreepThreshold: number;
+    monitoringFrequency: number;
+    stakeholderNotificationEnabled: boolean;
+    pmbokValidationEnabled: boolean;
+  };
+  lastScopeReview?: Date;
+  scopeRiskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,6 +131,54 @@ const ProjectSchema: Schema = new Schema({
     type: String,
     default: 'USD',
     maxlength: 3
+  },
+  
+  // Scope Control Enhancement Fields
+  scopeBaseline: {
+    version: { type: String },
+    description: { type: String, maxlength: 2000 },
+    deliverables: [{ type: String, maxlength: 200 }],
+    acceptanceCriteria: [{ type: String, maxlength: 500 }],
+    exclusions: [{ type: String, maxlength: 200 }],
+    assumptions: [{ type: String, maxlength: 200 }],
+    constraints: [{ type: String, maxlength: 200 }],
+    approvedBy: { type: String, maxlength: 100 },
+    approvalDate: { type: Date },
+    lastModified: { type: Date, default: Date.now }
+  },
+  
+  scopeMetrics: {
+    totalChanges: { type: Number, default: 0, min: 0 },
+    approvedChanges: { type: Number, default: 0, min: 0 },
+    rejectedChanges: { type: Number, default: 0, min: 0 },
+    pendingChanges: { type: Number, default: 0, min: 0 },
+    scopeCreepIndex: { type: Number, default: 0, min: 0, max: 1 },
+    changeVelocity: { type: Number, default: 0, min: 0 },
+    lastCalculated: { type: Date, default: Date.now }
+  },
+  
+  scopeControlEnabled: {
+    type: Boolean,
+    default: false
+  },
+  
+  scopeControlSettings: {
+    autoApprovalThreshold: { type: Number, default: 0.2, min: 0, max: 1 },
+    escalationThreshold: { type: Number, default: 0.5, min: 0, max: 1 },
+    scopeCreepThreshold: { type: Number, default: 0.3, min: 0, max: 1 },
+    monitoringFrequency: { type: Number, default: 60, min: 1, max: 1440 },
+    stakeholderNotificationEnabled: { type: Boolean, default: true },
+    pmbokValidationEnabled: { type: Boolean, default: true }
+  },
+  
+  lastScopeReview: {
+    type: Date
+  },
+  
+  scopeRiskLevel: {
+    type: String,
+    enum: ['low', 'medium', 'high', 'critical'],
+    default: 'low'
   }
 }, {
   timestamps: true,
@@ -121,16 +208,45 @@ ProjectSchema.virtual('duration').get(function(this: IProject) {
   return null;
 });
 
-// Pre-save middleware to update compliance score based on documents and stakeholders
+// Pre-save middleware to update compliance score based on documents, stakeholders, and scope control
 ProjectSchema.pre('save', function(this: IProject, next: any) {
-  if (this.isModified('documents') || this.isModified('stakeholders')) {
-    // Simple compliance score calculation
-    const docScore = Math.min((this.documents || 0) * 5, 50); // Max 50 points for documents
-    const stakeholderScore = Math.min((this.stakeholders || 0) * 3, 30); // Max 30 points for stakeholders
-    const baseScore = 20; // Base score for having a project
+  if (this.isModified('documents') || this.isModified('stakeholders') || this.isModified('scopeMetrics')) {
+    // Enhanced compliance score calculation including scope control
+    const docScore = Math.min((this.documents || 0) * 5, 40); // Max 40 points for documents
+    const stakeholderScore = Math.min((this.stakeholders || 0) * 3, 25); // Max 25 points for stakeholders
+    const baseScore = 15; // Base score for having a project
     
-    this.complianceScore = Math.min(docScore + stakeholderScore + baseScore, 100);
+    // Scope control bonus
+    let scopeScore = 0;
+    if (this.scopeControlEnabled) {
+      scopeScore += 10; // Base scope control bonus
+      
+      if (this.scopeMetrics) {
+        // Bonus for good scope management
+        const scopeCreepPenalty = Math.min(this.scopeMetrics.scopeCreepIndex * 10, 5);
+        const changeManagementBonus = this.scopeMetrics.totalChanges > 0 ? 
+          Math.min((this.scopeMetrics.approvedChanges / this.scopeMetrics.totalChanges) * 10, 10) : 5;
+        
+        scopeScore += changeManagementBonus - scopeCreepPenalty;
+      }
+    }
+    
+    this.complianceScore = Math.min(docScore + stakeholderScore + baseScore + scopeScore, 100);
   }
+  
+  // Update scope risk level based on metrics
+  if (this.isModified('scopeMetrics') && this.scopeMetrics) {
+    if (this.scopeMetrics.scopeCreepIndex > 0.7) {
+      this.scopeRiskLevel = 'critical';
+    } else if (this.scopeMetrics.scopeCreepIndex > 0.5) {
+      this.scopeRiskLevel = 'high';
+    } else if (this.scopeMetrics.scopeCreepIndex > 0.3) {
+      this.scopeRiskLevel = 'medium';
+    } else {
+      this.scopeRiskLevel = 'low';
+    }
+  }
+  
   next();
 });
 
