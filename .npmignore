@@ -64,11 +64,35 @@ upload-to-sharepoint.ps1
 setup.ps1
 setup.sh
 codespaces-setup.sh
+.augment
+.Github
+admin-interface/
+admin-interface-dotnet/
+admin-interface-net/
+ADPA/
+ADPA-Confluence-Integration/
+api-specs/
+assets/
+coverage/
+data/
+demo/
+dev-proxy/
+exmamples/
+
 
 # Generated documents (examples only)
 generated-documents/
+generated-documents-pdf/
 Gitbook/
 Github Wiki/
+postman/
+sandbox/
+scripts/
+templates/
+test-data/
+tests/
+to process/
+tsp-output/
 
 # Config files that shouldn't be published
 config-rga.json
