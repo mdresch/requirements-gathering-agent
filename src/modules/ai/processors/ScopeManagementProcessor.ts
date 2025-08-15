@@ -34,16 +34,10 @@ export class ScopeManagementProcessor extends BaseAIProcessor {    protected asy
         const fullContext = enhancedContext || context;
 
         return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                `You are a PMBOK-certified project manager specializing in scope management. Generate a comprehensive ${documentType} following PMBOK 7th Edition standards.`,
-                `Based on the project context below, create a well-structured ${documentType}:
-
-Project Context:
-${fullContext}
-
-Follow PMBOK standards and ensure the document is clear, comprehensive, and tailored to the project's needs.`
-            );
-            const response = await aiProcessor.makeAICall(messages, 1500);
+            // Use enhanced messages with few-shot learning examples
+            const tokenLimit = 2500; // Increased token limit for examples
+            const messages = this.createPMBOKMessages(documentType, fullContext, additionalContext, tokenLimit);
+            const response = await aiProcessor.makeAICall(messages, tokenLimit);
             return getAIProcessor().extractContent(response);
         }, `${documentType} Generation`, documentType);
     }

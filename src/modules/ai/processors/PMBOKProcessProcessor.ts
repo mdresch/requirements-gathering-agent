@@ -63,17 +63,11 @@ export class PMBOKProcessProcessor extends BaseAIProcessor {
         const fullContext = enhancedContext || context;
 
         return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                `You are a PMBOK-certified project manager. Generate a comprehensive ${pmbokSection} following PMBOK 7th Edition standards.`,
-                `Based on the project context below, create a well-structured ${pmbokSection}:
-
-Project Context:
-${fullContext}
-
-Follow PMBOK standards and ensure the document is clear, comprehensive, and tailored to the project's needs.`
-            );
+            // Use enhanced messages with few-shot learning examples
+            const tokenLimit = 2500; // Increased token limit for examples
+            const messages = this.createPMBOKMessages(pmbokSection, fullContext, additionalContext, tokenLimit);
             const aiProcessor = getAIProcessor();
-            const response = await aiProcessor.makeAICall(messages, 1500);
+            const response = await aiProcessor.makeAICall(messages, tokenLimit);
             return getAIProcessor().extractContent(response);
         }, `${pmbokSection} Generation`, pmbokSection);
     }
@@ -166,120 +160,12 @@ Follow PMBOK standards and ensure the document is clear, comprehensive, and tail
 
             return await this.handleAICall(async () => {
                 try {
-                    const messages = this.createStandardMessages(
-                        `You are a PMBOK-certified project manager with expertise in financial planning and budgeting. Generate a comprehensive project charter following PMBOK 7th Edition standards that includes all required core elements and a detailed budget summary.`,
-                        `Based on the project context below, create a well-structured project charter that must include all the following sections:
-
-Project Context:
-${fullContext}
-
-1. Project Purpose
-   - Clear statement of why the project exists
-   - Business case alignment
-   - Strategic value and expected benefits
-   - Problem or opportunity being addressed
-
-2. Measurable Project Objectives
-   Each objective must follow this structure:
-   
-   a) SMART Criteria Definition
-      - Specific: Clear, unambiguous statement of what is to be achieved
-      - Measurable: Quantifiable metrics with specific numbers/percentages
-      - Achievable: Realistic within project constraints
-      - Relevant: Aligned with business goals
-      - Time-bound: Specific completion dates
-   
-   b) Quantifiable Metrics (for each objective)
-      - Current baseline value
-      - Target value
-      - Measurement method
-      - Measurement frequency
-      - Data source
-   
-   c) Key Performance Indicators (KPIs)
-      - Primary KPI with specific numeric targets
-      - Secondary KPIs for tracking progress
-      - Leading indicators
-      - Lagging indicators
-   
-   d) Success Criteria
-      - Minimum acceptable values
-      - Target values
-      - Stretch goals
-      - Verification methods
-   
-   e) Timeline-based Milestones
-      - Interim targets with dates
-      - Progress checkpoints
-      - Review periods
-      - Final completion criteria
-   
-   f) Measurement Implementation
-      - Tools and methods for tracking
-      - Reporting frequency
-      - Responsible parties
-      - Data collection process
-   
-   Example Format for Each Objective:
-   "Increase system performance by 40% (from current 2.5s to 1.5s response time) by Q4 2024, measured through automated performance testing conducted weekly, reported monthly, with interim targets of 2.0s by Q2 2024 and 1.7s by Q3 2024."
-
-3. High-level Requirements
-   - Business requirements
-   - Stakeholder requirements
-   - Technical requirements
-   - Compliance and regulatory requirements
-   - Quality requirements
-   - Constraints and assumptions
-
-4. Budget Summary
-   - Total project cost estimate
-   - Major cost categories and allocations
-   - Key financial assumptions
-   - Funding sources and constraints
-   - Budget milestones and phasing
-   - Financial risks and contingencies
-   - Budget alignment with objectives
-
-5. Integration Elements
-   - Dependencies between objectives and requirements
-   - Resource allocation alignment
-   - Risk considerations across all areas
-   - Stakeholder impact analysis
-
-Follow PMBOK standards and ensure:
-- All sections are clearly structured and labeled
-- Each element contains specific, actionable information
-- Requirements are traceable to objectives
-- Budget aligns with scope and objectives
-- Clear relationships between all charter components
-
-Specific Requirements for Measurable Objectives:
-1. Each objective MUST include:
-   - Numeric targets with specific values
-   - Current baseline measurements
-   - Clear timeline with dates
-   - Defined measurement method
-   - Specific data sources
-   - Responsible parties
-   - Reporting frequency
-
-2. Objectives must be written in this format:
-   "Action + Metric + Target + Timeline + Measurement + Reporting"
-   Example: "Reduce customer support tickets by 30% (from 1000 to 700 monthly) by Q3 2024, tracked through the support ticket system daily, reported bi-weekly to stakeholders"
-
-3. Every objective requires:
-   - Primary quantifiable metric
-   - At least one secondary tracking metric
-   - Minimum of 3 interim milestones
-   - Clear success criteria with specific values
-   - Defined measurement tools and methods
-
-4. Measurement validation:
-   - Each metric must have a defined data source
-   - Collection methods must be specified
-   - Frequency of measurement stated
-   - Quality control measures identified
-   - Verification process documented`
+                    // Use enhanced messages with few-shot learning examples
+                    const messages = this.createPMBOKMessages(
+                        'project-charter', 
+                        fullContext, 
+                        ['user-stories', 'stakeholder-register', 'cost-management-plan'],
+                        tokenLimit
                     );
 
                     const aiProcessor = getAIProcessor();
