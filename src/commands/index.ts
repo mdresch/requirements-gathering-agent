@@ -77,6 +77,9 @@ export type {
   VcsPushOptions
 } from './vcs.js';
 
+// Feedback commands
+export { createFeedbackCommand } from './feedback.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';
