@@ -38,10 +38,13 @@ export class RequirementsProcessor extends BaseAIProcessor {
      * @param {string} context - Project context information
      * @returns {Promise<string|null>} User stories or null if generation fails
      */    async getUserStories(context: string): Promise<string | null> {
-        return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                "You are an expert agile business analyst. Generate comprehensive user stories for a project based on the provided context.",
-                `Based on the comprehensive project context below, generate detailed user stories:
+        return await this.handleAICallWithFallback(
+            'user-stories',
+            context,
+            async () => {
+                const messages = this.createStandardMessages(
+                    "You are an expert agile business analyst. Generate comprehensive user stories for a project based on the provided context.",
+                    `Based on the comprehensive project context below, generate detailed user stories:
 
 Project Context:
 ${context}
@@ -66,10 +69,19 @@ Group stories by user role or feature area. Ensure stories are:
 - Testable
 
 Include stories covering core functionality, edge cases, and non-functional requirements.`
-            );
-            const response = await aiProcessor.makeAICall(messages, 2000);
-            return getAIProcessor().extractContent(response);
-        }, 'User Stories Generation', 'user-stories');
+                );
+                const response = await aiProcessor.makeAICall(messages, 2000);
+                return getAIProcessor().extractContent(response);
+            }, 
+            'User Stories Generation',
+            { 
+                maxResponseTokens: 2500,
+                qualityValidation: {
+                    minLength: 400,
+                    requiredSections: ['As a', 'I want', 'so that']
+                }
+            }
+        );
     }    async getUserPersonas(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             const messages = this.createStandardMessages(
