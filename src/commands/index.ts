@@ -77,6 +77,8 @@ export type {
   VcsPushOptions
 } from './vcs.js';
 
+// Feedback commands
+export { createFeedbackCommand } from './feedback.js';
 // Prompts commands
 export { createPromptsCommand } from './prompts.js';
 
