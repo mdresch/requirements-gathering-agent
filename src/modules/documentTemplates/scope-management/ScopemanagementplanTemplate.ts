@@ -95,12 +95,18 @@ The project scope statement will include:
 - Documentation and training materials
 - Deployment and go-live support
 
-**Out of Scope:**
-- Third-party system modifications
-- Hardware procurement and installation
-- Ongoing maintenance and support (post-warranty)
-- Advanced features not specified in requirements
-- Integration with future systems not yet defined
+**Explicit Exclusions (Out of Scope):**
+The project scope statement will include comprehensive explicit exclusions organized by category:
+
+- **Functional Exclusions:** Features or capabilities not implemented
+- **Technical Exclusions:** Platforms, technologies, or integrations not supported  
+- **Business Process Exclusions:** Organizational changes or training not covered
+- **Data and Content Exclusions:** Migration or content creation tasks not included
+- **Infrastructure Exclusions:** Hardware, network, or environment setup not provided
+- **Support and Maintenance Exclusions:** Ongoing operational support not included
+- **Future Phase Exclusions:** Enhancements planned for later releases
+
+*Note: Detailed exclusions will be documented in the Project Scope Statement following the enhanced exclusion framework.*
 
 #### Project Deliverables
 1. **Analysis and Design Deliverables**
@@ -292,6 +298,40 @@ For each WBS element, the following information will be documented:
 - **Class 1 (Minor):** Changes within 5% of baseline scope
 - **Class 2 (Major):** Changes between 5-15% of baseline scope  
 - **Class 3 (Significant):** Changes exceeding 15% of baseline scope
+
+---
+
+## Exclusion Management Process
+
+### Purpose
+The exclusion management process ensures that all stakeholders understand what is explicitly NOT included in the project scope, preventing scope creep and managing expectations effectively.
+
+### Exclusion Identification and Documentation
+1. **Stakeholder Expectation Analysis**
+   - Review stakeholder assumptions about project deliverables
+   - Identify commonly expected features not in scope
+   - Document potential areas of misunderstanding
+
+2. **Exclusion Categorization**
+   - **Functional Exclusions:** Features or capabilities not implemented
+   - **Technical Exclusions:** Platforms, technologies, or integrations not supported
+   - **Business Process Exclusions:** Organizational changes or training not covered
+   - **Data and Content Exclusions:** Migration or content creation tasks not included
+   - **Infrastructure Exclusions:** Hardware, network, or environment setup not provided
+   - **Support and Maintenance Exclusions:** Ongoing operational support not included
+   - **Future Phase Exclusions:** Enhancements planned for later releases
+
+3. **Exclusion Communication**
+   - Include exclusions in all scope documentation
+   - Communicate exclusions during stakeholder meetings
+   - Obtain stakeholder acknowledgment of exclusions
+   - Reference exclusions in change control discussions
+
+### Exclusion Review and Updates
+- **Regular Review:** Review exclusions at each phase gate
+- **Stakeholder Validation:** Confirm exclusions remain valid with stakeholders
+- **Documentation Updates:** Update exclusion lists as project understanding evolves
+- **Change Impact:** Assess how scope changes affect existing exclusions
 
 ### Change Request Documentation
 - Change request identifier and title

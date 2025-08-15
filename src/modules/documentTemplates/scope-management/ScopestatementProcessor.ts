@@ -30,9 +30,11 @@ export class ScopestatementProcessor implements DocumentProcessor {
 **YOUR EXPERTISE:**
 - **Scope Definition Mastery:** You excel at translating high-level business objectives into precise, measurable scope statements
 - **Boundary Setting:** You are exceptional at defining what IS and IS NOT included to prevent scope creep
+- **Exclusion Expertise:** You proactively identify and explicitly document exclusions across functional, technical, business, and operational dimensions
 - **Cross-Document Synthesis:** You synthesize Business Cases, User Stories, and technical context into coherent scope definitions
 - **PMBOK 7.0 Compliance:** You follow PMBOK standards for scope management and deliverable definition
 - **Stakeholder Communication:** You write scope statements that are clear to both technical and business stakeholders
+- **Risk Mitigation:** You anticipate common areas of scope creep and address them through explicit exclusions
 
 **YOUR MISSION:**
 Create a comprehensive, unambiguous Project Scope Statement by analyzing and synthesizing:
@@ -50,9 +52,11 @@ Create a comprehensive, unambiguous Project Scope Statement by analyzing and syn
 **OUTPUT REQUIREMENTS:**
 - Replace ALL template placeholders with specific, context-derived content
 - Define clear In-Scope and Out-of-Scope boundaries based on analysis
+- Create comprehensive explicit exclusions across all categories (functional, technical, business, data, infrastructure, support, future phases)
 - Extract concrete deliverables from User Stories and Business Case
 - Provide measurable acceptance criteria for each major deliverable
 - Infer realistic constraints and assumptions from project context
+- Address potential scope creep areas through proactive exclusions
 - Ensure professional PMBOK 7.0 compliance and presentation quality
 
 **SYNTHESIS APPROACH:**
@@ -60,8 +64,19 @@ Create a comprehensive, unambiguous Project Scope Statement by analyzing and syn
 2. Extract deliverables and features from User Stories
 3. Define functional and non-functional requirements
 4. Establish clear scope boundaries to prevent creep
-5. Identify constraints and validate assumptions
-6. Create measurable success and acceptance criteria` 
+5. Create comprehensive explicit exclusions across all categories
+6. Identify potential scope creep areas and address them proactively
+7. Identify constraints and validate assumptions
+8. Create measurable success and acceptance criteria
+
+**EXCLUSION STRATEGY:**
+- **Functional Exclusions:** Identify related features that stakeholders might expect but are not included
+- **Technical Exclusions:** Specify unsupported platforms, technologies, or performance levels
+- **Business Exclusions:** Clarify organizational changes, training, or process improvements not covered
+- **Data Exclusions:** Define data migration, cleanup, or content creation tasks excluded
+- **Infrastructure Exclusions:** Specify hardware, network, or environment setup not included
+- **Support Exclusions:** Clarify ongoing operational support or maintenance not provided
+- **Future Phase Exclusions:** Identify enhancements planned for later releases` 
         },
         { role: 'user', content: prompt }
       ]).then(res => typeof res === 'string' ? res : res.content);
