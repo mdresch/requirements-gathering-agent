@@ -33,7 +33,10 @@ export class ProjectManagementProcessor extends BaseAIProcessor {    /**
      * Gets project summary and goals
      */
     async getSummaryAndGoals(context: string): Promise<string | null> {
-        return this.handleAICall(async () => {
+        return this.handleAICallWithFallback(
+            'summary-and-goals',
+            context,
+            async () => {
                 const messages = this.createStandardMessages(
                     "You are a senior business analyst experienced in extracting key project information. Create a comprehensive project summary and goals document following PMBOK standards.",
                     `Based on the provided project context, create a comprehensive summary and goals document:
@@ -65,7 +68,8 @@ Include the following sections:
                 const response = await aiProcessor.makeAICall(messages, 1500);
                 return getAIProcessor().extractContent(response);
             }, 
-            "Project Summary and Goals Generation",            "project-summary"
+            "Project Summary and Goals Generation",
+            { maxResponseTokens: 1500 }
         );
     }
 
@@ -73,7 +77,9 @@ Include the following sections:
      * Gets user stories
      */
     async getUserStories(context: string): Promise<string | null> {
-        return this.handleAICall(
+        return this.handleAICallWithFallback(
+            'user-stories',
+            context,
             async () => {
                 const messages = this.createStandardMessages(
                     `You are a certified Scrum Master and Business Analyst with expertise in writing comprehensive user stories following Agile and PMBOK best practices. Generate detailed user stories that capture functional requirements from the user's perspective.`,
@@ -125,7 +131,14 @@ Format as professional markdown suitable for development teams, product owners, 
                 const response = await getAIProcessor().makeAICall(messages, 2000);
                 return getAIProcessor().extractContent(response);
             },
-            "User Stories Generation",            "user-stories"
+            "User Stories Generation",
+            { 
+                maxResponseTokens: 2500,
+                qualityValidation: {
+                    minLength: 500,
+                    requiredSections: ['Epic-Level Stories', 'Detailed User Stories', 'Acceptance Criteria']
+                }
+            }
         );
     }
 
@@ -783,7 +796,9 @@ Format as professional markdown suitable for project initiation and stakeholder 
      * Gets business case
      */
     async getBusinessCase(context: string): Promise<string | null> {
-        return this.handleAICall(
+        return this.handleAICallWithFallback(
+            'business-case',
+            context,
             async () => {
                 const messages = this.createStandardMessages(
                     `You are a senior business analyst and PMBOK-certified project manager with expertise in developing compelling business cases. Generate a comprehensive Business Case that justifies the project investment and demonstrates its business value.`,
@@ -857,7 +872,13 @@ Format as professional markdown suitable for executive review and project approv
                 return getAIProcessor().extractContent(response);
             },
             "Business Case Generation",
-            "business-case"
+            { 
+                maxResponseTokens: 2600,
+                qualityValidation: {
+                    minLength: 800,
+                    requiredSections: ['Executive Summary', 'Financial Analysis', 'Risk Assessment']
+                }
+            }
         );
     }
 }

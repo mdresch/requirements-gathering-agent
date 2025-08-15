@@ -28,22 +28,193 @@ async function getContextManager(): Promise<any> {
     return _contextManager;
 }
 
-export class ScopeManagementProcessor extends BaseAIProcessor {    protected async generateScopeOutput(documentType: string, context: string, additionalContext: string[] = []): Promise<string | null> {
+export class ScopeManagementProcessor extends BaseAIProcessor {
+    
+    /**
+     * Analyze scope change for potential scope creep
+     * 
+     * @param {string} changeDescription - Description of the scope change
+     * @param {any} projectContext - Current project context
+     * @returns {Promise<any>} Scope creep analysis result
+     */
+    async analyzeScopeCreep(changeDescription: string, projectContext: any): Promise<any> {
+        return this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a PMBOK-certified project manager specializing in scope creep detection and analysis. Analyze scope changes for potential scope creep indicators.`,
+                `Analyze the following scope change for potential scope creep:
+
+Change Description: ${changeDescription}
+
+Project Context:
+${JSON.stringify(projectContext, null, 2)}
+
+Provide analysis including:
+1. Scope creep risk level (low/medium/high/critical)
+2. Indicators of scope creep
+3. Impact on project objectives
+4. Recommended mitigation strategies
+5. PMBOK compliance assessment
+6. Stakeholder communication requirements
+
+Format your response as a structured analysis with clear recommendations.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1000);
+            return getAIProcessor().extractContent(response);
+        }, 'Scope Creep Analysis', 'scope-creep-analysis');
+    }
+
+    /**
+     * Generate adaptive scope control recommendations
+     * 
+     * @param {any} projectMetrics - Current project metrics
+     * @param {any[]} recentChanges - Recent scope changes
+     * @returns {Promise<string|null>} Adaptive control recommendations
+     */
+    async generateAdaptiveControlRecommendations(projectMetrics: any, recentChanges: any[]): Promise<string | null> {
+        return this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are an expert project manager specializing in adaptive scope control mechanisms. Generate intelligent recommendations based on project metrics and change patterns.`,
+                `Based on the following project metrics and recent scope changes, provide adaptive scope control recommendations:
+
+Project Metrics:
+${JSON.stringify(projectMetrics, null, 2)}
+
+Recent Scope Changes:
+${JSON.stringify(recentChanges, null, 2)}
+
+Provide recommendations for:
+1. Adaptive threshold adjustments
+2. Monitoring frequency optimization
+3. Stakeholder engagement strategies
+4. Risk mitigation approaches
+5. Process improvements
+6. PMBOK compliance enhancements
+7. Predictive analytics insights
+
+Format as actionable recommendations with priority levels.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1200);
+            return getAIProcessor().extractContent(response);
+        }, 'Adaptive Control Recommendations', 'adaptive-control-recommendations');
+    }
+
+    /**
+     * Validate scope change against PMBOK standards
+     * 
+     * @param {any} scopeChange - Scope change details
+     * @returns {Promise<any>} PMBOK validation result
+     */
+    async validateScopeChangePMBOK(scopeChange: any): Promise<any> {
+        return this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a PMBOK 7th Edition expert specializing in scope management validation. Validate scope changes against PMBOK standards and best practices.`,
+                `Validate the following scope change against PMBOK 7th Edition standards:
+
+Scope Change Details:
+${JSON.stringify(scopeChange, null, 2)}
+
+Validate against PMBOK requirements:
+1. Scope change control process (Section 5.6)
+2. Impact analysis completeness
+3. Stakeholder involvement requirements
+4. Documentation standards
+5. Approval workflow compliance
+6. Risk assessment adequacy
+7. Communication plan alignment
+
+Provide:
+- Compliance score (0-100)
+- Non-compliance issues
+- Required improvements
+- PMBOK section references
+- Recommended actions`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1000);
+            return getAIProcessor().extractContent(response);
+        }, 'PMBOK Scope Validation', 'pmbok-scope-validation');
+    }
+
+    /**
+     * Generate scope baseline recommendations
+     * 
+     * @param {string} context - Project context
+     * @returns {Promise<string|null>} Scope baseline recommendations
+     */
+    async generateScopeBaseline(context: string): Promise<string | null> {
+        return this.generateScopeOutput(
+            'scope-baseline',
+            context,
+            ['project-charter', 'requirements-documentation', 'stakeholder-register', 'work-breakdown-structure']
+        );
+    }
+
+    /**
+     * Generate scope change impact analysis
+     * 
+     * @param {string} context - Project context
+     * @param {any} changeDetails - Scope change details
+     * @returns {Promise<string|null>} Impact analysis
+     */
+    async generateScopeChangeImpactAnalysis(context: string, changeDetails: any): Promise<string | null> {
+        return this.handleAICall(async () => {
+            const messages = this.createStandardMessages(
+                `You are a project management expert specializing in scope change impact analysis. Generate comprehensive impact assessments following PMBOK standards.`,
+                `Generate a comprehensive scope change impact analysis:
+
+Project Context:
+${context}
+
+Scope Change Details:
+${JSON.stringify(changeDetails, null, 2)}
+
+Provide detailed analysis of:
+1. Schedule Impact
+   - Timeline changes
+   - Critical path effects
+   - Milestone adjustments
+   
+2. Cost Impact
+   - Budget implications
+   - Resource cost changes
+   - ROI considerations
+   
+3. Resource Impact
+   - Additional resources needed
+   - Skill requirements
+   - Availability constraints
+   
+4. Quality Impact
+   - Quality standards effects
+   - Testing implications
+   - Acceptance criteria changes
+   
+5. Risk Impact
+   - New risks introduced
+   - Risk mitigation strategies
+   - Contingency planning
+   
+6. Stakeholder Impact
+   - Affected stakeholders
+   - Communication requirements
+   - Approval needs
+
+Format as a comprehensive impact assessment with quantified metrics where possible.`
+            );
+            const response = await aiProcessor.makeAICall(messages, 1500);
+            return getAIProcessor().extractContent(response);
+        }, 'Scope Change Impact Analysis', 'scope-change-impact-analysis');
+    }
+
+    protected async generateScopeOutput(documentType: string, context: string, additionalContext: string[] = []): Promise<string | null> {
         const contextManager = await getContextManager();
         const enhancedContext = contextManager.buildContextForDocument(documentType, additionalContext);
         const fullContext = enhancedContext || context;
 
         return await this.handleAICall(async () => {
-            const messages = this.createStandardMessages(
-                `You are a PMBOK-certified project manager specializing in scope management. Generate a comprehensive ${documentType} following PMBOK 7th Edition standards.`,
-                `Based on the project context below, create a well-structured ${documentType}:
-
-Project Context:
-${fullContext}
-
-Follow PMBOK standards and ensure the document is clear, comprehensive, and tailored to the project's needs.`
-            );
-            const response = await aiProcessor.makeAICall(messages, 1500);
+            // Use enhanced messages with few-shot learning examples
+            const tokenLimit = 2500; // Increased token limit for examples
+            const messages = this.createPMBOKMessages(documentType, fullContext, additionalContext, tokenLimit);
+            const response = await aiProcessor.makeAICall(messages, tokenLimit);
             return getAIProcessor().extractContent(response);
         }, `${documentType} Generation`, documentType);
     }

@@ -97,6 +97,10 @@ export type {
   AnalysisOptions,
   QualityOptions
 } from './business-analysis.js';
+// Feedback commands
+export { createFeedbackCommand } from './feedback.js';
+// Prompts commands
+export { createPromptsCommand } from './prompts.js';
 
 // Utility exports
 export { ValidationError } from './utils/validation.js';

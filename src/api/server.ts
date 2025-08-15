@@ -12,6 +12,7 @@ import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
 import { dbConnection } from '../config/database.js';
 import projectRoutes from './routes/projects.js';
+import feedbackRoutes from './routes/feedback.js';
 
 // In-memory project database (sample data)
 const projects = [
@@ -107,9 +108,13 @@ app.use(requestLogger);
 app.use('/api/v1/documents', apiKeyAuth);
 app.use('/api/v1/templates', apiKeyAuth);
 app.use('/api/v1/projects', apiKeyAuth);
+app.use('/api/v1/feedback', apiKeyAuth);
 
 // Project management routes
 app.use('/api/v1/projects', projectRoutes);
+
+// Feedback management routes
+app.use('/api/v1/feedback', feedbackRoutes);
 
 // Health check routes (public)
 app.get('/api/v1/health', HealthController.getHealth);

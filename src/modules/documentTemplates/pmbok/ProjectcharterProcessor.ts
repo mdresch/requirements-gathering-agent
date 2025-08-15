@@ -22,10 +22,22 @@ export class ProjectcharterProcessor implements DocumentProcessor {
   async process(context: ProjectContext): Promise<DocumentOutput> {
     try {
       const prompt = this.createPrompt(context);
+      
+      // Use enhanced messages with few-shot learning examples
+      const { getFewShotExamples, formatExamplesForPrompt } = await import('../../ai/few-shot-examples.js');
+      const examples = getFewShotExamples('project-charter');
+      const selectedExamples = examples.slice(0, 1); // Use one example to avoid token limits
+      
+      let systemPrompt = 'You are an expert consultant specializing in PMBOK documentation. Generate comprehensive, professional content based on the project context following PMBOK 7th Edition standards.';
+      
+      if (selectedExamples.length > 0) {
+        systemPrompt += `\n\nStudy this example of a high-quality project charter and follow its structure and level of detail:\n\n${formatExamplesForPrompt(selectedExamples)}`;
+      }
+      
       const content = await this.aiProcessor.makeAICall([
-        { role: 'system', content: 'You are an expert consultant specializing in pmbok documentation. Generate comprehensive, professional content based on the project context.' },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-      ]).then(res => typeof res === 'string' ? res : res.content);
+      ], 3000).then(res => typeof res === 'string' ? res : res.content); // Increased token limit
 
       await this.validateOutput(content);
       
