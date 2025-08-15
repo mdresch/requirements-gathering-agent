@@ -16,6 +16,7 @@ const fs = require('fs');
 import documentRoutes from './api/routes/documents.js';
 import healthRoutes from './api/routes/health.js';
 import standardsComplianceRoutes from './api/routes/standardsCompliance.js';
+import scopeControlRoutes from './api/routes/scopeControl.js';
 
 // Middleware
 import { errorHandler } from './api/middleware/errorHandler.js';
@@ -131,6 +132,7 @@ app.get('/', (req: Request, res: Response) => {
 // Protected API routes
 app.use('/api/v1/documents', authMiddleware, documentRoutes);
 app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
+app.use('/api/v1', authMiddleware, scopeControlRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {
