@@ -92,7 +92,8 @@ export class ReviewService {
       }
       
       // Check if reviewer can take on this review
-      if (!reviewer.canTakeReview(request.estimatedHours)) {
+      const reviewerWithMethods = reviewer as unknown as IReviewerProfile;
+      if (typeof reviewerWithMethods.canTakeReview === 'function' && !reviewerWithMethods.canTakeReview(request.estimatedHours)) {
         throw new Error('Reviewer is not available for this review');
       }
       
@@ -649,12 +650,12 @@ export class ReviewService {
       });
       
       // Find reviewer with capacity
-      for (const reviewer of reviewers) {
-        if (reviewer.canTakeReview()) {
+      for (const reviewerDoc of reviewers) {
+        const reviewer = reviewerDoc as unknown as IReviewerProfile;
+        if (typeof reviewer.canTakeReview === 'function' && reviewer.canTakeReview()) {
           return reviewer;
         }
       }
-      
       return null;
     } catch (error) {
       logger.error('Error finding best available reviewer:', error);
@@ -688,8 +689,9 @@ export class ReviewService {
    */
   private async updateReviewerMetrics(reviewerId: string, reviewRound: ReviewRound): Promise<void> {
     try {
-      const reviewer = await ReviewerProfileModel.findOne({ userId: reviewerId });
-      if (!reviewer) return;
+  const reviewerDoc = await ReviewerProfileModel.findOne({ userId: reviewerId });
+  if (!reviewerDoc) return;
+  const reviewer = reviewerDoc as unknown as IReviewerProfile;
       
       const reviewTime = reviewRound.completedAt && reviewRound.startedAt 
         ? (reviewRound.completedAt.getTime() - reviewRound.startedAt.getTime()) / (1000 * 60 * 60)
@@ -700,14 +702,15 @@ export class ReviewService {
       const feedbackQuality = this.assessFeedbackQuality(reviewRound.feedback);
       const thoroughness = this.assessThoroughness(reviewRound.feedback);
       
-      await reviewer.updateMetrics({
-        reviewTime,
-        qualityScore,
-        onTime,
-        feedbackQuality,
-        thoroughness
-      });
-      
+      if (typeof reviewer.updateMetrics === 'function') {
+        await reviewer.updateMetrics({
+          reviewTime,
+          qualityScore,
+          onTime,
+          feedbackQuality,
+          thoroughness
+        });
+      }
     } catch (error) {
       logger.error('Error updating reviewer metrics:', error);
     }

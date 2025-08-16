@@ -100,7 +100,7 @@ export type {
 // Feedback commands
 export { createFeedbackCommand } from './feedback.js';
 // Prompts commands
-export { createPromptsCommand } from './prompts.js';
+export { promptsCommand } from './prompts.js';
 
 // Utility exports
 export { ValidationError } from './utils/validation.js';

@@ -215,8 +215,8 @@ export class DocumentGenerationController {
           success: true,
           successCount: 0,
           failureCount: 0,
-          generatedFiles: [],
-          errors: [],
+          generatedFiles: [] as string[],
+          errors: [] as Array<{ task: string; error: string }>,
           duration: 0,
           message: ''
         };

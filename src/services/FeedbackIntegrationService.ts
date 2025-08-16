@@ -173,12 +173,17 @@ Return your response in JSON format:
 }
 `;
 
-      const response = await this.aiProcessor.processAIRequest(
-        optimizationPrompt,
+      const response: any = await this.aiProcessor.processAIRequest(
+        () => Promise.resolve(optimizationPrompt),
         'Optimize document generation prompt based on user feedback'
       );
 
-      const result = JSON.parse(response.content);
+      let result: any;
+      if (response && typeof response === 'object' && 'content' in response && typeof response.content === 'string') {
+        result = JSON.parse(response.content);
+      } else {
+        throw new Error('AI response content missing or invalid');
+      }
 
       return {
         originalPrompt: currentPrompt,
@@ -475,12 +480,16 @@ Provide specific, actionable prompt improvements that would address these issues
 Return as a JSON array of strings.
 `;
 
-      const response = await this.aiProcessor.processAIRequest(
-        analysisPrompt,
+      const response: any = await this.aiProcessor.processAIRequest(
+        () => Promise.resolve(analysisPrompt),
         'Generate prompt improvements from feedback'
       );
 
-      return JSON.parse(response.content);
+      if (response && typeof response === 'object' && 'content' in response && typeof response.content === 'string') {
+        return JSON.parse(response.content);
+      } else {
+        throw new Error('AI response content missing or invalid');
+      }
     } catch (error) {
       console.error('Error generating prompt improvements:', error);
       return ['Review and enhance prompt specificity', 'Add quality validation criteria'];

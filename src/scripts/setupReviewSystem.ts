@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { ReviewWorkflowConfigModel } from '../models/ReviewWorkflow.js';
 import { ReviewerProfileModel } from '../models/ReviewerProfile.js';
 import { logger } from '../utils/logger.js';
 
@@ -468,6 +467,128 @@ const sampleReviewers = [
     isActive: true
   }
 ];
+
+interface IReviewStage {
+  stageNumber: number;
+  name: string;
+  description?: string;
+  requiredRole: string;
+  isParallel?: boolean;
+  isOptional?: boolean;
+  canSkip?: boolean;
+  estimatedHours?: number;
+  maxDays?: number;
+  criteria?: string[];
+  passingScore?: number;
+}
+
+interface IEscalationRule {
+  id: string;
+  name: string;
+  condition: {
+    type: string;
+    parameters?: object;
+  };
+  action: {
+    type: string;
+    parameters?: object;
+  };
+  triggerAfterHours?: number;
+  reminderIntervalHours?: number;
+  maxReminders?: number;
+  escalateTo?: string[];
+  notificationTemplate?: string;
+  isActive?: boolean;
+}
+
+export interface IReviewWorkflowConfig extends mongoose.Document {
+  name: string;
+  description?: string;
+  documentTypes: string[];
+  requiredRoles: string[];
+  reviewStages: IReviewStage[];
+  defaultDueDays?: number;
+  escalationRules: IEscalationRule[];
+  minimumReviewers?: number;
+  requiredApprovals?: number;
+  qualityThreshold?: number;
+  autoAssignment?: boolean;
+  autoEscalation?: boolean;
+  autoNotification?: boolean;
+  isActive?: boolean;
+  createdBy: string;
+  validateWorkflow(): { isValid: boolean; errors: string[] };
+}
+
+const ReviewWorkflowConfigSchema: mongoose.Schema<IReviewWorkflowConfig> = new mongoose.Schema<IReviewWorkflowConfig>({
+  name: { type: String, required: true },
+  description: { type: String },
+  documentTypes: [{ type: String }],
+  requiredRoles: [{ type: String }],
+  reviewStages: [
+    {
+      stageNumber: { type: Number, required: true },
+      name: { type: String, required: true },
+      description: { type: String },
+      requiredRole: { type: String, required: true },
+      isParallel: { type: Boolean, default: false },
+      isOptional: { type: Boolean, default: false },
+      canSkip: { type: Boolean, default: false },
+      estimatedHours: { type: Number },
+      maxDays: { type: Number },
+    criteria: [{ type: String }]
+  }
+],
+  defaultDueDays: { type: Number },
+  escalationRules: [
+    {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+      condition: {
+        type: { type: String, required: true },
+        parameters: { type: Object }
+      },
+      action: {
+        type: { type: String, required: true },
+        parameters: { type: Object }
+      },
+      triggerAfterHours: { type: Number },
+      reminderIntervalHours: { type: Number },
+      maxReminders: { type: Number },
+      escalateTo: [{ type: String }],
+      notificationTemplate: { type: String },
+      isActive: { type: Boolean, default: true }
+    }
+  ],
+  minimumReviewers: { type: Number },
+  requiredApprovals: { type: Number },
+  qualityThreshold: { type: Number, min: 0, max: 100 },
+  autoAssignment: { type: Boolean, default: true },
+  autoEscalation: { type: Boolean, default: true },
+  autoNotification: { type: Boolean, default: true },
+  isActive: { type: Boolean, default: true },
+  createdBy: { type: String, required: true }
+});
+
+// Add instance method for workflow validation
+ReviewWorkflowConfigSchema.methods.validateWorkflow = function () {
+  const errors = [];
+  // Example validation logic
+  if (!this.name || typeof this.name !== 'string') {
+    errors.push('Name is required and must be a string');
+  }
+  if (!Array.isArray(this.reviewStages) || this.reviewStages.length === 0) {
+    errors.push('At least one review stage is required');
+  }
+  // Add more validation as needed
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+export const ReviewWorkflowConfigModel = mongoose.model('ReviewWorkflowConfig', ReviewWorkflowConfigSchema);
 
 /**
  * Initialize the review system with sample data

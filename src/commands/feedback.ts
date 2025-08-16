@@ -79,7 +79,7 @@ export function createFeedbackCommand(): Command {
     .description('Apply feedback-driven improvements to document generation')
     .requiredOption('-p, --project <id>', 'Project ID to apply improvements to')
     .option('--dry-run', 'Show what would be improved without applying changes')
-    .action(async (options) => {
+  .action(async (options: any) => {
       try {
         console.log(`🔧 ${options.dryRun ? 'Analyzing' : 'Applying'} feedback improvements for project ${options.project}...`);
         
@@ -157,7 +157,7 @@ export function createFeedbackCommand(): Command {
     .option('-p, --project <id>', 'Project ID for feedback integration')
     .option('--learning', 'Enable learning mode for iterative improvement')
     .option('--threshold <number>', 'Quality threshold for iterative improvement', '80')
-    .action(async (options) => {
+  .action(async (options: any) => {
       try {
         console.log('🧠 Starting feedback-enhanced document generation...');
         
@@ -215,7 +215,7 @@ export function createFeedbackCommand(): Command {
     .description('Show feedback statistics and trends')
     .option('-p, --project <id>', 'Show stats for specific project')
     .option('--days <number>', 'Number of days to analyze', '30')
-    .action(async (options) => {
+  .action(async (options: any) => {
       try {
         console.log('📊 Gathering feedback statistics...');
         

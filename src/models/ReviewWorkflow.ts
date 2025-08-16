@@ -8,7 +8,12 @@ import {
   ReviewerRole
 } from '../types/review.js';
 
-export interface IReviewWorkflowConfig extends ReviewWorkflowConfig, Document {}
+export interface IReviewWorkflowConfig extends Omit<ReviewWorkflowConfig, 'id'>, Document {
+  id: string;
+  validateWorkflow(): { isValid: boolean; errors: string[] };
+  getApplicableStages(documentType: string): ReviewStage[];
+  getNextStage(currentStageNumber: number): ReviewStage | null;
+}
 
 const EscalationConditionSchema = new Schema({
   type: { 

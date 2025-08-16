@@ -19,6 +19,7 @@ export interface EnhancedGenerationResult extends GenerationResult {
     appliedImprovements: string[];
     qualityPrediction: number;
     recommendedActions: string[];
+    documentsImproved?: string[];
   };
   qualityMetrics?: {
     beforeScore: number;
@@ -31,6 +32,19 @@ export interface EnhancedGenerationResult extends GenerationResult {
     patternsIdentified: string[];
   };
 }
+// Helper to extract only GenerationOptions properties
+function extractGenerationOptions(opts: any): Partial<import('./types').GenerationOptions> {
+  const keys = [
+    'includeCategories', 'excludeCategories', 'maxConcurrent', 'delayBetweenCalls',
+    'continueOnError', 'generateIndex', 'cleanup', 'outputDir', 'format'
+  ];
+  const result: any = {};
+  for (const key of keys) {
+    if (key in opts) result[key] = opts[key];
+  }
+  return result;
+}
+
 
 export class FeedbackEnhancedGenerator extends DocumentGenerator {
   private feedbackService: FeedbackIntegrationService;
@@ -38,10 +52,11 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
 
   constructor(
     context: string,
-    options: Partial<EnhancedGenerationOptions> = {},
+    options: Partial<EnhancedGenerationOptions & import('./types').GenerationOptions> = {},
     aiProcessor?: AIProcessor
   ) {
-    super(context, options, aiProcessor);
+    const baseOptions = extractGenerationOptions(options);
+    super(context, baseOptions, aiProcessor);
     this.feedbackService = new FeedbackIntegrationService();
     this.enhancedOptions = {
       applyFeedbackImprovements: true,
@@ -75,7 +90,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
 
       // Phase 2: Generate documents with enhanced prompts
       console.log('📝 Generating documents with enhanced prompts...');
-      const baseResult = await this.generateAll();
+  const baseResult = await super.generateAll();
 
       // Phase 3: Quality assessment and iterative improvement
       if (this.enhancedOptions.learningMode) {
@@ -106,7 +121,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
 
       const enhancedResult: EnhancedGenerationResult = {
         ...baseResult,
-        duration: Date.now() - startTime,
+  duration: Date.now() - startTime,
         feedbackInsights: feedbackInsights ? {
           appliedImprovements: feedbackInsights.improvementsSummary,
           qualityPrediction: feedbackInsights.qualityPrediction,
@@ -127,11 +142,11 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
       
       // Fallback to standard generation
       console.log('🔄 Falling back to standard generation...');
-      const fallbackResult = await this.generateAll();
+  const fallbackResult = await super.generateAll();
       
       return {
         ...fallbackResult,
-        duration: Date.now() - startTime,
+  duration: Date.now() - startTime,
         feedbackInsights: {
           appliedImprovements: [],
           qualityPrediction: 0,
@@ -167,7 +182,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
       }
 
       // Generate the document
-      const success = await this.generateOne(documentKey);
+  const success = await super.generateOne(documentKey);
 
       if (success) {
         // Assess quality of generated document
@@ -200,7 +215,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
   }> {
     try {
       // Use PMBOK validation to assess quality
-      const validation = await this.validatePMBOKCompliance();
+  const validation = await super.validatePMBOKCompliance();
       
       const documentScores: Record<string, number> = {};
       let totalScore = 0;
@@ -246,7 +261,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
     try {
       // Simplified quality assessment - in a real implementation,
       // this would use more sophisticated analysis
-      const validation = await this.validatePMBOKCompliance();
+  const validation = await super.validatePMBOKCompliance();
       
       if (validation.documentQuality && validation.documentQuality[documentKey]) {
         return (validation.documentQuality[documentKey] as any).score || 0;
@@ -339,7 +354,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
       // 4. Validate the improvement
       
       // For now, we'll simulate this process
-      await this.generateOne(documentType);
+  await super.generateOne(documentType);
       
     } catch (error) {
       console.error(`Error applying targeted improvement to ${documentType}:`, error);
@@ -351,9 +366,9 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
    */
   private printEnhancedSummary(result: EnhancedGenerationResult): void {
     console.log(`\n🧠 Enhanced Generation Summary:`);
-    console.log(`✅ Successfully generated: ${result.successCount} documents`);
-    console.log(`❌ Failed to generate: ${result.failureCount} documents`);
-    console.log(`⏱️ Total duration: ${(result.duration / 1000).toFixed(2)}s`);
+  console.log(`✅ Successfully generated: ${result.successCount} documents`);
+  console.log(`❌ Failed to generate: ${result.failureCount} documents`);
+  console.log(`⏱️ Total duration: ${(result.duration / 1000).toFixed(2)}s`);
 
     if (result.feedbackInsights) {
       console.log(`\n📊 Feedback Integration:`);
@@ -362,7 +377,7 @@ export class FeedbackEnhancedGenerator extends DocumentGenerator {
       
       if (result.feedbackInsights.recommendedActions.length > 0) {
         console.log(`💡 Recommended actions:`);
-        result.feedbackInsights.recommendedActions.slice(0, 3).forEach((action, i) => {
+        result.feedbackInsights.recommendedActions.slice(0, 3).forEach((action: string, i: number) => {
           console.log(`   ${i + 1}. ${action}`);
         });
       }

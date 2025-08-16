@@ -18,28 +18,28 @@ const router = Router();
 router.post(
   '/',
   requirePermission('admin'),
-  validate(createReviewerProfileSchema),
+  validate({ body: createReviewerProfileSchema }),
   ReviewerController.createReviewerProfile
 );
 
 router.get(
   '/',
   requirePermission('read'),
-  validate(reviewerSearchSchema, 'query'),
+  validate({ query: reviewerSearchSchema }),
   ReviewerController.searchReviewers
 );
 
 router.get(
   '/available',
   requirePermission('read'),
-  validate(availableReviewersSchema, 'query'),
+  validate({ query: availableReviewersSchema }),
   ReviewerController.getAvailableReviewers
 );
 
 router.get(
   '/leaderboard',
   requirePermission('read'),
-  validate(leaderboardQuerySchema, 'query'),
+  validate({ query: leaderboardQuerySchema }),
   ReviewerController.getReviewerLeaderboard
 );
 
@@ -52,7 +52,7 @@ router.get(
 router.put(
   '/:userId',
   requirePermission('write'),
-  validate(updateReviewerProfileSchema),
+  validate({ body: updateReviewerProfileSchema }),
   ReviewerController.updateReviewerProfile
 );
 
@@ -66,14 +66,14 @@ router.delete(
 router.patch(
   '/:userId/availability',
   requirePermission('write'),
-  validate(updateAvailabilitySchema),
+  validate({ body: updateAvailabilitySchema }),
   ReviewerController.updateReviewerAvailability
 );
 
 router.patch(
   '/:userId/preferences',
   requirePermission('write'),
-  validate(updatePreferencesSchema),
+  validate({ body: updatePreferencesSchema }),
   ReviewerController.updateReviewerPreferences
 );
 

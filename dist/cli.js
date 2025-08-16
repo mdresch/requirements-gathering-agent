@@ -33,6 +33,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 // 3. Internal modules
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
+import { promptsCommand } from './commands/prompts.js';
 // 4. Constants and configuration
 import { DEFAULT_OUTPUT_DIR, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_BACKOFF, DEFAULT_RETRY_MAX_DELAY, SUPPORTED_FORMATS, CONFIG_FILENAME, PACKAGE_JSON_FILENAME, TSCONFIG_JSON_FILENAME, README_FILENAME, PROCESSOR_CONFIG_FILENAME } from './constants.js';
 // 5. Command handlers
@@ -346,6 +347,221 @@ yargs(hideBin(process.argv))
     })
         .demandCommand(1, 'You must provide a valid vcs command.');
 })
+    // Feedback commands
+    .command('feedback', 'Manage document feedback and AI improvements', (yargs) => {
+    return yargs
+        .command('analyze', 'Analyze feedback patterns to identify improvement opportunities', (yargs) => {
+        return yargs
+            .option('document-type', { type: 'string', describe: 'Analyze specific document type' })
+            .option('project', { type: 'string', describe: 'Analyze specific project' })
+            .option('days', { type: 'number', default: 30, describe: 'Number of days to analyze' });
+    }, async (argv) => {
+        const { FeedbackIntegrationService } = await import('./services/FeedbackIntegrationService.js');
+        try {
+            console.log('🔍 Analyzing feedback patterns...');
+            const service = new FeedbackIntegrationService();
+            const insights = await service.analyzeFeedbackPatterns(argv['document-type'], argv.days);
+            if (insights.length === 0) {
+                console.log('📊 No feedback patterns found for the specified criteria.');
+                return;
+            }
+            console.log(`\n📈 Feedback Analysis Results (${argv.days} days):`);
+            console.log('='.repeat(60));
+            insights.forEach((insight, index) => {
+                console.log(`\n${index + 1}. Document Type: ${insight.documentType}`);
+                console.log(`   Quality Trend: ${insight.qualityTrends.ratingTrend} (${insight.qualityTrends.averageRating.toFixed(1)}/5)`);
+                console.log(`   Feedback Volume: ${insight.qualityTrends.feedbackVolume} items`);
+                if (insight.commonIssues.length > 0) {
+                    console.log(`   Common Issues:`);
+                    insight.commonIssues.slice(0, 3).forEach(issue => {
+                        console.log(`     • ${issue}`);
+                    });
+                }
+                if (insight.suggestedPromptImprovements.length > 0) {
+                    console.log(`   Suggested Improvements:`);
+                    insight.suggestedPromptImprovements.slice(0, 2).forEach(improvement => {
+                        console.log(`     • ${improvement}`);
+                    });
+                }
+            });
+            console.log('\n💡 Next Steps:');
+            console.log('   • Use "rga feedback apply" to implement improvements');
+            console.log('   • Review specific document types with low ratings');
+            console.log('   • Monitor trends after implementing changes');
+        }
+        catch (error) {
+            console.error('❌ Error analyzing feedback:', error);
+            process.exit(1);
+        }
+    })
+        .command('apply', 'Apply feedback-driven improvements to document generation', (yargs) => {
+        return yargs
+            .option('project', { type: 'string', required: true, describe: 'Project ID to apply improvements to' })
+            .option('dry-run', { type: 'boolean', default: false, describe: 'Show what would be improved without applying changes' });
+    }, async (argv) => {
+        const { FeedbackIntegrationService } = await import('./services/FeedbackIntegrationService.js');
+        try {
+            console.log(`🔧 ${argv['dry-run'] ? 'Analyzing' : 'Applying'} feedback improvements for project ${argv.project}...`);
+            const service = new FeedbackIntegrationService();
+            if (argv['dry-run']) {
+                const recommendations = await service.generateRecommendations(argv.project);
+                console.log('\n📋 Recommended Improvements:');
+                console.log('='.repeat(50));
+                if (recommendations.immediateActions.length > 0) {
+                    console.log('\n🚨 Immediate Actions:');
+                    recommendations.immediateActions.forEach((action, i) => {
+                        console.log(`   ${i + 1}. ${action}`);
+                    });
+                }
+                console.log('\n💡 Run without --dry-run to apply these improvements');
+            }
+            else {
+                const result = await service.applyFeedbackImprovements(argv.project);
+                console.log('\n✅ Feedback Improvements Applied:');
+                console.log('='.repeat(50));
+                console.log(`📝 Documents Improved: ${result.documentsImproved.length}`);
+                console.log(`📈 Predicted Quality Improvement: +${result.qualityPrediction}%`);
+            }
+        }
+        catch (error) {
+            console.error('❌ Error applying feedback improvements:', error);
+            process.exit(1);
+        }
+    })
+        .command('generate', 'Generate documents with feedback-driven enhancements', (yargs) => {
+        return yargs
+            .option('context', { type: 'string', required: true, describe: 'Project context for document generation' })
+            .option('project', { type: 'string', describe: 'Project ID for feedback integration' })
+            .option('learning', { type: 'boolean', default: false, describe: 'Enable learning mode for iterative improvement' })
+            .option('threshold', { type: 'number', default: 80, describe: 'Quality threshold for iterative improvement' });
+    }, async (argv) => {
+        const { FeedbackEnhancedGenerator } = await import('./modules/documentGenerator/FeedbackEnhancedGenerator.js');
+        try {
+            console.log('🧠 Starting feedback-enhanced document generation...');
+            const generator = new FeedbackEnhancedGenerator(argv.context, {
+                projectId: argv.project,
+                applyFeedbackImprovements: true,
+                learningMode: argv.learning,
+                qualityThreshold: argv.threshold
+            });
+            const result = await generator.generateWithFeedbackEnhancement();
+            console.log('\n📊 Generation Results:');
+            console.log('='.repeat(50));
+            console.log(`✅ Success: ${result.success}`);
+            console.log(`📝 Documents Generated: ${result.successCount}`);
+            console.log(`⏱️ Duration: ${(result.duration / 1000).toFixed(2)}s`);
+            if (result.feedbackInsights) {
+                console.log('\n🔧 Feedback Integration:');
+                console.log(`   Applied Improvements: ${result.feedbackInsights.appliedImprovements.length}`);
+                console.log(`   Quality Prediction: +${result.feedbackInsights.qualityPrediction}%`);
+            }
+        }
+        catch (error) {
+            console.error('❌ Error in feedback-enhanced generation:', error);
+            process.exit(1);
+        }
+    })
+        .command('stats', 'Show feedback statistics and trends', (yargs) => {
+        return yargs
+            .option('project', { type: 'string', describe: 'Show stats for specific project' })
+            .option('days', { type: 'number', default: 30, describe: 'Number of days to analyze' });
+    }, async (argv) => {
+        const { DocumentFeedback } = await import('./models/DocumentFeedback.js');
+        try {
+            console.log('📊 Gathering feedback statistics...');
+            const filter = {};
+            if (argv.project) {
+                filter.projectId = argv.project;
+            }
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - argv.days);
+            filter.submittedAt = { $gte: startDate };
+            const totalFeedback = await DocumentFeedback.countDocuments(filter);
+            const avgRating = await DocumentFeedback.aggregate([
+                { $match: filter },
+                { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+            ]);
+            console.log('\n📈 Feedback Statistics:');
+            console.log('='.repeat(50));
+            console.log(`📝 Total Feedback: ${totalFeedback}`);
+            console.log(`⭐ Average Rating: ${avgRating[0]?.avgRating?.toFixed(1) || 'N/A'}/5`);
+            console.log(`📅 Period: Last ${argv.days} days`);
+            console.log('\n💡 Recommendations:');
+            if (avgRating[0]?.avgRating < 3) {
+                console.log('   • Focus on improving overall document quality');
+            }
+            console.log('   • Use "rga feedback analyze" for detailed insights');
+        }
+        catch (error) {
+            console.error('❌ Error gathering feedback statistics:', error);
+            process.exit(1);
+        }
+    })
+        .demandCommand(1, 'You must provide a valid feedback command.');
+})
+    .command('provider-test', 'Test AI provider connectivity', (yargs) => {
+    return yargs
+        .option('provider', { type: 'string', describe: 'Provider to test (ollama, google, azure, github)' });
+}, async (argv) => {
+    if (argv.provider === 'ollama') {
+        try {
+            const fetch = (await import('node-fetch')).default;
+            const res = await fetch('http://localhost:11434/api/tags');
+            if (res.ok) {
+                console.log('✅ Ollama is running and reachable.');
+            }
+            else {
+                console.error('❌ Ollama endpoint returned error:', res.statusText);
+            }
+        }
+        catch (e) {
+            console.error('❌ Could not reach Ollama endpoint:', e);
+        }
+    }
+    else {
+        console.log('Provider test for other providers not yet implemented.');
+    }
+})
+    .command('ollama', 'Ollama model management', (yargs) => {
+    return yargs
+        .command('models-list', 'List available Ollama models', {}, async () => {
+        try {
+            const fetch = (await import('node-fetch')).default;
+            const res = await fetch('http://localhost:11434/api/tags');
+            const data = await res.json();
+            if (typeof data === 'object' && data !== null && 'models' in data) {
+                console.log('Available models:', data.models);
+            }
+            else {
+                console.log('Available models:', data);
+            }
+        }
+        catch (e) {
+            console.error('❌ Error listing models:', e);
+        }
+    })
+        .command('models-pull <model>', 'Pull a new Ollama model', {}, async (argv) => {
+        try {
+            const fetch = (await import('node-fetch')).default;
+            const res = await fetch('http://localhost:11434/api/pull', {
+                method: 'POST',
+                body: JSON.stringify({ name: argv.model }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+                console.log(`✅ Model ${argv.model} pulled successfully.`);
+            }
+            else {
+                console.error('❌ Failed to pull model:', res.statusText);
+            }
+        }
+        catch (e) {
+            console.error('❌ Error pulling model:', e);
+        }
+    })
+        .demandCommand(1, 'You must provide a valid ollama command.');
+})
+    .command(promptsCommand)
     .option('quiet', {
     alias: 'q',
     type: 'boolean',

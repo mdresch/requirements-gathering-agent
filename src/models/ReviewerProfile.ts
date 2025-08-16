@@ -7,7 +7,36 @@ import {
   ReviewerRole
 } from '../types/review.js';
 
-export interface IReviewerProfile extends ReviewerProfile, Document {}
+export interface IReviewerProfile extends Document {
+  // All ReviewerProfile fields except id
+  userId: string;
+  name: string;
+  email: string;
+  title: string;
+  department: string;
+  organization: string;
+  roles: ReviewerRole[];
+  expertise: string[];
+  certifications?: string[];
+  experienceYears: number;
+  availability: ReviewerAvailability;
+  preferences: ReviewerPreferences;
+  metrics: ReviewerMetrics;
+  isActive: boolean;
+  // Virtuals
+  availabilityStatus?: string;
+  currentWorkload?: number;
+  performanceRating?: string;
+  // Methods
+  canTakeReview?: (estimatedHours?: number) => boolean;
+  updateMetrics?: (reviewData: {
+    reviewTime: number;
+    qualityScore: number;
+    onTime: boolean;
+    feedbackQuality: number;
+    thoroughness: number;
+  }) => Promise<void>;
+}
 
 const ReviewerAvailabilitySchema = new Schema({
   hoursPerWeek: { type: Number, required: true, min: 1, max: 168 },

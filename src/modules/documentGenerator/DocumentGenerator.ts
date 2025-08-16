@@ -49,6 +49,8 @@ import {
     GenerationTask,
     ValidationResult
 } from './types';
+
+export type { GenerationResult };
 import { ProjectContext } from '../ai/types';
 import { DOCUMENT_CONFIG } from '../fileManager.js';
 import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';

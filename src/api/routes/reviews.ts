@@ -18,35 +18,35 @@ const router = Router();
 router.post(
   '/',
   requirePermission('write'),
-  validate(createReviewSchema),
+  validate({ body: createReviewSchema }),
   ReviewController.createReview
 );
 
 router.get(
   '/',
   requirePermission('read'),
-  validate(reviewSearchSchema, 'query'),
+  validate({ query: reviewSearchSchema }),
   ReviewController.searchReviews
 );
 
 router.get(
   '/stats',
   requirePermission('read'),
-  validate(reviewStatsSchema, 'query'),
+  validate({ query: reviewStatsSchema }),
   ReviewController.getReviewStats
 );
 
 router.get(
   '/analytics',
   requirePermission('read'),
-  validate(analyticsQuerySchema, 'query'),
+  validate({ query: analyticsQuerySchema }),
   ReviewController.getReviewAnalytics
 );
 
 router.get(
   '/my-reviews',
   requirePermission('read'),
-  validate(reviewSearchSchema, 'query'),
+  validate({ query: reviewSearchSchema }),
   ReviewController.getMyReviews
 );
 
@@ -59,7 +59,7 @@ router.get(
 router.patch(
   '/:reviewId/status',
   requirePermission('write'),
-  validate(updateReviewStatusSchema),
+  validate({ body: updateReviewStatusSchema }),
   ReviewController.updateReviewStatus
 );
 
@@ -67,7 +67,7 @@ router.patch(
 router.post(
   '/:reviewId/assign',
   requirePermission('write'),
-  validate(assignReviewerSchema),
+  validate({ body: assignReviewerSchema }),
   ReviewController.assignReviewer
 );
 
@@ -87,7 +87,7 @@ router.post(
 router.post(
   '/:reviewId/feedback',
   requirePermission('write'),
-  validate(submitFeedbackSchema),
+  validate({ body: submitFeedbackSchema }),
   ReviewController.submitFeedback
 );
 

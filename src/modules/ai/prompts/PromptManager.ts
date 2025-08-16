@@ -46,6 +46,8 @@ export interface PromptBuildOptions {
     customStructure?: string;
     /** Override default quality criteria */
     customQuality?: string;
+    /** Enable metrics collection for prompt generation */
+    enableMetrics?: boolean;
 }
 
 export interface PromptMetrics {

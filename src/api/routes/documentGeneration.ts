@@ -55,7 +55,7 @@ const bulkApproveSchema = Joi.object({
 router.post(
   '/generate-with-review',
   requirePermission('write'),
-  validate(generateWithReviewSchema),
+  validate({ body: generateWithReviewSchema }),
   DocumentGenerationController.generateWithReview
 );
 
@@ -66,7 +66,7 @@ router.post(
 router.post(
   '/generate-with-validation',
   requirePermission('write'),
-  validate(generateWithReviewSchema),
+  validate({ body: generateWithReviewSchema }),
   DocumentGenerationController.generateWithValidationAndReview
 );
 
@@ -77,7 +77,7 @@ router.post(
 router.post(
   '/generate-only',
   requirePermission('write'),
-  validate(generateOnlySchema),
+  validate({ body: generateOnlySchema }),
   DocumentGenerationController.generateDocumentsOnly
 );
 
@@ -108,7 +108,7 @@ router.get(
 router.post(
   '/reviews/:reviewId/regenerate',
   requirePermission('write'),
-  validate(regenerateWithFeedbackSchema),
+  validate({ body: regenerateWithFeedbackSchema }),
   DocumentGenerationController.regenerateWithFeedback
 );
 
@@ -119,7 +119,7 @@ router.post(
 router.post(
   '/projects/:projectId/bulk-approve',
   requirePermission('write'),
-  validate(bulkApproveSchema),
+  validate({ body: bulkApproveSchema }),
   DocumentGenerationController.bulkApproveDocuments
 );
 

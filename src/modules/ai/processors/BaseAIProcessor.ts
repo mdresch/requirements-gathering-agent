@@ -100,6 +100,9 @@ export abstract class BaseAIProcessor {
         // Fallback to legacy method
         console.log(`⚠️ Falling back to legacy prompts for ${documentType}`);
         return await this.handleAICall(legacyOperation, operationName);
+    }
+
+    /**
      * Create enhanced messages with few-shot learning examples
      * @param systemPrompt Base system prompt
      * @param userPrompt User prompt with context

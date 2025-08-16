@@ -13,7 +13,7 @@ const router = Router();
 router.post(
   '/',
   requirePermission('write'),
-  validate(feedbackSchemas.submitFeedback),
+  validate({ body: feedbackSchemas.submitFeedback }),
   FeedbackController.submitFeedback
 );
 
@@ -35,7 +35,7 @@ router.get(
 router.patch(
   '/:feedbackId/status',
   requirePermission('write'),
-  validate(feedbackSchemas.updateStatus),
+  validate({ body: feedbackSchemas.updateStatus }),
   FeedbackController.updateFeedbackStatus
 );
 

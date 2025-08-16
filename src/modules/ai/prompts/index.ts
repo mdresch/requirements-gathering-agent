@@ -10,20 +10,24 @@
  * @filepath src/modules/ai/prompts/index.ts
  */
 
-export { PromptRegistry, PromptTemplate, PromptContext } from './PromptRegistry.js';
-export { 
+export { PromptRegistry } from './PromptRegistry.js';
+export type { PromptTemplate, PromptContext } from './PromptRegistry.js';
+export type { 
     PromptManager, 
     PromptSelectionCriteria, 
     PromptBuildOptions, 
     PromptMetrics 
 } from './PromptManager.js';
 
-// Re-export enhanced AI processor for convenience
-export { 
-    EnhancedAIProcessor, 
+// Re-export enhanced AI processor types for convenience
+export type { 
     EnhancedGenerationOptions, 
     EnhancedGenerationResult 
 } from '../EnhancedAIProcessor.js';
+
+import { PromptRegistry } from './PromptRegistry.js';
+import { PromptManager } from './PromptManager.js';
+import { EnhancedAIProcessor } from '../EnhancedAIProcessor.js';
 
 /**
  * Initialize the prompt engineering system

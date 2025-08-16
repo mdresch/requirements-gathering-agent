@@ -14,7 +14,9 @@ import {
 } from '../types/review.js';
 
 // Document Review Schema
-export interface IDocumentReview extends DocumentReview, Document {}
+export interface IDocumentReview extends Omit<DocumentReview, 'id'>, Document {
+  id: string;
+}
 
 const ReviewFeedbackSchema = new Schema({
   id: { type: String, required: true },

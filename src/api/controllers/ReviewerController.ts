@@ -272,8 +272,8 @@ export class ReviewerController {
       
       // Filter by actual availability (would check current workload in real implementation)
       const availableReviewers = reviewers.filter(reviewer => {
-        // Placeholder for availability check
-        return reviewer.canTakeReview();
+        // Type guard for canTakeReview method
+        return typeof reviewer.canTakeReview === 'function' ? reviewer.canTakeReview() : false;
       });
       
       res.json({
