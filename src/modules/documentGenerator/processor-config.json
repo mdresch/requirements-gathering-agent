@@ -314,6 +314,14 @@
     "dependencies": [],
     "priority": 999
   },
+  "risk-compliance-assessment": {
+    "module": "../documentTemplates/risk-management/RiskComplianceAssessmentProcessor.ts#RiskComplianceAssessmentProcessor",
+    "dependencies": [
+      "risk-register",
+      "risk-management-plan"
+    ],
+    "priority": 20
+  },
   "procurement-management-plan": {
     "module": "../documentTemplates/planning/ProcurementmanagementplanProcessor.ts#ProcurementmanagementplanProcessor",
     "dependencies": [],

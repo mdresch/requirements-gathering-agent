@@ -637,6 +637,68 @@ yargs(hideBin(process.argv))
       .demandCommand(1, 'You must provide a valid ollama command.');
   })
   .command(promptsCommand)
+  .command('risk-compliance', 'Generate comprehensive risk and compliance assessments', (yargs) => {
+    return yargs
+      .option('project', {
+        alias: 'p',
+        type: 'string',
+        description: 'Project name',
+        demandOption: true
+      })
+      .option('type', {
+        alias: 't',
+        type: 'string',
+        description: 'Project type (SOFTWARE_DEVELOPMENT, INFRASTRUCTURE, etc.)',
+        default: 'SOFTWARE_DEVELOPMENT'
+      })
+      .option('description', {
+        alias: 'd',
+        type: 'string',
+        description: 'Project description'
+      })
+      .option('output', {
+        alias: 'o',
+        type: 'string',
+        description: 'Output directory',
+        default: 'generated-documents/risk-compliance'
+      })
+      .option('integrated', {
+        type: 'boolean',
+        description: 'Generate integrated assessment using compliance engine',
+        default: false
+      })
+      .option('pmbok-only', {
+        type: 'boolean',
+        description: 'Generate PMBOK-focused assessment only',
+        default: false
+      })
+      .option('format', {
+        type: 'string',
+        description: 'Output format (markdown, json)',
+        choices: ['markdown', 'json'],
+        default: 'markdown'
+      });
+  }, async (argv) => {
+    try {
+      const { createRiskComplianceCommand } = await import('./commands/risk-compliance.js');
+      const command = createRiskComplianceCommand();
+      
+      // Execute the command with the provided arguments
+      await command.parseAsync([
+        'risk-compliance',
+        '--project', argv.project,
+        '--type', argv.type || 'SOFTWARE_DEVELOPMENT',
+        ...(argv.description ? ['--description', argv.description] : []),
+        '--output', argv.output,
+        ...(argv.integrated ? ['--integrated'] : []),
+        ...(argv.pmbokOnly ? ['--pmbok-only'] : []),
+        '--format', argv.format
+      ], { from: 'user' });
+    } catch (error) {
+      console.error('❌ Error executing risk-compliance command:', error.message);
+      process.exit(1);
+    }
+  })
   .option('quiet', {
     alias: 'q',
     type: 'boolean',
