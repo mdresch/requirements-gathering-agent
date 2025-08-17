@@ -102,6 +102,16 @@ export { createFeedbackCommand } from './feedback.js';
 // Prompts commands
 export { promptsCommand } from './prompts.js';
 
+// Stakeholder Analysis commands
+export {
+  handleStakeholderAnalysisCommand,
+  handleStakeholderRegisterCommand,
+  handleStakeholderEngagementPlanCommand,
+  handleStakeholderAutomationCommand,
+  displayStakeholderHelp
+} from './stakeholder.js';
+export type { StakeholderAnalysisOptions } from './stakeholder.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';

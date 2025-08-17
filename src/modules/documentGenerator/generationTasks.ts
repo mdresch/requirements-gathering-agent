@@ -655,6 +655,15 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'acceptance-criteria', name: 'Acceptance Criteria', func: 'getAiAcceptanceCriteria', emoji: '✔️', category: 'technical-analysis', priority: 31, pmbokRef: '5.2.3.1' },
     { key: 'compliance-considerations', name: 'Compliance Considerations', func: 'getAiComplianceConsiderations', emoji: '⚖️', category: 'technical-analysis', priority: 32, pmbokRef: 'N/A' },
     { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 28, pmbokRef: 'PMBOK 7.0: Stakeholder & Planning Performance Domains' },
+
+    { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 33, pmbokRef: 'N/A' },
+    
+    // Technical Recommendations (PMBOK-aligned technical guidance)
+    { key: 'technical-recommendations', name: 'Technical Recommendations', func: 'getAiTechnicalRecommendations', emoji: '🎯', category: 'technical-analysis', priority: 34, pmbokRef: 'PMBOK 4.0, 7.0, 8.0, 9.0, 11.0', dependencies: ['project-charter', 'stakeholder-register', 'requirements-documentation'] },
+    { key: 'technology-selection-criteria', name: 'Technology Selection Criteria', func: 'getAiTechnologySelectionCriteria', emoji: '📋', category: 'technical-analysis', priority: 35, pmbokRef: 'PMBOK 8.0, 11.0', dependencies: ['technical-recommendations'] },
+    { key: 'technical-implementation-roadmap', name: 'Technical Implementation Roadmap', func: 'getAiTechnicalImplementationRoadmap', emoji: '🗺️', category: 'technical-analysis', priority: 36, pmbokRef: 'PMBOK 6.0, 4.0', dependencies: ['technical-recommendations', 'technology-selection-criteria'] },
+    { key: 'technology-governance-framework', name: 'Technology Governance Framework', func: 'getAiTechnologyGovernanceFramework', emoji: '🏛️', category: 'technical-analysis', priority: 37, pmbokRef: 'PMBOK 13.0, 4.0', dependencies: ['technical-recommendations'] },
+
   {
     key: 'babokintroduction',
     name: 'BABOKIntroduction',
@@ -999,6 +1008,10 @@ export const GENERATION_TASKS: GenerationTask[] = [
     'acceptance-criteria': { filename: 'acceptance-criteria.md', title: 'Acceptance Criteria' },
     'compliance-considerations': { filename: 'compliance-considerations.md', title: 'Compliance Considerations' },
     'ui-ux-considerations': { filename: 'ui-ux-considerations.md', title: 'UI/UX Considerations' },
+    'technical-recommendations': { filename: 'technical-recommendations.md', title: 'Technical Recommendations' },
+    'technology-selection-criteria': { filename: 'technology-selection-criteria.md', title: 'Technology Selection Criteria' },
+    'technical-implementation-roadmap': { filename: 'technical-implementation-roadmap.md', title: 'Technical Implementation Roadmap' },
+    'technology-governance-framework': { filename: 'technology-governance-framework.md', title: 'Technology Governance Framework' },
     // DMBOK Data Governance Plan
     'data-governance-plan': { filename: 'data-governance-plan.md', title: 'Data Governance Plan' },
     'data-quality-management-plan': {
