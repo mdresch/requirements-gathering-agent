@@ -96,7 +96,13 @@ import {
   handleVcsCommitCommand,
   handleVcsPushCommand,
   // Feedback commands
-  createFeedbackCommand
+  createFeedbackCommand,
+  // Stakeholder Analysis commands
+  handleStakeholderAnalysisCommand,
+  handleStakeholderRegisterCommand,
+  handleStakeholderEngagementPlanCommand,
+  handleStakeholderAutomationCommand,
+  displayStakeholderHelp
 } from './commands/index.js';
 
 // 6. Utilities and version management
@@ -582,6 +588,72 @@ yargs(hideBin(process.argv))
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
   .command(promptsCommand)
+  // Stakeholder Analysis commands
+  .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
+    return yargs
+      .command('analysis', 'Generate comprehensive stakeholder analysis', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('include-register', { type: 'boolean', default: true, describe: 'Include stakeholder register' })
+          .option('include-engagement-plan', { type: 'boolean', default: false, describe: 'Include engagement plan' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAnalysisCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: argv['include-register'],
+          includeEngagementPlan: argv['include-engagement-plan'],
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
+      })
+      .command('register', 'Generate stakeholder register only', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderRegisterCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
+      })
+      .command('engagement-plan', 'Generate stakeholder engagement plan', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderEngagementPlanCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
+      })
+      .command('automate', 'Generate all stakeholder documents (comprehensive automation)', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAutomationCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: true,
+          includeEngagementPlan: true,
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
+      })
+      .command('help', 'Show stakeholder analysis help', {}, () => {
+        displayStakeholderHelp();
+      })
+      .demandCommand(1, 'You must provide a valid stakeholder command.');
+  })
   .option('quiet', {
     alias: 'q',
     type: 'boolean',

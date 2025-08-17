@@ -30,7 +30,7 @@ export class SchedulenetworkdiagramProcessor implements DocumentProcessor {
       await this.validateOutput(content);
       
       return {
-        title: 'Schedulenetworkdiagram',
+        title: 'Schedule Network Diagram',
         content
       };
     } catch (error) {
@@ -45,28 +45,105 @@ export class SchedulenetworkdiagramProcessor implements DocumentProcessor {
   }
 
   private createPrompt(context: ProjectContext): string {
-    // Get the template as an example structure
-    const template = new SchedulenetworkdiagramTemplate(context);
-    const exampleStructure = template.generateContent();
-
-    return `Based on the following project context, generate a comprehensive Schedulenetworkdiagram document.
+    const projectName = context.projectName || 'Untitled Project';
+    const projectType = context.projectType || 'Not specified';
+    const projectDescription = context.description || 'No description provided';
+    
+    return `Based on the following project context, generate a comprehensive Schedule Network Diagram document.
 
 Project Context:
-- Name: ${context.projectName || 'Untitled Project'}
-- Type: ${context.projectType || 'Not specified'}
-- Description: ${context.description || 'No description provided'}
+- Name: ${projectName}
+- Type: ${projectType}
+- Description: ${projectDescription}
 
-Use this structure as a reference (but customize the content for the specific project):
+Requirements:
+1. Create a detailed schedule network diagram showing activity relationships
+2. Define all dependency types (FS, SS, FF, SF) where applicable
+3. Identify the critical path and critical activities
+4. Show lead and lag times where relevant
+5. Include milestone activities and decision points
+6. Provide detailed dependency analysis
+7. Address resource constraints and leveling
+8. Include schedule compression techniques
 
-${exampleStructure}
+Structure your response as:
+# Schedule Network Diagram
 
-Important Instructions:
-- Make the content specific to the project context provided
-- Ensure the language is professional and appropriate for the document type
-- Include practical guidance where applicable
-- Focus on what makes this project unique
-- Use markdown formatting for proper structure
-- Keep content concise but comprehensive`;
+## Document Overview
+- Project name and type
+- Purpose of the schedule network diagram
+- Methodology used (PDM/ADM)
+
+## Network Diagram Development
+- Activity identification process
+- Dependency analysis methodology
+- Critical path determination
+
+## Activity Network Structure
+Create detailed network diagrams for each project phase:
+
+### Phase 1: [Phase Name]
+\`\`\`
+[Activity A] --FS--> [Activity B] --FS--> [Activity C]
+     |                   |                   |
+     SS                  FF                  FS
+     ↓                   ↓                   ↓
+[Activity D] --FS--> [Activity E] --FS--> [Activity F]
+\`\`\`
+
+**Critical Activities:** [List critical path activities]
+**Float Analysis:** [Activities with float and duration]
+
+[Repeat for each phase]
+
+## Critical Path Analysis
+- Complete critical path sequence
+- Total project duration
+- Critical activities that cannot be delayed
+- Schedule compression opportunities
+
+## Dependency Management
+### Mandatory Dependencies (Hard Logic)
+- Technical requirements
+- Legal/regulatory requirements
+- Physical constraints
+
+### Discretionary Dependencies (Soft Logic)
+- Best practices
+- Preferred sequences
+- Resource optimization
+
+### External Dependencies
+- Vendor deliverables
+- Third-party approvals
+- Infrastructure dependencies
+
+## Resource Considerations
+- Resource-constrained activities
+- Resource leveling requirements
+- Multi-resource activities
+- Resource availability windows
+
+## Schedule Optimization
+- Fast-tracking opportunities
+- Crashing analysis
+- Resource smoothing
+- Alternative sequencing options
+
+## Risk and Contingency
+- Schedule risks and buffers
+- Contingency activities
+- Risk mitigation in sequencing
+- Schedule reserve allocation
+
+## Network Diagram Maintenance
+- Update procedures and frequency
+- Change control process
+- Version management
+- Stakeholder communication
+
+Make the content specific to the ${projectType} project context and include realistic activities and dependencies for this type of project.
+Use proper markdown formatting and include visual network representations using text diagrams.`;
   }
 
   private async validateOutput(content: string): Promise<void> {
@@ -74,9 +151,16 @@ Important Instructions:
       throw new ExpectedError('Generated content is empty');
     }
 
-    // Basic validation - ensure content has some structure
-    if (!content.includes('#')) {
-      throw new ExpectedError('Generated content lacks proper markdown structure');
+    if (!content.includes('Schedule Network Diagram')) {
+      throw new ExpectedError('Generated content does not appear to be a valid Schedule Network Diagram');
+    }
+
+    // Validate that key sections are present
+    const requiredSections = ['Critical Path', 'Dependencies', 'Network'];
+    for (const section of requiredSections) {
+      if (!content.includes(section)) {
+        throw new ExpectedError(`Generated content is missing required section: ${section}`);
+      }
     }
   }
 }

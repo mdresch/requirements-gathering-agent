@@ -564,6 +564,26 @@
     "dependencies": [],
     "priority": 999
   },
+  "technical-recommendations": {
+    "module": "../documentTemplates/technical-analysis/TechnicalRecommendationsProcessor.ts#TechnicalRecommendationsProcessor",
+    "dependencies": ["project-charter", "stakeholder-register", "requirements-documentation"],
+    "priority": 34
+  },
+  "technology-selection-criteria": {
+    "module": "../documentTemplates/technical-analysis/TechnicalRecommendationsProcessor.ts#TechnicalRecommendationsProcessor",
+    "dependencies": ["technical-recommendations"],
+    "priority": 35
+  },
+  "technical-implementation-roadmap": {
+    "module": "../documentTemplates/technical-analysis/TechnicalRecommendationsProcessor.ts#TechnicalRecommendationsProcessor",
+    "dependencies": ["technical-recommendations", "technology-selection-criteria"],
+    "priority": 36
+  },
+  "technology-governance-framework": {
+    "module": "../documentTemplates/technical-analysis/TechnicalRecommendationsProcessor.ts#TechnicalRecommendationsProcessor",
+    "dependencies": ["technical-recommendations"],
+    "priority": 37
+  },
   "common-goals-user-personas": {
     "module": "../documentTemplates/basic-docs/CommongoalsuserpersonasProcessor.ts#CommongoalsuserpersonasProcessor",
     "dependencies": [],
@@ -762,5 +782,10 @@
     "module": "../documentTemplates/pppm/ProgramChangeRequestFormProcessor.ts#ProgramChangeRequestFormProcessor",
     "dependencies": [],
     "priority": 14
+  },
+  "detailed-planning-artifacts": {
+    "module": "../documentTemplates/planningArtifacts/DetailedPlanningArtifactsProcessor.ts#DetailedPlanningArtifactsProcessor",
+    "dependencies": ["project-charter", "stakeholder-register"],
+    "priority": 5
   }
 }

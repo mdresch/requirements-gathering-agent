@@ -25,6 +25,7 @@ import type { ContextManager } from "../../contextManager.js";
 // Import domain-specific processors
 import { StakeholderProcessor } from "./StakeholderProcessor.js";
 import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor.js";
+import { TechnicalRecommendationsProcessor } from "./TechnicalRecommendationsProcessor.js";
 import { RequirementsProcessor } from "./RequirementsProcessor.js";
 import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor.js";
 import { PlanningProcessor } from "./PlanningProcessor.js";
@@ -59,6 +60,7 @@ const pmbokProcessor = new PMBOKProcessProcessor();
 const scopeProcessor = new ScopeManagementProcessor();
 const stakeholderProcessor = new StakeholderProcessor();
 const technicalProcessor = new TechnicalAnalysisProcessor();
+const technicalRecommendationsProcessor = new TechnicalRecommendationsProcessor();
 const requirementsProcessor = new RequirementsProcessor();
 const planningProcessor = new PlanningProcessor();
 const wbsProcessor = new WBSProcessor();
@@ -142,6 +144,12 @@ export const getAiRiskAnalysis = async (context: string): Promise<string> => awa
 export const getAiAcceptanceCriteria = async (context: string): Promise<string> => await safeProcessorCall(requirementsProcessor.getAcceptanceCriteria(context));
 export const getAiComplianceConsiderations = async (context: string): Promise<string> => await safeProcessorCall(technicalProcessor.getComplianceConsiderations(context));
 export const getAiUiUxConsiderations = async (context: string): Promise<string> => await safeProcessorCall(technicalProcessor.getUiUxConsiderations(context));
+
+// Technical Recommendations
+export const getAiTechnicalRecommendations = async (context: string): Promise<string> => await safeProcessorCall(technicalRecommendationsProcessor.getTechnicalRecommendations(context));
+export const getAiTechnologySelectionCriteria = async (context: string): Promise<string> => await safeProcessorCall(technicalRecommendationsProcessor.getTechnologySelectionCriteria(context));
+export const getAiTechnicalImplementationRoadmap = async (context: string): Promise<string> => await safeProcessorCall(technicalRecommendationsProcessor.getTechnicalImplementationRoadmap(context));
+export const getAiTechnologyGovernanceFramework = async (context: string): Promise<string> => await safeProcessorCall(technicalRecommendationsProcessor.getTechnologyGovernanceFramework(context));
 
 
 // DMBOK Data Management Strategy

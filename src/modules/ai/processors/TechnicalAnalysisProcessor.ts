@@ -185,30 +185,61 @@ Focus on practical, actionable compliance guidance that can be integrated into t
     async getUiUxConsiderations(context: string): Promise<string | null> {
         return await this.handleAICall(async () => {
             const messages = this.createStandardMessages(
-                "You are a UX/UI expert with extensive experience in user-centered design. Analyze the project for UI/UX considerations.",
-                `Based on the project context below, provide comprehensive UI/UX considerations:
+                "You are a UX/UI expert with extensive experience in user-centered design and PMBOK 7.0 project management practices. Analyze the project for comprehensive UI/UX considerations that align with project management standards.",
+                `Based on the project context below, provide comprehensive UI/UX considerations that align with PMBOK 7.0 performance domains:
 
 Project Context:
 ${context}
 
-Include in your UI/UX analysis:
-- User experience strategy and principles
-- User interface design guidelines
-- Accessibility requirements (WCAG, Section 508)
-- Mobile and responsive design considerations
-- User journey mapping recommendations
-- Information architecture suggestions
-- Interaction design patterns
-- Visual design and branding considerations
-- Usability testing strategies
-- Performance and optimization for UX
-- Content strategy recommendations
-- Internationalization and localization needs
+## PMBOK 7.0 Performance Domain Integration
 
-Focus on creating user-centered design recommendations that align with business objectives and technical constraints.`
+### Stakeholder Performance Domain
+- User research methodology and stakeholder engagement
+- User persona development and validation processes
+- Stakeholder feedback collection and integration workflows
+- User advocacy and representation in project decisions
+
+### Planning Performance Domain
+- UI/UX project planning and milestone integration
+- Resource allocation for design activities and user research
+- Timeline considerations for design iterations and user testing
+- Risk assessment and mitigation for user experience delivery
+
+### Project Work Performance Domain
+- Design-to-development handoff processes and workflows
+- Cross-functional collaboration between UX and development teams
+- Quality gates and checkpoints for UI/UX deliverables
+- Change management for design iterations and user feedback
+
+### Delivery Performance Domain
+- User acceptance criteria and testing protocols
+- Performance metrics and success measurement for UX
+- User training and adoption strategies
+- Post-launch optimization and continuous improvement
+
+## Comprehensive UI/UX Analysis Required
+
+Include detailed analysis of:
+- Strategic UX planning and project integration
+- User experience strategy aligned with business objectives
+- User interface design guidelines and standards
+- Accessibility compliance (WCAG 2.1 AA, Section 508, ADA)
+- Mobile-first and responsive design considerations
+- User journey mapping and experience flow optimization
+- Information architecture and navigation design
+- Interaction design patterns and component libraries
+- Visual design principles and brand alignment
+- Usability testing strategies and validation methods
+- Performance optimization for user experience
+- Content strategy and information design
+- Internationalization and localization requirements
+- Risk management specific to user experience
+- Quality assurance processes for UI/UX deliverables
+
+Focus on creating actionable, measurable recommendations that contribute to successful project delivery while ensuring exceptional user experience and alignment with PMBOK project management standards.`
             );
             
-            const response = await getAIProcessor().makeAICall(messages, 1700);
+            const response = await getAIProcessor().makeAICall(messages, 2000);
             return getAIProcessor().extractContent(response);
         }, 'UI/UX Considerations Generation', 'ui-ux-considerations');
     }
