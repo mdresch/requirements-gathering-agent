@@ -22,6 +22,7 @@ import { PMBOKProcessProcessor } from "./PMBOKProcessProcessor.js";
 import { ScopeManagementProcessor } from "./ScopeManagementProcessor.js";
 import { StakeholderProcessor } from "./StakeholderProcessor.js";
 import { TechnicalAnalysisProcessor } from "./TechnicalAnalysisProcessor.js";
+import { TechnicalRecommendationsProcessor } from "./TechnicalRecommendationsProcessor.js";
 import { RequirementsProcessor } from "./RequirementsProcessor.js";
 import { PlanningProcessor } from "./PlanningProcessor.js";
 import { WBSProcessor } from "./WBSProcessor.js";
@@ -35,6 +36,7 @@ const pmbokProcessor = new PMBOKProcessProcessor();
 const scopeProcessor = new ScopeManagementProcessor();
 const stakeholderProcessor = new StakeholderProcessor();
 const technicalProcessor = new TechnicalAnalysisProcessor();
+const technicalRecommendationsProcessor = new TechnicalRecommendationsProcessor();
 const requirementsProcessor = new RequirementsProcessor();
 const planningProcessor = new PlanningProcessor();
 const wbsProcessor = new WBSProcessor();
@@ -74,6 +76,13 @@ export class ProcessorFactory {
      */
     static getTechnicalAnalysisProcessor(): TechnicalAnalysisProcessor {
         return technicalProcessor;
+    }
+
+    /**
+     * Get Technical Recommendations Processor instance
+     */
+    static getTechnicalRecommendationsProcessor(): TechnicalRecommendationsProcessor {
+        return technicalRecommendationsProcessor;
     }
 
     /**
@@ -122,6 +131,8 @@ export class ProcessorFactory {
                     return stakeholderProcessor;
                 case 'technical':
                     return technicalProcessor;
+                case 'technical-recommendations':
+                    return technicalRecommendationsProcessor;
                 case 'planning':
                     return planningProcessor;
                 case 'wbs':
@@ -144,6 +155,7 @@ export {
     scopeProcessor,
     stakeholderProcessor,
     technicalProcessor,
+    technicalRecommendationsProcessor,
     requirementsProcessor,
     planningProcessor,
     wbsProcessor,
