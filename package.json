@@ -1,6 +1,6 @@
 {
   "name": "adpa-enterprise-framework-automation",
-  "version": "3.2.1",
+  "version": "3.2.3",
   "description": "Modular, standards-compliant Node.js/TypeScript automation framework for enterprise requirements, project, and data management. Provides CLI and API for BABOK v3, PMBOK 7th Edition, and DMBOK 2.0 (in progress). Production-ready Express.js API with TypeSpec architecture. Designed for secure, scalable, and maintainable enterprise automation.",
   "main": "dist/server.js",
   "type": "module",
@@ -18,8 +18,8 @@
     "multi-standard-api": "dist/server.js"
   },
   "scripts": {
-  "build": "tsc && npm run copy-configs",
-  "setup-review-system": "node dist/cli.js setup-review-system",
+    "build": "tsc && npm run copy-configs",
+    "setup-review-system": "node dist/cli.js setup-review-system",
     "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
     "start": "node dist/server.js",
     "api:start": "node dist/server.js",
@@ -122,6 +122,7 @@
     "@types/mongoose": "^5.11.96",
     "axios": "^1.10.0",
     "bcryptjs": "^2.4.3",
+    "commander": "^14.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
