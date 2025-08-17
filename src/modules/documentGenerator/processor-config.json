@@ -762,5 +762,10 @@
     "module": "../documentTemplates/pppm/ProgramChangeRequestFormProcessor.ts#ProgramChangeRequestFormProcessor",
     "dependencies": [],
     "priority": 14
+  },
+  "detailed-planning-artifacts": {
+    "module": "../documentTemplates/planningArtifacts/DetailedPlanningArtifactsProcessor.ts#DetailedPlanningArtifactsProcessor",
+    "dependencies": ["project-charter", "stakeholder-register"],
+    "priority": 5
   }
 }
