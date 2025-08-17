@@ -513,6 +513,34 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'User experience and interface design recommendations',
         generatedAt: ''
     },
+    'technical-recommendations': {
+        title: 'Technical Recommendations',
+        filename: 'technical-analysis/technical-recommendations.md',
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
+        description: 'Comprehensive technical recommendations aligned with PMBOK standards',
+        generatedAt: ''
+    },
+    'technology-selection-criteria': {
+        title: 'Technology Selection Criteria',
+        filename: 'technical-analysis/technology-selection-criteria.md',
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
+        description: 'Criteria and framework for technology selection decisions',
+        generatedAt: ''
+    },
+    'technical-implementation-roadmap': {
+        title: 'Technical Implementation Roadmap',
+        filename: 'technical-analysis/technical-implementation-roadmap.md',
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
+        description: 'Phased technical implementation plan and timeline',
+        generatedAt: ''
+    },
+    'technology-governance-framework': {
+        title: 'Technology Governance Framework',
+        filename: 'technical-analysis/technology-governance-framework.md',
+        category: DOCUMENT_CATEGORIES.TECHNICAL_ANALYSIS,
+        description: 'Technology governance structure and decision-making framework',
+        generatedAt: ''
+    },
     // Missing documents that were incorrectly categorized as "unknown"
     'control-scope': {
         title: 'Control Scope Process',

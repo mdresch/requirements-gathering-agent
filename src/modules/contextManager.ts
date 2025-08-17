@@ -167,6 +167,13 @@ export class ContextManager {
         this.documentRelationships.set('acceptance-criteria', ['user-stories', 'quality-management', 'compliance', 'project-charter']);
         this.documentRelationships.set('compliance-considerations', ['project-charter', 'tech-stack', 'data-model', 'stakeholder-register']);
         this.documentRelationships.set('ui-ux-considerations', ['user-stories', 'personas', 'tech-stack', 'acceptance-criteria']);
+        
+        // Technical Recommendations relationships
+        this.documentRelationships.set('technical-recommendations', ['project-charter', 'stakeholder-register', 'requirements-documentation', 'tech-stack-analysis', 'risk-analysis']);
+        this.documentRelationships.set('technology-selection-criteria', ['technical-recommendations', 'project-charter', 'quality-management-plan', 'risk-management-plan']);
+        this.documentRelationships.set('technical-implementation-roadmap', ['technical-recommendations', 'technology-selection-criteria', 'schedule-management-plan', 'resource-management-plan']);
+        this.documentRelationships.set('technology-governance-framework', ['technical-recommendations', 'stakeholder-register', 'project-charter', 'communication-management-plan']);
+        
         this.documentRelationships.set('user-personas', ['summary', 'project-charter', 'key-roles']);
         this.documentRelationships.set('key-roles-and-needs', ['summary', 'project-charter', 'stakeholder-register', 'user-stories']);
         this.documentRelationships.set('mission-vision-core-values', ['project-charter', 'summary', 'stakeholder-register']);
