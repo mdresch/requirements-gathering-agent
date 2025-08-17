@@ -26,7 +26,9 @@ import * as path from 'path';
 import { join } from 'path';
 import process from 'process';
 import { writeFile } from 'fs/promises';
+import * as fs from 'fs/promises';
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
+import { ComplianceValidationService, DocumentComplianceValidation, ComplianceValidationConfig } from '../../services/ComplianceValidationService.js';
 import { createProcessor } from './ProcessorFactory.js';
 import { 
     createDirectoryStructure, 
@@ -64,6 +66,7 @@ export class DocumentGenerator {
     private results: GenerationResult;
     private aiProcessor: AIProcessor;
     private configManager: ConfigurationManager;
+    private complianceService: ComplianceValidationService;
     // ...existing code...
     constructor(
         context: string,
@@ -95,6 +98,10 @@ export class DocumentGenerator {
             errors: [],
             duration: 0
         };
+        
+        // Initialize compliance validation service
+        const complianceConfig = ComplianceValidationService.getDefaultConfig();
+        this.complianceService = new ComplianceValidationService(complianceConfig);
     }
 
     /**
@@ -503,6 +510,33 @@ export class DocumentGenerator {
                 const documentKey = task.key;
                 const config = DOCUMENT_CONFIG[documentKey];
                 
+                // Validate compliance before saving
+                console.log(`🔍 Validating compliance for ${task.name}...`);
+                try {
+                    const complianceValidation = await this.complianceService.validateDocumentCompliance(
+                        task.key,
+                        task.category,
+                        content
+                    );
+                    
+                    // Log compliance results
+                    console.log(`📊 Compliance Score: ${complianceValidation.complianceScore}% (${complianceValidation.complianceStatus})`);
+                    
+                    // Check if compliance issues need to be addressed
+                    if (complianceValidation.issues.length > 0) {
+                        console.log(`⚠️ Found ${complianceValidation.issues.length} compliance issues:`);
+                        complianceValidation.issues.slice(0, 3).forEach(issue => {
+                            console.log(`   • ${issue.description}`);
+                        });
+                    }
+                    
+                    // Save compliance report
+                    await this.saveComplianceReport(task.key, complianceValidation);
+                } catch (complianceError) {
+                    console.warn(`⚠️ Compliance validation failed for ${task.name}:`, complianceError);
+                    // Continue with document generation even if compliance validation fails
+                }
+                
                 if (!config) {
                     console.error(`❌ Unknown document key: ${documentKey}`);
                     saveDocument(documentKey, content);
@@ -526,6 +560,131 @@ export class DocumentGenerator {
             this.results.errors.push({ task: task.name, error: errorMsg });
             return false;
         }
+    }
+
+    /**
+     * Save compliance report for a document
+     * @param documentKey Document key
+     * @param validation Compliance validation result
+     */
+    private async saveComplianceReport(documentKey: string, validation: DocumentComplianceValidation): Promise<void> {
+        try {
+            const reportContent = this.generateComplianceReportContent(validation);
+            const reportPath = join(this.options.outputDir, 'compliance-reports', `${documentKey}-compliance.md`);
+            
+            // Ensure compliance reports directory exists
+            const reportsDir = join(this.options.outputDir, 'compliance-reports');
+            await fs.mkdir(reportsDir, { recursive: true });
+            
+            await writeFile(reportPath, reportContent);
+            console.log(`📄 Compliance report saved: ${reportPath}`);
+        } catch (error) {
+            console.warn(`⚠️ Failed to save compliance report for ${documentKey}:`, error);
+        }
+    }
+
+    /**
+     * Generate compliance report content
+     * @param validation Compliance validation result
+     * @returns Formatted compliance report content
+     */
+    private generateComplianceReportContent(validation: DocumentComplianceValidation): string {
+        const timestamp = new Date().toISOString();
+        
+        return `# Compliance Validation Report
+
+**Document:** ${validation.documentId}  
+**Document Type:** ${validation.documentType}  
+**Validation Date:** ${timestamp}  
+**Compliance Score:** ${validation.complianceScore}%  
+**Compliance Status:** ${validation.complianceStatus}  
+
+## Executive Summary
+
+This document has been validated against enterprise governance policies, regulatory requirements, and industry standards to ensure compliance with organizational requirements.
+
+## Governance Policy Compliance
+
+**Overall Compliance:** ${validation.governancePolicyCompliance.overallCompliance ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}  
+**Policy Checks:** ${validation.governancePolicyCompliance.policyChecks.length}  
+**Policy Violations:** ${validation.governancePolicyCompliance.policyViolations.length}  
+
+${validation.governancePolicyCompliance.policyViolations.length > 0 ? `
+### Policy Violations
+${validation.governancePolicyCompliance.policyViolations.map(violation => `
+- **${violation.description}**
+  - Severity: ${violation.severity}
+  - Impact: ${violation.impact}
+  - Remediation: ${violation.remediation}
+`).join('')}
+` : ''}
+
+## Regulatory Compliance
+
+**Overall Compliance:** ${validation.regulatoryCompliance.overallCompliance ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}  
+**Applicable Regulations:** ${validation.regulatoryCompliance.applicableRegulations.length}  
+**Compliance Gaps:** ${validation.regulatoryCompliance.complianceGaps.length}  
+**Risk Level:** ${validation.regulatoryCompliance.riskAssessment.overallRisk}  
+
+${validation.regulatoryCompliance.complianceGaps.length > 0 ? `
+### Compliance Gaps
+${validation.regulatoryCompliance.complianceGaps.map(gap => `
+- **${gap.description}**
+  - Severity: ${gap.severity}
+  - Impact: ${gap.impact}
+  - Remediation: ${gap.remediation}
+  - Timeline: ${gap.timeline}
+`).join('')}
+` : ''}
+
+## Enterprise Standards Compliance
+
+**Overall Compliance:** ${validation.enterpriseStandardsCompliance.overallCompliance ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}  
+**Standards Checked:** ${validation.enterpriseStandardsCompliance.standardsChecks.length}  
+**Deviations:** ${validation.enterpriseStandardsCompliance.deviations.length}  
+**Improvement Areas:** ${validation.enterpriseStandardsCompliance.improvementAreas.length}  
+
+${validation.enterpriseStandardsCompliance.deviations.length > 0 ? `
+### Standards Deviations
+${validation.enterpriseStandardsCompliance.deviations.map(deviation => `
+- **${deviation.description}**
+  - Severity: ${deviation.severity}
+  - Justification: ${deviation.justification}
+  - Approved: ${deviation.approved ? 'Yes' : 'No'}
+`).join('')}
+` : ''}
+
+## Issues and Recommendations
+
+### Critical Issues (${validation.issues.length})
+${validation.issues.map(issue => `
+- **${issue.description}**
+  - Category: ${issue.category}
+  - Severity: ${issue.severity}
+  - Impact: ${issue.impact}
+  - Recommendation: ${issue.recommendation}
+`).join('')}
+
+### Recommendations (${validation.recommendations.length})
+${validation.recommendations.map(rec => `
+- **${rec.description}**
+  - Priority: ${rec.priority}
+  - Category: ${rec.category}
+  - Timeline: ${rec.timeline}
+  - Benefits: ${rec.benefits.join(', ')}
+`).join('')}
+
+## Next Steps
+
+1. **Address Critical Issues:** Review and resolve all critical compliance issues identified above
+2. **Implement Recommendations:** Prioritize and implement the recommended improvements
+3. **Monitor Compliance:** Establish ongoing monitoring to ensure continued compliance
+4. **Regular Reviews:** Schedule periodic compliance reviews to maintain standards
+
+---
+
+*This report was generated by the ADPA Compliance Validation Service - ensuring your documents meet the highest standards of governance, regulatory, and enterprise compliance.*
+`;
     }
 
     /**
