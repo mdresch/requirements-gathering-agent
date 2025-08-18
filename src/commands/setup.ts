@@ -5,7 +5,7 @@
 
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import readline from 'readline';
+import readline from 'readline/promises';
 import { execSync } from 'child_process';
 import {
   CONFIG_FILENAME,
@@ -15,13 +15,14 @@ import {
 /**
  * Run the enhanced setup wizard for configuring AI providers
  */
-export async function handleSetupCommand(): Promise<void> {
+export async function handleSetupCommand() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const cwd = process.cwd();
   console.log('🧙‍♂️ Interactive Setup Wizard\n');
 
-  function ask(question: string): Promise<string> {
-    return new Promise(resolve => rl.question(question, answer => resolve(answer.trim())));
+  async function ask(question: string): Promise<string> {
+    const answer = await rl.question(question);
+    return answer.trim();
   }
 
   // Choose provider
@@ -61,13 +62,38 @@ export async function handleSetupCommand(): Promise<void> {
       process.exit(1);
   }
 
-  // Write .env file
-  let envContent = '';
+  // Merge new envVars into existing .env file
+  const envPath = join(cwd, '.env');
+  let existingEnv: string = '';
+  try {
+    existingEnv = await fs.readFile(envPath, 'utf-8');
+  } catch {}
+  const envLines = existingEnv.split(/\r?\n/);
+  const envMap = new Map<string, string>();
+  for (const line of envLines) {
+    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (match) envMap.set(match[1], match[2]);
+  }
   for (const [k, v] of Object.entries(envVars)) {
-    if (v) envContent += `${k}=${v}\n`;
+    if (v) envMap.set(k, v);
+  }
+  // Reconstruct .env file, preserving comments and order
+  const updatedEnv: string[] = [];
+  for (const line of envLines) {
+    const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (match) {
+      updatedEnv.push(`${match[1]}=${envMap.get(match[1])}`);
+      envMap.delete(match[1]);
+    } else {
+      updatedEnv.push(line);
+    }
+  }
+  // Add any new keys
+  for (const [k, v] of envMap.entries()) {
+    updatedEnv.push(`${k}=${v}`);
   }
   try {
-    await fs.writeFile(join(cwd, '.env'), envContent, { encoding: 'utf-8' });
+    await fs.writeFile(envPath, updatedEnv.join('\n'), { encoding: 'utf-8' });
     console.log('\n✅ .env file created/updated.');
   } catch (e) {
     console.error('❌ Failed to write .env:', e);
@@ -131,6 +157,7 @@ export async function handleSetupCommand(): Promise<void> {
     }
   }
 
-  rl.close();
+  await rl.close();
   console.log('\nSetup complete. You may now use the CLI.');
 }
+

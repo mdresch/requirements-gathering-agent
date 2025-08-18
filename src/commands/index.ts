@@ -104,6 +104,16 @@ export { promptsCommand } from './prompts.js';
 // Risk and Compliance commands
 export { createRiskComplianceCommand } from './risk-compliance.js';
 
+// Stakeholder Analysis commands
+export {
+  handleStakeholderAnalysisCommand,
+  handleStakeholderRegisterCommand,
+  handleStakeholderEngagementPlanCommand,
+  handleStakeholderAutomationCommand,
+  displayStakeholderHelp
+} from './stakeholder.js';
+export type { StakeholderAnalysisOptions } from './stakeholder.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';

@@ -499,68 +499,6 @@ yargs(hideBin(process.argv))
     })
         .demandCommand(1, 'You must provide a valid feedback command.');
 })
-    .command('provider-test', 'Test AI provider connectivity', (yargs) => {
-    return yargs
-        .option('provider', { type: 'string', describe: 'Provider to test (ollama, google, azure, github)' });
-}, async (argv) => {
-    if (argv.provider === 'ollama') {
-        try {
-            const fetch = (await import('node-fetch')).default;
-            const res = await fetch('http://localhost:11434/api/tags');
-            if (res.ok) {
-                console.log('✅ Ollama is running and reachable.');
-            }
-            else {
-                console.error('❌ Ollama endpoint returned error:', res.statusText);
-            }
-        }
-        catch (e) {
-            console.error('❌ Could not reach Ollama endpoint:', e);
-        }
-    }
-    else {
-        console.log('Provider test for other providers not yet implemented.');
-    }
-})
-    .command('ollama', 'Ollama model management', (yargs) => {
-    return yargs
-        .command('models-list', 'List available Ollama models', {}, async () => {
-        try {
-            const fetch = (await import('node-fetch')).default;
-            const res = await fetch('http://localhost:11434/api/tags');
-            const data = await res.json();
-            if (typeof data === 'object' && data !== null && 'models' in data) {
-                console.log('Available models:', data.models);
-            }
-            else {
-                console.log('Available models:', data);
-            }
-        }
-        catch (e) {
-            console.error('❌ Error listing models:', e);
-        }
-    })
-        .command('models-pull <model>', 'Pull a new Ollama model', {}, async (argv) => {
-        try {
-            const fetch = (await import('node-fetch')).default;
-            const res = await fetch('http://localhost:11434/api/pull', {
-                method: 'POST',
-                body: JSON.stringify({ name: argv.model }),
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (res.ok) {
-                console.log(`✅ Model ${argv.model} pulled successfully.`);
-            }
-            else {
-                console.error('❌ Failed to pull model:', res.statusText);
-            }
-        }
-        catch (e) {
-            console.error('❌ Error pulling model:', e);
-        }
-    })
-        .demandCommand(1, 'You must provide a valid ollama command.');
-})
     .command(promptsCommand)
     .option('quiet', {
     alias: 'q',

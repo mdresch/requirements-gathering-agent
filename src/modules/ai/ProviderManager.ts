@@ -194,28 +194,6 @@ export class ProviderManager {
     };
     this.addProvider(githubAI);
 
-    // Ollama (Local)
-    const ollama: ProviderConfig = {
-      name: 'ollama',
-      check: async () => {
-        const endpoint = process.env.AZURE_AI_ENDPOINT || 'http://localhost:11434';
-        if (!endpoint.includes('localhost:11434') && !endpoint.includes('127.0.0.1:11434')) {
-          return false;
-        }
-        try {
-          const response = await fetch(`${endpoint}/api/tags`);
-          return response.ok;
-        } catch (error) {
-          console.warn('Ollama service not running:', error instanceof Error ? error.message : String(error));
-          return false;
-        }
-      },
-      priority: 4,
-      description: 'Local AI models with Ollama - offline capable',
-      endpoint: process.env.AZURE_AI_ENDPOINT || 'http://localhost:11434',
-      tokenLimit: 131072
-    };
-    this.addProvider(ollama);
 
     // Initialize default quotas
     this.setDefaultQuotas();

@@ -96,7 +96,13 @@ import {
   handleVcsCommitCommand,
   handleVcsPushCommand,
   // Feedback commands
-  createFeedbackCommand
+  createFeedbackCommand,
+  // Stakeholder Analysis commands
+  handleStakeholderAnalysisCommand,
+  handleStakeholderRegisterCommand,
+  handleStakeholderEngagementPlanCommand,
+  handleStakeholderAutomationCommand,
+  displayStakeholderHelp
 } from './commands/index.js';
 
 // 6. Utilities and version management
@@ -581,61 +587,74 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
-  .command('provider-test', 'Test AI provider connectivity', (yargs) => {
+  .command(promptsCommand)
+  // Stakeholder Analysis commands
+  .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
     return yargs
-      .option('provider', { type: 'string', describe: 'Provider to test (ollama, google, azure, github)' });
-  }, async (argv) => {
-    if (argv.provider === 'ollama') {
-      try {
-        const fetch = (await import('node-fetch')).default;
-        const res = await fetch('http://localhost:11434/api/tags');
-        if (res.ok) {
-          console.log('✅ Ollama is running and reachable.');
-        } else {
-          console.error('❌ Ollama endpoint returned error:', res.statusText);
-        }
-      } catch (e) {
-        console.error('❌ Could not reach Ollama endpoint:', e);
-      }
-    } else {
-      console.log('Provider test for other providers not yet implemented.');
-    }
-  })
-  .command('ollama', 'Ollama model management', (yargs) => {
-    return yargs
-      .command('models-list', 'List available Ollama models', {}, async () => {
-        try {
-          const fetch = (await import('node-fetch')).default;
-          const res = await fetch('http://localhost:11434/api/tags');
-          const data = await res.json();
-          if (typeof data === 'object' && data !== null && 'models' in data) {
-            console.log('Available models:', (data as any).models);
-          } else {
-            console.log('Available models:', data);
-          }
-        } catch (e) {
-          console.error('❌ Error listing models:', e);
-        }
+      .command('analysis', 'Generate comprehensive stakeholder analysis', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('include-register', { type: 'boolean', default: true, describe: 'Include stakeholder register' })
+          .option('include-engagement-plan', { type: 'boolean', default: false, describe: 'Include engagement plan' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAnalysisCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: argv['include-register'],
+          includeEngagementPlan: argv['include-engagement-plan'],
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
       })
-      .command('models-pull <model>', 'Pull a new Ollama model', {}, async (argv) => {
-        try {
-          const fetch = (await import('node-fetch')).default;
-          const res = await fetch('http://localhost:11434/api/pull', {
-            method: 'POST',
-            body: JSON.stringify({ name: argv.model }),
-            headers: { 'Content-Type': 'application/json' }
-          });
-          if (res.ok) {
-            console.log(`✅ Model ${argv.model} pulled successfully.`);
-          } else {
-            console.error('❌ Failed to pull model:', res.statusText);
-          }
-        } catch (e) {
-          console.error('❌ Error pulling model:', e);
-        }
+      .command('register', 'Generate stakeholder register only', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderRegisterCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
       })
-      .demandCommand(1, 'You must provide a valid ollama command.');
+      .command('engagement-plan', 'Generate stakeholder engagement plan', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderEngagementPlanCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
+      })
+      .command('automate', 'Generate all stakeholder documents (comprehensive automation)', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAutomationCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: true,
+          includeEngagementPlan: true,
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
+      })
+      .command('help', 'Show stakeholder analysis help', {}, () => {
+        displayStakeholderHelp();
+      })
+      .demandCommand(1, 'You must provide a valid stakeholder command.');
   })
+
   .command(promptsCommand)
   .command('risk-compliance', 'Generate comprehensive risk and compliance assessments', (yargs) => {
     return yargs
@@ -699,6 +718,7 @@ yargs(hideBin(process.argv))
       process.exit(1);
     }
   })
+
   .option('quiet', {
     alias: 'q',
     type: 'boolean',
