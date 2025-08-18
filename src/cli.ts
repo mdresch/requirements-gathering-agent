@@ -247,6 +247,43 @@ yargs(hideBin(process.argv))
   .command('setup', 'Interactive setup wizard for AI providers', {}, async () => {
     await handleSetupCommand();
   })
+  .command('interactive', 'Launch interactive CLI menu interface', (yargs) => {
+    return yargs
+      .option('mode', { 
+        type: 'string', 
+        choices: ['beginner', 'advanced'], 
+        default: 'beginner',
+        describe: 'Interface mode for different user experience levels' 
+      })
+      .option('skip-intro', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Skip the introduction message' 
+      })
+      .option('debug', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Enable debug mode for troubleshooting' 
+      });
+  }, async (argv) => {
+    const { 
+      handleInteractiveCommand, 
+      checkInteractiveSupport, 
+      showInteractiveNotSupportedMessage 
+    } = await import('./commands/interactive.js');
+    
+    // Check if interactive mode is supported
+    if (!checkInteractiveSupport()) {
+      showInteractiveNotSupportedMessage();
+      process.exit(1);
+    }
+    
+    await handleInteractiveCommand({
+      mode: argv.mode as 'beginner' | 'advanced',
+      skipIntro: argv.skipIntro,
+      debug: argv.debug
+    });
+  })
   .command('analyze', 'Analyze workspace without generating docs', {}, async () => {
     await handleAnalyzeCommand();
   })
