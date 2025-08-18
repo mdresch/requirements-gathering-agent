@@ -247,6 +247,37 @@ yargs(hideBin(process.argv))
   .command('setup', 'Interactive setup wizard for AI providers', {}, async () => {
     await handleSetupCommand();
   })
+  .command('configure', 'Configure AI providers and environment settings', (yargs) => {
+    return yargs
+      .option('interactive', { alias: 'i', type: 'boolean', describe: 'Run interactive configuration wizard' })
+      .option('template', { alias: 't', type: 'string', choices: ['development', 'production', 'testing'], describe: 'Generate configuration template' })
+      .option('validate', { alias: 'v', type: 'boolean', describe: 'Validate current configuration' })
+      .option('optimize', { alias: 'o', type: 'boolean', describe: 'Optimize configuration for performance' })
+      .option('reset', { alias: 'r', type: 'boolean', describe: 'Reset configuration to defaults' })
+      .option('export', { alias: 'e', type: 'string', describe: 'Export configuration to file' })
+      .option('import', { type: 'string', describe: 'Import configuration from file' })
+      .option('monitor', { alias: 'm', type: 'boolean', describe: 'Monitor provider health in real-time' })
+      .option('test', { type: 'boolean', describe: 'Test all configured providers' });
+  }, async (argv) => {
+    const { createConfigureCommand } = await import('./commands/configure.js');
+    const configureCommand = createConfigureCommand();
+    
+    // Convert yargs argv to commander-style options
+    const options = {
+      interactive: argv.interactive,
+      template: argv.template,
+      validate: argv.validate,
+      optimize: argv.optimize,
+      reset: argv.reset,
+      export: argv.export,
+      import: argv.import,
+      monitor: argv.monitor,
+      test: argv.test
+    };
+    
+    // Execute the configure command action
+    await configureCommand._actionHandler(options);
+  })
   .command('analyze', 'Analyze workspace without generating docs', {}, async () => {
     await handleAnalyzeCommand();
   })

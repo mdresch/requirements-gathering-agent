@@ -112,6 +112,9 @@ export {
 } from './stakeholder.js';
 export type { StakeholderAnalysisOptions } from './stakeholder.js';
 
+// Configuration commands
+export { createConfigureCommand } from './configure.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';
