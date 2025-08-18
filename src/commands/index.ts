@@ -101,6 +101,8 @@ export type {
 export { createFeedbackCommand } from './feedback.js';
 // Prompts commands
 export { promptsCommand } from './prompts.js';
+// Risk and Compliance commands
+export { createRiskComplianceCommand } from './risk-compliance.js';
 
 // Stakeholder Analysis commands
 export {
