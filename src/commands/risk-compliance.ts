@@ -51,10 +51,11 @@ export function createRiskComplianceCommand(): Command {
           await generateStandardAssessment(projectContext, options);
         }
         
-        console.log('\n✅ Risk and Compliance Assessment completed successfully!');
+  console.log('\n\u2705 Risk and Compliance Assessment completed successfully!');
         
       } catch (error) {
-        console.error('\n❌ Error generating risk and compliance assessment:', error.message);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('\n\u274c Error generating risk and compliance assessment:', message);
         process.exit(1);
       }
     });

@@ -1,4 +1,5 @@
 import { StandardsComplianceAnalysisEngine } from '../modules/standardsCompliance/StandardsComplianceEngine.js';
+import { ExecutiveSummary } from '../types/standardsCompliance.js';
 import { PMBOKValidator } from '../modules/pmbokValidation/PMBOKValidator.js';
 import type { 
   ProjectData, 
@@ -68,7 +69,11 @@ export class RiskComplianceAssessmentService {
       };
     } catch (error) {
       console.error('Error performing integrated assessment:', error);
-      throw new Error(`Failed to perform integrated risk and compliance assessment: ${error.message}`);
+      if (error instanceof Error) {
+        throw new Error(`Failed to perform integrated risk and compliance assessment: ${error.message}`);
+      } else {
+        throw new Error('Failed to perform integrated risk and compliance assessment: Unknown error');
+      }
     }
   }
 

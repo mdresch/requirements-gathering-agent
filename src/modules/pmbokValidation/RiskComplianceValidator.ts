@@ -62,7 +62,7 @@ export class RiskComplianceValidator extends PMBOKValidator {
       };
     } catch (error) {
       console.error('Error validating risk and compliance assessment:', error);
-      throw new Error(`Validation failed: ${error.message}`);
+  throw new Error(`Validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -374,7 +374,7 @@ export class RiskComplianceValidator extends PMBOKValidator {
       const fs = await import('fs/promises');
       return await fs.readFile(documentPath, 'utf-8');
     } catch (error) {
-      throw new Error(`Failed to read document: ${error.message}`);
+  throw new Error(`Failed to read document: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

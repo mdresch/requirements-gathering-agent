@@ -8,7 +8,7 @@
  * @author ADPA Team
  */
 
-import readline from 'readline';
+import * as readline from 'readline';
 import { EventEmitter } from 'events';
 
 // Types and Interfaces
@@ -217,15 +217,19 @@ export class InteractiveMenuSystem extends EventEmitter {
 
         default:
           console.log('❌ Unknown action type');
+        }
+      } catch (error) {
+          if (error instanceof Error) {
+            console.error('❌ Error executing action:', error.message);
+          } else {
+            console.error('❌ Error executing action:', error);
+          }
+          await this.pause();
+          if (this.currentMenu) {
+            await this.navigateTo(this.currentMenu);
+          }
+        }
       }
-    } catch (error) {
-      console.error('❌ Error executing action:', error.message);
-      await this.pause();
-      if (this.currentMenu) {
-        await this.navigateTo(this.currentMenu);
-      }
-    }
-  }
 
   /**
    * Execute a function handler

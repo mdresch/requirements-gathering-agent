@@ -50,16 +50,14 @@ export class StrategicSuccessMetricsTemplate {
 ### 2.3 Success Hierarchy
 *[Instruction: Show the relationship between project outputs, outcomes, and strategic benefits.]*
 
-```
+
+/*
 Strategic Benefits (Why)
-    ↑
+  ↑
 Business Outcomes (What)
-    ↑
+  ↑
 Project Outputs (How)
-```
-
----
-
+*/
 ## 3. Strategic Key Performance Indicators (KPIs)
 
 ### 3.1 Primary Strategic KPIs

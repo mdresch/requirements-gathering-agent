@@ -751,7 +751,8 @@ yargs(hideBin(process.argv))
         '--format', argv.format
       ], { from: 'user' });
     } catch (error) {
-      console.error('❌ Error executing risk-compliance command:', error.message);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Error executing risk-compliance command:', message);
       process.exit(1);
     }
   })
