@@ -431,6 +431,7 @@ npm test           # Run tests
 ## 📞 **Support & Documentation**
 
 - **📖 Full Documentation**: [GitHub Wiki](https://github.com/mdresch/requirements-gathering-agent/wiki)
+- **🎯 CLI Usage Documentation**: [Interactive Menu Navigation & Complete Usage Guide](docs/CLI-USAGE-DOCUMENTATION.md)
 - **🖥️ CLI Execution Guide**: [Complete CLI Usage Guide](docs/CLI-EXECUTION-GUIDE.md)
 - **⚡ CLI Quick Reference**: [Essential Commands & Examples](docs/CLI-QUICK-REFERENCE.md)
 - **🐛 Issue Tracking**: [GitHub Issues](https://github.com/mdresch/requirements-gathering-agent/issues)
