@@ -11,6 +11,7 @@
 import * as readline from 'readline';
 import { EventEmitter } from 'events';
 import { CommandIntegrationService } from './CommandIntegration.js';
+import { spawn } from 'child_process';
 
 // Types and Interfaces
 export interface MenuItem {
@@ -363,24 +364,41 @@ export class InteractiveMenuSystem extends EventEmitter {
       // Use the integrated command service instead of spawning child processes
       const result = await this.commandIntegration.executeCommand(command, args);
       
-      if (result.success) {
-        console.log('✅ Command executed successfully');
-        if (result.message) {
-          console.log(`💡 ${result.message}`);
-        }
-      } else {
-        console.error('❌ Command execution failed');
-        if (result.message) {
-          console.error(`💡 ${result.message}`);
-        }
-        if (result.error) {
-          console.error(`Details: ${result.error.message}`);
-        }
-      }
+      // Execute the command in a child process
+      const childProcess = spawn('node', ['dist/cli.js', command, ...args], {
+        stdio: 'inherit',
+        cwd: process.cwd()
+      });
+      
+      // Wait for the command to complete
+      await new Promise((resolve, reject) => {
+  childProcess.on('close', (code: number) => {
+          if (code === 0) {
+            console.log('✅ Command executed successfully');
+            resolve(code);
+          } else {
+            console.log(`⚠️  Command exited with code ${code}`);
+            resolve(code);
+          }
+        });
+        
+        childProcess.on('error', (error) => {
+          if (error instanceof Error) {
+            console.error('❌ Error executing command:', error.message);
+          } else {
+            console.error('❌ Error executing command:', error);
+          }
+          reject(error);
+        });
+      });
       
     } catch (error) {
-      console.error('❌ Unexpected error executing command:', error instanceof Error ? error.message : String(error));
-      console.log('💡 Please check your configuration and try again.');
+      if (error instanceof Error) {
+        console.error('❌ Error executing command:', error.message);
+      } else {
+        console.error('❌ Error executing command:', error);
+      }
+      console.log('💡 Make sure the CLI is properly built and configured.');
     }
     
     await this.pause();
