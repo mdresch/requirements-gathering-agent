@@ -114,6 +114,17 @@ export {
 } from './stakeholder.js';
 export type { StakeholderAnalysisOptions } from './stakeholder.js';
 
+// Interactive CLI commands
+export { 
+  handleInteractiveCommand,
+  showInteractiveHelp,
+  validateInteractiveOptions,
+  getDefaultInteractiveOptions,
+  checkInteractiveSupport,
+  showInteractiveNotSupportedMessage
+} from './interactive.js';
+export type { InteractiveOptions } from './interactive.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';
