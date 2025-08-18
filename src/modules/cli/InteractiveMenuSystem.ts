@@ -10,6 +10,7 @@
 
 import * as readline from 'readline';
 import { EventEmitter } from 'events';
+import { CommandIntegrationService } from './CommandIntegration.js';
 
 // Types and Interfaces
 export interface MenuItem {
@@ -61,6 +62,7 @@ export class InteractiveMenuSystem extends EventEmitter {
   private currentMenu?: string;
   private menus: Map<string, MenuConfig> = new Map();
   private systemStatus: SystemStatus;
+  private commandIntegration: CommandIntegrationService;
 
   constructor() {
     super();
@@ -76,6 +78,7 @@ export class InteractiveMenuSystem extends EventEmitter {
       documentsGenerated: 0
     };
 
+    this.commandIntegration = new CommandIntegrationService();
     this.initializeMenus();
   }
 
@@ -335,6 +338,9 @@ export class InteractiveMenuSystem extends EventEmitter {
       case 'configureAdobe':
         await this.configureAdobe();
         break;
+      case 'customRiskAssessment':
+        await this.customRiskAssessment();
+        break;
       case 'exit':
         await this.stop();
         process.exit(0);
@@ -350,43 +356,31 @@ export class InteractiveMenuSystem extends EventEmitter {
   }
 
   /**
-   * Execute a CLI command
+   * Execute a CLI command using the integrated command service
    */
   private async executeCommand(command: string, args: string[]): Promise<void> {
-    console.log(`🔄 Executing: ${command} ${args.join(' ')}`);
-    
     try {
-      // Import and execute the actual CLI commands
-      const { spawn } = await import('child_process');
-      const { promisify } = await import('util');
+      // Use the integrated command service instead of spawning child processes
+      const result = await this.commandIntegration.executeCommand(command, args);
       
-      // Execute the command in a child process
-      const childProcess = spawn('node', ['dist/cli.js', command, ...args], {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-      
-      // Wait for the command to complete
-      await new Promise((resolve, reject) => {
-        childProcess.on('close', (code) => {
-          if (code === 0) {
-            console.log('✅ Command executed successfully');
-            resolve(code);
-          } else {
-            console.log(`⚠️  Command exited with code ${code}`);
-            resolve(code);
-          }
-        });
-        
-        childProcess.on('error', (error) => {
-          console.error('❌ Error executing command:', error.message);
-          reject(error);
-        });
-      });
+      if (result.success) {
+        console.log('✅ Command executed successfully');
+        if (result.message) {
+          console.log(`💡 ${result.message}`);
+        }
+      } else {
+        console.error('❌ Command execution failed');
+        if (result.message) {
+          console.error(`💡 ${result.message}`);
+        }
+        if (result.error) {
+          console.error(`Details: ${result.error.message}`);
+        }
+      }
       
     } catch (error) {
-      console.error('❌ Error executing command:', error.message);
-      console.log('💡 Make sure the CLI is properly built and configured.');
+      console.error('❌ Unexpected error executing command:', error instanceof Error ? error.message : String(error));
+      console.log('💡 Please check your configuration and try again.');
     }
     
     await this.pause();
@@ -1114,6 +1108,261 @@ export class InteractiveMenuSystem extends EventEmitter {
         }
       ]
     });
+
+    // Stakeholder Management Menu
+    this.menus.set('stakeholder-management', {
+      id: 'stakeholder-management',
+      title: 'Stakeholder Management',
+      showBreadcrumb: true,
+      showStatusBar: true,
+      parent: 'project-management',
+      items: [
+        {
+          key: '1',
+          label: 'Stakeholder Analysis',
+          icon: '🔍',
+          description: 'Generate comprehensive stakeholder analysis',
+          enabled: true,
+          action: { type: 'command', command: 'stakeholder', args: ['analysis'] }
+        },
+        {
+          key: '2',
+          label: 'Stakeholder Register',
+          icon: '📋',
+          description: 'Generate stakeholder register only',
+          enabled: true,
+          action: { type: 'command', command: 'stakeholder', args: ['register'] }
+        },
+        {
+          key: '3',
+          label: 'Engagement Plan',
+          icon: '🤝',
+          description: 'Generate stakeholder engagement plan',
+          enabled: true,
+          action: { type: 'command', command: 'stakeholder', args: ['engagement-plan'] }
+        },
+        {
+          key: '4',
+          label: 'Complete Automation',
+          icon: '🚀',
+          description: 'Generate all stakeholder documents',
+          enabled: true,
+          action: { type: 'command', command: 'stakeholder', args: ['automate'] }
+        },
+        {
+          key: '5',
+          label: 'Back to Project Management',
+          icon: '⬅️',
+          description: 'Return to project management menu',
+          enabled: true,
+          action: { type: 'navigate', target: 'project-management' }
+        }
+      ]
+    });
+
+    // Risk & Compliance Menu
+    this.menus.set('risk-compliance', {
+      id: 'risk-compliance',
+      title: 'Risk & Compliance Assessment',
+      showBreadcrumb: true,
+      showStatusBar: true,
+      parent: 'project-management',
+      items: [
+        {
+          key: '1',
+          label: 'Software Development Risk Assessment',
+          icon: '💻',
+          description: 'Risk assessment for software projects',
+          enabled: true,
+          action: { type: 'command', command: 'risk-compliance', args: ['--project', 'current-project', '--type', 'SOFTWARE_DEVELOPMENT'] }
+        },
+        {
+          key: '2',
+          label: 'Infrastructure Risk Assessment',
+          icon: '🏗️',
+          description: 'Risk assessment for infrastructure projects',
+          enabled: true,
+          action: { type: 'command', command: 'risk-compliance', args: ['--project', 'current-project', '--type', 'INFRASTRUCTURE'] }
+        },
+        {
+          key: '3',
+          label: 'Custom Risk Assessment',
+          icon: '🎯',
+          description: 'Custom risk assessment with interactive setup',
+          enabled: true,
+          action: { type: 'function', handler: 'customRiskAssessment' }
+        },
+        {
+          key: '4',
+          label: 'PMBOK-Only Assessment',
+          icon: '📊',
+          description: 'PMBOK-focused risk assessment',
+          enabled: true,
+          action: { type: 'command', command: 'risk-compliance', args: ['--project', 'current-project', '--pmbok-only'] }
+        },
+        {
+          key: '5',
+          label: 'Back to Project Management',
+          icon: '⬅️',
+          description: 'Return to project management menu',
+          enabled: true,
+          action: { type: 'navigate', target: 'project-management' }
+        }
+      ]
+    });
+
+    // Confluence Integration Menu
+    this.menus.set('confluence-integration', {
+      id: 'confluence-integration',
+      title: 'Confluence Integration',
+      showBreadcrumb: true,
+      showStatusBar: true,
+      parent: 'integrations',
+      items: [
+        {
+          key: '1',
+          label: 'Initialize Configuration',
+          icon: '🔧',
+          description: 'Set up Confluence integration',
+          enabled: true,
+          action: { type: 'command', command: 'confluence', args: ['init'] }
+        },
+        {
+          key: '2',
+          label: 'Test Connection',
+          icon: '🔍',
+          description: 'Test Confluence connection',
+          enabled: true,
+          action: { type: 'command', command: 'confluence', args: ['test'] }
+        },
+        {
+          key: '3',
+          label: 'Publish Documents',
+          icon: '📤',
+          description: 'Publish documents to Confluence',
+          enabled: true,
+          action: { type: 'command', command: 'confluence', args: ['publish'] }
+        },
+        {
+          key: '4',
+          label: 'Integration Status',
+          icon: '📊',
+          description: 'View Confluence integration status',
+          enabled: true,
+          action: { type: 'command', command: 'confluence', args: ['status'] }
+        },
+        {
+          key: '5',
+          label: 'Back to Integrations',
+          icon: '⬅️',
+          description: 'Return to integrations menu',
+          enabled: true,
+          action: { type: 'navigate', target: 'integrations' }
+        }
+      ]
+    });
+
+    // SharePoint Integration Menu
+    this.menus.set('sharepoint-integration', {
+      id: 'sharepoint-integration',
+      title: 'SharePoint Integration',
+      showBreadcrumb: true,
+      showStatusBar: true,
+      parent: 'integrations',
+      items: [
+        {
+          key: '1',
+          label: 'Initialize Configuration',
+          icon: '🔧',
+          description: 'Set up SharePoint integration',
+          enabled: true,
+          action: { type: 'command', command: 'sharepoint', args: ['init'] }
+        },
+        {
+          key: '2',
+          label: 'Test Connection',
+          icon: '🔍',
+          description: 'Test SharePoint connection',
+          enabled: true,
+          action: { type: 'command', command: 'sharepoint', args: ['test'] }
+        },
+        {
+          key: '3',
+          label: 'Publish Documents',
+          icon: '📤',
+          description: 'Publish documents to SharePoint',
+          enabled: true,
+          action: { type: 'command', command: 'sharepoint', args: ['publish'] }
+        },
+        {
+          key: '4',
+          label: 'Integration Status',
+          icon: '📊',
+          description: 'View SharePoint integration status',
+          enabled: true,
+          action: { type: 'command', command: 'sharepoint', args: ['status'] }
+        },
+        {
+          key: '5',
+          label: 'Back to Integrations',
+          icon: '⬅️',
+          description: 'Return to integrations menu',
+          enabled: true,
+          action: { type: 'navigate', target: 'integrations' }
+        }
+      ]
+    });
+
+    // VCS Integration Menu
+    this.menus.set('vcs-integration', {
+      id: 'vcs-integration',
+      title: 'Version Control Integration',
+      showBreadcrumb: true,
+      showStatusBar: true,
+      parent: 'integrations',
+      items: [
+        {
+          key: '1',
+          label: 'Initialize Repository',
+          icon: '🔧',
+          description: 'Initialize Git repository',
+          enabled: true,
+          action: { type: 'command', command: 'vcs', args: ['init'] }
+        },
+        {
+          key: '2',
+          label: 'Repository Status',
+          icon: '📊',
+          description: 'Show Git repository status',
+          enabled: true,
+          action: { type: 'command', command: 'vcs', args: ['status'] }
+        },
+        {
+          key: '3',
+          label: 'Commit Changes',
+          icon: '💾',
+          description: 'Commit changes to repository',
+          enabled: true,
+          action: { type: 'command', command: 'vcs', args: ['commit'] }
+        },
+        {
+          key: '4',
+          label: 'Push to Remote',
+          icon: '🚀',
+          description: 'Push changes to remote repository',
+          enabled: true,
+          action: { type: 'command', command: 'vcs', args: ['push'] }
+        },
+        {
+          key: '5',
+          label: 'Back to Integrations',
+          icon: '⬅️',
+          description: 'Return to integrations menu',
+          enabled: true,
+          action: { type: 'navigate', target: 'integrations' }
+        }
+      ]
+    });
   }
 
   /**
@@ -1274,11 +1523,25 @@ export class InteractiveMenuSystem extends EventEmitter {
     console.log('\n🔧 Environment Setup');
     console.log('─'.repeat(50));
     
-    console.log('This would launch the interactive setup wizard...');
-    console.log('• Configure AI Provider');
-    console.log('• Set up integrations');
-    console.log('• Initialize project structure');
-    console.log('• Validate configuration');
+    console.log('Launching the interactive setup wizard...');
+    
+    try {
+      // Execute the setup command directly
+      const result = await this.commandIntegration.executeCommand('setup', []);
+      
+      if (result.success) {
+        console.log('✅ Environment setup completed successfully');
+        // Reload system status after setup
+        await this.loadSystemStatus();
+      } else {
+        console.error('❌ Environment setup failed');
+        if (result.message) {
+          console.error(`💡 ${result.message}`);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error during environment setup:', error instanceof Error ? error.message : String(error));
+    }
     
     await this.pause();
     
@@ -1734,6 +1997,92 @@ export class InteractiveMenuSystem extends EventEmitter {
     
     console.log('\n💡 This feature is in development');
     console.log('💡 Contact support for early access');
+    
+    await this.pause();
+    
+    if (this.currentMenu) {
+      await this.navigateTo(this.currentMenu);
+    }
+  }
+
+  /**
+   * Custom risk assessment with interactive setup
+   */
+  private async customRiskAssessment(): Promise<void> {
+    console.log('\n🎯 Custom Risk Assessment');
+    console.log('─'.repeat(50));
+    
+    try {
+      const projectName = await this.promptForChoice('Enter project name: ');
+      if (!projectName) {
+        console.log('❌ Project name is required');
+        await this.pause();
+        if (this.currentMenu) {
+          await this.navigateTo(this.currentMenu);
+        }
+        return;
+      }
+      
+      console.log('\nSelect project type:');
+      console.log('1. Software Development');
+      console.log('2. Infrastructure');
+      console.log('3. Data Management');
+      console.log('4. Business Process');
+      console.log('5. Other');
+      
+      const typeChoice = await this.promptForChoice('Enter choice (1-5): ');
+      const typeMap: { [key: string]: string } = {
+        '1': 'SOFTWARE_DEVELOPMENT',
+        '2': 'INFRASTRUCTURE', 
+        '3': 'DATA_MANAGEMENT',
+        '4': 'BUSINESS_PROCESS',
+        '5': 'OTHER'
+      };
+      
+      const projectType = typeMap[typeChoice] || 'SOFTWARE_DEVELOPMENT';
+      
+      const description = await this.promptForChoice('Enter project description (optional): ');
+      
+      console.log('\nSelect assessment type:');
+      console.log('1. Integrated assessment (recommended)');
+      console.log('2. PMBOK-only assessment');
+      
+      const assessmentChoice = await this.promptForChoice('Enter choice (1-2): ');
+      const isIntegrated = assessmentChoice === '1';
+      
+      // Build command arguments
+      const args = [
+        '--project', projectName,
+        '--type', projectType
+      ];
+      
+      if (description) {
+        args.push('--description', description);
+      }
+      
+      if (isIntegrated) {
+        args.push('--integrated');
+      } else {
+        args.push('--pmbok-only');
+      }
+      
+      console.log('\n🔄 Starting risk assessment...');
+      
+      // Execute the risk compliance command
+      const result = await this.commandIntegration.executeCommand('risk-compliance', args);
+      
+      if (result.success) {
+        console.log('✅ Risk assessment completed successfully');
+      } else {
+        console.error('❌ Risk assessment failed');
+        if (result.message) {
+          console.error(`💡 ${result.message}`);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ Error during risk assessment:', error instanceof Error ? error.message : String(error));
+    }
     
     await this.pause();
     
