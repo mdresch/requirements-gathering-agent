@@ -11,7 +11,10 @@
 import * as readline from 'readline';
 import { EventEmitter } from 'events';
 import { CommandIntegrationService } from './CommandIntegration.js';
+import { InputValidationService, ValidationResult } from './InputValidationService.js';
+import { InteractiveErrorHandler, ErrorContext, InteractiveError } from './InteractiveErrorHandler.js';
 import { spawn } from 'child_process';
+
 
 // Types and Interfaces
 export interface MenuItem {
@@ -177,105 +180,210 @@ export class InteractiveMenuSystem extends EventEmitter {
    * Handle user input for a menu
    */
   private async handleMenuInput(menu: MenuConfig): Promise<void> {
-    const choice = await this.promptForChoice('Select an option (or type "back", "home", "help", "exit"): ');
-    
-    // Handle special navigation commands
-    const normalizedChoice = choice.toLowerCase().trim();
-    switch (normalizedChoice) {
-      case 'back':
-      case 'b':
-        await this.goBack();
-        return;
-      case 'home':
-      case 'h':
-        await this.goHome();
-        return;
-      case 'help':
-      case '?':
-        await this.showNavigationHelp();
-        await this.handleMenuInput(menu);
-        return;
-      case 'exit':
-      case 'quit':
-      case 'q':
-        await this.stop();
-        process.exit(0);
-        return;
-      case 'status':
-      case 's':
-        await this.showSystemStatus();
-        await this.handleMenuInput(menu);
-        return;
-      case 'refresh':
-      case 'r':
-        await this.loadSystemStatus();
-        await this.renderMenu(menu);
-        await this.handleMenuInput(menu);
-        return;
-    }
-    
-    // Handle numeric menu selections
-    const selectedItem = menu.items.find(item => item.key === choice);
-    if (!selectedItem) {
-      console.log('❌ Invalid choice. Please try again.');
-      console.log('💡 Tip: Use numbers to select options, or type "help" for navigation commands.');
-      await this.pause();
-      await this.renderMenu(menu);
-      await this.handleMenuInput(menu);
-      return;
-    }
+    while (true) {
+      try {
+        const choice = await this.promptForChoice('Select an option (or type "back", "home", "help", "exit"): ');
+        
+        // Validate menu choice
+        const validChoices = menu.items.map(item => item.key);
+        const validationResult = InputValidationService.validateMenuChoice(choice, validChoices);
+        
+        if (!validationResult.isValid) {
+          const context: ErrorContext = {
+            operation: 'menu selection',
+            userInput: choice,
+            menuId: menu.id,
+            timestamp: new Date()
+          };
+          
+          const error = InteractiveErrorHandler.handleValidationError(validationResult, context);
+          await InteractiveErrorHandler.displayError(error);
+          
+          const action = await InteractiveErrorHandler.getRecoveryAction(error, this.promptForChoice.bind(this));
+          
+          switch (action) {
+            case 'retry':
+              continue; // Try again
+            case 'back':
+              await this.goBack();
+              return;
+            case 'help':
+              await this.showNavigationHelp();
+              continue;
+            case 'exit':
+              await this.stop();
+              process.exit(0);
+              return;
+          }
+          continue;
+        }
 
-    if (!selectedItem.enabled) {
-      console.log('⚠️  This option is currently disabled.');
-      console.log('💡 Check system status or configuration to enable this option.');
-      await this.pause();
-      await this.renderMenu(menu);
-      await this.handleMenuInput(menu);
-      return;
-    }
+        const sanitizedChoice = validationResult.sanitizedValue!;
+        
+        // Handle special navigation commands
+        switch (sanitizedChoice) {
+          case 'back':
+          case 'b':
+            await this.goBack();
+            return;
+          case 'home':
+          case 'h':
+            await this.goHome();
+            return;
+          case 'help':
+          case '?':
+            await this.showNavigationHelp();
+            continue;
+          case 'exit':
+          case 'quit':
+          case 'q':
+            await this.stop();
+            process.exit(0);
+            return;
+          case 'status':
+          case 's':
+            await this.showSystemStatus();
+            continue;
+          case 'refresh':
+          case 'r':
+            await this.loadSystemStatus();
+            await this.renderMenu(menu);
+            continue;
+        }
+        
+        // Handle numeric menu selections
+        const selectedItem = menu.items.find(item => item.key === sanitizedChoice);
+        if (!selectedItem) {
+          // This shouldn't happen due to validation, but handle it gracefully
+          console.log('❌ Invalid choice. Please try again.');
+          continue;
+        }
 
-    await this.executeMenuAction(selectedItem.action);
+        if (!selectedItem.enabled) {
+          console.log('⚠️  This option is currently disabled.');
+          console.log('💡 Check system status or configuration to enable this option.');
+          await this.pause();
+          continue;
+        }
+
+        // Execute the menu action with error handling
+        const success = await this.executeMenuActionWithErrorHandling(selectedItem.action, menu.id);
+        if (success) {
+          return; // Action completed successfully
+        }
+        // If action failed, continue the menu loop
+        
+      } catch (error) {
+        const context: ErrorContext = {
+          operation: 'menu input handling',
+          menuId: menu.id,
+          timestamp: new Date()
+        };
+        
+        const interactiveError = InteractiveErrorHandler.handleUnknownError(error as Error, context);
+        await InteractiveErrorHandler.displayError(interactiveError);
+        
+        const action = await InteractiveErrorHandler.getRecoveryAction(interactiveError, this.promptForChoice.bind(this));
+        
+        switch (action) {
+          case 'retry':
+            continue;
+          case 'back':
+            await this.goBack();
+            return;
+          case 'exit':
+            await this.stop();
+            process.exit(0);
+            return;
+          case 'help':
+            await this.showNavigationHelp();
+            continue;
+        }
+      }
+    }
   }
 
   /**
-   * Execute a menu action
+   * Execute a menu action with enhanced error handling
    */
-  private async executeMenuAction(action: MenuAction): Promise<void> {
+  private async executeMenuActionWithErrorHandling(action: MenuAction, menuId: string): Promise<boolean> {
+    const context: ErrorContext = {
+      operation: `execute ${action.type} action`,
+      menuId,
+      timestamp: new Date()
+    };
+
     try {
       switch (action.type) {
         case 'navigate':
           if (action.target) {
             await this.navigateTo(action.target);
+            return true;
           }
           break;
 
         case 'function':
           if (action.handler) {
-            await this.executeFunction(action.handler);
+            await this.executeFunctionWithErrorHandling(action.handler, context);
+            return true;
           }
           break;
 
         case 'command':
           if (action.command) {
-            await this.executeCommand(action.command, action.args || []);
+            await this.executeCommandWithErrorHandling(action.command, action.args || [], context);
+            return true;
           }
           break;
 
         default:
           console.log('❌ Unknown action type');
-        }
-      } catch (error) {
-          if (error instanceof Error) {
-            console.error('❌ Error executing action:', error.message);
-          } else {
-            console.error('❌ Error executing action:', error);
-          }
-          await this.pause();
-          if (this.currentMenu) {
-            await this.navigateTo(this.currentMenu);
-          }
-        }
+          return false;
       }
+    } catch (error) {
+      const interactiveError = InteractiveErrorHandler.handleUnknownError(error as Error, context);
+      await InteractiveErrorHandler.displayError(interactiveError);
+      
+      const recoveryAction = await InteractiveErrorHandler.getRecoveryAction(interactiveError, this.promptForChoice.bind(this));
+      
+      switch (recoveryAction) {
+        case 'retry':
+          return await this.executeMenuActionWithErrorHandling(action, menuId);
+        case 'back':
+          await this.goBack();
+          return true;
+        case 'exit':
+          await this.stop();
+          process.exit(0);
+          return true;
+        case 'help':
+          await this.showNavigationHelp();
+          return false;
+        default:
+          return false;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Execute a menu action (legacy method for backward compatibility)
+   */
+  private async executeMenuAction(action: MenuAction): Promise<void> {
+    await this.executeMenuActionWithErrorHandling(action, this.currentMenu || 'unknown');
+  }
+
+  /**
+   * Execute a function handler with error handling
+   */
+  private async executeFunctionWithErrorHandling(handlerName: string, context: ErrorContext): Promise<void> {
+    return await InteractiveErrorHandler.withErrorHandling(
+      () => this.executeFunction(handlerName),
+      { ...context, operation: `execute function ${handlerName}` },
+      this.promptForChoice.bind(this)
+    );
+  }
 
   /**
    * Execute a function handler
@@ -354,6 +462,17 @@ export class InteractiveMenuSystem extends EventEmitter {
           await this.navigateTo(this.currentMenu);
         }
     }
+  }
+
+  /**
+   * Execute a CLI command with error handling
+   */
+  private async executeCommandWithErrorHandling(command: string, args: string[], context: ErrorContext): Promise<void> {
+    return await InteractiveErrorHandler.withErrorHandling(
+      () => this.executeCommand(command, args),
+      { ...context, operation: `execute command ${command}` },
+      this.promptForChoice.bind(this)
+    );
   }
 
   /**
@@ -2031,14 +2150,18 @@ export class InteractiveMenuSystem extends EventEmitter {
     console.log('─'.repeat(50));
     
     try {
-      const projectName = await this.promptForChoice('Enter project name: ');
-      if (!projectName) {
-        console.log('❌ Project name is required');
-        await this.pause();
-        if (this.currentMenu) {
-          await this.navigateTo(this.currentMenu);
+      // Get project name with validation
+      let projectName: string;
+      while (true) {
+        const input = await this.promptForChoice('Enter project name: ');
+        const validation = InputValidationService.validateProjectName(input);
+        
+        if (validation.isValid) {
+          projectName = validation.sanitizedValue!;
+          break;
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
         }
-        return;
       }
       
       console.log('\nSelect project type:');
@@ -2048,25 +2171,55 @@ export class InteractiveMenuSystem extends EventEmitter {
       console.log('4. Business Process');
       console.log('5. Other');
       
-      const typeChoice = await this.promptForChoice('Enter choice (1-5): ');
-      const typeMap: { [key: string]: string } = {
-        '1': 'SOFTWARE_DEVELOPMENT',
-        '2': 'INFRASTRUCTURE', 
-        '3': 'DATA_MANAGEMENT',
-        '4': 'BUSINESS_PROCESS',
-        '5': 'OTHER'
-      };
+      // Get project type with validation
+      let projectType: string;
+      while (true) {
+        const typeChoice = await this.promptForChoice('Enter choice (1-5): ');
+        const validation = InputValidationService.validateText(typeChoice, {
+          required: true,
+          allowedValues: ['1', '2', '3', '4', '5'],
+          caseSensitive: true
+        }, 'project type choice');
+        
+        if (validation.isValid) {
+          const typeMap: { [key: string]: string } = {
+            '1': 'SOFTWARE_DEVELOPMENT',
+            '2': 'INFRASTRUCTURE', 
+            '3': 'DATA_MANAGEMENT',
+            '4': 'BUSINESS_PROCESS',
+            '5': 'OTHER'
+          };
+          projectType = typeMap[validation.sanitizedValue!];
+          break;
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
+        }
+      }
       
-      const projectType = typeMap[typeChoice] || 'SOFTWARE_DEVELOPMENT';
-      
+      // Get project description (optional, no validation needed)
       const description = await this.promptForChoice('Enter project description (optional): ');
       
       console.log('\nSelect assessment type:');
       console.log('1. Integrated assessment (recommended)');
       console.log('2. PMBOK-only assessment');
       
-      const assessmentChoice = await this.promptForChoice('Enter choice (1-2): ');
-      const isIntegrated = assessmentChoice === '1';
+      // Get assessment type with validation
+      let isIntegrated: boolean;
+      while (true) {
+        const assessmentChoice = await this.promptForChoice('Enter choice (1-2): ');
+        const validation = InputValidationService.validateText(assessmentChoice, {
+          required: true,
+          allowedValues: ['1', '2'],
+          caseSensitive: true
+        }, 'assessment type choice');
+        
+        if (validation.isValid) {
+          isIntegrated = validation.sanitizedValue === '1';
+          break;
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
+        }
+      }
       
       // Build command arguments
       const args = [
