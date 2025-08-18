@@ -708,6 +708,51 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: ''
   },
   {
+    key: 'strategic-alignment',
+    name: 'Strategic Alignment Document',
+    category: 'strategic-statements',
+    func: 'strategic-alignment.md',
+    priority: 5,
+    emoji: '🎯',
+    pmbokRef: '1.2.3.1 Strategic Alignment'
+  },
+  {
+    key: 'benefits-realization-plan',
+    name: 'Benefits Realization Plan',
+    category: 'strategic-statements',
+    func: 'benefits-realization-plan.md',
+    priority: 10,
+    emoji: '📈',
+    pmbokRef: '1.2.6 Benefits Management'
+  },
+  {
+    key: 'value-proposition',
+    name: 'Value Proposition Document',
+    category: 'strategic-statements',
+    func: 'value-proposition.md',
+    priority: 3,
+    emoji: '💎',
+    pmbokRef: '1.2.3.1 Strategic Alignment'
+  },
+  {
+    key: 'strategic-success-metrics',
+    name: 'Strategic Success Metrics',
+    category: 'strategic-statements',
+    func: 'strategic-success-metrics.md',
+    priority: 15,
+    emoji: '📊',
+    pmbokRef: '1.2.5 Performance Management'
+  },
+  {
+    key: 'strategic-roadmap',
+    name: 'Strategic Roadmap',
+    category: 'strategic-statements',
+    func: 'strategic-roadmap.md',
+    priority: 20,
+    emoji: '🗺️',
+    pmbokRef: '6.2 Schedule Management'
+  },
+  {
     key: 'scope-statement',
     name: 'ScopeStatement',
     category: 'scope-management',
