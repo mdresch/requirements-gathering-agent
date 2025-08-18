@@ -35,8 +35,11 @@ export async function handleInteractiveCommand(options: InteractiveOptions = {})
     await startInteractiveMenu();
     
   } catch (error) {
-    console.error('❌ Error starting interactive mode:', error.message);
-    
+    if (error instanceof Error) {
+      console.error('❌ Error starting interactive mode:', error.message);
+    } else {
+      console.error('❌ Error starting interactive mode:', error);
+    }
     if (options.debug) {
       console.error('Debug info:', error);
     }

@@ -7,7 +7,7 @@
  * This script can be used to test the menu system without running the full CLI.
  */
 
-import { startInteractiveMenu } from '../src/modules/cli/InteractiveMenuSystem.js';
+import { startInteractiveMenu } from '../dist/modules/cli/InteractiveMenuSystem.js';
 
 async function runDemo() {
   console.log('🎯 Interactive Menu Demo');
