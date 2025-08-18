@@ -934,6 +934,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: 'PMBOK: Status Report',
     dependencies: []
   },
+  {
+    key: 'detailed-planning-artifacts',
+    name: 'Detailed Planning Artifacts',
+    category: 'pppm',
+    func: 'generateDetailedPlanningArtifacts',
+    emoji: '📊',
+    priority: 22,
+    pmbokRef: 'PMBOK: Detailed Planning Artifacts',
+    dependencies: []
+  }
 ];
 
 /**

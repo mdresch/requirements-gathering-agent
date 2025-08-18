@@ -237,7 +237,7 @@
   },
   "stakeholder-needs-analysis": {
     "module": "../documentTemplates/stakeholder-management/StakeholderNeedsAnalysisProcessor.ts#StakeholderNeedsAnalysisProcessor",
-    "dependencies": ["stakeholder-register"],
+    "dependencies": [" stakeholder-register"],
     "priority": 16
   },
   "project-scope-statement": {
@@ -267,7 +267,7 @@
   },
   "project-charter": {
     "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
-    "dependencies": [
+    "dependencies": [ 
       "stakeholder-register",
       "project-scope-statement",
       "risk-register"
