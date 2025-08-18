@@ -24,6 +24,8 @@ import {
   ConnectionTestResult,
   MenuAction
 } from './enhanced-types.js';
+import { InputValidationService } from '../cli/InputValidationService.js';
+import { InteractiveErrorHandler, ErrorContext } from '../cli/InteractiveErrorHandler.js';
 
 export class InteractiveProviderMenu {
   private readline: readline.Interface;
@@ -128,9 +130,42 @@ export class InteractiveProviderMenu {
    * Handle user menu selection
    */
   private async handleMenuChoice(choice: string): Promise<string | null | 'EXIT'> {
-    const choiceNum = parseInt(choice);
     const providers = Array.from(this.providers.values())
       .sort((a, b) => a.priority - b.priority);
+    
+    // Build valid choices array
+    const validChoices: string[] = [];
+    for (let i = 1; i <= providers.length; i++) {
+      validChoices.push(i.toString());
+    }
+    
+    const menuOffset = providers.length;
+    validChoices.push((menuOffset + 1).toString()); // Configure New Provider
+    validChoices.push((menuOffset + 2).toString()); // View Status & Metrics
+    validChoices.push((menuOffset + 3).toString()); // Help & Documentation
+    
+    if (this.options.allowExit) {
+      validChoices.push((menuOffset + 4).toString()); // Exit
+    }
+    validChoices.push('0'); // Hidden exit option
+
+    // Validate menu choice
+    const validationResult = InputValidationService.validateMenuChoice(choice, validChoices);
+    
+    if (!validationResult.isValid) {
+      const context: ErrorContext = {
+        operation: 'provider menu selection',
+        userInput: choice,
+        timestamp: new Date()
+      };
+      
+      const error = InteractiveErrorHandler.handleValidationError(validationResult, context);
+      await InteractiveErrorHandler.displayError(error);
+      await this.pause();
+      return null;
+    }
+
+    const choiceNum = parseInt(validationResult.sanitizedValue!);
 
     // Handle provider selection (1-N)
     if (choiceNum >= 1 && choiceNum <= providers.length) {
@@ -139,7 +174,6 @@ export class InteractiveProviderMenu {
     }
 
     // Handle menu options
-    const menuOffset = providers.length;
     switch (choiceNum) {
       case menuOffset + 1: // Configure New Provider
         return await this.configureNewProvider();
@@ -160,10 +194,6 @@ export class InteractiveProviderMenu {
       
       case 0: // Hidden exit option
         return 'EXIT';
-      
-      default:
-        console.log('❌ Invalid choice. Please try again.');
-        await this.pause();
     }
 
     return null; // Continue menu loop
@@ -179,10 +209,20 @@ export class InteractiveProviderMenu {
       console.log(`\n✅ ${provider.displayName} is ready!`);
       console.log(`   Features: ${provider.features.join(', ')}`);
       
-      const confirm = await this.getUserInput('Use this provider? (y/n): ');
-      
-      if (confirm.toLowerCase() === 'y' || confirm.toLowerCase() === 'yes') {
-        return provider.id;
+      // Get confirmation with validation
+      while (true) {
+        const confirm = await this.getUserInput('Use this provider? (y/n): ');
+        const validation = InputValidationService.validateYesNo(confirm);
+        
+        if (validation.isValid) {
+          if (validation.sanitizedValue === 'yes') {
+            return provider.id;
+          } else {
+            break; // User said no
+          }
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
+        }
       }
     } else if (status.available && !status.configured) {
       // Provider available but needs setup
@@ -190,12 +230,23 @@ export class InteractiveProviderMenu {
       console.log(`   Setup difficulty: ${provider.setupGuide.difficulty}`);
       console.log(`   Estimated time: ${provider.setupGuide.estimatedTime}`);
       
-      const setup = await this.getUserInput('Start setup now? (y/n): ');
-      
-      if (setup.toLowerCase() === 'y' || setup.toLowerCase() === 'yes') {
-        const configured = await this.runProviderSetup(provider);
-        if (configured) {
-          return provider.id;
+      // Get setup confirmation with validation
+      while (true) {
+        const setup = await this.getUserInput('Start setup now? (y/n): ');
+        const validation = InputValidationService.validateYesNo(setup);
+        
+        if (validation.isValid) {
+          if (validation.sanitizedValue === 'yes') {
+            const configured = await this.runProviderSetup(provider);
+            if (configured) {
+              return provider.id;
+            }
+            break;
+          } else {
+            break; // User said no
+          }
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
         }
       }
     } else {
@@ -246,7 +297,7 @@ export class InteractiveProviderMenu {
     
     console.log('🔧 Configuration:');
     
-    // Required configuration
+    // Required configuration with validation
     for (const envVar of provider.requiredEnvVars) {
       const template = provider.configTemplate[envVar];
       let prompt = `Enter ${envVar}`;
@@ -256,13 +307,31 @@ export class InteractiveProviderMenu {
       }
       prompt += ': ';
       
-      const value = await this.getUserInput(prompt);
-      if (!value.trim()) {
-        console.log('❌ Required field cannot be empty.');
-        return false;
+      while (true) {
+        const value = await this.getUserInput(prompt);
+        let validation;
+        
+        // Apply specific validation based on environment variable type
+        if (envVar.includes('API_KEY') || envVar.includes('TOKEN')) {
+          validation = InputValidationService.validateApiKey(value, provider.id);
+        } else if (envVar.includes('ENDPOINT') || envVar.includes('URL')) {
+          validation = InputValidationService.validateUrl(value);
+        } else {
+          validation = InputValidationService.validateText(value, {
+            required: true,
+            minLength: 1,
+            maxLength: 500,
+            sanitize: true
+          }, envVar);
+        }
+        
+        if (validation.isValid) {
+          config[envVar] = validation.sanitizedValue!;
+          break;
+        } else {
+          console.log(InputValidationService.formatValidationError(validation));
+        }
       }
-      
-      config[envVar] = value.trim();
     }
 
     // Optional configuration
