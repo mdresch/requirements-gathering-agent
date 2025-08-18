@@ -65,7 +65,21 @@
     "babok:generate": "node dist/server.js --framework=babok",
     "pmbok:generate": "node dist/server.js --framework=pmbok",
     "dmbok:generate": "node dist/server.js --framework=dmbok",
-    "framework:multi": "node dist/server.js --framework=multi"
+    "framework:multi": "node dist/server.js --framework=multi",
+    "env:setup": "node dist/cli.js env setup",
+    "env:setup:dev": "node dist/cli.js env setup --template development",
+    "env:setup:prod": "node dist/cli.js env setup --template production",
+    "env:validate": "node dist/cli.js env validate",
+    "env:validate:report": "node dist/cli.js env validate --report",
+    "env:providers": "node dist/cli.js env providers",
+    "env:providers:detailed": "node dist/cli.js env providers --detailed",
+    "env:fallback": "node dist/cli.js env fallback",
+    "env:fallback:health": "node dist/cli.js env fallback --health",
+    "env:fallback:history": "node dist/cli.js env fallback --history",
+    "env:test": "node dist/cli.js env test",
+    "env:test:all": "node dist/cli.js env test --all",
+    "env:optimize": "node dist/cli.js env optimize",
+    "test:env": "node scripts/test-environment-setup.js"
   },
   "keywords": [
     "babok",
