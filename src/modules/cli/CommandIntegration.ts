@@ -66,6 +66,14 @@ import {
   handleVcsPushCommand
 } from '../../commands/vcs.js';
 
+import {
+  handleStrategicPlanningCommand,
+  handleRequirementsGenerationCommand,
+  handleTechnologyAnalysisCommand,
+  handleRiskManagementCommand,
+  handleComprehensiveAnalysisCommand
+} from '../../commands/user-stories.js';
+
 
 import { DEFAULT_OUTPUT_DIR } from '../../constants.js';
 
@@ -159,6 +167,23 @@ export class CommandIntegrationService {
           break;
         case 'vcs':
           await this.handleVcs(args, options);
+          break;
+          
+        // User Stories commands
+        case 'strategic-planning':
+          await this.handleStrategicPlanning(args, options);
+          break;
+        case 'requirements-generation':
+          await this.handleRequirementsGeneration(args, options);
+          break;
+        case 'technology-analysis':
+          await this.handleTechnologyAnalysis(args, options);
+          break;
+        case 'risk-management':
+          await this.handleRiskManagement(args, options);
+          break;
+        case 'comprehensive-analysis':
+          await this.handleComprehensiveAnalysis(args, options);
           break;
           
         default:
@@ -633,6 +658,74 @@ export class CommandIntegrationService {
       default:
         throw new Error(`Unknown vcs subcommand: ${subcommand}`);
     }
+  }
+
+  /**
+   * Handle user stories commands
+   */
+  private async handleStrategicPlanning(args: string[], options: CommandOptions): Promise<void> {
+    const userStoryOptions = {
+      businessProblem: options.businessProblem || options.problem,
+      technologyStack: options.technologyStack ? options.technologyStack.split(',') : [],
+      contextBundle: options.contextBundle || options.context || '',
+      output: options.output || DEFAULT_OUTPUT_DIR,
+      format: options.format || 'markdown',
+      quiet: options.quiet || false
+    };
+
+    await handleStrategicPlanningCommand(userStoryOptions);
+  }
+
+  private async handleRequirementsGeneration(args: string[], options: CommandOptions): Promise<void> {
+    const userStoryOptions = {
+      businessProblem: options.businessProblem || options.problem,
+      technologyStack: options.technologyStack ? options.technologyStack.split(',') : [],
+      contextBundle: options.contextBundle || options.context || '',
+      output: options.output || DEFAULT_OUTPUT_DIR,
+      format: options.format || 'json',
+      quiet: options.quiet || false
+    };
+
+    await handleRequirementsGenerationCommand(userStoryOptions);
+  }
+
+  private async handleTechnologyAnalysis(args: string[], options: CommandOptions): Promise<void> {
+    const userStoryOptions = {
+      businessProblem: options.businessProblem || options.problem,
+      technologyStack: options.technologyStack ? options.technologyStack.split(',') : [],
+      contextBundle: options.contextBundle || options.context || '',
+      output: options.output || DEFAULT_OUTPUT_DIR,
+      format: options.format || 'markdown',
+      quiet: options.quiet || false
+    };
+
+    await handleTechnologyAnalysisCommand(userStoryOptions);
+  }
+
+  private async handleRiskManagement(args: string[], options: CommandOptions): Promise<void> {
+    const userStoryOptions = {
+      businessProblem: options.businessProblem || options.problem,
+      technologyStack: options.technologyStack ? options.technologyStack.split(',') : [],
+      contextBundle: options.contextBundle || options.context || '',
+      output: options.output || DEFAULT_OUTPUT_DIR,
+      format: options.format || 'markdown',
+      quiet: options.quiet || false
+    };
+
+    await handleRiskManagementCommand(userStoryOptions);
+  }
+
+  private async handleComprehensiveAnalysis(args: string[], options: CommandOptions): Promise<void> {
+    const userStoryOptions = {
+      businessProblem: options.businessProblem || options.problem,
+      technologyStack: options.technologyStack ? options.technologyStack.split(',') : [],
+      contextBundle: options.contextBundle || options.context || '',
+      output: options.output || DEFAULT_OUTPUT_DIR,
+      format: options.format || 'markdown',
+      quiet: options.quiet || false
+    };
+
+    await handleComprehensiveAnalysisCommand(userStoryOptions);
   }
 }
 
