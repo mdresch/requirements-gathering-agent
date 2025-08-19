@@ -264,6 +264,11 @@ yargs(hideBin(process.argv))
         type: 'boolean', 
         default: false, 
         describe: 'Enable debug mode for troubleshooting' 
+      })
+      .option('enhanced', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Use enhanced navigation with inquirer (recommended)' 
       });
   }, async (argv) => {
     const { 
@@ -281,7 +286,8 @@ yargs(hideBin(process.argv))
     await handleInteractiveCommand({
       mode: argv.mode as 'beginner' | 'advanced',
       skipIntro: argv.skipIntro,
-      debug: argv.debug
+      debug: argv.debug,
+      enhanced: argv.enhanced
     });
   })
   .command('analyze', 'Analyze workspace without generating docs', {}, async () => {

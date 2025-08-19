@@ -9,11 +9,13 @@
  */
 
 import { startInteractiveMenu } from '../modules/cli/InteractiveMenuSystem.js';
+import { startEnhancedNavigation } from '../modules/cli/EnhancedMenuNavigation.js';
 
 export interface InteractiveOptions {
   mode?: 'beginner' | 'advanced';
   skipIntro?: boolean;
   debug?: boolean;
+  enhanced?: boolean;
 }
 
 /**
@@ -31,8 +33,12 @@ export async function handleInteractiveCommand(options: InteractiveOptions = {})
       process.env.DEBUG = 'true';
     }
 
-    // Start the interactive menu system
-    await startInteractiveMenu();
+    // Start the appropriate menu system
+    if (options.enhanced) {
+      await startEnhancedNavigation();
+    } else {
+      await startInteractiveMenu();
+    }
     
   } catch (error) {
     if (error instanceof Error) {
@@ -87,10 +93,12 @@ OPTIONS:
   --mode <mode>     Set interface mode (beginner|advanced)
   --skip-intro      Skip the introduction message
   --debug           Enable debug mode for troubleshooting
+  --enhanced        Use enhanced navigation with inquirer (recommended)
   --help, -h        Show this help message
 
 EXAMPLES:
   adpa interactive                    # Start interactive mode
+  adpa interactive --enhanced         # Start with enhanced navigation (recommended)
   adpa interactive --mode advanced    # Start in advanced mode
   adpa interactive --skip-intro       # Skip intro and start directly
   adpa interactive --debug            # Start with debug information
@@ -139,7 +147,8 @@ export function getDefaultInteractiveOptions(): InteractiveOptions {
   return {
     mode: 'beginner',
     skipIntro: false,
-    debug: false
+    debug: false,
+    enhanced: false
   };
 }
 
