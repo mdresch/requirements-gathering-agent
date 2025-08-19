@@ -66,8 +66,6 @@ import {
   handleVcsPushCommand
 } from '../../commands/vcs.js';
 
-import { createRiskComplianceCommand } from '../../commands/risk-compliance.js';
-import { createFeedbackCommand } from '../../commands/feedback.js';
 
 import { DEFAULT_OUTPUT_DIR } from '../../constants.js';
 
@@ -476,11 +474,12 @@ export class CommandIntegrationService {
       throw new Error('Project name is required for risk-compliance command');
     }
     
-    // Create the risk compliance command and execute it
+    // Create and execute the risk compliance command
+    const { createRiskComplianceCommand } = await import('../../commands/risk-compliance.js');
     const command = createRiskComplianceCommand();
     
+    // Build command arguments
     const commandArgs = [
-      'risk-compliance',
       '--project', project,
       '--type', options.type || options.t || 'SOFTWARE_DEVELOPMENT',
       '--output', options.output || options.o || 'generated-documents/risk-compliance',
@@ -499,7 +498,8 @@ export class CommandIntegrationService {
       commandArgs.push('--pmbok-only');
     }
     
-    await command.parseAsync(commandArgs, { from: 'user' });
+    // Execute the command by calling its action directly
+    const parsedOptions = command.parse(commandArgs, { from: 'user' });
   }
   
   /**
@@ -508,10 +508,12 @@ export class CommandIntegrationService {
   private async handleFeedback(args: string[], options: CommandOptions): Promise<void> {
     const subcommand = args.find(arg => !arg.startsWith('-')) || 'stats';
     
-    // Create the feedback command and execute it
+    // Create and execute the feedback command
+    const { createFeedbackCommand } = await import('../../commands/feedback.js');
     const command = createFeedbackCommand();
     
-    const commandArgs = ['feedback', subcommand];
+    // Build command arguments for the subcommand
+    const commandArgs = [subcommand];
     
     // Add options based on subcommand
     if (options.project || options.p) {
@@ -530,6 +532,7 @@ export class CommandIntegrationService {
       commandArgs.push('--dry-run');
     }
     
+    // Execute the command by parsing the arguments
     await command.parseAsync(commandArgs, { from: 'user' });
   }
   
