@@ -36,3 +36,17 @@ C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\
 C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\admin-interface-dotnet.dll
 C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\refint\admin-interface-dotnet.dll
 C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\admin-interface-dotnet.pdb
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.staticwebassets.runtime.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.staticwebassets.endpoints.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.exe
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.deps.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.runtimeconfig.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.dll
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\bin\Debug\net8.0\admin-interface-dotnet.pdb
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\staticwebassets.development.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\admin-interface-dotnet.genruntimeconfig.cache
+C:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface-dotnet\obj\Debug\net8.0\ref\admin-interface-dotnet.dll

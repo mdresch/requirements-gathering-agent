@@ -115,7 +115,7 @@ async function ensureGitRepoInitialized(documentsDir = DEFAULT_OUTPUT_DIR) {
 }
 // Yargs CLI definition
 yargs(hideBin(process.argv))
-    .scriptName('rga')
+    .scriptName('adpa')
     .usage('Usage: $0 <command> [options]')
     .version(getLegacyDisplayName())
     .command('generate [key]', 'Generate a specific document by key', (yargs) => {
@@ -418,7 +418,7 @@ yargs(hideBin(process.argv))
                 }
             });
             console.log('\n💡 Next Steps:');
-            console.log('   • Use "rga feedback apply" to implement improvements');
+            console.log('   • Use "adpa feedback apply" to implement improvements');
             console.log('   • Review specific document types with low ratings');
             console.log('   • Monitor trends after implementing changes');
         }
@@ -523,7 +523,7 @@ yargs(hideBin(process.argv))
             if (avgRating[0]?.avgRating < 3) {
                 console.log('   • Focus on improving overall document quality');
             }
-            console.log('   • Use "rga feedback analyze" for detailed insights');
+            console.log('   • Use "adpa feedback analyze" for detailed insights');
         }
         catch (error) {
             console.error('❌ Error gathering feedback statistics:', error);

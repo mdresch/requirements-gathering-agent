@@ -378,7 +378,7 @@ export class InteractiveMenuSystem extends EventEmitter {
    * Execute a function handler with error handling
    */
   private async executeFunctionWithErrorHandling(handlerName: string, context: ErrorContext): Promise<void> {
-    return await InteractiveErrorHandler.withErrorHandling(
+  await InteractiveErrorHandler.withErrorHandling(
       () => this.executeFunction(handlerName),
       { ...context, operation: `execute function ${handlerName}` },
       this.promptForChoice.bind(this)
@@ -468,7 +468,7 @@ export class InteractiveMenuSystem extends EventEmitter {
    * Execute a CLI command with error handling
    */
   private async executeCommandWithErrorHandling(command: string, args: string[], context: ErrorContext): Promise<void> {
-    return await InteractiveErrorHandler.withErrorHandling(
+  await InteractiveErrorHandler.withErrorHandling(
       () => this.executeCommand(command, args),
       { ...context, operation: `execute command ${command}` },
       this.promptForChoice.bind(this)
