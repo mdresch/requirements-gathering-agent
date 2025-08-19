@@ -1015,6 +1015,103 @@ async function runEnhancedSetupWizard(): Promise<void> {
   console.log('\nSetup complete. You may now use the CLI.');
 }
 
+/**
+ * Run User Stories menu for implementing the user story requirements
+ */
+async function runUserStoriesMenu(): Promise<void> {
+  const readline = (await import('readline')).createInterface({ 
+    input: process.stdin, 
+    output: process.stdout 
+  });
+
+  function ask(question: string): Promise<string> {
+    return new Promise(resolve => readline.question(question, answer => resolve(answer.trim())));
+  }
+
+  console.log('\n🎯 User Stories Implementation Menu');
+  console.log('=====================================');
+  console.log('This menu implements the user stories from the requirements document.');
+  console.log('');
+
+  try {
+    // Get common inputs
+    const businessProblem = await ask('📋 Enter the business problem: ');
+    if (!businessProblem || businessProblem.length < 10) {
+      console.log('❌ Business problem must be at least 10 characters long.');
+      readline.close();
+      return;
+    }
+
+    const techStackInput = await ask('🔧 Enter technology stack (comma-separated): ');
+    const technologyStack = techStackInput ? techStackInput.split(',').map(s => s.trim()) : [];
+
+    const contextBundle = await ask('📝 Enter additional context (optional): ');
+    const outputDir = await ask('📁 Enter output directory (default: ./output): ') || './output';
+    const format = await ask('📄 Enter output format (json/markdown, default: markdown): ') || 'markdown';
+
+    console.log('\n🚀 Available User Story Commands:');
+    console.log('1. Strategic Planning (User Story 2)');
+    console.log('2. Requirements Generation (User Story 3)');
+    console.log('3. Technology Analysis (User Story 7)');
+    console.log('4. Risk Management (User Story 8)');
+    console.log('5. Comprehensive Analysis (All User Stories)');
+    console.log('6. Exit');
+
+    const choice = await ask('\nSelect an option (1-6): ');
+
+    const options = {
+      businessProblem,
+      technologyStack,
+      contextBundle,
+      output: outputDir,
+      format: format as 'json' | 'markdown',
+      quiet: false
+    };
+
+    const { 
+      handleStrategicPlanningCommand,
+      handleRequirementsGenerationCommand,
+      handleTechnologyAnalysisCommand,
+      handleRiskManagementCommand,
+      handleComprehensiveAnalysisCommand
+    } = await import('./commands/user-stories.js');
+
+    switch (choice) {
+      case '1':
+        console.log('\n🎯 Generating Strategic Planning Documents...');
+        await handleStrategicPlanningCommand(options);
+        break;
+      case '2':
+        console.log('\n📋 Generating Comprehensive Requirements...');
+        // Force JSON format for requirements to ensure strict JSON output (User Story 9)
+        await handleRequirementsGenerationCommand({ ...options, format: 'json' });
+        break;
+      case '3':
+        console.log('\n🔧 Analyzing Technology Stack...');
+        await handleTechnologyAnalysisCommand(options);
+        break;
+      case '4':
+        console.log('\n⚠️ Generating Risk Management Plan...');
+        await handleRiskManagementCommand(options);
+        break;
+      case '5':
+        console.log('\n🚀 Running Comprehensive Analysis...');
+        await handleComprehensiveAnalysisCommand(options);
+        break;
+      case '6':
+        console.log('👋 Goodbye!');
+        break;
+      default:
+        console.log('❌ Invalid choice. Please select 1-6.');
+    }
+
+  } catch (error) {
+    console.error('❌ Error in user stories menu:', error);
+  } finally {
+    readline.close();
+  }
+}
+
 // --- FUTURE TESTING REMINDER ---
 // When updating retry/backoff logic or AI/model integration, add/maintain integration tests that simulate rate limits, network errors, and provider failures.\n// Use CLI flags --retries, --retry-backoff, --retry-max-delay for test scenarios.\n// See documentation for test strategies and update as needed.
 

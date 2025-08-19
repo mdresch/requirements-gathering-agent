@@ -125,6 +125,16 @@ export {
 } from './interactive.js';
 export type { InteractiveOptions } from './interactive.js';
 
+// User Stories commands
+export {
+  handleStrategicPlanningCommand,
+  handleRequirementsGenerationCommand,
+  handleTechnologyAnalysisCommand,
+  handleRiskManagementCommand,
+  handleComprehensiveAnalysisCommand
+} from './user-stories.js';
+export type { UserStoryOptions } from './user-stories.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';
