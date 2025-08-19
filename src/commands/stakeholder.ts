@@ -339,6 +339,7 @@ Core Commands:
   register                 Generate stakeholder register only
   engagement-plan          Generate stakeholder engagement plan only
   automate                 Generate all stakeholder documents (comprehensive)
+  help                     Show stakeholder analysis help
 
 Options:
   --output-dir <dir>       Output directory (default: generated-documents)
@@ -347,6 +348,18 @@ Options:
   --include-register       Include stakeholder register (default: true)
   --include-engagement-plan Include engagement plan (default: false)
   --analysis-depth <depth> Analysis depth: basic, detailed, comprehensive (default: comprehensive)
+
+Stakeholder Features:
+  ✅ Automated stakeholder identification from project context
+  ✅ Power/Interest grid analysis
+  ✅ Stakeholder register generation
+  ✅ Stakeholder engagement plan generation
+  ✅ Comprehensive stakeholder analysis (basic, detailed, comprehensive)
+  ✅ PMBOK-compliant documentation structure
+  ✅ Cross-document consistency and integration
+  ✅ Professional formatting and organization
+  ✅ Customizable output format (markdown, json)
+  ✅ Verbose output and previews
 
 Examples:
   rga stakeholder analysis --verbose
@@ -357,15 +370,10 @@ Examples:
 PMBOK Compliance:
   All generated documents follow PMBOK 7th Edition standards for:
   - 13.1 Identify Stakeholders
-  - 13.2 Plan Stakeholder Engagement  
+  - 13.2 Plan Stakeholder Engagement
   - 13.3 Manage Stakeholder Engagement
   - 13.4 Monitor Stakeholder Engagement
 
-Features:
-  ✅ Automated stakeholder identification from project context
-  ✅ Power/Interest grid analysis
-  ✅ PMBOK-compliant documentation structure
-  ✅ Cross-document consistency and integration
-  ✅ Professional formatting and organization
+For more details, use 'rga stakeholder help' or see the documentation.
   `);
 }

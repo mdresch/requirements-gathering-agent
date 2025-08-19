@@ -178,7 +178,7 @@ async function ensureGitRepoInitialized(documentsDir = DEFAULT_OUTPUT_DIR) {
 
 // Yargs CLI definition
 yargs(hideBin(process.argv))
-  .scriptName('rga')
+  .scriptName('adpa')
   .usage('Usage: $0 <command> [options]')
   .version(getLegacyDisplayName())
   .command('generate [key]', 'Generate a specific document by key', (yargs) => {
@@ -247,6 +247,49 @@ yargs(hideBin(process.argv))
   })
   .command('setup', 'Interactive setup wizard for AI providers', {}, async () => {
     await handleSetupCommand();
+  })
+  .command('interactive', 'Launch interactive CLI menu interface', (yargs) => {
+    return yargs
+      .option('mode', { 
+        type: 'string', 
+        choices: ['beginner', 'advanced'], 
+        default: 'beginner',
+        describe: 'Interface mode for different user experience levels' 
+      })
+      .option('skip-intro', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Skip the introduction message' 
+      })
+      .option('debug', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Enable debug mode for troubleshooting' 
+      })
+      .option('enhanced', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Use enhanced navigation with inquirer (recommended)' 
+      });
+  }, async (argv) => {
+    const { 
+      handleInteractiveCommand, 
+      checkInteractiveSupport, 
+      showInteractiveNotSupportedMessage 
+    } = await import('./commands/interactive.js');
+    
+    // Check if interactive mode is supported
+    if (!checkInteractiveSupport()) {
+      showInteractiveNotSupportedMessage();
+      process.exit(1);
+    }
+    
+    await handleInteractiveCommand({
+      mode: argv.mode as 'beginner' | 'advanced',
+      skipIntro: argv.skipIntro,
+      debug: argv.debug,
+      enhanced: argv.enhanced
+    });
   })
   .command('analyze', 'Analyze workspace without generating docs', {}, async () => {
     await handleAnalyzeCommand();
@@ -460,7 +503,7 @@ yargs(hideBin(process.argv))
           });
 
           console.log('\n💡 Next Steps:');
-          console.log('   • Use "rga feedback apply" to implement improvements');
+          console.log('   • Use "adpa feedback apply" to implement improvements');
           console.log('   • Review specific document types with low ratings');
           console.log('   • Monitor trends after implementing changes');
 
@@ -579,7 +622,7 @@ yargs(hideBin(process.argv))
           if (avgRating[0]?.avgRating < 3) {
             console.log('   • Focus on improving overall document quality');
           }
-          console.log('   • Use "rga feedback analyze" for detailed insights');
+          console.log('   • Use "adpa feedback analyze" for detailed insights');
 
         } catch (error) {
           console.error('❌ Error gathering feedback statistics:', error);
@@ -656,6 +699,72 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid stakeholder command.');
   })
+
+  .command(promptsCommand)
+  .command('risk-compliance', 'Generate comprehensive risk and compliance assessments', (yargs) => {
+    return yargs
+      .option('project', {
+        alias: 'p',
+        type: 'string',
+        description: 'Project name',
+        demandOption: true
+      })
+      .option('type', {
+        alias: 't',
+        type: 'string',
+        description: 'Project type (SOFTWARE_DEVELOPMENT, INFRASTRUCTURE, etc.)',
+        default: 'SOFTWARE_DEVELOPMENT'
+      })
+      .option('description', {
+        alias: 'd',
+        type: 'string',
+        description: 'Project description'
+      })
+      .option('output', {
+        alias: 'o',
+        type: 'string',
+        description: 'Output directory',
+        default: 'generated-documents/risk-compliance'
+      })
+      .option('integrated', {
+        type: 'boolean',
+        description: 'Generate integrated assessment using compliance engine',
+        default: false
+      })
+      .option('pmbok-only', {
+        type: 'boolean',
+        description: 'Generate PMBOK-focused assessment only',
+        default: false
+      })
+      .option('format', {
+        type: 'string',
+        description: 'Output format (markdown, json)',
+        choices: ['markdown', 'json'],
+        default: 'markdown'
+      });
+  }, async (argv) => {
+    try {
+      const { createRiskComplianceCommand } = await import('./commands/risk-compliance.js');
+      const command = createRiskComplianceCommand();
+      
+      // Execute the command with the provided arguments
+      await command.parseAsync([
+        'risk-compliance',
+        '--project', argv.project,
+        '--type', argv.type || 'SOFTWARE_DEVELOPMENT',
+        ...(argv.description ? ['--description', argv.description] : []),
+        '--output', argv.output,
+        ...(argv.integrated ? ['--integrated'] : []),
+        ...(argv.pmbokOnly ? ['--pmbok-only'] : []),
+        '--format', argv.format
+      ], { from: 'user' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Error executing risk-compliance command:', message);
+      process.exit(1);
+    }
+  })
+
   .option('quiet', {
     alias: 'q',
     type: 'boolean',

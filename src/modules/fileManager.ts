@@ -898,6 +898,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'PMO/PMBOK-compliant change request form for program-level changes.',
         generatedAt: ''
     },
+    'detailed-planning-artifacts': {
+        title: 'Detailed Planning Artifacts',
+        filename: 'pppm/detailed-planning-artifacts.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'PMO/PMBOK-compliant detailed planning artifacts for program-level changes.',
+        generatedAt: ''
+    }
 };
 
 // Create organized directory structure

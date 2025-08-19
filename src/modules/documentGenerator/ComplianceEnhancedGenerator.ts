@@ -44,15 +44,12 @@ export interface ComplianceEnhancedOptions extends GenerationOptions {
   generateComplianceReports?: boolean;
   enforceComplianceThresholds?: boolean;
   complianceThreshold?: number; // Minimum compliance score required
+  outputDir?: string;
 }
 
-/**
- * Compliance-Enhanced Document Generator
- */
 export class ComplianceEnhancedGenerator extends DocumentGenerator {
-  private complianceService: ComplianceValidationService;
-  private standardsEngine: StandardsComplianceAnalysisEngine;
   private complianceOptions: ComplianceEnhancedOptions;
+  private standardsEngine: StandardsComplianceAnalysisEngine;
   private complianceResults: DocumentComplianceValidation[] = [];
 
   constructor(
@@ -60,28 +57,24 @@ export class ComplianceEnhancedGenerator extends DocumentGenerator {
     options: ComplianceEnhancedOptions = {}
   ) {
     super(context, options);
-    
     this.complianceOptions = {
       enableComplianceValidation: true,
       generateComplianceReports: true,
       enforceComplianceThresholds: false,
       complianceThreshold: 80,
+      outputDir: options.outputDir || 'generated-documents',
       ...options
     };
-
-    // Initialize compliance services
-    const complianceConfig = options.complianceConfig || ComplianceValidationService.getDefaultConfig();
-    this.complianceService = new ComplianceValidationService(complianceConfig);
-    
     // Initialize standards compliance engine
     this.standardsEngine = new StandardsComplianceAnalysisEngine({
       enabledStandards: ['BABOK_V3', 'PMBOK_7', 'DMBOK_2', 'ISO_15408'],
       analysisDepth: 'COMPREHENSIVE',
-      includeIntelligentDeviations: true,
+      intelligentDeviationThreshold: 80,
+      riskToleranceLevel: 'MEDIUM',
+      includeRecommendations: true,
       generateExecutiveSummary: true,
-      customRules: []
+      outputFormat: 'JSON'
     });
-
     logger.info('🔒 Compliance-Enhanced Document Generator initialized');
   }
 
@@ -201,48 +194,59 @@ export class ComplianceEnhancedGenerator extends DocumentGenerator {
     try {
       // Create mock project data for standards analysis
       const projectData = {
-        projectId: 'current-project',
-        projectName: 'Document Generation Project',
-        industry: 'TECHNOLOGY',
-        projectType: 'DEVELOPMENT',
-        complexity: 'MEDIUM',
+  projectId: 'current-project',
+  projectName: 'Document Generation Project',
+  industry: 'TECHNOLOGY' as import('../../types/standardsCompliance').Industry,
+  projectType: 'SOFTWARE_DEVELOPMENT' as import('../../types/standardsCompliance').ProjectType,
+  complexity: 'MEDIUM' as import('../../types/standardsCompliance').ProjectComplexity,
         duration: 6,
         budget: 500000,
         teamSize: 10,
         stakeholderCount: 15,
         regulatoryRequirements: [],
-        methodology: 'AGILE',
+  methodology: 'AGILE' as import('../../types/standardsCompliance').Methodology,
         documents: [],
         processes: [],
         deliverables: [],
-        governance: {
-          hasSteeringCommittee: true,
-          hasProjectBoard: true,
-          decisionMakingAuthority: 'PROJECT_MANAGER',
-          escalationPaths: [],
-          workingGroups: []
-        },
-        metadata: {
-          createdDate: new Date(),
-          lastModified: new Date(),
-          version: '1.0',
-          tags: ['compliance', 'documentation'],
-          customFields: {}
-        }
+         governance: {
+           hasSteeringCommittee: true,
+           hasProjectBoard: true,
+           decisionMakingAuthority: 'Project Board',
+           escalationPaths: [],
+           workingGroups: [],
+          steeringCommittee: [] as import('../../types/standardsCompliance').CommitteeMember[],
+          projectBoard: [] as import('../../types/standardsCompliance').CommitteeMember[],
+          decisionMakingProcess: '',
+         },
+          metadata: {
+            createdDate: new Date(),
+            lastModified: new Date(),
+            lastUpdated: new Date(),
+            version: '1.0',
+            tags: ['compliance', 'documentation'],
+            customFields: {}
+          }
       };
 
       // Perform standards analysis
       const analysisRequest = {
+        requestId: `analysis-${Date.now()}`,
         projectData,
-        requestedBy: 'Compliance-Enhanced Generator',
-        analysisType: 'FULL' as const,
-        config: {
-          enabledStandards: ['BABOK_V3', 'PMBOK_7', 'DMBOK_2', 'ISO_15408'],
-          analysisDepth: 'COMPREHENSIVE' as const,
+            enabledStandards: [
+              'BABOK_V3',
+              'PMBOK_7',
+              'DMBOK_2',
+              'ISO_15408',
+            ] as ('BABOK_V3' | 'PMBOK_7' | 'DMBOK_2' | 'ISO_15408')[],
+        analysisOptions: {
           includeIntelligentDeviations: true,
+          includeCrossStandardAnalysis: true,
           generateExecutiveSummary: true,
-          customRules: []
-        }
+          detailLevel: 'COMPREHENSIVE' as 'BASIC' | 'DETAILED' | 'COMPREHENSIVE',
+          riskAssessmentLevel: 'COMPREHENSIVE' as 'COMPREHENSIVE' | 'BASIC' | 'STANDARD'
+        },
+        requestDate: new Date(),
+        requestor: 'Compliance-Enhanced Generator'
       };
 
       const analysisResponse = await this.standardsEngine.analyzeProject(analysisRequest);
@@ -252,19 +256,19 @@ export class ComplianceEnhancedGenerator extends DocumentGenerator {
         return {
           babok: { 
             score: matrix.standards.find(s => s.standard === 'BABOK_V3')?.overallScore || 0,
-            status: matrix.standards.find(s => s.standard === 'BABOK_V3')?.complianceStatus || 'NOT_ASSESSED'
+            status: matrix.standards.find(s => s.standard === 'BABOK_V3')?.status || 'NOT_ASSESSED'
           },
           pmbok: { 
             score: matrix.standards.find(s => s.standard === 'PMBOK_7')?.overallScore || 0,
-            status: matrix.standards.find(s => s.standard === 'PMBOK_7')?.complianceStatus || 'NOT_ASSESSED'
+            status: matrix.standards.find(s => s.standard === 'PMBOK_7')?.status || 'NOT_ASSESSED'
           },
           dmbok: { 
             score: matrix.standards.find(s => s.standard === 'DMBOK_2')?.overallScore || 0,
-            status: matrix.standards.find(s => s.standard === 'DMBOK_2')?.complianceStatus || 'NOT_ASSESSED'
+            status: matrix.standards.find(s => s.standard === 'DMBOK_2')?.status || 'NOT_ASSESSED'
           },
           iso15408: { 
             score: matrix.standards.find(s => s.standard === 'ISO_15408')?.overallScore || 0,
-            status: matrix.standards.find(s => s.standard === 'ISO_15408')?.complianceStatus || 'NOT_ASSESSED'
+            status: matrix.standards.find(s => s.standard === 'ISO_15408')?.status || 'NOT_ASSESSED'
           }
         };
       }
