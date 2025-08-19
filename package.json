@@ -79,7 +79,7 @@
     "env:test": "node dist/cli.js env test",
     "env:test:all": "node dist/cli.js env test --all",
     "env:optimize": "node dist/cli.js env optimize",
-    "test:env": "node scripts/test-environment-setup.js"
+    "test:env": "node scripts/test-environment-setup.js",
     "demo:enhanced-nav": "node examples/enhanced-navigation-demo.js",
     "test:enhanced-nav": "node test-enhanced-navigation.js"
 
