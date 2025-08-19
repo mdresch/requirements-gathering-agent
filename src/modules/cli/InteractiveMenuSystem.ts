@@ -467,36 +467,23 @@ export class InteractiveMenuSystem extends EventEmitter {
    */
   private async executeCommand(command: string, args: string[]): Promise<void> {
     try {
-      // Use the integrated command service instead of spawning child processes
+      // Use the integrated command service directly - no child process spawning needed
       const result = await this.commandIntegration.executeCommand(command, args);
       
-      // Execute the command in a child process
-      const childProcess = spawn('node', ['dist/cli.js', command, ...args], {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-      
-      // Wait for the command to complete
-      await new Promise((resolve, reject) => {
-  childProcess.on('close', (code: number) => {
-          if (code === 0) {
-            console.log('✅ Command executed successfully');
-            resolve(code);
-          } else {
-            console.log(`⚠️  Command exited with code ${code}`);
-            resolve(code);
-          }
-        });
-        
-        childProcess.on('error', (error) => {
-          if (error instanceof Error) {
-            console.error('❌ Error executing command:', error.message);
-          } else {
-            console.error('❌ Error executing command:', error);
-          }
-          reject(error);
-        });
-      });
+      if (result.success) {
+        console.log('✅ Command executed successfully');
+        if (result.message) {
+          console.log(`💡 ${result.message}`);
+        }
+      } else {
+        console.error('❌ Command execution failed');
+        if (result.message) {
+          console.error(`💡 ${result.message}`);
+        }
+        if (result.error) {
+          console.error(`🔍 Error details: ${result.error.message}`);
+        }
+      }
       
     } catch (error) {
       if (error instanceof Error) {
@@ -504,7 +491,7 @@ export class InteractiveMenuSystem extends EventEmitter {
       } else {
         console.error('❌ Error executing command:', error);
       }
-      console.log('💡 Make sure the CLI is properly built and configured.');
+      console.log('💡 Make sure the CLI is properly configured.');
     }
     
     await this.pause();
