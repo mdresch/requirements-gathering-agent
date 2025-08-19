@@ -16,6 +16,7 @@ export interface ValidationResult {
   error?: string;
   sanitizedValue?: string;
   suggestions?: string[];
+  timestamp?: Date;
 }
 
 export interface ValidationOptions {
@@ -30,7 +31,91 @@ export interface ValidationOptions {
 }
 
 export class InputValidationService {
-  
+  private static readonly errorHistory: ValidationResult[] = [];
+  private static readonly MAX_ERROR_HISTORY = 100;
+
+  /**
+   * Enhanced validation with timeout and retry support
+   */
+  static async validateWithRetry<T>(
+    input: string,
+    validator: (input: string) => ValidationResult,
+    options: {
+      maxRetries?: number;
+      retryMessage?: string;
+      fieldName?: string;
+    } = {}
+  ): Promise<{ isValid: boolean; value?: T; attempts: number }> {
+    const { maxRetries = 3, retryMessage = 'Please try again', fieldName = 'input' } = options;
+    let attempts = 0;
+    
+    while (attempts < maxRetries) {
+      attempts++;
+      const result = validator(input);
+      
+      if (result.isValid) {
+        return { isValid: true, value: result.sanitizedValue as T, attempts };
+      }
+      
+      if (attempts < maxRetries) {
+        console.log(`❌ ${this.formatValidationError(result)}`);
+        console.log(`💡 ${retryMessage} (Attempt ${attempts}/${maxRetries})`);
+      }
+    }
+    
+    return { isValid: false, attempts };
+  }
+
+  /**
+   * Validate input with timeout
+   */
+  static validateWithTimeout(input: string, validator: (input: string) => ValidationResult, timeoutMs: number = 30000): Promise<ValidationResult> {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        resolve({
+          isValid: false,
+          error: 'Input validation timed out',
+          suggestions: ['Please try again with valid input']
+        });
+      }, timeoutMs);
+
+      try {
+        const result = validator(input);
+        clearTimeout(timer);
+        resolve(result);
+      } catch (error) {
+        clearTimeout(timer);
+        resolve({
+          isValid: false,
+          error: `Validation error: ${error instanceof Error ? error.message : String(error)}`,
+          suggestions: ['Please check your input and try again']
+        });
+      }
+    });
+  }
+
+  /**
+   * Enhanced input sanitization with security measures
+   */
+  static sanitizeInputSecure(input: string): string {
+    if (!input || typeof input !== 'string') {
+      return '';
+    }
+
+    return input
+      .trim()
+      // Remove potential script injection attempts
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove null bytes
+      .replace(/\0/g, '')
+      // Normalize whitespace
+      .replace(/\s+/g, ' ')
+      // Limit length to prevent buffer overflow
+      .substring(0, 1000);
+  }
+
   /**
    * Validate menu choice input
    */
@@ -472,5 +557,190 @@ export class InputValidationService {
     }
     
     return message;
+  }
+
+  /**
+   * Track validation errors for analytics
+   */
+  static trackValidationError(result: ValidationResult): void {
+    if (!result.isValid) {
+      this.errorHistory.push({
+        ...result,
+        timestamp: new Date()
+      });
+      
+      // Keep history size manageable
+      if (this.errorHistory.length > this.MAX_ERROR_HISTORY) {
+        this.errorHistory.shift();
+      }
+    }
+  }
+
+  /**
+   * Get validation error statistics
+   */
+  static getValidationStats(): {
+    totalErrors: number;
+    recentErrors: number;
+    commonErrors: string[];
+    errorRate: number;
+  } {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    
+    const recentErrors = this.errorHistory.filter(error => 
+      error.timestamp && error.timestamp > oneHourAgo
+    );
+    
+    const errorCounts: { [key: string]: number } = {};
+    this.errorHistory.forEach(error => {
+      if (error.error) {
+        errorCounts[error.error] = (errorCounts[error.error] || 0) + 1;
+      }
+    });
+    
+    const commonErrors = Object.entries(errorCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([error]) => error);
+    
+    return {
+      totalErrors: this.errorHistory.length,
+      recentErrors: recentErrors.length,
+      commonErrors,
+      errorRate: this.errorHistory.length > 0 ? (recentErrors.length / this.errorHistory.length) * 100 : 0
+    };
+  }
+
+  /**
+   * Clear validation error history
+   */
+  static clearValidationHistory(): void {
+    this.errorHistory.length = 0;
+  }
+
+  /**
+   * Validate command line arguments
+   */
+  static validateCommandArgs(args: string[]): ValidationResult {
+    if (!Array.isArray(args)) {
+      return {
+        isValid: false,
+        error: 'Invalid arguments format',
+        suggestions: ['Arguments must be an array of strings']
+      };
+    }
+
+    // Check for potentially dangerous arguments
+    const dangerousPatterns = [
+      /--eval/i,
+      /--exec/i,
+      /\$\(/,
+      /`[^`]*`/,
+      /\|\s*sh/i,
+      /\|\s*bash/i,
+      /\|\s*cmd/i
+    ];
+
+    for (const arg of args) {
+      if (typeof arg !== 'string') {
+        return {
+          isValid: false,
+          error: 'All arguments must be strings',
+          suggestions: ['Check argument types']
+        };
+      }
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(arg)) {
+          return {
+            isValid: false,
+            error: 'Potentially dangerous argument detected',
+            suggestions: ['Remove shell injection attempts', 'Use safe argument values']
+          };
+        }
+      }
+    }
+
+    return {
+      isValid: true,
+      sanitizedValue: args.map(arg => this.sanitizeInputSecure(arg))
+    };
+  }
+
+  /**
+   * Validate file system paths with security checks
+   */
+  static validatePathSecure(input: string): ValidationResult {
+    const sanitized = this.sanitizeInputSecure(input);
+    
+    if (!sanitized) {
+      return {
+        isValid: false,
+        error: 'Path cannot be empty',
+        suggestions: ['Provide a valid file or directory path']
+      };
+    }
+
+    // Check for path traversal attempts
+    if (sanitized.includes('..') || sanitized.includes('~')) {
+      return {
+        isValid: false,
+        error: 'Path traversal not allowed',
+        suggestions: ['Use relative paths within the project directory', 'Avoid ".." and "~" in paths']
+      };
+    }
+
+    // Check for absolute paths outside allowed directories
+    if (sanitized.startsWith('/') && !sanitized.startsWith('/tmp/') && !sanitized.startsWith('/var/tmp/')) {
+      return {
+        isValid: false,
+        error: 'Absolute paths outside allowed directories not permitted',
+        suggestions: ['Use relative paths', 'Use paths within the project directory']
+      };
+    }
+
+    return {
+      isValid: true,
+      sanitizedValue: sanitized
+    };
+  }
+
+  /**
+   * Validate numeric input with range checking
+   */
+  static validateNumericRange(input: string, min: number = Number.MIN_SAFE_INTEGER, max: number = Number.MAX_SAFE_INTEGER): ValidationResult {
+    const sanitized = this.sanitizeInputSecure(input);
+    
+    if (!sanitized) {
+      return {
+        isValid: false,
+        error: 'Numeric input cannot be empty',
+        suggestions: [`Enter a number between ${min} and ${max}`]
+      };
+    }
+
+    const num = parseFloat(sanitized);
+    
+    if (isNaN(num)) {
+      return {
+        isValid: false,
+        error: 'Input must be a valid number',
+        suggestions: ['Enter a numeric value', 'Use decimal notation if needed']
+      };
+    }
+
+    if (num < min || num > max) {
+      return {
+        isValid: false,
+        error: `Number must be between ${min} and ${max}`,
+        suggestions: [`Enter a value between ${min} and ${max}`]
+      };
+    }
+
+    return {
+      isValid: true,
+      sanitizedValue: num.toString()
+    };
   }
 }
