@@ -85,7 +85,7 @@ ${context}
 
 Generate only the vision statement, no additional text or formatting.`;
 
-    const vision = await aiProcessor.processRequest(visionPrompt, 'strategic-planning');
+  const vision = await aiProcessor.processAIRequest(() => Promise.resolve(visionPrompt), 'strategic-planning');
 
     // Generate mission statement
     const missionPrompt = `Based on the following project context, generate a concise mission statement that describes the purpose and primary objectives of this project:
@@ -94,7 +94,7 @@ ${context}
 
 Generate only the mission statement, no additional text or formatting.`;
 
-    const mission = await aiProcessor.processRequest(missionPrompt, 'strategic-planning');
+  const mission = await aiProcessor.processAIRequest(() => Promise.resolve(missionPrompt), 'strategic-planning');
 
     // Generate core values
     const valuesPrompt = `Based on the following project context, generate 3-5 core values that will guide this project's execution and decision-making:
@@ -103,7 +103,7 @@ ${context}
 
 Generate only the core values as a comma-separated list, no additional text or formatting.`;
 
-    const coreValues = await aiProcessor.processRequest(valuesPrompt, 'strategic-planning');
+  const coreValues = await aiProcessor.processAIRequest(() => Promise.resolve(valuesPrompt), 'strategic-planning');
 
     // Generate purpose statement
     const purposePrompt = `Based on the following project context, generate a clear purpose statement that explains why this project exists and what problem it solves:
@@ -112,7 +112,7 @@ ${context}
 
 Generate only the purpose statement, no additional text or formatting.`;
 
-    const purpose = await aiProcessor.processRequest(purposePrompt, 'strategic-planning');
+  const purpose = await aiProcessor.processAIRequest(() => Promise.resolve(purposePrompt), 'strategic-planning');
 
     return {
       vision: vision?.trim() || 'Vision not generated',
@@ -167,7 +167,7 @@ Requirements:
 
 JSON Response:`;
 
-    const response = await aiProcessor.processRequest(prompt, 'requirements-generation');
+  const response = await aiProcessor.processAIRequest(() => Promise.resolve(prompt), 'requirements-generation');
     
     if (!response) {
       return [];
@@ -339,7 +339,7 @@ Requirements:
 
 JSON Response:`;
 
-    const response = await aiProcessor.processRequest(prompt, 'technology-analysis');
+  const response = await aiProcessor.processAIRequest(() => Promise.resolve(prompt), 'technology-analysis');
     
     if (!response) {
       throw new Error('No response received from AI processor');
@@ -464,7 +464,7 @@ Requirements:
 
 JSON Response:`;
 
-    const response = await aiProcessor.processRequest(prompt, 'risk-management');
+  const response = await aiProcessor.processAIRequest(() => Promise.resolve(prompt), 'risk-management');
     
     if (!response) {
       throw new Error('No response received from AI processor');
