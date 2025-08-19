@@ -47,6 +47,7 @@ import { getTasksByCategory, getTaskByKey, GENERATION_TASKS } from './modules/do
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
 import { promptsCommand } from './commands/prompts.js';
+import { createEnvironmentCommands } from './commands/environment.js';
 // 4. Constants and configuration
 import { 
   DEFAULT_OUTPUT_DIR, 
@@ -631,6 +632,7 @@ yargs(hideBin(process.argv))
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
   .command(promptsCommand)
+  .command(createEnvironmentCommands())
   // Stakeholder Analysis commands
   .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
     return yargs
