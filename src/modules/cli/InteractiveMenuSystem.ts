@@ -13,6 +13,8 @@ import { EventEmitter } from 'events';
 import { CommandIntegrationService } from './CommandIntegration.js';
 import { InputValidationService, ValidationResult } from './InputValidationService.js';
 import { InteractiveErrorHandler, ErrorContext, InteractiveError } from './InteractiveErrorHandler.js';
+import { EnhancedPromptService } from './EnhancedPromptService.js';
+import { spawn } from 'child_process';
 
 
 // Types and Interfaces
@@ -66,6 +68,7 @@ export class InteractiveMenuSystem extends EventEmitter {
   private menus: Map<string, MenuConfig> = new Map();
   private systemStatus: SystemStatus;
   private commandIntegration: CommandIntegrationService;
+  private promptService: EnhancedPromptService;
 
   constructor() {
     super();
@@ -82,6 +85,7 @@ export class InteractiveMenuSystem extends EventEmitter {
     };
 
     this.commandIntegration = new CommandIntegrationService();
+    this.promptService = new EnhancedPromptService(this.rl);
     this.initializeMenus();
   }
 
@@ -102,6 +106,7 @@ export class InteractiveMenuSystem extends EventEmitter {
    * Stop the interactive menu system
    */
   async stop(): Promise<void> {
+    this.promptService.close();
     this.rl.close();
     console.log('\n👋 Thank you for using ADPA Interactive CLI!');
   }
@@ -181,43 +186,26 @@ export class InteractiveMenuSystem extends EventEmitter {
   private async handleMenuInput(menu: MenuConfig): Promise<void> {
     while (true) {
       try {
-        const choice = await this.promptForChoice('Select an option (or type "back", "home", "help", "exit"): ');
-        
-        // Validate menu choice
+        // Use enhanced prompt service for menu choice
         const validChoices = menu.items.map(item => item.key);
-        const validationResult = InputValidationService.validateMenuChoice(choice, validChoices);
+        const result = await this.promptService.promptMenuChoice(
+          'Select an option (or type "back", "home", "help", "exit"): ',
+          validChoices
+        );
         
-        if (!validationResult.isValid) {
-          const context: ErrorContext = {
-            operation: 'menu selection',
-            userInput: choice,
-            menuId: menu.id,
-            timestamp: new Date()
-          };
-          
-          const error = InteractiveErrorHandler.handleValidationError(validationResult, context);
-          await InteractiveErrorHandler.displayError(error);
-          
-          const action = await InteractiveErrorHandler.getRecoveryAction(error, this.promptForChoice.bind(this));
-          
-          switch (action) {
-            case 'retry':
-              continue; // Try again
-            case 'back':
-              await this.goBack();
-              return;
-            case 'help':
-              await this.showNavigationHelp();
-              continue;
-            case 'exit':
-              await this.stop();
-              process.exit(0);
-              return;
+        if (!result.success) {
+          if (result.cancelled) {
+            console.log('🚫 Operation cancelled by user.');
+            await this.goBack();
+            return;
           }
+          
+          console.log(`❌ ${result.error}`);
+          console.log('💡 Please try again or type "help" for assistance.');
           continue;
         }
 
-        const sanitizedChoice = validationResult.sanitizedValue!;
+        const sanitizedChoice = result.value!;
         
         // Handle special navigation commands
         switch (sanitizedChoice) {
@@ -1599,10 +1587,23 @@ export class InteractiveMenuSystem extends EventEmitter {
     console.log('\n🔍 Template Search');
     console.log('─'.repeat(50));
     
-    const searchTerm = await this.promptForChoice('Enter search term (or press Enter to see all): ');
+    const searchResult = await this.promptService.prompt({
+      message: 'Enter search term (or press Enter to see all): ',
+      required: false,
+      helpText: 'Search for templates by name, category, or keyword',
+      suggestions: ['project-charter', 'stakeholder', 'risk', 'business-case']
+    });
+    
+    const searchTerm = searchResult.success ? searchResult.value : '';
     
     // This would integrate with the actual template system
     console.log('\n📋 Available Templates:');
+    if (searchTerm) {
+      console.log(`🔍 Search results for "${searchTerm}":`);
+    } else {
+      console.log('📚 All available templates:');
+    }
+    
     console.log('• Project Charter (project-charter)');
     console.log('• Stakeholder Register (stakeholder-register)');
     console.log('• Risk Management Plan (risk-management-plan)');
@@ -2136,76 +2137,67 @@ export class InteractiveMenuSystem extends EventEmitter {
     console.log('─'.repeat(50));
     
     try {
-      // Get project name with validation
-      let projectName: string;
-      while (true) {
-        const input = await this.promptForChoice('Enter project name: ');
-        const validation = InputValidationService.validateProjectName(input);
-        
-        if (validation.isValid) {
-          projectName = validation.sanitizedValue!;
-          break;
-        } else {
-          console.log(InputValidationService.formatValidationError(validation));
-        }
+      // Get project name with enhanced validation
+      const projectNameResult = await this.promptService.promptProjectName('Enter project name: ');
+      if (!projectNameResult.success) {
+        console.log('❌ Project name is required. Returning to menu.');
+        return;
+      }
+      const projectName = projectNameResult.value!;
+      
+      // Get project type with enhanced choice selection
+      const projectTypeChoices = [
+        'Software Development',
+        'Infrastructure',
+        'Data Management',
+        'Business Process',
+        'Other'
+      ];
+      
+      const projectTypeResult = await this.promptService.promptChoice(
+        'Select project type:',
+        projectTypeChoices
+      );
+      
+      if (!projectTypeResult.success) {
+        console.log('❌ Project type selection is required. Returning to menu.');
+        return;
       }
       
-      console.log('\nSelect project type:');
-      console.log('1. Software Development');
-      console.log('2. Infrastructure');
-      console.log('3. Data Management');
-      console.log('4. Business Process');
-      console.log('5. Other');
+      const typeMap: { [key: string]: string } = {
+        'Software Development': 'SOFTWARE_DEVELOPMENT',
+        'Infrastructure': 'INFRASTRUCTURE', 
+        'Data Management': 'DATA_MANAGEMENT',
+        'Business Process': 'BUSINESS_PROCESS',
+        'Other': 'OTHER'
+      };
+      const projectType = typeMap[projectTypeResult.value as string];
       
-      // Get project type with validation
-      let projectType: string;
-      while (true) {
-        const typeChoice = await this.promptForChoice('Enter choice (1-5): ');
-        const validation = InputValidationService.validateText(typeChoice, {
-          required: true,
-          allowedValues: ['1', '2', '3', '4', '5'],
-          caseSensitive: true
-        }, 'project type choice');
-        
-        if (validation.isValid) {
-          const typeMap: { [key: string]: string } = {
-            '1': 'SOFTWARE_DEVELOPMENT',
-            '2': 'INFRASTRUCTURE', 
-            '3': 'DATA_MANAGEMENT',
-            '4': 'BUSINESS_PROCESS',
-            '5': 'OTHER'
-          };
-          projectType = typeMap[validation.sanitizedValue!];
-          break;
-        } else {
-          console.log(InputValidationService.formatValidationError(validation));
-        }
+      // Get project description (optional)
+      const descriptionResult = await this.promptService.prompt({
+        message: 'Enter project description (optional): ',
+        required: false,
+        helpText: 'Provide a brief description of your project (optional)'
+      });
+      const description = descriptionResult.success ? descriptionResult.value : '';
+      
+      // Get assessment type
+      const assessmentTypeChoices = [
+        'Integrated assessment (recommended)',
+        'PMBOK-only assessment'
+      ];
+      
+      const assessmentResult = await this.promptService.promptChoice(
+        'Select assessment type:',
+        assessmentTypeChoices
+      );
+      
+      if (!assessmentResult.success) {
+        console.log('❌ Assessment type selection is required. Returning to menu.');
+        return;
       }
       
-      // Get project description (optional, no validation needed)
-      const description = await this.promptForChoice('Enter project description (optional): ');
-      
-      console.log('\nSelect assessment type:');
-      console.log('1. Integrated assessment (recommended)');
-      console.log('2. PMBOK-only assessment');
-      
-      // Get assessment type with validation
-      let isIntegrated: boolean;
-      while (true) {
-        const assessmentChoice = await this.promptForChoice('Enter choice (1-2): ');
-        const validation = InputValidationService.validateText(assessmentChoice, {
-          required: true,
-          allowedValues: ['1', '2'],
-          caseSensitive: true
-        }, 'assessment type choice');
-        
-        if (validation.isValid) {
-          isIntegrated = validation.sanitizedValue === '1';
-          break;
-        } else {
-          console.log(InputValidationService.formatValidationError(validation));
-        }
-      }
+      const isIntegrated = (assessmentResult.value as string).includes('Integrated');
       
       // Build command arguments
       const args = [
