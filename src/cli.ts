@@ -47,6 +47,7 @@ import { getTasksByCategory, getTaskByKey, GENERATION_TASKS } from './modules/do
 import { readProjectContext, readEnhancedProjectContext } from './modules/fileManager.js';
 import { PMBOKValidator } from './modules/pmbokValidation/PMBOKValidator.js';
 import { promptsCommand } from './commands/prompts.js';
+import { createEnvironmentCommands } from './commands/environment.js';
 // 4. Constants and configuration
 import { 
   DEFAULT_OUTPUT_DIR, 
@@ -177,7 +178,7 @@ async function ensureGitRepoInitialized(documentsDir = DEFAULT_OUTPUT_DIR) {
 
 // Yargs CLI definition
 yargs(hideBin(process.argv))
-  .scriptName('rga')
+  .scriptName('adpa')
   .usage('Usage: $0 <command> [options]')
   .version(getLegacyDisplayName())
   .command('generate [key]', 'Generate a specific document by key', (yargs) => {
@@ -246,6 +247,49 @@ yargs(hideBin(process.argv))
   })
   .command('setup', 'Interactive setup wizard for AI providers', {}, async () => {
     await handleSetupCommand();
+  })
+  .command('interactive', 'Launch interactive CLI menu interface', (yargs) => {
+    return yargs
+      .option('mode', { 
+        type: 'string', 
+        choices: ['beginner', 'advanced'], 
+        default: 'beginner',
+        describe: 'Interface mode for different user experience levels' 
+      })
+      .option('skip-intro', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Skip the introduction message' 
+      })
+      .option('debug', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Enable debug mode for troubleshooting' 
+      })
+      .option('enhanced', { 
+        type: 'boolean', 
+        default: false, 
+        describe: 'Use enhanced navigation with inquirer (recommended)' 
+      });
+  }, async (argv) => {
+    const { 
+      handleInteractiveCommand, 
+      checkInteractiveSupport, 
+      showInteractiveNotSupportedMessage 
+    } = await import('./commands/interactive.js');
+    
+    // Check if interactive mode is supported
+    if (!checkInteractiveSupport()) {
+      showInteractiveNotSupportedMessage();
+      process.exit(1);
+    }
+    
+    await handleInteractiveCommand({
+      mode: argv.mode as 'beginner' | 'advanced',
+      skipIntro: argv.skipIntro,
+      debug: argv.debug,
+      enhanced: argv.enhanced
+    });
   })
   .command('analyze', 'Analyze workspace without generating docs', {}, async () => {
     await handleAnalyzeCommand();
@@ -459,7 +503,7 @@ yargs(hideBin(process.argv))
           });
 
           console.log('\n💡 Next Steps:');
-          console.log('   • Use "rga feedback apply" to implement improvements');
+          console.log('   • Use "adpa feedback apply" to implement improvements');
           console.log('   • Review specific document types with low ratings');
           console.log('   • Monitor trends after implementing changes');
 
@@ -578,7 +622,7 @@ yargs(hideBin(process.argv))
           if (avgRating[0]?.avgRating < 3) {
             console.log('   • Focus on improving overall document quality');
           }
-          console.log('   • Use "rga feedback analyze" for detailed insights');
+          console.log('   • Use "adpa feedback analyze" for detailed insights');
 
         } catch (error) {
           console.error('❌ Error gathering feedback statistics:', error);
@@ -587,60 +631,138 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
-  .command('provider-test', 'Test AI provider connectivity', (yargs) => {
+  .command(promptsCommand)
+  .command(require('./commands/environment.js').environmentCommandModule)
+  // Stakeholder Analysis commands
+  .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
     return yargs
-      .option('provider', { type: 'string', describe: 'Provider to test (ollama, google, azure, github)' });
-  }, async (argv) => {
-    if (argv.provider === 'ollama') {
-      try {
-        const fetch = (await import('node-fetch')).default;
-        const res = await fetch('http://localhost:11434/api/tags');
-        if (res.ok) {
-          console.log('✅ Ollama is running and reachable.');
-        } else {
-          console.error('❌ Ollama endpoint returned error:', res.statusText);
-        }
-      } catch (e) {
-        console.error('❌ Could not reach Ollama endpoint:', e);
-      }
-    } else {
-      console.log('Provider test for other providers not yet implemented.');
-    }
+      .command('analysis', 'Generate comprehensive stakeholder analysis', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('include-register', { type: 'boolean', default: true, describe: 'Include stakeholder register' })
+          .option('include-engagement-plan', { type: 'boolean', default: false, describe: 'Include engagement plan' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAnalysisCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: argv['include-register'],
+          includeEngagementPlan: argv['include-engagement-plan'],
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
+      })
+      .command('register', 'Generate stakeholder register only', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderRegisterCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
+      })
+      .command('engagement-plan', 'Generate stakeholder engagement plan', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
+      }, async (argv) => {
+        await handleStakeholderEngagementPlanCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose
+        });
+      })
+      .command('automate', 'Generate all stakeholder documents (comprehensive automation)', (yargs) => {
+        return yargs
+          .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
+          .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
+          .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
+          .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
+      }, async (argv) => {
+        await handleStakeholderAutomationCommand({
+          outputDir: argv['output-dir'],
+          format: argv.format as 'markdown' | 'json',
+          verbose: argv.verbose,
+          includeRegister: true,
+          includeEngagementPlan: true,
+          analysisDepth: argv['analysis-depth'] as 'basic' | 'detailed' | 'comprehensive'
+        });
+      })
+      .command('help', 'Show stakeholder analysis help', {}, () => {
+        displayStakeholderHelp();
+      })
+      .demandCommand(1, 'You must provide a valid stakeholder command.');
   })
-  .command('ollama', 'Ollama model management', (yargs) => {
+
+  .command(promptsCommand)
+  .command('risk-compliance', 'Generate comprehensive risk and compliance assessments', (yargs) => {
     return yargs
-      .command('models-list', 'List available Ollama models', {}, async () => {
-        try {
-          const fetch = (await import('node-fetch')).default;
-          const res = await fetch('http://localhost:11434/api/tags');
-          const data = await res.json();
-          if (typeof data === 'object' && data !== null && 'models' in data) {
-            console.log('Available models:', (data as any).models);
-          } else {
-            console.log('Available models:', data);
-          }
-        } catch (e) {
-          console.error('❌ Error listing models:', e);
-        }
+      .option('project', {
+        alias: 'p',
+        type: 'string',
+        description: 'Project name',
+        demandOption: true
       })
-      .command('models-pull <model>', 'Pull a new Ollama model', {}, async (argv) => {
-        try {
-          const fetch = (await import('node-fetch')).default;
-          const res = await fetch('http://localhost:11434/api/pull', {
-            method: 'POST',
-            body: JSON.stringify({ name: argv.model }),
-            headers: { 'Content-Type': 'application/json' }
-          });
-          if (res.ok) {
-            console.log(`✅ Model ${argv.model} pulled successfully.`);
-          } else {
-            console.error('❌ Failed to pull model:', res.statusText);
-          }
-        } catch (e) {
-          console.error('❌ Error pulling model:', e);
-        }
+      .option('type', {
+        alias: 't',
+        type: 'string',
+        description: 'Project type (SOFTWARE_DEVELOPMENT, INFRASTRUCTURE, etc.)',
+        default: 'SOFTWARE_DEVELOPMENT'
       })
-      .demandCommand(1, 'You must provide a valid ollama command.');
+      .option('description', {
+        alias: 'd',
+        type: 'string',
+        description: 'Project description'
+      })
+      .option('output', {
+        alias: 'o',
+        type: 'string',
+        description: 'Output directory',
+        default: 'generated-documents/risk-compliance'
+      })
+      .option('integrated', {
+        type: 'boolean',
+        description: 'Generate integrated assessment using compliance engine',
+        default: false
+      })
+      .option('pmbok-only', {
+        type: 'boolean',
+        description: 'Generate PMBOK-focused assessment only',
+        default: false
+      })
+      .option('format', {
+        type: 'string',
+        description: 'Output format (markdown, json)',
+        choices: ['markdown', 'json'],
+        default: 'markdown'
+      });
+  }, async (argv) => {
+    try {
+      const { createRiskComplianceCommand } = await import('./commands/risk-compliance.js');
+      const command = createRiskComplianceCommand();
+      
+      // Execute the command with the provided arguments
+      await command.parseAsync([
+        'risk-compliance',
+        '--project', argv.project,
+        '--type', argv.type || 'SOFTWARE_DEVELOPMENT',
+        ...(argv.description ? ['--description', argv.description] : []),
+        '--output', argv.output,
+        ...(argv.integrated ? ['--integrated'] : []),
+        ...(argv.pmbokOnly ? ['--pmbok-only'] : []),
+        '--format', argv.format
+      ], { from: 'user' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('❌ Error executing risk-compliance command:', message);
+      process.exit(1);
+    }
   })
   .command(promptsCommand)
   // Stakeholder Analysis commands
@@ -957,6 +1079,103 @@ async function runEnhancedSetupWizard(): Promise<void> {
 
   readline.close();
   console.log('\nSetup complete. You may now use the CLI.');
+}
+
+/**
+ * Run User Stories menu for implementing the user story requirements
+ */
+async function runUserStoriesMenu(): Promise<void> {
+  const readline = (await import('readline')).createInterface({ 
+    input: process.stdin, 
+    output: process.stdout 
+  });
+
+  function ask(question: string): Promise<string> {
+    return new Promise(resolve => readline.question(question, answer => resolve(answer.trim())));
+  }
+
+  console.log('\n🎯 User Stories Implementation Menu');
+  console.log('=====================================');
+  console.log('This menu implements the user stories from the requirements document.');
+  console.log('');
+
+  try {
+    // Get common inputs
+    const businessProblem = await ask('📋 Enter the business problem: ');
+    if (!businessProblem || businessProblem.length < 10) {
+      console.log('❌ Business problem must be at least 10 characters long.');
+      readline.close();
+      return;
+    }
+
+    const techStackInput = await ask('🔧 Enter technology stack (comma-separated): ');
+    const technologyStack = techStackInput ? techStackInput.split(',').map(s => s.trim()) : [];
+
+    const contextBundle = await ask('📝 Enter additional context (optional): ');
+    const outputDir = await ask('📁 Enter output directory (default: ./output): ') || './output';
+    const format = await ask('📄 Enter output format (json/markdown, default: markdown): ') || 'markdown';
+
+    console.log('\n🚀 Available User Story Commands:');
+    console.log('1. Strategic Planning (User Story 2)');
+    console.log('2. Requirements Generation (User Story 3)');
+    console.log('3. Technology Analysis (User Story 7)');
+    console.log('4. Risk Management (User Story 8)');
+    console.log('5. Comprehensive Analysis (All User Stories)');
+    console.log('6. Exit');
+
+    const choice = await ask('\nSelect an option (1-6): ');
+
+    const options = {
+      businessProblem,
+      technologyStack,
+      contextBundle,
+      output: outputDir,
+      format: format as 'json' | 'markdown',
+      quiet: false
+    };
+
+    const { 
+      handleStrategicPlanningCommand,
+      handleRequirementsGenerationCommand,
+      handleTechnologyAnalysisCommand,
+      handleRiskManagementCommand,
+      handleComprehensiveAnalysisCommand
+    } = await import('./commands/user-stories.js');
+
+    switch (choice) {
+      case '1':
+        console.log('\n🎯 Generating Strategic Planning Documents...');
+        await handleStrategicPlanningCommand(options);
+        break;
+      case '2':
+        console.log('\n📋 Generating Comprehensive Requirements...');
+        // Force JSON format for requirements to ensure strict JSON output (User Story 9)
+        await handleRequirementsGenerationCommand({ ...options, format: 'json' });
+        break;
+      case '3':
+        console.log('\n🔧 Analyzing Technology Stack...');
+        await handleTechnologyAnalysisCommand(options);
+        break;
+      case '4':
+        console.log('\n⚠️ Generating Risk Management Plan...');
+        await handleRiskManagementCommand(options);
+        break;
+      case '5':
+        console.log('\n🚀 Running Comprehensive Analysis...');
+        await handleComprehensiveAnalysisCommand(options);
+        break;
+      case '6':
+        console.log('👋 Goodbye!');
+        break;
+      default:
+        console.log('❌ Invalid choice. Please select 1-6.');
+    }
+
+  } catch (error) {
+    console.error('❌ Error in user stories menu:', error);
+  } finally {
+    readline.close();
+  }
 }
 
 // --- FUTURE TESTING REMINDER ---

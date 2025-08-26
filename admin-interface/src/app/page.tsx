@@ -229,6 +229,7 @@ export default function HomePage() {
       // Incremental diagnostics for fetch/network errors
       console.error('❌ API Connection Error:', error);
       toast.error(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       toast(`Step 1: Is the backend server running and accessible at ${apiUrl}?`);
       toast('Step 2: Check your network connection and browser console for errors.');
       toast('Step 3: If using Docker or a remote server, check port mappings and firewall.');
@@ -337,7 +338,7 @@ export default function HomePage() {
           {/* Background decorative elements */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-float"></div>
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float animate-delay-1s"></div>
           </div>
           
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0">

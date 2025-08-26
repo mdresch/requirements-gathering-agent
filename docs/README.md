@@ -5,6 +5,7 @@ Welcome to the ADPA (Advanced Document Processing & Automation) Framework docume
 ## 📚 Documentation Index
 
 ### CLI Documentation
+- **[CLI Usage Documentation](CLI-USAGE-DOCUMENTATION.md)** - Complete interactive CLI usage guide with menu navigation and integration workflows
 - **[CLI Execution Guide](CLI-EXECUTION-GUIDE.md)** - Comprehensive guide for using the ADPA CLI with detailed examples and workflows
 - **[CLI Quick Reference](CLI-QUICK-REFERENCE.md)** - Essential commands, options, and quick examples for daily use
 
@@ -27,6 +28,13 @@ Welcome to the ADPA (Advanced Document Processing & Automation) Framework docume
 - **[PMBOK 7th Edition Support](../README.md#pmbok-7th-edition-project-management)** - Project Management Body of Knowledge implementation
 - **[DMBOK 2.0 Support](../README.md#dmbok-20-data-management)** - Data Management Body of Knowledge implementation
 
+### Security and Authentication
+- **[Authentication Design Summary](AUTHENTICATION-DESIGN-SUMMARY.md)** - Overview of enterprise authentication design for ADPA
+- **[Authentication Design Specification](AUTHENTICATION-DESIGN-SPECIFICATION.md)** - Comprehensive technical design specification
+- **[Authentication Implementation Strategy](AUTHENTICATION-IMPLEMENTATION-STRATEGY.md)** - Detailed implementation roadmap and strategy
+- **[Entra ID Configuration Guide](ENTRA-ID-CONFIGURATION-GUIDE.md)** - Step-by-step Microsoft Entra ID setup instructions
+- **[Security Compliance Checklist](AUTHENTICATION-SECURITY-COMPLIANCE-CHECKLIST.md)** - Comprehensive security and compliance validation framework
+
 ### Development
 - **[Contributing Guide](../README.md#contributing)** - How to contribute to the project
 - **[Development Setup](../README.md#development-setup)** - Setting up the development environment
@@ -36,8 +44,9 @@ Welcome to the ADPA (Advanced Document Processing & Automation) Framework docume
 
 ### For End Users
 1. **[Install ADPA](../README.md#installation)** - Get ADPA installed on your system
-2. **[CLI Quick Reference](CLI-QUICK-REFERENCE.md)** - Start with essential commands
-3. **[CLI Execution Guide](CLI-EXECUTION-GUIDE.md)** - Detailed usage examples
+2. **[CLI Usage Documentation](CLI-USAGE-DOCUMENTATION.md)** - Interactive menu navigation and complete usage guide
+3. **[CLI Quick Reference](CLI-QUICK-REFERENCE.md)** - Start with essential commands
+4. **[CLI Execution Guide](CLI-EXECUTION-GUIDE.md)** - Detailed usage examples
 
 ### For Developers
 1. **[Development Setup](../README.md#development-setup)** - Set up development environment
@@ -48,6 +57,7 @@ Welcome to the ADPA (Advanced Document Processing & Automation) Framework docume
 1. **[Enterprise Features](../README.md#enterprise-features)** - Enterprise-specific capabilities
 2. **[Integration Guides](CLI-EXECUTION-GUIDE.md#integration-commands)** - Confluence, SharePoint, and VCS integration
 3. **[Standards Compliance](CLI-EXECUTION-GUIDE.md#validation)** - PMBOK validation and compliance
+4. **[Authentication Design](AUTHENTICATION-DESIGN-SUMMARY.md)** - Enterprise authentication and security design
 
 ## 📖 Document Categories
 
@@ -90,6 +100,7 @@ ADPA supports generating documents in the following categories:
 
 ## 🆘 Getting Help
 
+- **Interactive Help**: Use the [CLI Usage Documentation](CLI-USAGE-DOCUMENTATION.md) for menu navigation and workflows
 - **Quick Issues**: Check the [CLI Quick Reference](CLI-QUICK-REFERENCE.md#troubleshooting)
 - **Detailed Help**: See the [CLI Execution Guide](CLI-EXECUTION-GUIDE.md#troubleshooting)
 - **Command Help**: Use `adpa --help` or `adpa <command> --help`

@@ -230,6 +230,31 @@
     "dependencies": [],
     "priority": 999
   },
+  "strategic-alignment": {
+    "module": "../documentTemplates/strategic-statements/StrategicAlignmentProcessor.ts#StrategicAlignmentProcessor",
+    "dependencies": [],
+    "priority": 5
+  },
+  "benefits-realization-plan": {
+    "module": "../documentTemplates/strategic-statements/BenefitsRealizationPlanProcessor.ts#BenefitsRealizationPlanProcessor",
+    "dependencies": ["strategic-alignment"],
+    "priority": 10
+  },
+  "value-proposition": {
+    "module": "../documentTemplates/strategic-statements/ValuePropositionProcessor.ts#ValuePropositionProcessor",
+    "dependencies": [],
+    "priority": 3
+  },
+  "strategic-success-metrics": {
+    "module": "../documentTemplates/strategic-statements/StrategicSuccessMetricsProcessor.ts#StrategicSuccessMetricsProcessor",
+    "dependencies": ["benefits-realization-plan"],
+    "priority": 15
+  },
+  "strategic-roadmap": {
+    "module": "../documentTemplates/strategic-statements/StrategicRoadmapProcessor.ts#StrategicRoadmapProcessor",
+    "dependencies": ["strategic-alignment", "value-proposition"],
+    "priority": 20
+  },
   "stakeholder-register": {
     "module": "../documentTemplates/stakeholder-management/StakeholderregisterProcessor.ts#StakeholderregisterProcessor",
     "dependencies": [],
@@ -237,7 +262,7 @@
   },
   "stakeholder-needs-analysis": {
     "module": "../documentTemplates/stakeholder-management/StakeholderNeedsAnalysisProcessor.ts#StakeholderNeedsAnalysisProcessor",
-    "dependencies": ["stakeholder-register"],
+    "dependencies": [" stakeholder-register"],
     "priority": 16
   },
   "project-scope-statement": {
@@ -267,7 +292,7 @@
   },
   "project-charter": {
     "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
-    "dependencies": [
+    "dependencies": [ 
       "stakeholder-register",
       "project-scope-statement",
       "risk-register"
@@ -313,6 +338,14 @@
     "module": "../documentTemplates/risk-management/RiskmanagementplanProcessor.ts#RiskmanagementplanProcessor",
     "dependencies": [],
     "priority": 999
+  },
+  "risk-compliance-assessment": {
+    "module": "../documentTemplates/risk-management/RiskComplianceAssessmentProcessor.ts#RiskComplianceAssessmentProcessor",
+    "dependencies": [
+      "risk-register",
+      "risk-management-plan"
+    ],
+    "priority": 20
   },
   "procurement-management-plan": {
     "module": "../documentTemplates/planning/ProcurementmanagementplanProcessor.ts#ProcurementmanagementplanProcessor",
@@ -782,5 +815,10 @@
     "module": "../documentTemplates/pppm/ProgramChangeRequestFormProcessor.ts#ProgramChangeRequestFormProcessor",
     "dependencies": [],
     "priority": 14
+  },
+  "detailed-planning-artifacts": {
+    "module": "../documentTemplates/planningArtifacts/DetailedPlanningArtifactsProcessor.ts#DetailedPlanningArtifactsProcessor",
+    "dependencies": ["project-charter", "stakeholder-register"],
+    "priority": 5
   }
 }

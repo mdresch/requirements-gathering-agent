@@ -1,6 +1,6 @@
 {
   "name": "adpa-enterprise-framework-automation",
-  "version": "3.2.1",
+  "version": "3.2.5",
   "description": "Modular, standards-compliant Node.js/TypeScript automation framework for enterprise requirements, project, and data management. Provides CLI and API for BABOK v3, PMBOK 7th Edition, and DMBOK 2.0 (in progress). Production-ready Express.js API with TypeSpec architecture. Designed for secure, scalable, and maintainable enterprise automation.",
   "main": "dist/server.js",
   "type": "module",
@@ -18,8 +18,8 @@
     "multi-standard-api": "dist/server.js"
   },
   "scripts": {
-  "build": "tsc && npm run copy-configs",
-  "setup-review-system": "node dist/cli.js setup-review-system",
+    "build": "tsc && npm run copy-configs",
+    "setup-review-system": "node dist/cli.js setup-review-system",
     "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
     "start": "node dist/server.js",
     "api:start": "node dist/server.js",
@@ -65,7 +65,24 @@
     "babok:generate": "node dist/server.js --framework=babok",
     "pmbok:generate": "node dist/server.js --framework=pmbok",
     "dmbok:generate": "node dist/server.js --framework=dmbok",
-    "framework:multi": "node dist/server.js --framework=multi"
+    "framework:multi": "node dist/server.js --framework=multi",
+    "env:setup": "node dist/cli.js env setup",
+    "env:setup:dev": "node dist/cli.js env setup --template development",
+    "env:setup:prod": "node dist/cli.js env setup --template production",
+    "env:validate": "node dist/cli.js env validate",
+    "env:validate:report": "node dist/cli.js env validate --report",
+    "env:providers": "node dist/cli.js env providers",
+    "env:providers:detailed": "node dist/cli.js env providers --detailed",
+    "env:fallback": "node dist/cli.js env fallback",
+    "env:fallback:health": "node dist/cli.js env fallback --health",
+    "env:fallback:history": "node dist/cli.js env fallback --history",
+    "env:test": "node dist/cli.js env test",
+    "env:test:all": "node dist/cli.js env test --all",
+    "env:optimize": "node dist/cli.js env optimize",
+    "test:env": "node scripts/test-environment-setup.js",
+    "demo:enhanced-nav": "node examples/enhanced-navigation-demo.js",
+    "test:enhanced-nav": "node test-enhanced-navigation.js"
+
   },
   "keywords": [
     "babok",
@@ -122,6 +139,7 @@
     "@types/mongoose": "^5.11.96",
     "axios": "^1.10.0",
     "bcryptjs": "^2.4.3",
+    "commander": "^14.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -132,6 +150,7 @@
     "form-data": "^4.0.3",
     "glob": "^11.0.3",
     "helmet": "^7.1.0",
+    "inquirer": "^12.9.3",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "marked": "^16.0.0",
@@ -156,6 +175,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/glob": "^8.1.0",
+    "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/morgan": "^1.9.9",
