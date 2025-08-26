@@ -209,11 +209,13 @@ export class EnhancedPromptService {
     if (result.success && result.value) {
       return {
         ...result,
-        value: parseFloat(result.value as string) as number
+        value: parseFloat(result.value as string)
       };
     }
-
-    return result as PromptResult<number>;
+    return {
+      ...result,
+      value: undefined
+    };
   }
 
   /**
@@ -233,11 +235,13 @@ export class EnhancedPromptService {
       const value = result.value.toLowerCase();
       return {
         ...result,
-        value: ['yes', 'y', 'true', '1'].includes(value) as boolean
+        value: ['yes', 'y', 'true', '1'].includes(value)
       };
     }
-
-    return result as PromptResult<boolean>;
+    return {
+      ...result,
+      value: undefined
+    };
   }
 
   /**
@@ -335,11 +339,13 @@ export class EnhancedPromptService {
         const indices = result.value.split(',').map(s => parseInt(s.trim()) - 1);
         return {
           ...result,
-          value: indices.map(i => choices[i]) as string[]
+          value: indices.map(i => choices[i])
         };
       }
-
-      return result as PromptResult<string[]>;
+      return {
+        ...result,
+        value: undefined
+      };
     } else {
       const result = await this.prompt({
         message: 'Enter choice number:',

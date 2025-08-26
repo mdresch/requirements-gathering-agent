@@ -664,7 +664,7 @@ export class InputValidationService {
 
     return {
       isValid: true,
-      sanitizedValue: args.map(arg => this.sanitizeInputSecure(arg))
+      sanitizedValue: args.map(arg => this.sanitizeInputSecure(arg)).join(',')
     };
   }
 

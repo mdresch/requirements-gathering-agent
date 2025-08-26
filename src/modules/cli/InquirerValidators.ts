@@ -20,7 +20,7 @@ export class InquirerValidators {
   static projectName() {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateProjectName(input);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 
@@ -30,7 +30,7 @@ export class InquirerValidators {
   static filePath() {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateFilePath(input);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 
@@ -40,7 +40,7 @@ export class InquirerValidators {
   static url() {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateUrl(input);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 
@@ -50,7 +50,7 @@ export class InquirerValidators {
   static email() {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateEmail(input);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 
@@ -60,7 +60,7 @@ export class InquirerValidators {
   static apiKey(provider?: string) {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateApiKey(input, provider);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 
@@ -70,7 +70,7 @@ export class InquirerValidators {
   static number(min?: number, max?: number) {
     return (input: string): boolean | string => {
       const result = InputValidationService.validateNumber(input, min, max);
-      return result.isValid ? true : result.errors.join(', ');
+  return result.isValid ? true : result.error || 'Invalid input';
     };
   }
 

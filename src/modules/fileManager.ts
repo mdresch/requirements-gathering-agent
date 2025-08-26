@@ -58,13 +58,14 @@ function getAIProviderDisplayName(): string {
         const providerNames: Record<AIProvider, string> = {
             'azure-openai': 'Azure OpenAI',
             'azure-openai-key': 'Azure OpenAI (API Key)',
+            'azure-openai-entra': 'Azure OpenAI (Entra ID)',
             'azure-ai-studio': 'Azure AI Studio',
             'google-ai': 'Google AI (Gemini)',
             'github-ai': 'GitHub AI',
             'ollama': 'Ollama'
         };
         
-        return providerNames[provider] || provider;
+        return providerNames[provider] || provider; // Original line
     } catch (error) {
         console.warn('Could not determine AI provider, using fallback');
         return 'AI Provider';

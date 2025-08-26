@@ -167,6 +167,7 @@ export class AIProcessor {
             'google-ai': () => this.makeGoogleAICall(client, messages, maxTokens),
             'azure-openai': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-openai-key': () => this.makeAzureOpenAICall(client, messages, maxTokens),
+            'azure-openai-entra': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-ai-studio': () => this.makeAzureAIStudioCall(client, messages, maxTokens),
             'github-ai': () => this.makeGitHubAICall(client, messages, maxTokens),
             'ollama': () => this.makeOllamaCall(client, messages, maxTokens)

@@ -16,6 +16,7 @@ import { writeFileSync } from 'fs';
 import { EnvironmentSetup } from '../utils/environmentSetup.js';
 import { ProviderFallbackManager } from '../modules/ai/ProviderFallbackManager.js';
 import { PROVIDER_DEFINITIONS } from '../modules/ai/provider-definitions.js';
+import type { AIProvider } from '../modules/ai/types.js';
 
 /**
  * Create environment configuration commands
@@ -100,7 +101,7 @@ export function createEnvironmentCommands(): Command {
                 console.log('=' .repeat(50));
                 
                 for (const providerDef of PROVIDER_DEFINITIONS) {
-                    const status = await setup.checkProviderStatus(providerDef.id);
+                    const status = await setup.checkProviderStatus(providerDef.id as AIProvider);
                     
                     const statusIcon = status.connected ? '✅' : status.configured ? '⚠️' : '❌';
                     const statusText = status.connected ? 'Connected' : 

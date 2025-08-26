@@ -632,7 +632,7 @@ yargs(hideBin(process.argv))
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
   .command(promptsCommand)
-  .command(createEnvironmentCommands())
+  .command(require('./commands/environment.js').environmentCommandModule)
   // Stakeholder Analysis commands
   .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
     return yargs

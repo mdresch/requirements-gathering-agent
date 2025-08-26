@@ -76,14 +76,14 @@ export class EnvironmentSetup {
 
         // Check each provider
         for (const providerDef of PROVIDER_DEFINITIONS) {
-            const status = await this.checkProviderStatus(providerDef.id);
+            const status = await this.checkProviderStatus(providerDef.id as AIProvider);
             
             if (status.configured) {
-                result.configuredProviders.push(providerDef.id);
+                result.configuredProviders.push(providerDef.id as AIProvider);
             }
             
             if (status.available) {
-                result.availableProviders.push(providerDef.id);
+                result.availableProviders.push(providerDef.id as AIProvider);
             }
             
             result.missingRequiredVars.push(...status.missingVars);
@@ -131,7 +131,7 @@ export class EnvironmentSetup {
             missingVars,
             setupComplexity: providerDef.setupGuide.difficulty,
             estimatedSetupTime: providerDef.setupGuide.estimatedTime,
-            recommendation: providerDef.recommendation
+            recommendation: providerDef.recommendation ?? ''
         };
     }
 
@@ -458,7 +458,7 @@ export class EnvironmentSetup {
         report += `- **Available Providers**: ${validation.availableProviders.length}\n\n`;
         
         report += `## Provider Details\n\n`;
-        for (const providerId of PROVIDER_DEFINITIONS.map(p => p.id)) {
+        for (const providerId of PROVIDER_DEFINITIONS.map(p => p.id as AIProvider)) {
             const status = await this.checkProviderStatus(providerId);
             const providerDef = getProviderById(providerId);
             
