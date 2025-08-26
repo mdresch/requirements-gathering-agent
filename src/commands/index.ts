@@ -135,6 +135,16 @@ export {
 } from './user-stories.js';
 export type { UserStoryOptions } from './user-stories.js';
 
+// Stakeholder Analysis commands
+export {
+  handleStakeholderAnalysisCommand,
+  handleStakeholderRegisterCommand,
+  handleStakeholderEngagementPlanCommand,
+  handleStakeholderAutomationCommand,
+  displayStakeholderHelp
+} from './stakeholder.js';
+export type { StakeholderAnalysisOptions } from './stakeholder.js';
+
 // Utility exports
 export { ValidationError } from './utils/validation.js';
 export { SimpleSpinner } from './utils/common.js';
