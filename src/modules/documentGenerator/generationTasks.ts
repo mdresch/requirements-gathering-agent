@@ -663,7 +663,6 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'technology-selection-criteria', name: 'Technology Selection Criteria', func: 'getAiTechnologySelectionCriteria', emoji: '📋', category: 'technical-analysis', priority: 35, pmbokRef: 'PMBOK 8.0, 11.0', dependencies: ['technical-recommendations'] },
     { key: 'technical-implementation-roadmap', name: 'Technical Implementation Roadmap', func: 'getAiTechnicalImplementationRoadmap', emoji: '🗺️', category: 'technical-analysis', priority: 36, pmbokRef: 'PMBOK 6.0, 4.0', dependencies: ['technical-recommendations', 'technology-selection-criteria'] },
     { key: 'technology-governance-framework', name: 'Technology Governance Framework', func: 'getAiTechnologyGovernanceFramework', emoji: '🏛️', category: 'technical-analysis', priority: 37, pmbokRef: 'PMBOK 13.0, 4.0', dependencies: ['technical-recommendations'] },
-
   {
     key: 'babokintroduction',
     name: 'BABOKIntroduction',
