@@ -221,17 +221,16 @@ export class ComplianceValidationService {
     
     // Initialize standards compliance engine
     const standardsConfig: StandardsComplianceConfig = {
-      enabledStandards: config.enabledStandards,
+      enabledStandards: config.enabledStandards.filter(
+        (s): s is "BABOK_V3" | "PMBOK_7" | "DMBOK_2" | "ISO_15408" =>
+          ["BABOK_V3", "PMBOK_7", "DMBOK_2", "ISO_15408"].includes(s)
+      ),
       analysisDepth: 'COMPREHENSIVE',
-      includeIntelligentDeviations: true,
       generateExecutiveSummary: true,
-      customRules: config.validationRules.map(rule => ({
-        id: rule.ruleId,
-        name: rule.name,
-        category: rule.category,
-        severity: rule.severity,
-        condition: rule.condition
-      }))
+      intelligentDeviationThreshold: 0.7,
+      riskToleranceLevel: 'MEDIUM',
+      includeRecommendations: true,
+      outputFormat: 'JSON'
     };
 
     this.standardsEngine = new StandardsComplianceAnalysisEngine(standardsConfig);

@@ -101,6 +101,8 @@ export type {
 export { createFeedbackCommand } from './feedback.js';
 // Prompts commands
 export { promptsCommand } from './prompts.js';
+// Risk and Compliance commands
+export { createRiskComplianceCommand } from './risk-compliance.js';
 
 // Stakeholder Analysis commands
 export {
@@ -112,8 +114,26 @@ export {
 } from './stakeholder.js';
 export type { StakeholderAnalysisOptions } from './stakeholder.js';
 
-// Configuration commands
-export { createConfigureCommand } from './configure.js';
+// Interactive CLI commands
+export { 
+  handleInteractiveCommand,
+  showInteractiveHelp,
+  validateInteractiveOptions,
+  getDefaultInteractiveOptions,
+  checkInteractiveSupport,
+  showInteractiveNotSupportedMessage
+} from './interactive.js';
+export type { InteractiveOptions } from './interactive.js';
+
+// User Stories commands
+export {
+  handleStrategicPlanningCommand,
+  handleRequirementsGenerationCommand,
+  handleTechnologyAnalysisCommand,
+  handleRiskManagementCommand,
+  handleComprehensiveAnalysisCommand
+} from './user-stories.js';
+export type { UserStoryOptions } from './user-stories.js';
 
 // Utility exports
 export { ValidationError } from './utils/validation.js';

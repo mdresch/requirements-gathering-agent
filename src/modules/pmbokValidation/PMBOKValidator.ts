@@ -360,7 +360,7 @@ export class PMBOKValidator {
      * @param element Element to check for
      * @returns Whether element is in content
      */
-    private contentContainsElement(content: string, element: string): boolean {
+    protected contentContainsElement(content: string, element: string): boolean {
         const contentLower = content.toLowerCase();
         const elementLower = element.toLowerCase();
         

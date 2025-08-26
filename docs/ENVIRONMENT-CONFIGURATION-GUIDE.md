@@ -2,467 +2,455 @@
 
 ## Overview
 
-The Requirements Gathering Agent (RGA) provides comprehensive environment configuration options for AI providers with automatic fallback mechanisms to maximize uptime and performance. This guide covers all configuration options, best practices, and troubleshooting.
-
-## Table of Contents
-
-1. [Quick Start](#quick-start)
-2. [Configuration Options](#configuration-options)
-3. [Environment Templates](#environment-templates)
-4. [Automatic Fallback System](#automatic-fallback-system)
-5. [Performance Optimization](#performance-optimization)
-6. [Monitoring and Health Checks](#monitoring-and-health-checks)
-7. [Troubleshooting](#troubleshooting)
-8. [Best Practices](#best-practices)
+The ADPA (Adaptive Document Processing Agent) provides comprehensive environment configuration options for AI providers with automatic fallback mechanisms to maximize uptime and performance. This guide covers setup, configuration, and optimization of your AI provider environment.
 
 ## Quick Start
 
-### 1. Generate Configuration Template
+### 1. Create Environment Configuration
 
 ```bash
-# Generate development template
-rga configure --template development
+# Create development environment
+npm run env:setup -- --template development
 
-# Generate production template
-rga configure --template production
+# Create production environment  
+npm run env:setup -- --template production
 
-# Generate testing template
-rga configure --template testing
+# Or use CLI directly
+npx rga env setup --template development
 ```
 
-### 2. Interactive Configuration Wizard
+### 2. Configure Your Providers
+
+Edit the generated `.env` file and add your API keys:
 
 ```bash
-# Run interactive setup
-rga configure --interactive
+# Example for Google AI (recommended for getting started)
+GOOGLE_AI_API_KEY=your-api-key-here
+GOOGLE_AI_ENABLED=true
+
+# Enable automatic fallback
+ENABLE_PROVIDER_FALLBACK=true
 ```
 
 ### 3. Validate Configuration
 
 ```bash
-# Validate current setup
-rga configure --validate
+# Validate your setup
+npm run env:validate
+
+# Or use CLI directly
+npx rga env validate --report
 ```
 
-## Configuration Options
+## Supported AI Providers
 
-### Primary Configuration Variables
+### 🟣 Google AI Studio (Recommended)
+- **Category**: Free Tier
+- **Setup Time**: 2 minutes
+- **Features**: 1M-2M token context, generous free tier, fast response
+- **Best For**: Getting started, development, high-volume processing
 
-| Variable | Description | Default | Example |
-|----------|-------------|---------|---------|
-| `RGA_PRIMARY_PROVIDER` | Primary AI provider | `google-ai` | `azure-openai` |
-| `RGA_FALLBACK_PROVIDERS` | Comma-separated fallback providers | `azure-openai,github-ai,ollama` | `google-ai,github-ai` |
-| `RGA_AUTO_FALLBACK` | Enable automatic fallback | `true` | `false` |
-| `RGA_HEALTH_CHECK_INTERVAL` | Health check interval (ms) | `30000` | `15000` |
+**Setup:**
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create an API key
+3. Add to `.env`: `GOOGLE_AI_API_KEY=your-key`
 
-### Performance Thresholds
+### 🟢 GitHub AI (Free for GitHub Users)
+- **Category**: Free Tier
+- **Setup Time**: 3 minutes
+- **Features**: GPT-4o-mini access, free for GitHub users
+- **Best For**: GitHub users, reliable fallback option
 
-| Variable | Description | Default | Production | Development |
-|----------|-------------|---------|------------|-------------|
-| `RGA_MAX_RESPONSE_TIME` | Maximum response time (ms) | `10000` | `8000` | `15000` |
-| `RGA_MIN_SUCCESS_RATE` | Minimum success rate (0-1) | `0.95` | `0.98` | `0.90` |
-| `RGA_MAX_ERROR_RATE` | Maximum error rate (0-1) | `0.05` | `0.02` | `0.10` |
-| `RGA_HEALTH_CHECK_TIMEOUT` | Health check timeout (ms) | `5000` | `3000` | `10000` |
+**Setup:**
+1. Create [GitHub Personal Access Token](https://github.com/settings/tokens)
+2. Add to `.env`: `GITHUB_TOKEN=your-token`
 
-### Circuit Breaker Configuration
+### 🔷 Azure OpenAI (Enterprise)
+- **Category**: Enterprise
+- **Setup Time**: 20 minutes
+- **Features**: Enterprise security, Entra ID auth, high reliability
+- **Best For**: Enterprise environments, production workloads
 
-| Variable | Description | Default | Production | Testing |
-|----------|-------------|---------|------------|---------|
-| `RGA_CIRCUIT_BREAKER_THRESHOLD` | Failure threshold | `5` | `3` | `2` |
-| `RGA_CIRCUIT_BREAKER_RESET_TIMEOUT` | Reset timeout (ms) | `60000` | `30000` | `5000` |
+**Setup:**
+1. Create Azure OpenAI resource
+2. Configure Entra ID authentication
+3. Add credentials to `.env`
 
-### Retry Configuration
+### 🔶 Azure OpenAI (API Key)
+- **Category**: Cloud
+- **Setup Time**: 5 minutes
+- **Features**: Simpler setup than Entra ID
+- **Best For**: Quick Azure OpenAI setup
 
-| Variable | Description | Default | Production | Development |
-|----------|-------------|---------|------------|-------------|
-| `RGA_MAX_RETRIES` | Maximum retry attempts | `3` | `5` | `2` |
-| `RGA_RETRY_BASE_DELAY` | Base retry delay (ms) | `1000` | `2000` | `500` |
-| `RGA_RETRY_MAX_DELAY` | Maximum retry delay (ms) | `30000` | `60000` | `5000` |
+### 🟡 Ollama (Local AI)
+- **Category**: Local/Privacy
+- **Setup Time**: 15 minutes
+- **Features**: Offline processing, privacy-focused
+- **Best For**: Privacy-conscious users, offline environments
 
 ## Environment Templates
 
-### Development Environment
+### Development Template (`.env.development.template`)
 
-Optimized for developer experience with free tiers and local options:
-
-```bash
-# Primary: Google AI Studio (free)
-# Fallbacks: Ollama (local), GitHub AI (free for users)
-rga configure --template development
-```
-
-**Features:**
-- Free tier providers prioritized
-- Relaxed performance thresholds
-- Local development support
-- Verbose logging for debugging
-
-### Production Environment
-
-Optimized for high availability and enterprise requirements:
+Optimized for development with:
+- Enhanced debugging and logging
+- Shorter timeouts and faster recovery
+- Aggressive health checking
+- Test mode features
 
 ```bash
-# Primary: Azure OpenAI (enterprise)
-# Fallbacks: Google AI, GitHub AI, Azure AI Studio
-rga configure --template production
+# Key development settings
+LOG_LEVEL=debug
+ENABLE_DEBUG_LOGGING=true
+AI_TIMEOUT=30000
+PROVIDER_HEALTH_CHECK_INTERVAL=60000
 ```
 
-**Features:**
-- Enterprise-grade providers
-- Strict performance thresholds
-- Multiple fallback options
-- Enhanced monitoring
-- Security-focused configuration
+### Production Template (`.env.production.template`)
 
-### Testing Environment
-
-Optimized for CI/CD and automated testing:
+Optimized for production with:
+- Performance optimization
+- Longer timeouts for stability
+- Comprehensive monitoring
+- Security-focused logging
 
 ```bash
-# Primary: Mock AI (deterministic)
-# Fallbacks: Real providers for integration tests
-rga configure --template testing
+# Key production settings
+LOG_LEVEL=info
+ENABLE_DEBUG_LOGGING=false
+AI_TIMEOUT=60000
+PROVIDER_HEALTH_CHECK_INTERVAL=300000
 ```
 
-**Features:**
-- Mock providers for unit tests
-- Fast response requirements
-- Minimal retries for speed
-- Deterministic responses
-- CI/CD integration
+## Automatic Fallback Configuration
 
-## Automatic Fallback System
+### Enable Fallback
 
-### How It Works
+```bash
+# Enable automatic provider switching
+ENABLE_PROVIDER_FALLBACK=true
 
-1. **Health Monitoring**: Continuous health checks on all providers
-2. **Performance Tracking**: Real-time metrics collection
-3. **Circuit Breaker**: Automatic provider isolation on failures
-4. **Intelligent Fallback**: Performance-based provider selection
-5. **Automatic Recovery**: Self-healing when providers recover
+# Define fallback order (highest priority first)
+PROVIDER_FALLBACK_ORDER=google-ai,github-ai,azure-openai-entra,azure-openai-key,ollama
+```
 
-### Fallback Triggers
+### Fallback Settings
 
-- **Primary Provider Failure**: Automatic switch to best fallback
-- **Performance Degradation**: Switch when thresholds exceeded
-- **Rate Limiting**: Temporary switch during rate limit periods
-- **Circuit Breaker Open**: Immediate fallback to healthy provider
+```bash
+# Health monitoring
+PROVIDER_HEALTH_CHECK_INTERVAL=300000  # 5 minutes
+PROVIDER_HEALTH_CHECK_TIMEOUT=10000    # 10 seconds
 
-### Fallback Selection Logic
+# Circuit breaker
+CIRCUIT_BREAKER_FAILURE_THRESHOLD=5
+CIRCUIT_BREAKER_RECOVERY_TIME=60000    # 1 minute
 
-```typescript
-// Provider scoring algorithm
-const score = (responseTimeScore + successRateScore + errorRateScore + circuitBreakerScore) / 4;
-
-// Factors considered:
-// - Response time vs threshold
-// - Success rate history
-// - Error rate trends
-// - Circuit breaker state
+# Retry configuration
+MAX_RETRIES=3
+RETRY_BASE_DELAY=1000                  # 1 second
+RETRY_MAX_DELAY=30000                  # 30 seconds
 ```
 
 ## Performance Optimization
 
-### Automatic Optimization
+### Request Caching
 
 ```bash
-# Optimize configuration based on performance data
-rga configure --optimize
+# Enable caching for better performance
+ENABLE_REQUEST_CACHING=true
+CACHE_TTL=3600000                      # 1 hour
 ```
 
-This analyzes provider performance and adjusts:
-- Primary provider selection
-- Performance thresholds
-- Retry configurations
-- Health check intervals
-
-### Manual Optimization
-
-1. **Monitor Performance**:
-   ```bash
-   rga configure --monitor
-   ```
-
-2. **Analyze Metrics**:
-   - Response times
-   - Success rates
-   - Error patterns
-   - Fallback frequency
-
-3. **Adjust Thresholds**:
-   - Increase thresholds for stability
-   - Decrease for performance
-   - Balance based on requirements
-
-## Monitoring and Health Checks
-
-### Real-time Monitoring
+### Metrics and Monitoring
 
 ```bash
-# Start real-time health monitor
-rga configure --monitor
+# Enable performance monitoring
+ENABLE_METRICS=true
+METRICS_COLLECTION_INTERVAL=60000      # 1 minute
+ENABLE_TOKEN_MONITORING=true
 ```
 
-**Displays:**
-- Provider status (healthy/degraded/unhealthy)
-- Success rates and error rates
-- Response times
-- Circuit breaker states
-- Recent fallback events
+### Timeout Configuration
 
-### Health Check Components
+```bash
+# AI request timeout
+AI_TIMEOUT=60000                       # 60 seconds
 
-1. **Connection Test**: Verify provider accessibility
-2. **Authentication Check**: Validate credentials
-3. **Performance Test**: Measure response times
-4. **Capacity Check**: Verify rate limits and quotas
+# Adjust based on your needs:
+# - Development: 30000 (30s)
+# - Production: 60000 (60s)
+# - High-volume: 120000 (2m)
+```
 
-### Metrics Collection
+## CLI Commands
 
-- **Response Time**: Average and percentile tracking
-- **Success Rate**: Successful requests / total requests
-- **Error Rate**: Failed requests / total requests
-- **Availability**: Uptime percentage
-- **Fallback Events**: Frequency and reasons
+### Environment Validation
+
+```bash
+# Basic validation
+npx rga env validate
+
+# Detailed report
+npx rga env validate --report
+
+# Save report to file
+npx rga env validate --report --output config-report.md
+```
+
+### Provider Management
+
+```bash
+# Show provider status
+npx rga env providers
+
+# Detailed provider information
+npx rga env providers --detailed
+
+# Test provider connections
+npx rga env test --all
+npx rga env test --provider google-ai
+```
+
+### Fallback Monitoring
+
+```bash
+# Show fallback configuration
+npx rga env fallback
+
+# Show provider health status
+npx rga env fallback --health
+
+# Show fallback history
+npx rga env fallback --history
+```
+
+### Configuration Optimization
+
+```bash
+# Analyze configuration for optimization
+npx rga env optimize
+```
+
+## Configuration Examples
+
+### Minimal Setup (Single Provider)
+
+```bash
+# .env
+PRIMARY_AI_PROVIDER=google-ai
+GOOGLE_AI_API_KEY=your-key-here
+GOOGLE_AI_ENABLED=true
+```
+
+### Recommended Setup (Multiple Providers with Fallback)
+
+```bash
+# .env
+PRIMARY_AI_PROVIDER=google-ai
+ENABLE_PROVIDER_FALLBACK=true
+PROVIDER_FALLBACK_ORDER=google-ai,github-ai
+
+# Google AI
+GOOGLE_AI_API_KEY=your-google-key
+GOOGLE_AI_ENABLED=true
+
+# GitHub AI (fallback)
+GITHUB_TOKEN=your-github-token
+GITHUB_ENDPOINT=https://models.github.ai/inference/
+GITHUB_AI_ENABLED=true
+
+# Performance settings
+ENABLE_REQUEST_CACHING=true
+ENABLE_METRICS=true
+AI_TIMEOUT=60000
+```
+
+### Enterprise Setup (Azure + Fallback)
+
+```bash
+# .env
+PRIMARY_AI_PROVIDER=azure-openai-entra
+ENABLE_PROVIDER_FALLBACK=true
+PROVIDER_FALLBACK_ORDER=azure-openai-entra,google-ai,github-ai
+
+# Azure OpenAI (primary)
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_CLIENT_ID=your-client-id
+AZURE_TENANT_ID=your-tenant-id
+AZURE_CLIENT_SECRET=your-client-secret
+USE_ENTRA_ID=true
+AZURE_OPENAI_ENTRA_ENABLED=true
+
+# Fallback providers
+GOOGLE_AI_API_KEY=your-google-key
+GOOGLE_AI_ENABLED=true
+GITHUB_TOKEN=your-github-token
+GITHUB_AI_ENABLED=true
+
+# Enterprise settings
+ENABLE_METRICS=true
+LOG_LEVEL=info
+CIRCUIT_BREAKER_FAILURE_THRESHOLD=5
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### 1. Provider Not Configured
-
-**Symptoms:**
-- "Provider not properly configured" error
-- Failed validation
-
-**Solutions:**
+#### No Providers Configured
 ```bash
-# Check configuration
-rga configure --validate
+❌ No AI providers are configured. At least one provider must be set up
+```
+**Solution**: Configure at least one provider in your `.env` file.
 
-# View required environment variables
-rga configure --interactive
+#### Provider Connection Failed
+```bash
+⚠️ Provider google-ai health check failed: Invalid API key
+```
+**Solution**: Verify your API key is correct and has proper permissions.
+
+#### Fallback Not Working
+```bash
+⚠️ Provider fallback is disabled
+```
+**Solution**: Set `ENABLE_PROVIDER_FALLBACK=true` in your `.env` file.
+
+### Debug Mode
+
+Enable debug logging for troubleshooting:
+
+```bash
+# .env
+LOG_LEVEL=debug
+ENABLE_DEBUG_LOGGING=true
+LOG_AI_REQUESTS=true
+LOG_PROVIDER_SWITCHES=true
+LOG_CIRCUIT_BREAKER_EVENTS=true
 ```
 
-#### 2. Frequent Fallbacks
+### Health Check Issues
 
-**Symptoms:**
-- Constant provider switching
-- Performance degradation
+If providers are showing as unhealthy:
 
-**Solutions:**
-```bash
-# Check thresholds
-rga configure --monitor
-
-# Optimize configuration
-rga configure --optimize
-
-# Adjust thresholds manually
-export RGA_MAX_RESPONSE_TIME=15000
-export RGA_MIN_SUCCESS_RATE=0.90
-```
-
-#### 3. Circuit Breaker Always Open
-
-**Symptoms:**
-- "Circuit breaker is OPEN" errors
-- No successful requests
-
-**Solutions:**
-```bash
-# Reset circuit breakers
-rga configure --reset
-
-# Check provider health
-rga configure --test
-
-# Adjust circuit breaker settings
-export RGA_CIRCUIT_BREAKER_THRESHOLD=10
-export RGA_CIRCUIT_BREAKER_RESET_TIMEOUT=30000
-```
-
-#### 4. No Fallback Providers Available
-
-**Symptoms:**
-- "No healthy fallback providers" error
-- System failure when primary fails
-
-**Solutions:**
-```bash
-# Configure additional providers
-rga configure --interactive
-
-# Test all providers
-rga configure --test
-
-# Add more fallback options
-export RGA_FALLBACK_PROVIDERS=google-ai,github-ai,ollama
-```
-
-### Diagnostic Commands
+1. Check network connectivity
+2. Verify API keys and credentials
+3. Check service status pages
+4. Adjust timeout settings if needed
 
 ```bash
-# Comprehensive validation
-rga configure --validate
-
-# Test all providers
-rga configure --test
-
-# Export configuration for analysis
-rga configure --export config-backup.json
-
-# Monitor in real-time
-rga configure --monitor
+# Increase timeouts for slow networks
+PROVIDER_HEALTH_CHECK_TIMEOUT=20000
+AI_TIMEOUT=120000
 ```
 
 ## Best Practices
 
-### 1. Multi-Provider Strategy
+### 1. Use Multiple Providers
+Configure at least 2 providers for reliability:
+- Primary: Your preferred provider
+- Fallback: A reliable backup option
 
-- **Always configure fallbacks**: Never rely on a single provider
-- **Mix provider types**: Combine cloud, local, and free options
-- **Test regularly**: Verify all providers work correctly
+### 2. Monitor Performance
+Enable metrics to track performance:
+```bash
+ENABLE_METRICS=true
+ENABLE_TOKEN_MONITORING=true
+```
 
-### 2. Environment-Specific Configuration
+### 3. Optimize for Your Use Case
 
-- **Development**: Use free tiers and local options
-- **Production**: Use enterprise providers with SLAs
-- **Testing**: Use mock providers for consistency
+**Development:**
+- Use free tiers (Google AI, GitHub AI)
+- Enable debug logging
+- Shorter timeouts for faster feedback
 
-### 3. Performance Tuning
-
-- **Monitor continuously**: Use real-time monitoring
-- **Adjust thresholds**: Based on actual performance data
-- **Optimize regularly**: Run optimization weekly
+**Production:**
+- Use reliable providers (Azure OpenAI, Google AI)
+- Enable caching
+- Longer timeouts for stability
+- Monitor health and performance
 
 ### 4. Security Considerations
 
-- **Rotate API keys**: Regular key rotation
-- **Use environment variables**: Never hardcode credentials
-- **Secure storage**: Use secure credential management
+- Never commit `.env` files to version control
+- Use environment-specific configurations
+- Rotate API keys regularly
+- Monitor usage and costs
 
-### 5. Monitoring and Alerting
+### 5. Cost Optimization
 
-- **Set up alerts**: For fallback events and failures
-- **Track metrics**: Monitor trends over time
-- **Regular reviews**: Weekly configuration reviews
+- Use free tiers when possible
+- Enable caching to reduce API calls
+- Monitor token usage
+- Set up usage alerts
+
+## Integration Examples
+
+### Docker Environment
+
+```dockerfile
+# Dockerfile
+ENV GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+ENV ENABLE_PROVIDER_FALLBACK=true
+ENV PROVIDER_FALLBACK_ORDER=google-ai,github-ai
+```
+
+### CI/CD Pipeline
+
+```yaml
+# .github/workflows/test.yml
+env:
+  GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ENABLE_PROVIDER_FALLBACK: true
+  LOG_LEVEL: info
+```
+
+### Kubernetes ConfigMap
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adpa-config
+data:
+  ENABLE_PROVIDER_FALLBACK: "true"
+  PROVIDER_FALLBACK_ORDER: "google-ai,github-ai"
+  AI_TIMEOUT: "60000"
+  ENABLE_METRICS: "true"
+```
 
 ## Advanced Configuration
 
-### Custom Provider Configuration
+### Custom Fallback Logic
 
-```typescript
-// Custom provider definition
-const customProvider: EnhancedProviderConfig = {
-  id: 'custom-ai',
-  name: 'Custom AI Provider',
-  displayName: 'Custom AI Service',
-  description: 'Custom AI provider integration',
-  category: 'enterprise',
-  priority: 1,
-  requiredEnvVars: ['CUSTOM_AI_API_KEY'],
-  // ... additional configuration
-};
-```
-
-### Environment-Specific Overrides
+You can customize fallback behavior by adjusting:
 
 ```bash
-# Development overrides
-export NODE_ENV=development
-export RGA_HEALTH_CHECK_INTERVAL=60000
-export RGA_MAX_RESPONSE_TIME=15000
+# Performance thresholds
+MAX_RESPONSE_TIME=30000
+MIN_SUCCESS_RATE=0.8
 
-# Production overrides
-export NODE_ENV=production
-export RGA_HEALTH_CHECK_INTERVAL=15000
-export RGA_MAX_RESPONSE_TIME=8000
-export RGA_MIN_SUCCESS_RATE=0.98
+# Circuit breaker tuning
+CIRCUIT_BREAKER_FAILURE_THRESHOLD=3
+CIRCUIT_BREAKER_RECOVERY_TIME=30000
+CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS=2
 ```
 
-### Configuration File
-
-Create `.rga-config.json` for persistent configuration:
-
-```json
-{
-  "primaryProvider": "azure-openai",
-  "fallbackProviders": ["google-ai", "github-ai"],
-  "autoFallbackEnabled": true,
-  "healthCheckInterval": 30000,
-  "performanceThresholds": {
-    "maxResponseTime": 10000,
-    "minSuccessRate": 0.95,
-    "maxErrorRate": 0.05,
-    "healthCheckTimeout": 5000
-  },
-  "retryConfig": {
-    "maxRetries": 3,
-    "baseDelay": 1000,
-    "maxDelay": 30000,
-    "backoffMultiplier": 2,
-    "retryableErrors": ["429", "rate limit", "timeout", "500", "502", "503", "504"]
-  },
-  "circuitBreakerConfig": {
-    "failureThreshold": 5,
-    "resetTimeout": 60000,
-    "halfOpenMaxCalls": 3
-  }
-}
-```
-
-## API Reference
-
-### Configuration Manager
-
-```typescript
-import EnvironmentConfigManager from './modules/ai/EnvironmentConfigManager.js';
-
-const configManager = EnvironmentConfigManager.getInstance();
-
-// Get configuration
-const config = configManager.getConfiguration();
-
-// Update configuration
-await configManager.updateConfiguration({
-  primaryProvider: 'azure-openai',
-  autoFallbackEnabled: true
-});
-
-// Execute with fallback
-const result = await configManager.executeWithFallback(
-  async (provider) => {
-    // Your AI operation here
-    return await aiOperation(provider);
-  },
-  'Document Generation'
-);
-
-// Get provider health
-const health = configManager.getProviderHealth();
-
-// Get fallback history
-const history = configManager.getFallbackHistory();
-```
-
-### CLI Commands
+### Provider-Specific Settings
 
 ```bash
-# Configuration management
-rga configure --interactive          # Interactive wizard
-rga configure --template <type>      # Generate template
-rga configure --validate             # Validate configuration
-rga configure --optimize             # Optimize performance
-rga configure --reset                # Reset to defaults
-rga configure --export <file>        # Export configuration
-rga configure --import <file>        # Import configuration
-rga configure --monitor              # Real-time monitoring
-rga configure --test                 # Test all providers
+# Google AI specific
+GOOGLE_AI_MODEL=gemini-1.5-flash
+GOOGLE_AI_MAX_TOKENS=1048576
 
-# Status and information
-rga status                           # Show current status
-rga configure                        # Show configuration overview
+# GitHub AI specific  
+GITHUB_AI_MODEL=gpt-4o-mini
+GITHUB_AI_MAX_TOKENS=128000
+
+# Azure OpenAI specific
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
 ```
 
 ## Support and Resources
@@ -470,15 +458,21 @@ rga configure                        # Show configuration overview
 ### Documentation
 - [Provider Setup Guides](./PROVIDER-SETUP-GUIDES.md)
 - [Performance Tuning](./PERFORMANCE-TUNING.md)
-- [Security Best Practices](./SECURITY-GUIDE.md)
+- [Troubleshooting Guide](./TROUBLESHOOTING.md)
+
+### CLI Help
+```bash
+# Get help for environment commands
+npx rga env --help
+npx rga env validate --help
+npx rga env setup --help
+```
 
 ### Community
 - [GitHub Issues](https://github.com/your-repo/issues)
 - [Discussions](https://github.com/your-repo/discussions)
-- [Discord Community](https://discord.gg/your-server)
+- [Documentation](https://your-docs-site.com)
 
-### Professional Support
-- Enterprise support available
-- Custom provider integration
-- Performance consulting
-- Training and workshops
+---
+
+For more information, see the [complete documentation](./README.md) or run `npx rga env setup` to get started with the interactive setup wizard.

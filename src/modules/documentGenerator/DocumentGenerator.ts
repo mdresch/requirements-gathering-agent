@@ -26,7 +26,6 @@ import * as path from 'path';
 import { join } from 'path';
 import process from 'process';
 import { writeFile } from 'fs/promises';
-import * as fs from 'fs/promises';
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
 import { ComplianceValidationService, DocumentComplianceValidation, ComplianceValidationConfig } from '../../services/ComplianceValidationService.js';
 import { createProcessor } from './ProcessorFactory.js';
@@ -53,6 +52,7 @@ import {
 } from './types';
 
 export type { GenerationResult };
+export type { GenerationOptions };
 import { ProjectContext } from '../ai/types';
 import { DOCUMENT_CONFIG } from '../fileManager.js';
 import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskByKey } from './generationTasks.js';
@@ -66,7 +66,7 @@ export class DocumentGenerator {
     private results: GenerationResult;
     private aiProcessor: AIProcessor;
     private configManager: ConfigurationManager;
-    private complianceService: ComplianceValidationService;
+    protected complianceService: ComplianceValidationService;
     // ...existing code...
     constructor(
         context: string,

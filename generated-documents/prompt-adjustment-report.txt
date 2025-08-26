@@ -1,8 +1,9 @@
 
 === PROMPT ADJUSTMENT REPORT ===
 
-Document: project-charter
-  - Missing required element: project purpose
+Document: stakeholder-register
+  - Missing required element: assessment information
+  - Missing required element: stakeholder classification
 
 Document: stakeholder-engagement-plan
   - Missing required element: engagement strategies
@@ -10,9 +11,8 @@ Document: stakeholder-engagement-plan
 Document: requirements-documentation
   - Missing required element: acceptance criteria
 
-Document: stakeholder-register
-  - Missing required element: assessment information
-  - Missing required element: stakeholder classification
+Document: project-charter
+  - Missing required element: project purpose
 
 Document: risk-management-plan
   - Missing required element: risk categories
@@ -21,6 +21,5 @@ Document: mission-vision-core-values
   - Missing required element: alignment with project goals
 
 Document: project-purpose
-  - Missing required element: project background
   - Missing required element: strategic importance
   - Missing required element: expected impact

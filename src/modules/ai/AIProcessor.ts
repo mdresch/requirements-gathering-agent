@@ -25,6 +25,7 @@ import { MetricsManager } from "./MetricsManager.js";
 import { RetryManager } from "./RetryManager.js";
 import { ConfigurationManager } from "./ConfigurationManager.js";
 import { ProviderManager } from "./ProviderManager.js";
+import { ProviderFallbackManager } from "./ProviderFallbackManager.js";
 
 export class AIProcessor {
     private static instance: AIProcessor;
@@ -33,6 +34,7 @@ export class AIProcessor {
     private retryManager: RetryManager;
     private config: ConfigurationManager;
     private providerManager: ProviderManager;
+    private fallbackManager: ProviderFallbackManager;
     private initializationPromise: Promise<void> | null = null;
 
     private constructor() {
@@ -41,6 +43,7 @@ export class AIProcessor {
         this.retryManager = RetryManager.getInstance();
         this.config = ConfigurationManager.getInstance();
         this.providerManager = new ProviderManager();
+        this.fallbackManager = ProviderFallbackManager.getInstance();
         this.initializationPromise = this.providerManager.validateConfigurations().then(() => {});
     }
 
@@ -110,77 +113,49 @@ export class AIProcessor {
         
         const defaultTokens = this.config.getMaxResponseTokens();
         maxTokens = maxTokens ?? defaultTokens;
-        // Always use provider from config unless fallback is required
-        let provider = this.config.getAIProvider();
         
-        if (!provider) {
-            throw new Error('No AI provider configured');
-        }
-
-        // Ensure the client for the provider is initialized
-        if (!this.clientManager.getClient(provider as AIProvider)) {
-            console.log(`🔧 Initializing client for provider: ${provider}`);
-            await this.clientManager.initializeSpecificProvider(provider as AIProvider);
-        }
-
-        let status = this.providerManager.getProviderStatus(provider);
-        if (!status.withinRateLimit) {
-            throw new Error(`Rate limit exceeded for provider ${provider}`);
-        }
-        if (!status.withinQuota) {
-            if (await this.providerManager.switchProvider()) {
-                const fallbackProvider = this.providerManager.getActiveProvider();
-                if (fallbackProvider && fallbackProvider !== provider) {
-                    this.config.setProvider(fallbackProvider as AIProvider); // update config for this session
-                    return this.makeAICall(messages, maxTokens); // Retry with new provider
+        const startTime = Date.now();
+        
+        // Use enhanced fallback manager for automatic provider switching
+        return this.fallbackManager.executeWithFallback(async (provider: AIProvider) => {
+            // Ensure the client for the provider is initialized
+            let client = this.clientManager.getClient(provider);
+            if (!client) {
+                console.log(`🔧 Initializing client for provider: ${provider}`);
+                await this.clientManager.initializeSpecificProvider(provider);
+                client = this.clientManager.getClient(provider);
+                if (!client) {
+                    throw new Error(`Failed to initialize client for provider: ${provider}`);
                 }
             }
-            throw new Error(`Quota exceeded for provider ${provider}`);
-        }
 
-        const client = this.clientManager.getClient(provider as AIProvider);
-        if (!client) {
-            throw new Error(`No client available for provider: ${provider}`);
-        }
+            // Check provider status
+            const status = this.providerManager.getProviderStatus(provider);
+            if (!status.withinRateLimit) {
+                throw new Error(`Rate limit exceeded for provider ${provider}`);
+            }
+            if (!status.withinQuota) {
+                throw new Error(`Quota exceeded for provider ${provider}`);
+            }
 
-        const startTime = Date.now();
-
-        try {
-            const result = await this.routeProviderCall(provider as AIProvider, client, messages, maxTokens);
+            // Make the AI call
+            const result = await this.routeProviderCall(provider, client, messages, maxTokens);
             const endTime = Date.now();
             const responseTime = endTime - startTime;
             const tokensUsed = this.estimateTokens(result);
 
-            // Update provider metrics
+            // Update provider metrics on success
             this.providerManager.updateMetrics(provider, true, responseTime, tokensUsed);
             
             return {
                 content: result,
                 metadata: {
-                    provider: provider as AIProvider,
+                    provider,
                     responseTime,
                     tokensUsed
                 }
             };
-        } catch (error: any) {
-            const endTime = Date.now();
-            const responseTime = endTime - startTime;
-            
-            // Update provider metrics on failure
-            this.providerManager.updateMetrics(provider, false, responseTime, 0, error);
-            
-            // Try fallback provider
-            if (await this.providerManager.switchProvider()) {
-                // Sync the new active provider with ConfigurationManager
-                const newActiveProvider = this.providerManager.getActiveProvider();
-                if (newActiveProvider) {
-                    this.config.setProvider(newActiveProvider as AIProvider);
-                }
-                return this.makeAICall(messages, maxTokens); // Retry with new provider
-            }
-            
-            throw error;
-        }
+        }, 'AI_Call');
     }
 
     private async routeProviderCall(
