@@ -58,13 +58,14 @@ function getAIProviderDisplayName(): string {
         const providerNames: Record<AIProvider, string> = {
             'azure-openai': 'Azure OpenAI',
             'azure-openai-key': 'Azure OpenAI (API Key)',
+            'azure-openai-entra': 'Azure OpenAI (Entra ID)',
             'azure-ai-studio': 'Azure AI Studio',
             'google-ai': 'Google AI (Gemini)',
             'github-ai': 'GitHub AI',
             'ollama': 'Ollama'
         };
         
-        return providerNames[provider] || provider;
+        return providerNames[provider] || provider; // Original line
     } catch (error) {
         console.warn('Could not determine AI provider, using fallback');
         return 'AI Provider';
@@ -898,6 +899,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'PMO/PMBOK-compliant change request form for program-level changes.',
         generatedAt: ''
     },
+    'detailed-planning-artifacts': {
+        title: 'Detailed Planning Artifacts',
+        filename: 'pppm/detailed-planning-artifacts.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'PMO/PMBOK-compliant detailed planning artifacts for program-level changes.',
+        generatedAt: ''
+    }
 };
 
 // Create organized directory structure

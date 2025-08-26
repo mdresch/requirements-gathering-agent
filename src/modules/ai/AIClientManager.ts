@@ -92,6 +92,7 @@ class AIClientManager {
             'google-ai': () => this.initializeGoogleAI(),
             'azure-openai': () => this.initializeAzureOpenAIWithEntra(),
             'azure-openai-key': () => this.initializeAzureOpenAIWithKey(),
+            'azure-openai-entra': () => this.initializeAzureOpenAIWithEntra(),
             'azure-ai-studio': () => this.initializeAzureAIStudio(),
             'github-ai': () => this.initializeGitHubAI(),
             'ollama': () => this.initializeOllama()
@@ -252,6 +253,7 @@ class AIClientManager {
     }    private async performHealthCheck(provider: AIProvider, client: any): Promise<void> {        const healthCheckCalls: Record<AIProvider, () => Promise<void>> = {
             'azure-openai': () => this.healthCheckAzureOpenAI(client),
             'azure-openai-key': () => this.healthCheckAzureOpenAI(client),
+            'azure-openai-entra': () => this.healthCheckAzureOpenAI(client),
             'azure-ai-studio': () => this.healthCheckAzureAIStudio(client),
             'github-ai': () => this.healthCheckGitHubAI(client),
             'google-ai': () => Promise.resolve(), // Google AI doesn't need health check

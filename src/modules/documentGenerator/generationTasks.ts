@@ -654,6 +654,8 @@ export const GENERATION_TASKS: GenerationTask[] = [
     { key: 'risk-analysis', name: 'Risk Analysis', func: 'getAiRiskAnalysis', emoji: '🔍', category: 'technical-analysis', priority: 30, pmbokRef: '11.2.3.1' },
     { key: 'acceptance-criteria', name: 'Acceptance Criteria', func: 'getAiAcceptanceCriteria', emoji: '✔️', category: 'technical-analysis', priority: 31, pmbokRef: '5.2.3.1' },
     { key: 'compliance-considerations', name: 'Compliance Considerations', func: 'getAiComplianceConsiderations', emoji: '⚖️', category: 'technical-analysis', priority: 32, pmbokRef: 'N/A' },
+    { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 28, pmbokRef: 'PMBOK 7.0: Stakeholder & Planning Performance Domains' },
+
     { key: 'ui-ux-considerations', name: 'UI/UX Considerations', func: 'getAiUiUxConsiderations', emoji: '🎨', category: 'technical-analysis', priority: 33, pmbokRef: 'N/A' },
     
     // Technical Recommendations (PMBOK-aligned technical guidance)
@@ -703,6 +705,51 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 999,
     emoji: '💼',
     pmbokRef: ''
+  },
+  {
+    key: 'strategic-alignment',
+    name: 'Strategic Alignment Document',
+    category: 'strategic-statements',
+    func: 'strategic-alignment.md',
+    priority: 5,
+    emoji: '🎯',
+    pmbokRef: '1.2.3.1 Strategic Alignment'
+  },
+  {
+    key: 'benefits-realization-plan',
+    name: 'Benefits Realization Plan',
+    category: 'strategic-statements',
+    func: 'benefits-realization-plan.md',
+    priority: 10,
+    emoji: '📈',
+    pmbokRef: '1.2.6 Benefits Management'
+  },
+  {
+    key: 'value-proposition',
+    name: 'Value Proposition Document',
+    category: 'strategic-statements',
+    func: 'value-proposition.md',
+    priority: 3,
+    emoji: '💎',
+    pmbokRef: '1.2.3.1 Strategic Alignment'
+  },
+  {
+    key: 'strategic-success-metrics',
+    name: 'Strategic Success Metrics',
+    category: 'strategic-statements',
+    func: 'strategic-success-metrics.md',
+    priority: 15,
+    emoji: '📊',
+    pmbokRef: '1.2.5 Performance Management'
+  },
+  {
+    key: 'strategic-roadmap',
+    name: 'Strategic Roadmap',
+    category: 'strategic-statements',
+    func: 'strategic-roadmap.md',
+    priority: 20,
+    emoji: '🗺️',
+    pmbokRef: '6.2 Schedule Management'
   },
   {
     key: 'scope-statement',
@@ -931,6 +978,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: 'PMBOK: Status Report',
     dependencies: []
   },
+  {
+    key: 'detailed-planning-artifacts',
+    name: 'Detailed Planning Artifacts',
+    category: 'pppm',
+    func: 'generateDetailedPlanningArtifacts',
+    emoji: '📊',
+    priority: 22,
+    pmbokRef: 'PMBOK: Detailed Planning Artifacts',
+    dependencies: []
+  }
 ];
 
 /**

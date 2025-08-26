@@ -4,9 +4,14 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
+// Helper to join base URL and endpoint without duplicate slashes
+function joinUrl(base: string, endpoint: string): string {
+  return `${base.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
+}
+
 // Enhanced request function with better error handling
 async function request(endpoint: string, options: RequestInit = {}): Promise<any> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = joinUrl(API_BASE_URL, endpoint);
   
   console.log(`🌐 API Request: ${options.method || 'GET'} ${url}`);
   console.log(`🔑 API Key: ${API_KEY ? 'Present' : 'Missing'}`);
@@ -18,7 +23,7 @@ async function request(endpoint: string, options: RequestInit = {}): Promise<any
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
-        ...options.headers,
+        ...(options.headers || {}),
       },
       mode: 'cors', // Explicitly set CORS mode
       credentials: 'omit', // Don't send credentials for now
@@ -64,7 +69,7 @@ export async function getTemplates(params?: {
   if (params?.search) searchParams.append('search', params.search);
 
   const queryString = searchParams.toString();
-  const endpoint = `/templates${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/v1/templates${queryString ? `?${queryString}` : ''}`;
   
   try {
     const response = await request(endpoint);
