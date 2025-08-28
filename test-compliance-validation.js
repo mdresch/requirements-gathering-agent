@@ -6,8 +6,8 @@
  * enterprise governance policies.
  */
 
-import { ComplianceValidationService } from './src/services/ComplianceValidationService.js';
-import { ComplianceEnhancedGenerator } from './src/modules/documentGenerator/ComplianceEnhancedGenerator.js';
+import { ComplianceValidationService } from './dist/services/ComplianceValidationService.js';
+import { ComplianceEnhancedGenerator } from './dist/modules/documentGenerator/ComplianceEnhancedGenerator.js';
 
 async function testComplianceValidation() {
   console.log('🔒 Testing Compliance Validation System');

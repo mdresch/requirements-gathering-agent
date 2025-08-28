@@ -33,7 +33,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 // 3. Internal modules
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
-import { promptsCommand } from './commands/prompts.js';
+import { environmentCommandModule } from './commands/environment.js';
 // 4. Constants and configuration
 import { DEFAULT_OUTPUT_DIR, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_BACKOFF, DEFAULT_RETRY_MAX_DELAY, SUPPORTED_FORMATS, CONFIG_FILENAME, PACKAGE_JSON_FILENAME, TSCONFIG_JSON_FILENAME, README_FILENAME, PROCESSOR_CONFIG_FILENAME } from './constants.js';
 // 5. Command handlers
@@ -43,9 +43,7 @@ handleConfluenceInitCommand, handleConfluenceTestCommand, handleConfluencePublis
 // SharePoint commands
 handleSharePointInitCommand, handleSharePointTestCommand, handleSharePointPublishCommand, handleSharePointStatusCommand, handleSharePointOAuth2LoginCommand, handleSharePointOAuth2StatusCommand, handleSharePointOAuth2DebugCommand, 
 // VCS commands
-handleVcsInitCommand, handleVcsStatusCommand, handleVcsCommitCommand, handleVcsPushCommand, 
-// Stakeholder Analysis commands
-handleStakeholderAnalysisCommand, handleStakeholderRegisterCommand, handleStakeholderEngagementPlanCommand, handleStakeholderAutomationCommand, displayStakeholderHelp } from './commands/index.js';
+handleVcsInitCommand, handleVcsStatusCommand, handleVcsCommitCommand, handleVcsPushCommand } from './commands/index.js';
 // 6. Utilities and version management
 import { getLegacyDisplayName } from './utils/version.js';
 const __filename = fileURLToPath(import.meta.url);
@@ -538,138 +536,7 @@ yargs(hideBin(process.argv))
     })
         .demandCommand(1, 'You must provide a valid feedback command.');
 })
-    .command(promptsCommand)
-    .command(require('./commands/environment.js').environmentCommandModule)
-    // Stakeholder Analysis commands
-    .command('stakeholder', 'Automated stakeholder analysis and management', (yargs) => {
-    return yargs
-        .command('analysis', 'Generate comprehensive stakeholder analysis', (yargs) => {
-        return yargs
-            .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
-            .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
-            .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
-            .option('include-register', { type: 'boolean', default: true, describe: 'Include stakeholder register' })
-            .option('include-engagement-plan', { type: 'boolean', default: false, describe: 'Include engagement plan' })
-            .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
-    }, async (argv) => {
-        await handleStakeholderAnalysisCommand({
-            outputDir: argv['output-dir'],
-            format: argv.format,
-            verbose: argv.verbose,
-            includeRegister: argv['include-register'],
-            includeEngagementPlan: argv['include-engagement-plan'],
-            analysisDepth: argv['analysis-depth']
-        });
-    })
-        .command('register', 'Generate stakeholder register only', (yargs) => {
-        return yargs
-            .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
-            .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
-            .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
-    }, async (argv) => {
-        await handleStakeholderRegisterCommand({
-            outputDir: argv['output-dir'],
-            format: argv.format,
-            verbose: argv.verbose
-        });
-    })
-        .command('engagement-plan', 'Generate stakeholder engagement plan', (yargs) => {
-        return yargs
-            .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
-            .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
-            .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' });
-    }, async (argv) => {
-        await handleStakeholderEngagementPlanCommand({
-            outputDir: argv['output-dir'],
-            format: argv.format,
-            verbose: argv.verbose
-        });
-    })
-        .command('automate', 'Generate all stakeholder documents (comprehensive automation)', (yargs) => {
-        return yargs
-            .option('output-dir', { type: 'string', default: DEFAULT_OUTPUT_DIR, describe: 'Output directory' })
-            .option('format', { type: 'string', default: 'markdown', choices: ['markdown', 'json'], describe: 'Output format' })
-            .option('verbose', { type: 'boolean', default: false, describe: 'Show detailed output' })
-            .option('analysis-depth', { type: 'string', default: 'comprehensive', choices: ['basic', 'detailed', 'comprehensive'], describe: 'Analysis depth' });
-    }, async (argv) => {
-        await handleStakeholderAutomationCommand({
-            outputDir: argv['output-dir'],
-            format: argv.format,
-            verbose: argv.verbose,
-            includeRegister: true,
-            includeEngagementPlan: true,
-            analysisDepth: argv['analysis-depth']
-        });
-    })
-        .command('help', 'Show stakeholder analysis help', {}, () => {
-        displayStakeholderHelp();
-    })
-        .demandCommand(1, 'You must provide a valid stakeholder command.');
-})
-    .command(promptsCommand)
-    .command('risk-compliance', 'Generate comprehensive risk and compliance assessments', (yargs) => {
-    return yargs
-        .option('project', {
-        alias: 'p',
-        type: 'string',
-        description: 'Project name',
-        demandOption: true
-    })
-        .option('type', {
-        alias: 't',
-        type: 'string',
-        description: 'Project type (SOFTWARE_DEVELOPMENT, INFRASTRUCTURE, etc.)',
-        default: 'SOFTWARE_DEVELOPMENT'
-    })
-        .option('description', {
-        alias: 'd',
-        type: 'string',
-        description: 'Project description'
-    })
-        .option('output', {
-        alias: 'o',
-        type: 'string',
-        description: 'Output directory',
-        default: 'generated-documents/risk-compliance'
-    })
-        .option('integrated', {
-        type: 'boolean',
-        description: 'Generate integrated assessment using compliance engine',
-        default: false
-    })
-        .option('pmbok-only', {
-        type: 'boolean',
-        description: 'Generate PMBOK-focused assessment only',
-        default: false
-    })
-        .option('format', {
-        type: 'string',
-        description: 'Output format (markdown, json)',
-        choices: ['markdown', 'json'],
-        default: 'markdown'
-    });
-}, async (argv) => {
-    try {
-        const { createRiskComplianceCommand } = await import('./commands/risk-compliance.js');
-        const command = createRiskComplianceCommand();
-        // Execute the command with the provided arguments
-        await command.parseAsync([
-            'risk-compliance',
-            '--project', argv.project,
-            '--type', argv.type || 'SOFTWARE_DEVELOPMENT',
-            ...(argv.description ? ['--description', argv.description] : []),
-            '--output', argv.output,
-            ...(argv.integrated ? ['--integrated'] : []),
-            ...(argv.pmbokOnly ? ['--pmbok-only'] : []),
-            '--format', argv.format
-        ], { from: 'user' });
-    }
-    catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        console.error('❌ Error executing risk-compliance command:', message);
-        process.exit(1);
-    }
-})
+    .command(environmentCommandModule)
     .option('quiet', {
     alias: 'q',
     type: 'boolean',

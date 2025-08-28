@@ -14,6 +14,9 @@
   "AI_TIMEOUT": 60000,
   "EXPERIMENTAL_FEATURES": true,
   "providers": {
+    "azure-openai-key": {
+      "model": "gpt-4.1"
+    },
     "github-ai": {
       "model": "gpt-4o-mini"
     },
