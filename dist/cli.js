@@ -33,7 +33,6 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 // 3. Internal modules
 import { InteractiveProviderMenu } from './modules/ai/interactive-menu.js';
-import { environmentCommandModule } from './commands/environment.js';
 // 4. Constants and configuration
 import { DEFAULT_OUTPUT_DIR, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_BACKOFF, DEFAULT_RETRY_MAX_DELAY, SUPPORTED_FORMATS, CONFIG_FILENAME, PACKAGE_JSON_FILENAME, TSCONFIG_JSON_FILENAME, README_FILENAME, PROCESSOR_CONFIG_FILENAME } from './constants.js';
 // 5. Command handlers
@@ -209,7 +208,7 @@ yargs(hideBin(process.argv))
 }, async (argv) => {
     const { handleInteractiveCommand, checkInteractiveSupport, showInteractiveNotSupportedMessage } = await import('./commands/interactive.js');
     // Check if interactive mode is supported
-    if (!checkInteractiveSupport()) {
+    if (!(await checkInteractiveSupport())) {
         showInteractiveNotSupportedMessage();
         process.exit(1);
     }
@@ -536,7 +535,7 @@ yargs(hideBin(process.argv))
     })
         .demandCommand(1, 'You must provide a valid feedback command.');
 })
-    .command(environmentCommandModule)
+    .command((await import('./commands/environment.js')).environmentCommandModule)
     .option('quiet', {
     alias: 'q',
     type: 'boolean',

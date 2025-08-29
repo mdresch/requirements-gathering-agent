@@ -147,12 +147,14 @@ export class ConfluenceOAuth2 {
                 console.log(`⏳ Waiting for authorization...`);
                 
                 // Auto-open browser (optional)
-                try {
-                    const { exec } = require('child_process');
-                    exec(`start "" "${authUrl}"`); // Windows
-                } catch (e) {
-                    // Ignore if can't auto-open
-                }
+                (async () => {
+                    try {
+                        const cp = await import('child_process');
+                        cp.exec(`start "" "${authUrl}"`); // Windows
+                    } catch (e) {
+                        // Ignore if can't auto-open
+                    }
+                })();
             });
 
             // Timeout after 5 minutes

@@ -1,0 +1,7 @@
+[
+  { "id": 1, "name": "ISO 9001", "description": "Quality management standard." },
+  { "id": 2, "name": "ISO 27001", "description": "Information security standard." },
+  { "id": 3, "name": "ISO 14001", "description": "Environmental management standard." },
+  { "id": 4, "name": "ISO 45001", "description": "Occupational health and safety standard." },
+  { "id": 5, "name": "ISO 22301", "description": "Business continuity management standard." }
+]

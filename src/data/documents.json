@@ -1,0 +1,7 @@
+[
+  { "id": 1, "title": "Project Plan", "content": "Initial project plan document." },
+  { "id": 2, "title": "Requirements Spec", "content": "Detailed requirements specification." },
+  { "id": 3, "title": "Design Doc", "content": "System design document." },
+  { "id": 4, "title": "Test Plan", "content": "Comprehensive test plan." },
+  { "id": 5, "title": "Release Notes", "content": "Release notes for v1.0." }
+]

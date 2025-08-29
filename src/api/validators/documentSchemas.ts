@@ -1,7 +1,4 @@
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const Joi = require('joi');
+import Joi from 'joi';
 
 // Common schemas
 export const uuidSchema = Joi.string().uuid().required();

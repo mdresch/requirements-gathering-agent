@@ -100,22 +100,30 @@ export function testProcessorIntegration(): void {
     console.log('=== Testing Processor Integration ===\n');
     
     // Test that the BaseAIProcessor has the new methods
-    try {
-        const { BaseAIProcessor } = require('./processors/BaseAIProcessor.js');
-        console.log('1. BaseAIProcessor import: ✓');
-        
-        // Check if the class has the expected methods
-        const processor = new (class extends BaseAIProcessor {})();
-        const hasEnhancedMessages = typeof processor.createEnhancedMessages === 'function';
-        const hasPMBOKMessages = typeof processor.createPMBOKMessages === 'function';
-        
-        console.log(`   createEnhancedMessages method: ${hasEnhancedMessages ? '✓' : '✗'}`);
-        console.log(`   createPMBOKMessages method: ${hasPMBOKMessages ? '✓' : '✗'}`);
-        
-    } catch (error) {
-        console.log('1. BaseAIProcessor import: ✗');
-    console.log(`   Error: ${(error instanceof Error ? error.message : String(error))}`);
-    }
+    (async () => {
+        try {
+            const module = await import('./processors/BaseAIProcessor.js');
+            const BaseAIProcessor = module.BaseAIProcessor;
+            console.log('1. BaseAIProcessor import: ✓');
+            // Check if the class has the expected methods
+            class TestProcessor extends BaseAIProcessor {
+                public hasEnhancedMessages(): boolean {
+                    return typeof this.createEnhancedMessages === 'function';
+                }
+                public hasPMBOKMessages(): boolean {
+                    return typeof this.createPMBOKMessages === 'function';
+                }
+            }
+            const processor = new TestProcessor();
+            const hasEnhancedMessages = processor.hasEnhancedMessages();
+            const hasPMBOKMessages = processor.hasPMBOKMessages();
+            console.log(`   createEnhancedMessages method: ${hasEnhancedMessages ? '✓' : '✗'}`);
+            console.log(`   createPMBOKMessages method: ${hasPMBOKMessages ? '✓' : '✗'}`);
+        } catch (error) {
+            console.log('1. BaseAIProcessor import: ✗');
+            console.log(`   Error: ${(error instanceof Error ? error.message : String(error))}`);
+        }
+    })();
     
     console.log('\n=== Processor Integration Test Complete ===\n');
 }

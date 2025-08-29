@@ -1,8 +1,5 @@
-import { createRequire } from 'module';
+import Joi from 'joi';
 import { uuidSchema, paginationSchema } from './documentSchemas.js';
-
-const require = createRequire(import.meta.url);
-const Joi = require('joi');
 
 // Template creation and update schemas
 export const templateCreateSchema = {

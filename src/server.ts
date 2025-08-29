@@ -1,9 +1,6 @@
-import { createRequire } from 'module';
 import app from './app.js';
 import { logger } from './config/logger.js';
-
-const require = createRequire(import.meta.url);
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();

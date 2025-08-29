@@ -1,0 +1,7 @@
+[
+  { "id": 1, "template": "Template A", "status": "completed" },
+  { "id": 2, "template": "Template B", "status": "pending" },
+  { "id": 3, "template": "Template C", "status": "failed" },
+  { "id": 4, "template": "Template D", "status": "completed" },
+  { "id": 5, "template": "Template E", "status": "pending" }
+]

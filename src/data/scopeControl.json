@@ -1,0 +1,7 @@
+[
+  { "id": 1, "scope": "admin", "description": "Full access" },
+  { "id": 2, "scope": "user", "description": "Limited access" },
+  { "id": 3, "scope": "guest", "description": "Read-only access" },
+  { "id": 4, "scope": "editor", "description": "Edit access" },
+  { "id": 5, "scope": "auditor", "description": "Audit access" }
+]

@@ -1,0 +1,7 @@
+[
+  { "id": 1, "documentId": 1, "reviewer": "Alice", "status": "approved" },
+  { "id": 2, "documentId": 2, "reviewer": "Bob", "status": "pending" },
+  { "id": 3, "documentId": 3, "reviewer": "Charlie", "status": "rejected" },
+  { "id": 4, "documentId": 4, "reviewer": "Dana", "status": "approved" },
+  { "id": 5, "documentId": 5, "reviewer": "Eve", "status": "pending" }
+]

@@ -1,7 +1,10 @@
 // server.ts
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\src\api\server.ts
 
-import { createRequire } from 'module';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { DocumentController } from './controllers/DocumentController.js';
 import { TemplateController } from './controllers/TemplateController.js';
@@ -54,11 +57,7 @@ const projects = [
   }
 ];
 
-const require = createRequire(import.meta.url);
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+// ...existing code...
 
 /**
  * ADPA API Server
@@ -166,11 +165,12 @@ if (process.env.NODE_ENV !== 'test') {
             } catch (err) {
                 console.error('❌ Failed to initialize TemplateRepository:', err);
             }
-            // Import and register templates router only after repo is set
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const { createTemplatesRouter } = require('./routes/templates.js');
-            const templatesRouter = createTemplatesRouter(TemplateController);
-            app.use('/api/v1/templates', templatesRouter);
+                        // Import and register templates router only after repo is set
+                        (async () => {
+                            const module = await import('./routes/templates.js');
+                            const templatesRouter = module.createTemplatesRouter(TemplateController);
+                            app.use('/api/v1/templates', templatesRouter);
+                        })();
             app.listen(actualPort, () => {
                 if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
                     console.warn('⚠️  NODE_ENV is not set to development or test. Some features may not work as expected.');

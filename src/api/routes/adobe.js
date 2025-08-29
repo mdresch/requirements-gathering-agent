@@ -1,7 +1,8 @@
 // Adobe PDF conversion endpoint
-const express = require("express");
+import express from "express";
+import { convertMarkdownToAdobePDF } from "../services/adobePdfService.js";
+
 const router = express.Router();
-const { convertMarkdownToAdobePDF } = require("../services/adobePdfService");
 
 router.post("/convert", async (req, res) => {
   try {
@@ -28,4 +29,4 @@ router.post("/convert", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

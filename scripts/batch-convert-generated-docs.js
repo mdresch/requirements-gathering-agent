@@ -23,9 +23,6 @@ const puppeteer = require('puppeteer');
 // Configuration
 const CONFIG = {
     inputDir: './generated-documents',
-    outputDir: './generated-documents-pdf',
-    supportedExtensions: ['.md', '.txt', '.html'],
-    conversionMethods: ['puppeteer', 'adobe'], // Order of preference
     puppeteerOptions: {
         headless: 'new',
         args: ['--no-sandbox', '--disable-setuid-sandbox']

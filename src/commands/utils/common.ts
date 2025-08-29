@@ -4,25 +4,30 @@
  */
 
 // 1. Node.js built-ins
+
 import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../../package.json'), 'utf-8'));
 
 // 2. Third-party dependencies (none in this file)
 
 // 3. Internal modules (none in this file)
 
 // 4. Constants and configuration
-const require = createRequire(import.meta.url);
+// const require = createRequire(import.meta.url);
 
 /**
  * Get package version from package.json
  */
 export function getPackageVersion(): string {
   try {
-    const packagePath = join(process.cwd(), 'package.json');
-    const { version } = require(packagePath);
-    return version;
+  return pkg.version;
   } catch {
     return 'unknown';
   }

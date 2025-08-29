@@ -12,10 +12,10 @@
  */
 
 // Node.js built-ins
-import { createRequire } from 'module';
 
-// Dynamic package.json import
-const require = createRequire(import.meta.url);
+// Static import for package.json (TypeScript >= 4.7, Node >= 18)
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 /**
  * Get the current package version from package.json
@@ -23,13 +23,14 @@ const require = createRequire(import.meta.url);
  */
 export function getPackageVersion(): string {
   try {
-    const { version } = require('../../package.json');
-    return version;
+    const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
+    return pkg.version;
   } catch (error) {
     console.warn('Warning: Could not read version from package.json:', error);
     return 'unknown';
   }
 }
+
 
 /**
  * Get formatted version string with 'v' prefix

@@ -3,15 +3,17 @@
  * Displays comprehensive system status, configuration, and AI provider information
  */
 
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import process from 'process';
 import { config as dotenvConfig } from 'dotenv';
-import { createRequire } from 'module';
 import { REQUIRED_FILES, DEFAULT_OUTPUT_DIR } from '../constants.js';
 
-const require = createRequire(import.meta.url);
-const { version } = require('../../package.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
 
 /**
  * Helper to check for provider config and display its status
@@ -24,6 +26,9 @@ const checkProvider = (name: string, envVars: string[], details: () => void) => 
         details();
     }
 };
+
+// Example usage of version from package.json
+console.log(`Version: ${pkg.version}`);
 
 /**
  * Check file existence and report status
@@ -99,7 +104,7 @@ export async function handleStatusCommand(): Promise<void> {
 
     // Version and environment info
     console.log('📋 VERSION INFO:');
-    console.log(`   🚀 CLI Version: ${version}`);
+    console.log(`   🚀 CLI Version: ${pkg.version}`);
     console.log(`   📁 Working Directory: ${process.cwd()}`);
     console.log(`   🟢 Node.js: ${process.version}`);
     console.log(`   💻 Platform: ${process.platform} (${process.arch})`);

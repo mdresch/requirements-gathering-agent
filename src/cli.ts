@@ -277,13 +277,13 @@ yargs(hideBin(process.argv))
       checkInteractiveSupport, 
       showInteractiveNotSupportedMessage 
     } = await import('./commands/interactive.js');
-    
+
     // Check if interactive mode is supported
-    if (!checkInteractiveSupport()) {
+    if (!(await checkInteractiveSupport())) {
       showInteractiveNotSupportedMessage();
       process.exit(1);
     }
-    
+
     await handleInteractiveCommand({
       mode: argv.mode as 'beginner' | 'advanced',
       skipIntro: argv.skipIntro,
@@ -631,7 +631,9 @@ yargs(hideBin(process.argv))
       })
       .demandCommand(1, 'You must provide a valid feedback command.');
   })
-  .command(environmentCommandModule)
+  .command(
+    (await import('./commands/environment.js')).environmentCommandModule
+  )
   .option('quiet', {
     alias: 'q',
     type: 'boolean',

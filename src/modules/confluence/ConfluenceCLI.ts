@@ -115,10 +115,11 @@ export async function testConfluenceConnection(): Promise<void> {
             if (validation.warnings.length > 0) {
                 console.warn('\n⚠️ Warnings:');
                 validation.warnings.forEach(warning => console.warn(`   • ${warning}`));
+                const fs = await import('fs');
+                
+                console.log('\n📋 Environment Setup Instructions:');
+                console.log(configManager.getEnvironmentSetupInstructions());
             }
-            
-            console.log('\n📋 Environment Setup Instructions:');
-            console.log(configManager.getEnvironmentSetupInstructions());
             return;
         }
 
@@ -291,7 +292,7 @@ export async function publishToConfluence(
         
         if (options.dryRun) {
             console.log('📄 Documents that would be published:');
-            const fs = require('fs');
+            const fs = await import('fs');
             const files = fs.readdirSync(docsPath).filter((file: string) => file.endsWith('.md'));
             files.forEach((file: string) => {
                 const title = file.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());

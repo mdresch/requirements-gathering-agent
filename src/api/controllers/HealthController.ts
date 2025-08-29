@@ -36,21 +36,23 @@ export class HealthController {
 
     static getVersion(req: Request, res: Response) {
         // Read version from package.json
-        try {
-            const packageJson = require('../../../package.json');
-            res.status(200).json({
-                version: packageJson.version,
-                name: packageJson.name,
-                description: packageJson.description,
-                timestamp: new Date().toISOString()
-            });
-        } catch (error) {
-            res.status(200).json({
-                version: '1.0.0',
-                name: 'ADPA API',
-                description: 'Document Processing API',
-                timestamp: new Date().toISOString()
-            });
-        }
+        (async () => {
+            try {
+                const packageJson = await import('../../../package.json', { assert: { type: 'json' } });
+                res.status(200).json({
+                    version: packageJson.default.version,
+                    name: packageJson.default.name,
+                    description: packageJson.default.description,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                res.status(200).json({
+                    version: '1.0.0',
+                    name: 'ADPA API',
+                    description: 'Document Processing API',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        })();
     }
 }

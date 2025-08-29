@@ -461,13 +461,13 @@ export class ConfluencePublisher {
         }
 
         // Process markdown files in the directory
-        const fs = require('fs');
+        const fs = await import('fs');
         const files = fs.readdirSync(documentsPath);
         
         for (const file of files) {
             if (file.endsWith('.md')) {
                 const filePath = join(documentsPath, file);
-                const content = readFileSync(filePath, 'utf-8');
+                const content = fs.readFileSync(filePath, 'utf-8');
                 
                 // Extract title from filename (remove .md extension)
                 const title = file.replace('.md', '').replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());

@@ -55,20 +55,20 @@ class AdobeCreativeSuite {
   
   constructor() {
     // Initialize credential management
-    try {
-      const { CredentialManager } = require('../setup-credentials.js');
-      this.credentialManager = new CredentialManager();
-    } catch (error) {
-      console.log('⚠️  Credential manager not available');
-    }
-    
-    // Initialize template management
-    try {
-      const { TemplateManager } = require('../template-manager.js');
-      this.templateManager = new TemplateManager();
-    } catch (error) {
-      console.log('⚠️  Template manager not available');
-    }
+    (async () => {
+      try {
+        const module = await import('../setup-credentials.js');
+        this.credentialManager = new module.CredentialManager();
+      } catch (error) {
+        console.log('⚠️  Credential manager not available');
+      }
+      try {
+        const module = await import('../template-manager.js');
+        this.templateManager = new module.TemplateManager();
+      } catch (error) {
+        console.log('⚠️  Template manager not available');
+      }
+    })();
     
     this.authenticator = new CreativeSuiteAuthenticator();
     this.batchProcessor = new EnhancedBatchProcessor();

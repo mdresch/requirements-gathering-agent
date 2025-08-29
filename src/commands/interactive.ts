@@ -155,7 +155,7 @@ export function getDefaultInteractiveOptions(): InteractiveOptions {
 /**
  * Check if interactive mode is supported in current environment
  */
-export function checkInteractiveSupport(): boolean {
+export async function checkInteractiveSupport(): Promise<boolean> {
   // Check if we're in a TTY (interactive terminal)
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     return false;
@@ -163,7 +163,7 @@ export function checkInteractiveSupport(): boolean {
 
   // Check if required modules are available
   try {
-    require('readline');
+    await import('readline');
     return true;
   } catch (error) {
     return false;

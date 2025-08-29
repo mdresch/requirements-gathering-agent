@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { createRequire } from 'module';
+import Joi from 'joi';
 import { logger } from '../../config/logger.js';
-
-const require = createRequire(import.meta.url);
-const Joi = require('joi');
 
 export interface ValidationSchema {
   body?: any;
