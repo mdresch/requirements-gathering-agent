@@ -109,6 +109,13 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'strategic-alignment': {
+        title: 'Strategic Alignment Document',
+        filename: 'strategic-statements/strategic-alignment.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC,
+        description: 'Defines the strategic alignment of the project, including objectives, business case, and alignment with organizational goals.',
+        generatedAt: ''
+    },
     'introduction-data-management-body-of-knowledge': {
         title: 'Introduction Data Management Body of Knowledge',
         filename: 'dmbok/INTRODUCTION DATA MANAGEMENT BODY OF KNOWLEDGE.md',

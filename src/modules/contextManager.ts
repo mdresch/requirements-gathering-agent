@@ -22,6 +22,7 @@
 import { AIProcessor } from './ai/AIProcessor.js';
 import { findRelevantMarkdownFiles } from './projectAnalyzer.js';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 
 // Define the ProjectMarkdownFile type locally to avoid circular dependencies
@@ -51,6 +52,32 @@ function extractContent(response: any) {
 }
 
 export class ContextManager {
+    /**
+     * Applies compliance findings to a document's context, auto-flagging and inserting recommendations
+     * Returns improved context string
+     */
+    public async applyComplianceImprovements(documentType: string, context: string): Promise<string> {
+        // Ensure findings are loaded
+        if (this.complianceFindings.length === 0) {
+            await this.parseComplianceReviewReports();
+        }
+        // Filter findings relevant to this document type
+        const findings = this.complianceFindings.filter(f => f.document === documentType);
+        if (findings.length === 0) return context;
+
+        let improvedContext = context;
+        let improvementSummary = `\n\n---\n## Compliance-Driven Improvements (Auto-Generated)\n`;
+        for (const finding of findings) {
+            // Auto-flag section (simple: prepend note)
+            const flagNote = `\n> ⚠️ Compliance Issue: ${finding.criteria}\n> Recommendation: ${finding.recommendation}\n> Severity: ${finding.severity}\n> Source: ${path.basename(finding.sourceFile)} (${finding.date})\n`;
+            // Insert flag at top of context (could be improved to target section)
+            improvedContext = flagNote + improvedContext;
+            improvementSummary += `- [${finding.criteria}] ${finding.recommendation} (Severity: ${finding.severity})\n`;
+        }
+        // Append summary of improvements
+        improvedContext += improvementSummary;
+        return improvedContext;
+    }
     private static instance: ContextManager | null = null;
     private maxContextTokens: number;
     private coreContext: string = '';
@@ -60,13 +87,78 @@ export class ContextManager {
     private modelTokenLimits: Map<string, number> = new Map();
     private autoConfigDone: boolean = false;
 
+        /**
+         * Stores parsed compliance findings for use in auto-improvement
+         */
+        private complianceFindings: Array<{
+            document: string;
+            criteria: string;
+            recommendation: string;
+            affectedSection: string;
+            severity: string;
+            score?: string;
+            sourceFile: string;
+            date: string;
+        }> = [];
+
     constructor(maxTokens: number = 4000) {
         this.maxContextTokens = maxTokens;
         this.initializeDocumentRelationships();
         this.initializeModelTokenLimits();
         // Auto-adjust based on current AI provider and model
         this.autoAdjustTokenLimits();
+            // Optionally, parse compliance findings at startup
+            // this.parseComplianceReviewReports();
     }
+
+        /**
+         * Parses compliance review markdown files and extracts actionable findings
+         * Stores results in this.complianceFindings
+         */
+        public async parseComplianceReviewReports(reportDir: string = 'generated-documents/compliance-reports'): Promise<void> {
+            const reportPath = path.resolve(reportDir);
+            let files: string[] = [];
+            try {
+                files = await fs.readdir(reportPath);
+            } catch (err) {
+                console.warn('No compliance review directory found:', reportPath);
+                return;
+            }
+            for (const file of files) {
+                if (!file.endsWith('.md')) continue;
+                const filePath = path.join(reportPath, file);
+                try {
+                    const content = await fs.readFile(filePath, 'utf-8');
+                    // Extract document name
+                    const docMatch = content.match(/\*\*Document:\*\*\s*(.+)/);
+                    const document = docMatch ? docMatch[1].trim() : file.replace('-compliance.md', '');
+                    // Extract validation date
+                    const dateMatch = content.match(/\*\*Validation Date:\*\*\s*(.+)/);
+                    const date = dateMatch ? dateMatch[1].trim() : '';
+                    // Extract compliance score
+                    const scoreMatch = content.match(/\*\*Compliance Score:\*\*\s*(.+)/);
+                    const score = scoreMatch ? scoreMatch[1].trim() : '';
+                    // Extract failed criteria and recommendations
+                    const findingsRegex = /- \*\*([\w\s'-]+)\*\*\s*\n\s*- Severity: ([A-Z]+)\n\s*- Impact: ([A-Z]+)\n\s*- Remediation: ([^\n]+)(?:\n\s*- Timeline: ([^\n]+))?/g;
+                    let match;
+                    while ((match = findingsRegex.exec(content)) !== null) {
+                        this.complianceFindings.push({
+                            document,
+                            criteria: match[1].trim(),
+                            recommendation: match[4].trim(),
+                            affectedSection: '', // Can be improved by section mapping
+                            severity: match[2].trim(),
+                            score,
+                            sourceFile: filePath,
+                            date
+                        });
+                        console.log(`✅ Compliance finding added: [${document}] ${match[1].trim()} (Severity: ${match[2].trim()}, Source: ${filePath})`);
+                    }
+                } catch (err) {
+                    console.warn('Could not parse compliance report:', filePath, err);
+                }
+            }
+        }
     
     /**
      * Get singleton instance of ContextManager
@@ -230,13 +322,39 @@ export class ContextManager {
     }
 
     buildContextForDocument(documentType: string, additionalContext?: string[]): string {
-        const cacheKey = `${documentType}_${this.hashString(this.coreContext)}_${additionalContext?.join('|') || ''}`;        if (this.contextCache.has(cacheKey)) {
-            return this.contextCache.get(cacheKey)!;
-        }
-        
-        let context = this.coreContext;
-        const isLargeContext = this.supportsLargeContext();
-        let remainingTokens = this.getEffectiveTokenLimit('enriched') - this.estimateTokens(context);
+            const cacheKey = `${documentType}_${this.hashString(this.coreContext)}_${additionalContext?.join('|') || ''}`;
+            if (this.contextCache.has(cacheKey)) {
+                return this.contextCache.get(cacheKey)!;
+            }
+
+            let context = this.coreContext;
+            const isLargeContext = this.supportsLargeContext();
+            let remainingTokens = this.getEffectiveTokenLimit('enriched') - this.estimateTokens(context);
+
+            // --- NEW: Load dependencies from processor-config.json and prioritize them ---
+            let processorConfig;
+            try {
+                const configPath = path.resolve(__dirname, './documentGenerator/processor-config.json');
+                const configRaw = fsSync.readFileSync(configPath, 'utf-8');
+                processorConfig = JSON.parse(configRaw);
+            } catch (err) {
+                processorConfig = {};
+            }
+            let dependencyKeys: string[] = [];
+            if (processorConfig[documentType] && Array.isArray(processorConfig[documentType].dependencies)) {
+                dependencyKeys = processorConfig[documentType].dependencies.map((dep: string) => dep.trim());
+            }
+            // Prioritize dependencies (just below user-modified docs)
+            for (const depKey of dependencyKeys) {
+                if (this.enrichedContext.has(depKey)) {
+                    const depContent = this.enrichedContext.get(depKey)!;
+                    const depTokens = this.estimateTokens(depContent);
+                    if (depTokens <= remainingTokens - 1000) {
+                        context += `\n\n## 🔗 PRIORITY DEPENDENCY: ${depKey}\n${depContent}`;
+                        remainingTokens -= depTokens;
+                    }
+                }
+            }
         
         // HIGHEST PRIORITY: Add existing generated documents first
         const existingDocsKeys = Array.from(this.enrichedContext.keys())
@@ -458,6 +576,38 @@ export class ContextManager {
             potentialContexts,
             recommendations
         };
+    }
+
+    /**
+     * Centralized compliance scoring logic
+     * If PII or Financial data is detected in project design, require corresponding compliance document in compliance folder
+     * Returns compliance score for the project or document set
+     */
+    public async getCentralizedComplianceScore(): Promise<{score: string, missing: string[]}> {
+        // Example: scan enrichedContext for PII/Financial keywords
+        const sensitiveTypes = ["PII", "Personal Data", "Financial", "Finance", "Payment", "Bank", "SSN", "Credit Card"];
+        let detected: string[] = [];
+        for (const [key, content] of this.enrichedContext.entries()) {
+            for (const type of sensitiveTypes) {
+                if (content.toLowerCase().includes(type.toLowerCase())) {
+                    detected.push(type);
+                }
+            }
+        }
+        // Map detected types to required compliance docs
+        const requiredDocs = [];
+        if (detected.some(t => ["PII", "Personal Data"].includes(t))) requiredDocs.push("gdpr-compliance-template.md");
+        if (detected.some(t => ["Financial", "Finance", "Payment", "Bank", "SSN", "Credit Card"].includes(t))) requiredDocs.push("sox-compliance-template.md");
+        // Check compliance folder for required docs
+        const complianceFolder = path.resolve("generated-documents/compliance");
+        let missing: string[] = [];
+        for (const doc of requiredDocs) {
+            if (!fsSync.existsSync(path.join(complianceFolder, doc))) {
+                missing.push(doc);
+            }
+        }
+        let score = missing.length === 0 ? "Compliant" : `Missing: ${missing.join(", ")}`;
+        return {score, missing};
     }
 
     /**
@@ -710,7 +860,7 @@ ${doc.content}
                 
                 // Add with highest priority prefix to ensure it's used first
                 this.enrichedContext.set(contextKey, contextContent);
-                console.log(`✅ Added existing document as priority context: ${doc.name}`);
+                    console.log(`✅ Priority context added: [${doc.name}] (Category: ${doc.category}, Path: ${doc.filePath})`);
             }
             
             console.log('🎯 Existing generated documents loaded as highest priority context');
@@ -785,7 +935,22 @@ ${doc.content}
         return documents;
     }
 
-    // ...existing code...
+    /**
+     * Integrate centralized compliance score into document generation workflow
+     * Call this before finalizing or publishing documents
+     * Notifies user in console logs
+     */
+    public async validateComplianceBeforePublish(documentType: string): Promise<void> {
+        const { score, missing } = await this.getCentralizedComplianceScore();
+        if (score !== "Compliant") {
+            console.warn(`⚠️ Compliance check failed for ${documentType}: ${score}`);
+            console.warn(`Please add the following compliance documents to 'generated-documents/compliance': ${missing.join(", ")}`);
+            // Optionally, throw error or halt publish
+            throw new Error(`Compliance requirements not met. Missing: ${missing.join(", ")}`);
+        } else {
+            console.log(`✅ Compliance check passed for ${documentType}. All required compliance documents are present.`);
+        }
+    }
 }
 
 // Version export for tracking

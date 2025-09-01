@@ -206,7 +206,7 @@ export class InteractiveMenuSystem extends EventEmitter {
         }
 
         const sanitizedChoice = result.value!;
-        
+
         // Handle special navigation commands
         switch (sanitizedChoice) {
           case 'back':
@@ -219,25 +219,39 @@ export class InteractiveMenuSystem extends EventEmitter {
             return;
           case 'help':
           case '?':
-            await this.showNavigationHelp();
-            continue;
-          case 'exit':
-          case 'quit':
-          case 'q':
-            await this.stop();
-            process.exit(0);
-            return;
-          case 'status':
-          case 's':
-            await this.showSystemStatus();
-            continue;
-          case 'refresh':
-          case 'r':
-            await this.loadSystemStatus();
-            await this.renderMenu(menu);
-            continue;
+            // Handle special navigation commands
+            switch (String(sanitizedChoice)) {
+              case 'back':
+              case 'b':
+                await this.goBack();
+                return;
+              case 'home':
+              case 'h':
+                await this.goHome();
+                return;
+              case 'help':
+              case '?':
+                await this.showNavigationHelp();
+                continue;
+              case 'exit':
+              case 'quit':
+              case 'q':
+                await this.stop();
+                process.exit(0);
+                return;
+              case 'status':
+              case 's':
+                await this.showSystemStatus();
+                continue;
+              case 'refresh':
+              case 'r':
+                await this.loadSystemStatus();
+                await this.renderMenu(menu);
+                continue;
+            }
+            break;
         }
-        
+
         // Handle numeric menu selections
         const selectedItem = menu.items.find(item => item.key === sanitizedChoice);
         if (!selectedItem) {
@@ -245,131 +259,21 @@ export class InteractiveMenuSystem extends EventEmitter {
           console.log('❌ Invalid choice. Please try again.');
           continue;
         }
-
-        if (!selectedItem.enabled) {
+        if (selectedItem && !selectedItem.enabled) {
           console.log('⚠️  This option is currently disabled.');
           console.log('💡 Check system status or configuration to enable this option.');
           await this.pause();
           continue;
         }
-
-        // Execute the menu action with error handling
-        const success = await this.executeMenuActionWithErrorHandling(selectedItem.action, menu.id);
-        if (success) {
-          return; // Action completed successfully
+        // Execute the menu action
+        if (selectedItem && selectedItem.action) {
+          await this.executeMenuAction(selectedItem.action);
         }
-        // If action failed, continue the menu loop
-        
+        return; // Action completed successfully
       } catch (error) {
-        const context: ErrorContext = {
-          operation: 'menu input handling',
-          menuId: menu.id,
-          timestamp: new Date()
-        };
-        
-        const interactiveError = InteractiveErrorHandler.handleUnknownError(error as Error, context);
-        await InteractiveErrorHandler.displayError(interactiveError);
-        
-        const action = await InteractiveErrorHandler.getRecoveryAction(interactiveError, this.promptForChoice.bind(this));
-        
-        switch (action) {
-          case 'retry':
-            continue;
-          case 'back':
-            await this.goBack();
-            return;
-          case 'exit':
-            await this.stop();
-            process.exit(0);
-            return;
-          case 'help':
-            await this.showNavigationHelp();
-            continue;
-        }
+        console.error('❌ Error in menu input:', error);
       }
     }
-  }
-
-  /**
-   * Execute a menu action with enhanced error handling
-   */
-  private async executeMenuActionWithErrorHandling(action: MenuAction, menuId: string): Promise<boolean> {
-    const context: ErrorContext = {
-      operation: `execute ${action.type} action`,
-      menuId,
-      timestamp: new Date()
-    };
-
-    try {
-      switch (action.type) {
-        case 'navigate':
-          if (action.target) {
-            await this.navigateTo(action.target);
-            return true;
-          }
-          break;
-
-        case 'function':
-          if (action.handler) {
-            await this.executeFunctionWithErrorHandling(action.handler, context);
-            return true;
-          }
-          break;
-
-        case 'command':
-          if (action.command) {
-            await this.executeCommandWithErrorHandling(action.command, action.args || [], context);
-            return true;
-          }
-          break;
-
-        default:
-          console.log('❌ Unknown action type');
-          return false;
-      }
-    } catch (error) {
-      const interactiveError = InteractiveErrorHandler.handleUnknownError(error as Error, context);
-      await InteractiveErrorHandler.displayError(interactiveError);
-      
-      const recoveryAction = await InteractiveErrorHandler.getRecoveryAction(interactiveError, this.promptForChoice.bind(this));
-      
-      switch (recoveryAction) {
-        case 'retry':
-          return await this.executeMenuActionWithErrorHandling(action, menuId);
-        case 'back':
-          await this.goBack();
-          return true;
-        case 'exit':
-          await this.stop();
-          process.exit(0);
-          return true;
-        case 'help':
-          await this.showNavigationHelp();
-          return false;
-        default:
-          return false;
-      }
-    }
-    
-    return false;
-  }
-
-  /**
-   * Execute a menu action (legacy method for backward compatibility)
-   */
-  private async executeMenuAction(action: MenuAction): Promise<void> {
-    await this.executeMenuActionWithErrorHandling(action, this.currentMenu || 'unknown');
-  }
-
-  /**
-   * Execute a function handler with error handling
-   */
-  private async executeFunctionWithErrorHandling(handlerName: string, context: ErrorContext): Promise<void> {
-  await InteractiveErrorHandler.withErrorHandling(
-      () => this.executeFunction(handlerName),
-      { ...context, operation: `execute function ${handlerName}` },
-      this.promptForChoice.bind(this)
-    );
   }
 
   /**
@@ -499,6 +403,35 @@ export class InteractiveMenuSystem extends EventEmitter {
     // Return to current menu after command execution
     if (this.currentMenu) {
       await this.navigateTo(this.currentMenu);
+    }
+  }
+
+  /**
+   * Execute a menu action
+   */
+  private async executeMenuAction(action: MenuAction): Promise<void> {
+    try {
+      switch (action.type) {
+        case 'navigate':
+          if (action.target) {
+            await this.navigateTo(action.target);
+          }
+          break;
+        case 'function':
+          if (action.handler) {
+            await this.executeFunction(action.handler);
+          }
+          break;
+        case 'command':
+          if (action.command) {
+            await this.executeCommand(action.command, action.args || []);
+          }
+          break;
+        default:
+          console.log('❌ Unknown action type');
+      }
+    } catch (error) {
+      console.error('❌ Error executing menu action:', error);
     }
   }
 

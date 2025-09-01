@@ -290,12 +290,23 @@
     "dependencies": [],
     "priority": 13
   },
-  "project-charter": {
+"project-charter": {
     "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
     "dependencies": [ 
       "stakeholder-register",
       "project-scope-statement",
-      "risk-register"
+      "risk-register",
+      "milestone-list",
+      "business-case",
+      "strategic-business-case",
+      "stakeholder-engagement-plan",
+      "communication-management-plan",
+      "schedule-management-plan",
+      "resource-management-plan",
+      "risk-management-plan",
+      "work-breakdown-structure",
+      "project-schedule",
+      "project-management-plan"
     ],
     "priority": 100
   },

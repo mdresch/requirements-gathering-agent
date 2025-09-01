@@ -430,14 +430,18 @@ export class EnhancedPromptService {
       process.once('SIGINT', handleCancel);
 
       if (mask) {
+        console.log('[DEBUG] getInput: Using masked input (raw mode, data listener)');
         // For password input, use a different approach
         this.getMaskedInput(displayMessage).then(handleInput).catch(() => handleCancel());
       } else if (multiline) {
+        console.log('[DEBUG] getInput: Using multiline input');
         // For multiline input
         this.getMultilineInput(displayMessage).then(handleInput).catch(() => handleCancel());
       } else {
-        // Standard input
+        console.log('[DEBUG] getInput: Using standard input (readline only)');
+        // Standard input: use only readline, do not set raw mode or add 'data' listeners
         this.rl.question(displayMessage, (input) => {
+          console.log('[DEBUG] getInput readline callback fired. Input:', input);
           // Restore original SIGINT listeners
           process.removeAllListeners('SIGINT');
           originalListeners.forEach(listener => process.on('SIGINT', listener));
@@ -462,6 +466,12 @@ export class EnhancedPromptService {
       let input = '';
       
       const onData = (char: string) => {
+        // Only process single printable characters, ignore buffered/duplicate input
+        if (char.length === 1 && char.charCodeAt(0) >= 32 && char.charCodeAt(0) <= 126) {
+          input += char;
+          process.stdout.write('*');
+          return;
+        }
         switch (char) {
           case '\n':
           case '\r':
@@ -484,16 +494,12 @@ export class EnhancedPromptService {
               process.stdout.write('\b \b');
             }
             break;
-          default:
-            if (char.charCodeAt(0) >= 32) { // Printable characters
-              input += char;
-              process.stdout.write('*');
-            }
-            break;
         }
       };
       
-      stdin.on('data', onData);
+  // Remove any existing 'data' listeners before adding new input
+  stdin.removeAllListeners('data');
+  stdin.on('data', onData);
     });
   }
 

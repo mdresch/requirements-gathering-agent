@@ -791,57 +791,7 @@ export class ComplianceValidationService {
         }
       ],
       regulatoryFrameworks: [
-        {
-          frameworkId: 'GDPR',
-          name: 'General Data Protection Regulation',
-          jurisdiction: 'EU',
-          applicableIndustries: ['ALL'],
-          requirements: [
-            {
-              requirementId: 'GDPR-001',
-              description: 'Data protection by design and by default',
-              compliant: false,
-              evidence: [],
-              gaps: []
-            },
-            {
-              requirementId: 'GDPR-002',
-              description: 'Privacy impact assessment',
-              compliant: false,
-              evidence: [],
-              gaps: []
-            },
-            {
-              requirementId: 'GDPR-003',
-              description: 'Data subject rights',
-              compliant: false,
-              evidence: [],
-              gaps: []
-            }
-          ]
-        },
-        {
-          frameworkId: 'SOX',
-          name: 'Sarbanes-Oxley Act',
-          jurisdiction: 'US',
-          applicableIndustries: ['FINANCIAL_SERVICES'],
-          requirements: [
-            {
-              requirementId: 'SOX-001',
-              description: 'Internal controls over financial reporting',
-              compliant: false,
-              evidence: [],
-              gaps: []
-            },
-            {
-              requirementId: 'SOX-002',
-              description: 'Management assessment of controls',
-              compliant: false,
-              evidence: [],
-              gaps: []
-            }
-          ]
-        }
+  // GDPR and SOX frameworks removed as requested
       ],
       enterpriseStandards: [
         {

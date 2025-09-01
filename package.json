@@ -1,6 +1,6 @@
 {
   "name": "adpa-enterprise-framework-automation",
-  "version": "3.2.7",
+  "version": "3.2.8",
   "description": "Modular, standards-compliant Node.js/TypeScript automation framework for enterprise requirements, project, and data management. Provides CLI and API for BABOK v3, PMBOK 7th Edition, and DMBOK 2.0 (in progress). Production-ready Express.js API with TypeSpec architecture. Designed for secure, scalable, and maintainable enterprise automation.",
   "main": "dist/server.js",
   "type": "module",
