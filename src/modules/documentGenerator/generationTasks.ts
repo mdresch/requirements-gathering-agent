@@ -11,6 +11,59 @@ import { DOCUMENT_CONFIG } from '../fileManager.js';
  */
 export const GENERATION_TASKS: GenerationTask[] = [
   {
+    key: 'new-test-doc',
+    name: 'New Test Doc',
+    category: 'quality-assurance',
+    func: 'generateNewTestDoc',
+    emoji: '🧪',
+    priority: 999,
+    pmbokRef: 'Quality Assurance: New Test Doc',
+    dependencies: []
+  },
+  {
+    key: 'implementation-guides',
+    name: 'Implementation Guides',
+    category: 'dmbok',
+    func: 'generateImplementationGuides',
+    emoji: '📘',
+    priority: 23,
+    pmbokRef: 'DMBOK: Implementation Guides',
+    dependencies: []
+  },
+  // --- Added missing processor keys ---
+  {
+    key: 'risk-compliance-assessment',
+    name: 'Risk Compliance Assessment',
+    category: 'compliance',
+    func: 'generateRiskComplianceAssessment',
+    emoji: '🛡️',
+    priority: 20,
+    pmbokRef: 'PMBOK: Risk Compliance Assessment',
+    dependencies: []
+  },
+  {
+    key: 'assumptions-log',
+    name: 'Assumptions Log',
+    category: 'planning',
+    func: 'generateAssumptionsLog',
+    emoji: '📓',
+    priority: 21,
+    pmbokRef: 'PMBOK: Assumptions Log',
+    dependencies: []
+  },
+  {
+    key: 'data-architecture-quality',
+    name: 'Data Architecture & Quality',
+    category: 'dmbok',
+    func: 'generateDataArchitectureQuality',
+    emoji: '🏗️',
+    priority: 22,
+    pmbokRef: 'DMBOK: Data Architecture & Quality',
+    dependencies: []
+  },
+  // Placeholder for implementation-guides (category, not a task key)
+  // If you have a specific document for implementation-guides, add it here as a GenerationTask.
+  {
     key: 'program-change-request-form',
     name: 'Program Change Request Form',
     category: 'pppm',
@@ -51,16 +104,15 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 1,
     dependencies: []
   },
-  // DMBOK Data Architecture & Quality
   {
-    key: 'data-architecture-quality',
-    name: 'Data Architecture & Quality',
+    key: 'dmbok-data-management-strategy',
+    name: 'DMBOK Data Management Strategy',
     category: 'dmbok',
-    func: 'generateDataArchitectureQuality',
-    emoji: '🏗️',
-    priority: 19,
-    pmbokRef: 'DMBOK: Data Architecture & Quality',
-    dependencies: ['data-architecture-modeling-guide', 'data-quality-management-plan']
+    func: 'generateDmbokDataManagementStrategy',
+    emoji: '🗺️',
+    priority: 18,
+    pmbokRef: 'DMBOK: Data Management Strategy',
+    dependencies: [],
   },
   // DMBOK Data Governance Framework
   {
@@ -988,7 +1040,38 @@ export const GENERATION_TASKS: GenerationTask[] = [
     priority: 22,
     pmbokRef: 'PMBOK: Detailed Planning Artifacts',
     dependencies: []
-  }
+    },
+    // --- Added missing processor keys ---
+    {
+      key: 'risk-compliance-assessment',
+      name: 'Risk Compliance Assessment',
+      category: 'compliance',
+      func: 'generateRiskComplianceAssessment',
+      emoji: '🛡️',
+      priority: 900,
+      pmbokRef: 'PMBOK: Risk Compliance Assessment',
+      dependencies: []
+    },
+    {
+      key: 'assumptions-log',
+      name: 'Assumptions Log',
+      category: 'planning',
+      func: 'generateAssumptionsLog',
+      emoji: '📓',
+      priority: 901,
+      pmbokRef: 'PMBOK: Assumptions Log',
+      dependencies: []
+    },
+    {
+      key: 'data-architecture-quality',
+      name: 'Data Architecture & Quality',
+      category: 'dmbok',
+      func: 'generateDataArchitectureQuality',
+      emoji: '🏗️',
+      priority: 902,
+      pmbokRef: 'DMBOK: Data Architecture & Quality',
+      dependencies: []
+    },
 ];
 
 /**

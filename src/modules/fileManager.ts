@@ -109,6 +109,69 @@ export const DOCUMENT_CATEGORIES = {
 
 // Document configuration with proper categorization
 export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
+    'implementation-guides': {
+        title: 'Implementation Guides',
+        filename: 'dmbok/implementation-guides.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Comprehensive implementation guides for DMBOK best practices.',
+        generatedAt: ''
+    },
+    'benefits-realization-plan': {
+        title: 'Benefits Realization Plan',
+        filename: 'strategic-statements/benefits-realization-plan.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
+        description: 'Plan for tracking and realizing project benefits.',
+        generatedAt: ''
+    },
+    'value-proposition': {
+        title: 'Value Proposition',
+        filename: 'strategic-statements/value-proposition.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
+        description: 'Defines the project value proposition.',
+        generatedAt: ''
+    },
+    'strategic-success-metrics': {
+        title: 'Strategic Success Metrics',
+        filename: 'strategic-statements/strategic-success-metrics.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
+        description: 'Metrics for measuring strategic success.',
+        generatedAt: ''
+    },
+    'strategic-roadmap': {
+        title: 'Strategic Roadmap',
+        filename: 'strategic-statements/strategic-roadmap.md',
+        category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS,
+        description: 'High-level strategic roadmap for project delivery.',
+        generatedAt: ''
+    },
+    'stakeholder-needs-analysis': {
+        title: 'Stakeholder Needs Analysis',
+        filename: 'stakeholder-management/stakeholder-needs-analysis.md',
+        category: DOCUMENT_CATEGORIES.STAKEHOLDER_MANAGEMENT,
+        description: 'Analysis of stakeholder needs and expectations.',
+        generatedAt: ''
+    },
+    'risk-compliance-assessment': {
+        title: 'Risk Compliance Assessment',
+        filename: 'compliance/risk-compliance-assessment.md',
+        category: DOCUMENT_CATEGORIES.RISK_MANAGEMENT,
+        description: 'Assessment of risk and compliance for the project.',
+        generatedAt: ''
+    },
+    'assumptions-log': {
+        title: 'Assumptions Log',
+        filename: 'planning/assumptions-log.md',
+        category: DOCUMENT_CATEGORIES.PLANNING,
+        description: 'Log of project assumptions.',
+        generatedAt: ''
+    },
+    'dmbok-data-management-strategy': {
+        title: 'DMBOK Data Management Strategy',
+        filename: 'dmbok/data-management-strategy.md',
+        category: DOCUMENT_CATEGORIES.DMBOK,
+        description: 'Strategy for data management in alignment with DMBOK.',
+        generatedAt: ''
+    },
     'strategic-alignment': {
         title: 'Strategic Alignment Document',
         filename: 'strategic-statements/strategic-alignment.md',

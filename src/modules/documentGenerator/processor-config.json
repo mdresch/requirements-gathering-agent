@@ -1,4 +1,9 @@
-{ 
+{
+  "new-test-doc": {
+    "module": "../documentTemplates/quality-assurance/NewTestDocProcessor.ts#NewTestDocProcessor",
+    "dependencies": [],
+    "priority": 999
+  },
   "project-status-report": {
     "module": "../documentTemplates/pppm/ProjectStatusReportProcessor.ts#ProjectStatusReportProcessor",
     "dependencies": [],
@@ -262,7 +267,7 @@
   },
   "stakeholder-needs-analysis": {
     "module": "../documentTemplates/stakeholder-management/StakeholderNeedsAnalysisProcessor.ts#StakeholderNeedsAnalysisProcessor",
-    "dependencies": [" stakeholder-register"],
+    "dependencies": ["stakeholder-register"],
     "priority": 16
   },
   "project-scope-statement": {
@@ -289,36 +294,6 @@
     "module": "../documentTemplates/risk-management/RiskregisterProcessor.ts#RiskregisterProcessor",
     "dependencies": [],
     "priority": 13
-  },
-"project-charter": {
-    "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
-    "dependencies": [ 
-      "stakeholder-register",
-      "project-scope-statement",
-      "risk-register",
-      "milestone-list",
-      "business-case",
-      "strategic-business-case",
-      "stakeholder-engagement-plan",
-      "communication-management-plan",
-      "schedule-management-plan",
-      "resource-management-plan",
-      "risk-management-plan",
-      "work-breakdown-structure",
-      "project-schedule",
-      "project-management-plan"
-    ],
-    "priority": 100
-  },
-  "assumptions-log": {
-    "module": "../documentTemplates/project-charter/AssumptionsLogProcessor.ts#AssumptionsLogProcessor",
-    "dependencies": [
-      "business-case",
-      "stakeholder-register",
-      "scope-statement",
-      "risk-register"
-    ],
-    "priority": 95
   },
   "schedule-management-plan": {
     "module": "../documentTemplates/planning/SchedulemanagementplanProcessor.ts#SchedulemanagementplanProcessor",
@@ -348,7 +323,7 @@
   "risk-management-plan": {
     "module": "../documentTemplates/risk-management/RiskmanagementplanProcessor.ts#RiskmanagementplanProcessor",
     "dependencies": [],
-    "priority": 999
+    "priority": 15
   },
   "risk-compliance-assessment": {
     "module": "../documentTemplates/risk-management/RiskComplianceAssessmentProcessor.ts#RiskComplianceAssessmentProcessor",
@@ -387,6 +362,35 @@
     "module": "../documentTemplates/pmbok/DevelopprojectcharterProcessor.ts#DevelopprojectcharterProcessor",
     "dependencies": [],
     "priority": 999
+  },
+"project-charter": {
+    "module": "../documentTemplates/project-charter/ProjectcharterProcessor.ts#ProjectcharterProcessor",
+    "dependencies": [ 
+      "stakeholder-register",
+      "project-scope-statement",
+      "risk-register",
+      "milestone-list",
+      "business-case",
+      "strategic-business-case",
+      "stakeholder-engagement-plan",
+      "communication-management-plan",
+      "schedule-management-plan",
+      "resource-management-plan",
+      "risk-management-plan",
+      "work-breakdown-structure",
+      "project-management-plan"
+    ],
+    "priority": 100
+  },
+  "assumptions-log": {
+    "module": "../documentTemplates/project-charter/AssumptionsLogProcessor.ts#AssumptionsLogProcessor",
+    "dependencies": [
+      "business-case",
+      "stakeholder-register",
+      "scope-statement",
+      "risk-register"
+    ],
+    "priority": 95
   },
   "validate-scope-process": {
     "module": "../documentTemplates/pmbok/ValidatescopeprocessProcessor.ts#ValidatescopeprocessProcessor",
@@ -654,7 +658,7 @@
     "priority": 999
   },
   "dmbok-data-management-strategy": {
-    "module": "../documentTemplates/dmbok/dataManagementStrategyProcessor.ts#DataManagementStrategyProcessor",
+  "module": "../documentTemplates/dmbok/dataManagementStrategyProcessor.ts#DataManagementStrategyProcessor",
     "dependencies": [],
     "priority": 2
   },

@@ -21,9 +21,14 @@
 
 import { AIProcessor } from './ai/AIProcessor.js';
 import { findRelevantMarkdownFiles } from './projectAnalyzer.js';
-import * as fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import * as fsSync from 'fs';
-import * as path from 'path';
+import * as fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Define the ProjectMarkdownFile type locally to avoid circular dependencies
 interface ProjectMarkdownFile {
@@ -233,60 +238,32 @@ export class ContextManager {
     }
 
     private initializeDocumentRelationships() {
-        this.documentRelationships.set('user-stories', ['personas', 'summary', 'key-roles']);
-        this.documentRelationships.set('project-charter', ['summary', 'scope-plan', 'stakeholder-register']);
-        this.documentRelationships.set('risk-management-plan', ['project-charter', 'scope-plan', 'tech-stack', 'quality-plan']);
-        this.documentRelationships.set('quality-management-plan', ['requirements', 'tech-stack', 'user-stories', 'acceptance-criteria', 'ui-ux-considerations']);
-        this.documentRelationships.set('stakeholder-register', ['project-charter', 'communication-plan', 'stakeholder-analysis']);
-        this.documentRelationships.set('scope-management-plan', ['project-charter', 'user-stories', 'wbs', 'requirements']);
-        this.documentRelationships.set('wbs', ['scope-management', 'activity-list', 'resource-estimates']);
-        this.documentRelationships.set('wbs-dictionary', ['wbs', 'scope-management', 'project-charter']);
-        this.documentRelationships.set('activity-list', ['wbs', 'wbs-dictionary', 'scope-management']);
-        this.documentRelationships.set('activity-duration-estimates', ['activity-list', 'wbs', 'resource-estimates']);
-        this.documentRelationships.set('activity-resource-estimates', ['activity-list', 'wbs', 'tech-stack', 'resource-management']);
-        this.documentRelationships.set('schedule-network-diagram', ['activity-list', 'duration-estimates', 'wbs']);
-        this.documentRelationships.set('milestone-list', ['activity-list', 'wbs', 'project-charter', 'scope-management']);
-        this.documentRelationships.set('schedule-development-input', ['activity-list', 'duration-estimates', 'resource-estimates', 'milestone-list', 'network-diagram']);
-        this.documentRelationships.set('communication-plan', ['stakeholder-register', 'stakeholder-analysis', 'project-charter']);
-        this.documentRelationships.set('communication-management-plan', ['stakeholder-register', 'project-charter', 'stakeholder-engagement']);
-        this.documentRelationships.set('cost-management-plan', ['project-charter', 'resource-estimates', 'wbs', 'activity-list']);
-        this.documentRelationships.set('resource-management-plan', ['project-charter', 'resource-estimates', 'activity-list', 'stakeholder-register']);
-        this.documentRelationships.set('procurement-management-plan', ['project-charter', 'resource-estimates', 'tech-stack', 'cost-management']);
-        this.documentRelationships.set('stakeholder-engagement-plan', ['stakeholder-register', 'communication-management', 'project-charter']);
-        this.documentRelationships.set('tech-stack-analysis', ['data-model', 'user-stories', 'compliance', 'ui-ux-considerations', 'project-charter']);
-        this.documentRelationships.set('data-model-suggestions', ['tech-stack', 'user-stories', 'compliance', 'project-charter']);
-        this.documentRelationships.set('risk-analysis', ['project-charter', 'tech-stack', 'scope-management', 'stakeholder-register']);
-        this.documentRelationships.set('acceptance-criteria', ['user-stories', 'quality-management', 'compliance', 'project-charter']);
-        this.documentRelationships.set('compliance-considerations', ['project-charter', 'tech-stack', 'data-model', 'stakeholder-register']);
-        this.documentRelationships.set('ui-ux-considerations', ['user-stories', 'personas', 'tech-stack', 'acceptance-criteria', 'project-charter', 'stakeholder-register', 'quality-management-plan', 'communication-management-plan']);
-        this.documentRelationships.set('ui-ux-considerations', ['user-stories', 'personas', 'tech-stack', 'acceptance-criteria']);
         
-        // Technical Recommendations relationships
-        this.documentRelationships.set('technical-recommendations', ['project-charter', 'stakeholder-register', 'requirements-documentation', 'tech-stack-analysis', 'risk-analysis']);
-        this.documentRelationships.set('technology-selection-criteria', ['technical-recommendations', 'project-charter', 'quality-management-plan', 'risk-management-plan']);
-        this.documentRelationships.set('technical-implementation-roadmap', ['technical-recommendations', 'technology-selection-criteria', 'schedule-management-plan', 'resource-management-plan']);
-        this.documentRelationships.set('technology-governance-framework', ['technical-recommendations', 'stakeholder-register', 'project-charter', 'communication-management-plan']);
-        this.documentRelationships.set('user-personas', ['summary', 'project-charter', 'key-roles']);
-        this.documentRelationships.set('key-roles-and-needs', ['summary', 'project-charter', 'stakeholder-register', 'user-stories']);
-        this.documentRelationships.set('mission-vision-core-values', ['project-charter', 'summary', 'stakeholder-register']);
-        this.documentRelationships.set('project-purpose', ['project-charter', 'summary', 'business-case']);
-        this.documentRelationships.set('project-kickoff-preparations-checklist', ['project-charter', 'stakeholder-register', 'resource-management-plan']);
-        // DMBOK Data Management Strategy relationships
-        this.documentRelationships.set('dmbok-data-management-strategy', ['project-charter', 'quality-management-plan']);
-        // Data Governance Plan relationships (DMBOK)
-        this.documentRelationships.set('data-governance-plan', ['dmbok-data-management-strategy', 'project-charter', 'stakeholder-register', 'compliance-considerations']);
-        // Data Governance Framework relationships (DMBOK)
-        this.documentRelationships.set('data-governance-framework', ['dmbok-data-management-strategy', 'project-charter']);
-
-        // Data Quality Management Plan relationships (DMBOK)
-        this.documentRelationships.set('data-quality-management-plan', [
-            'dmbok-data-management-strategy',
-            'data-governance-plan',
-            'project-charter',
-            'stakeholder-register',
-            'quality-management-plan',
-            'compliance-considerations'
-        ]);
+        // Load relationships from processor-config.json using ESM-compatible path resolution
+        const configPath = path.resolve(__dirname, '../../processor-config.json');
+        let processorConfigRaw = '{}';
+        try {
+            processorConfigRaw = readFileSync(configPath, 'utf-8');
+        } catch (e) {
+            console.warn('Could not read processor-config.json:', e);
+        }
+        let processorConfig: Record<string, any> = {};
+        try {
+            processorConfig = JSON.parse(processorConfigRaw);
+        } catch (e) {
+            console.warn('Could not parse processor-config.json:', e);
+        }
+        Object.keys(processorConfig).forEach(key => {
+            if (key !== 'lastSetup') {
+                const entry = processorConfig[key];
+                if (entry && entry.dependencies && Array.isArray(entry.dependencies)) {
+                    this.documentRelationships.set(key, entry.dependencies);
+                } else {
+                    this.documentRelationships.set(key, []);
+                }
+            }
+        });
+        
     }
 
     private estimateTokens(text: string): number {
@@ -334,8 +311,8 @@ export class ContextManager {
             // --- NEW: Load dependencies from processor-config.json and prioritize them ---
             let processorConfig;
             try {
-                const configPath = path.resolve(__dirname, './documentGenerator/processor-config.json');
-                const configRaw = fsSync.readFileSync(configPath, 'utf-8');
+                const configPath = path.resolve(__dirname, '../../processor-config.json');
+                const configRaw = readFileSync(configPath, 'utf-8');
                 processorConfig = JSON.parse(configRaw);
             } catch (err) {
                 processorConfig = {};
