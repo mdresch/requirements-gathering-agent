@@ -10,7 +10,7 @@ export const PROMPT_ADJUSTMENT_REPORT_FILENAME: string = 'prompt-adjustment-repo
 export const PACKAGE_JSON_FILENAME: string = 'package.json';
 export const TSCONFIG_JSON_FILENAME: string = 'tsconfig.json';
 export const README_FILENAME: string = 'README.md';
-export const PROCESSOR_CONFIG_FILENAME: string = 'src/modules/documentGenerator/processor-config.json';
+export const PROCESSOR_CONFIG_FILENAME: string = 'processor-config.json';
 export const TEMPLATES_FILENAME: string = 'templates.json';
 
 // Retry and timing constants

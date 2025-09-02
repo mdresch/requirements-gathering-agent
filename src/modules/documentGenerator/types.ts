@@ -72,6 +72,7 @@ export interface GenerationResult {
     duration: number;
     /** Optional error details */
     error?: string;
+    improvements?: string[];
     /** Individual results for each task */
     taskResults?: {
         [key: string]: {

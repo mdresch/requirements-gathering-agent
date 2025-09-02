@@ -747,7 +747,7 @@ async function analyzeWorkspace(): Promise<void> {
 
   // Parse processor-config.json
   try {
-    const procConfigPath = path.join(cwd, PROCESSOR_CONFIG_FILENAME);
+    const procConfigPath = path.join(cwd, 'processor-config.json');
     const procConfigRaw = await fs.readFile(procConfigPath, 'utf-8');
     const procConfig = JSON.parse(procConfigRaw);
     summary.push(`\n🧩 processor-config.json loaded: ${Object.keys(procConfig).length} keys`);

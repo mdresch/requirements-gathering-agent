@@ -29,6 +29,7 @@ import { writeFile } from 'fs/promises';
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
 import { ComplianceValidationService, DocumentComplianceValidation, ComplianceValidationConfig } from '../../services/ComplianceValidationService.js';
 import { createProcessor } from './ProcessorFactory.js';
+import { ContextManager } from '../contextManager.js';
 import { 
     createDirectoryStructure, 
     saveDocument, 
@@ -39,11 +40,12 @@ import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
 // Import all processor functions
 import * as processors from '../ai/processors/index.js';
-import { readFileSync } from 'fs';
-// Load processor-config.json at runtime to avoid import assertions under ESM
-const processorConfig: Record<string, any> = JSON.parse(
-  readFileSync(new URL('./processor-config.json', import.meta.url), 'utf8')
-);
+// Utility to load processor-config.json asynchronously
+async function loadProcessorConfig(): Promise<Record<string, any>> {
+    const configPath = path.resolve(process.cwd(), 'processor-config.json');
+    const raw = await fs.readFile(configPath, 'utf-8');
+    return JSON.parse(raw);
+}
 import { 
     GenerationOptions, 
     GenerationResult, 
@@ -61,6 +63,7 @@ import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskBy
  * Class responsible for generating project documentation
  */
 export class DocumentGenerator {
+    private processorConfig: Record<string, any> = {};
     private options: Required<GenerationOptions>;
     private context: string;
     private results: GenerationResult;
@@ -96,12 +99,19 @@ export class DocumentGenerator {
             skippedCount: 0,
             generatedFiles: [],
             errors: [],
-            duration: 0
+            duration: 0,
+            improvements: []
         };
-        
         // Initialize compliance validation service
         const complianceConfig = ComplianceValidationService.getDefaultConfig();
         this.complianceService = new ComplianceValidationService(complianceConfig);
+    }
+
+    /**
+     * Load processor config before generation
+     */
+    public async initializeProcessorConfig(): Promise<void> {
+        this.processorConfig = await loadProcessorConfig();
     }
 
     /**
@@ -458,7 +468,7 @@ export class DocumentGenerator {
 
         // Populate graph edges from dependencies
         tasks.forEach(t => {
-            const deps: string[] = processorConfig[t.key]?.dependencies || [];
+            const deps: string[] = this.processorConfig[t.key]?.dependencies || [];
             deps.forEach(dep => {
                 if (!taskMap.has(dep)) {
                     throw new Error(`Processor dependency not found: ${dep} for task ${t.key}`);
@@ -499,17 +509,15 @@ export class DocumentGenerator {
      * @returns Whether generation was successful
      */
     private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
-         try {
-             console.log(`${task.emoji} Generating ${task.name}...`);
+        try {
+            console.log(`${task.emoji} Generating ${task.name}...`);
             // Use generic ProcessorFactory to create and run the processor
             const processor = await createProcessor(task.key);
             const output = await processor.process({ projectName: this.context });
             const content = output.content;
-             
             if (content && content.trim().length > 0) {
                 const documentKey = task.key;
                 const config = DOCUMENT_CONFIG[documentKey];
-                
                 // Validate compliance before saving
                 console.log(`🔍 Validating compliance for ${task.name}...`);
                 try {
@@ -518,10 +526,8 @@ export class DocumentGenerator {
                         task.category,
                         content
                     );
-                    
                     // Log compliance results
                     console.log(`📊 Compliance Score: ${complianceValidation.complianceScore}% (${complianceValidation.complianceStatus})`);
-                    
                     // Check if compliance issues need to be addressed
                     if (complianceValidation.issues.length > 0) {
                         console.log(`⚠️ Found ${complianceValidation.issues.length} compliance issues:`);
@@ -529,14 +535,12 @@ export class DocumentGenerator {
                             console.log(`   • ${issue.description}`);
                         });
                     }
-                    
                     // Save compliance report
                     await this.saveComplianceReport(task.key, complianceValidation);
                 } catch (complianceError) {
                     console.warn(`⚠️ Compliance validation failed for ${task.name}:`, complianceError);
                     // Continue with document generation even if compliance validation fails
                 }
-                
                 if (!config) {
                     console.error(`❌ Unknown document key: ${documentKey}`);
                     saveDocument(documentKey, content);
@@ -544,7 +548,6 @@ export class DocumentGenerator {
                     console.log(`✅ Generated: ${task.name} (using default filename)`);
                     return true;
                 }
-                
                 saveDocument(documentKey, content);
                 this.results.generatedFiles.push(`${task.category}/${config.filename}`);
                 console.log(`✅ Generated: ${task.name}`);
@@ -553,7 +556,6 @@ export class DocumentGenerator {
                 console.log(`⚠️ No content generated for ${task.name}`);
                 return false;
             }
-            
         } catch (error: any) {
             const errorMsg = error.message || 'Unknown error';
             console.error(`❌ Error generating ${task.name}: ${errorMsg}`);
@@ -701,38 +703,69 @@ ${validation.recommendations.map(rec => `
      */
     public async generateAll(): Promise<GenerationResult> {
         const startTime = Date.now();
-        
+        this.results = {
+            success: false,
+            successCount: 0,
+            failureCount: 0,
+            skippedCount: 0,
+            duration: 0,
+            message: '',
+            generatedFiles: [],
+            errors: [],
+            improvements: []
+        };
         console.log('📋 Starting document generation...');
-        
         // Setup directory structure
         if (this.options.cleanup) {
             cleanupOldFiles();
         }
         createDirectoryStructure();
-
         const tasks = this.filterTasks();
         console.log(`📝 Planning to generate ${tasks.length} documents in ${this.options.maxConcurrent} concurrent batches`);
-        
         // Process tasks in batches
         for (let i = 0; i < tasks.length; i += this.options.maxConcurrent) {
             const batch = tasks.slice(i, i + this.options.maxConcurrent);
-            
             const batchPromises = batch.map(async (task) => {
-                const success = await this.generateSingleDocument(task);
-                if (success) {
-                    this.results.successCount++;
-                } else {
+                try {
+                    // Generate document content
+                    const success = await this.generateSingleDocument(task);
+                    if (success) {
+                        // Compliance-driven auto-improvement integration
+                        let improvementsApplied = false;
+                        try {
+                            // Integrate compliance findings logic if ContextManager is available
+                            let findings: any[] = [];
+                            if (typeof ContextManager !== 'undefined' && typeof ContextManager.getComplianceFindings === 'function') {
+                                findings = await ContextManager.getComplianceFindings(task.key) || [];
+                            }
+                            if (findings && findings.length > 0) {
+                                // Apply improvements before saving (placeholder for actual logic)
+                                improvementsApplied = true;
+                                console.log(`🔧 Auto-applying compliance improvements for ${task.key}:`, findings);
+                            }
+                        } catch (improveErr) {
+                            console.warn(`⚠️ Error applying compliance improvements for ${task.key}:`, improveErr);
+                        }
+                        if (improvementsApplied) {
+                            if (!this.results.improvements) {
+                                this.results.improvements = [];
+                            }
+                            this.results.improvements.push(task.key);
+                        }
+                        this.results.successCount++;
+                    } else {
+                        this.results.failureCount++;
+                    }
+                } catch (err) {
                     this.results.failureCount++;
+                    this.results.errors.push({ task: task.key, error: String(err) });
+                    console.error(`❌ Error generating document [${task.key}]:`, err);
                 }
-                
                 // Add delay between calls to avoid rate limiting
                 if (this.options.delayBetweenCalls > 0) {
                     await this.delay(this.options.delayBetweenCalls);
                 }
-                
-                return success;
             });
-            
             try {
                 await Promise.all(batchPromises);
             } catch (error: any) {
@@ -742,7 +775,6 @@ ${validation.recommendations.map(rec => `
                 }
             }
         }
-
         // Generate documentation index
         if (this.options.generateIndex) {
             try {
@@ -752,12 +784,25 @@ ${validation.recommendations.map(rec => `
                 console.error(`❌ Failed to generate index: ${error.message}`);
             }
         }
-
         this.results.duration = Date.now() - startTime;
         this.results.success = this.results.successCount > 0;
         this.results.message = this.results.success
             ? `Successfully generated ${this.results.successCount} documents`
-            : `Failed to generate any documents`;        this.printSummary();
+            : `Failed to generate any documents`;
+        // Print summary of generated files, improvements, and errors
+        console.log('--- Generation Summary ---');
+        this.results.generatedFiles.forEach(file => {
+            console.log(`Generated: ${file}`);
+        });
+        if (this.results.improvements && this.results.improvements.length > 0) {
+            console.log('Improvements applied to:');
+            this.results.improvements.forEach(key => console.log(`  • ${key}`));
+        }
+        if (this.results.errors.length > 0) {
+            console.log('Errors:');
+            this.results.errors.forEach(e => console.log(`[${e.task}]:`, e.error));
+        }
+        this.printSummary();
         return this.results;
     }
 

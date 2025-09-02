@@ -58,6 +58,20 @@ function extractContent(response: any) {
 
 export class ContextManager {
     /**
+     * Static accessor for compliance findings for a given document key
+     * Returns an array of findings (criteria, recommendation, severity, etc.)
+     */
+    public static async getComplianceFindings(documentKey: string): Promise<any[]> {
+        // Use singleton instance to access findings
+        const instance = ContextManager.getInstance();
+        // Ensure findings are loaded
+        if (!instance.complianceFindings || instance.complianceFindings.length === 0) {
+            await instance.parseComplianceReviewReports();
+        }
+        // Filter findings for the requested document key
+        return instance.complianceFindings.filter(f => f.document === documentKey);
+    }
+    /**
      * Applies compliance findings to a document's context, auto-flagging and inserting recommendations
      * Returns improved context string
      */
@@ -240,7 +254,7 @@ export class ContextManager {
     private initializeDocumentRelationships() {
         
         // Load relationships from processor-config.json using ESM-compatible path resolution
-        const configPath = path.resolve(__dirname, '../../processor-config.json');
+    const configPath = path.resolve(process.cwd(), 'processor-config.json');
         let processorConfigRaw = '{}';
         try {
             processorConfigRaw = readFileSync(configPath, 'utf-8');
@@ -311,7 +325,7 @@ export class ContextManager {
             // --- NEW: Load dependencies from processor-config.json and prioritize them ---
             let processorConfig;
             try {
-                const configPath = path.resolve(__dirname, '../../processor-config.json');
+                const configPath = path.resolve(process.cwd(), 'processor-config.json');
                 const configRaw = readFileSync(configPath, 'utf-8');
                 processorConfig = JSON.parse(configRaw);
             } catch (err) {

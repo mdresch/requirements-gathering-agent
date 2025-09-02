@@ -458,7 +458,7 @@
     "priority": 999
   },
   "acceptance-criteria": {
-    "module": "../documentTemplates/requirements/AcceptancecriteriaProcessor.ts#AcceptancecriteriaProcessor",
+  "module": "../documentTemplates/requirements/AcceptanceCriteriaProcessor.ts#AcceptanceCriteriaProcessor",
     "dependencies": [],
     "priority": 999
   },

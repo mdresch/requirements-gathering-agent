@@ -2,9 +2,9 @@
 
 **Document:** security-testing  
 **Document Type:** quality-assurance  
-**Validation Date:** 2025-09-01T22:04:20.059Z  
-**Compliance Score:** 100%  
-**Compliance Status:** FULLY_COMPLIANT  
+**Validation Date:** 2025-09-02T07:16:33.925Z  
+**Compliance Score:** 92%  
+**Compliance Status:** MOSTLY_COMPLIANT  
 
 ## Executive Summary
 
@@ -12,9 +12,32 @@ This document has been validated against enterprise governance policies, regulat
 
 ## Governance Policy Compliance
 
-**Overall Compliance:** ✅ COMPLIANT  
-**Policy Checks:** 1  
-**Policy Violations:** 0  
+**Overall Compliance:** ❌ NON-COMPLIANT  
+**Policy Checks:** 5  
+**Policy Violations:** 4  
+
+
+### Policy Violations
+
+- **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Executive summary
+
+- **Mandatory requirement 'Clear objectives' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Clear objectives
+
+- **Mandatory requirement 'Stakeholder analysis' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Stakeholder analysis
+
+- **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Approval process
 
 
 
@@ -38,7 +61,31 @@ This document has been validated against enterprise governance policies, regulat
 
 ## Issues and Recommendations
 
-### Critical Issues (0)
+### Critical Issues (4)
+
+- **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Executive summary
+
+- **Mandatory requirement 'Clear objectives' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Clear objectives
+
+- **Mandatory requirement 'Stakeholder analysis' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Stakeholder analysis
+
+- **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Approval process
 
 
 ### Recommendations (0)

@@ -138,6 +138,27 @@ export class ProviderManager {
     const azureOpenAIKey: ProviderConfig = {
       name: 'azure-openai-key',
       check: async () => {
+
+          // Ollama Llama 3.2 (Local)
+          const ollamaProvider: ProviderConfig = {
+            name: 'ollama',
+            check: async () => {
+              const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+              try {
+                const response = await fetch(`${apiUrl}/api/tags`, { method: 'GET' });
+                return response.ok;
+              } catch (error) {
+                console.warn('Ollama check failed:', error instanceof Error ? error.message : String(error));
+                return false;
+              }
+            },
+            priority: 1,
+            description: 'Ollama Llama 3.2 (Local AI provider)',
+            endpoint: process.env.OLLAMA_API_URL || 'http://localhost:11434',
+            tokenLimit: 32768,
+            costPerToken: 0
+          };
+          this.addProvider(ollamaProvider);
         // Check for either AZURE_AI_* or AZURE_OPENAI_* variables
         const endpoint = process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT;
         const apiKey = process.env.AZURE_AI_API_KEY || process.env.AZURE_OPENAI_API_KEY;

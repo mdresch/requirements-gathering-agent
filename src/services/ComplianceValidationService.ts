@@ -318,21 +318,26 @@ export class ComplianceValidationService {
     );
 
     for (const policy of applicablePolicies) {
-      const check = await this.validatePolicy(policy, content);
-      policyChecks.push(check);
-
-      if (!check.compliant) {
-        if (policy.mandatory) {
+      // For each requirement, create a separate policy check and violation if missing
+      for (const requirement of policy.requirements) {
+        const compliant = this.contentContainsRequirement(content, requirement);
+        policyChecks.push({
+          policyId: `${policy.policyId}-${requirement.replace(/\s+/g, '-').toLowerCase()}`,
+          policyName: `${policy.name}: ${requirement}`,
+          compliant,
+          severity: policy.mandatory ? 'HIGH' : 'MEDIUM',
+          description: `Validation of ${requirement} in ${policy.name}`,
+          evidence: compliant ? [`Found evidence of: ${requirement}`] : []
+        });
+        if (!compliant) {
           policyViolations.push({
-            violationId: `violation-${policy.policyId}-${Date.now()}`,
-            policyId: policy.policyId,
+            violationId: `violation-${policy.policyId}-${requirement.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+            policyId: `${policy.policyId}-${requirement.replace(/\s+/g, '-').toLowerCase()}`,
             severity: 'HIGH',
-            description: `Mandatory policy '${policy.name}' not satisfied`,
+            description: `Mandatory requirement '${requirement}' of policy '${policy.name}' not satisfied`,
             impact: 'MAJOR',
-            remediation: `Ensure document includes required elements: ${policy.requirements.join(', ')}`
+            remediation: `Ensure document includes required element: ${requirement}`
           });
-        } else {
-          missingPolicies.push(policy.name);
         }
       }
     }
@@ -463,7 +468,7 @@ export class ComplianceValidationService {
     enterprise: EnterpriseStandardsValidation
   ): number {
     const governanceScore = governance.overallCompliance ? 100 : 
-      Math.max(0, 100 - (governance.policyViolations.length * 20));
+      Math.max(0, 100 - (governance.policyViolations.length * 5));
     
     const regulatoryScore = regulatory.overallCompliance ? 100 :
       Math.max(0, 100 - (regulatory.complianceGaps.length * 15));
