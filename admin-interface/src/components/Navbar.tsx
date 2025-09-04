@@ -1,17 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Settings, FileText, BarChart3, Users, HelpCircle, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const navItems = [
-    { href: '#templates', icon: FileText, label: 'Templates', active: true },
-    { href: '#analytics', icon: BarChart3, label: 'Analytics', active: false },
-    { href: '#users', icon: Users, label: 'Users', active: false },
-    { href: '#settings', icon: Settings, label: 'Settings', active: false },
+    { href: '/', icon: FileText, label: 'Templates' },
+    { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { href: '/users', icon: Users, label: 'Users' },
+    { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
@@ -69,24 +72,26 @@ export default function Navbar() {
             <div className="ml-10 flex items-baseline space-x-2">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
+                const isActive = pathname === item.href;
                 return (
-                  <motion.a
+                  <motion.div
                     key={item.href}
-                    href={item.href}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center transition-all duration-300 ${
-                      item.active
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                    }`}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
                   >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </motion.a>
+                    <Link
+                      href={item.href}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center transition-all duration-300 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                          : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.label}
+                    </Link>
+                  </motion.div>
                 );
               })}
             </div>
@@ -153,23 +158,27 @@ export default function Navbar() {
             <div className="px-4 pt-2 pb-3 space-y-1">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
+                const isActive = pathname === item.href;
                 return (
-                  <motion.a
+                  <motion.div
                     key={item.href}
-                    href={item.href}
-                    className={`flex items-center px-3 py-3 rounded-xl text-base font-medium transition-all duration-300 ${
-                      item.active
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                    }`}
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <Icon className="w-5 h-5 mr-3" />
-                    {item.label}
-                  </motion.a>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center px-3 py-3 rounded-xl text-base font-medium transition-all duration-300 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                          : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {item.label}
+                    </Link>
+                  </motion.div>
                 );
               })}
             </div>
