@@ -831,6 +831,11 @@
     "dependencies": [],
     "priority": 14
   },
+  "portfolio-dashboard": {
+    "module": "../documentTemplates/pppm/PortfolioDashboardProcessor.ts#PortfolioDashboardProcessor",
+    "dependencies": [],
+    "priority": 17
+  },
   "detailed-planning-artifacts": {
     "module": "../documentTemplates/planningArtifacts/DetailedPlanningArtifactsProcessor.ts#DetailedPlanningArtifactsProcessor",
     "dependencies": ["project-charter", "stakeholder-register"],

@@ -975,6 +975,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.PPPM,
         description: 'PMO/PMBOK-compliant detailed planning artifacts for program-level changes.',
         generatedAt: ''
+    },
+    'portfolio-dashboard': {
+        title: 'Portfolio Dashboard',
+        filename: 'pppm/portfolio-dashboard.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Aggregates and visualizes performance, health, risks, and benefits across multiple projects/programs.',
+        generatedAt: ''
     }
 };
 
