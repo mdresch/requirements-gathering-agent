@@ -355,41 +355,42 @@ export default function HomePage() {
               </motion.button>
             </motion.div>
           </motion.div>
+        </motion.div>
 
-          {/* Stats Section */}
-          <AnimatePresence>
-            {showStats && (
-              <motion.div 
-                className="mb-12"
-                initial={{ opacity: 0, height: 0, y: -20 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-              >
-                <TemplateStats />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Stats Section */}
+        <AnimatePresence>
+          {showStats && (
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <TemplateStats />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Filters Section */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div 
-                className="mb-12"
-                initial={{ opacity: 0, height: 0, y: -20 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-              >
-                <SearchFilters
-                  onSearch={handleSearch}
-                  initialParams={searchParams}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Filters Section */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div 
+              className="mb-12"
+              initial={{ opacity: 0, height: 0, y: -20 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <SearchFilters
+                onSearch={handleSearch}
+                initialParams={searchParams}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Main Content */}
+        {/* Main Content */}
           <motion.div 
             className="grid grid-cols-1 lg:grid-cols-3 gap-12"
             initial={{ opacity: 0, y: 30 }}

@@ -5,36 +5,6 @@ import templates from '../../../src/data/templates.json';
 import { BarChart3, FileText, Tags, Layers, Activity } from 'lucide-react';
 
 export default function TemplateStats() {
-<<<<<<< Updated upstream
-  const [stats, setStats] = useState<ExtendedTemplateStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await apiClient.getTemplateStats();
-        if (response.success && response.data) {
-          // Transform the basic stats into extended stats for the UI
-          const basicStats = response.data;
-          const extendedStats: ExtendedTemplateStats = {
-            ...basicStats,
-            totalTemplates: basicStats.total,
-            categoriesCount: Object.keys(basicStats.byCategory).length,
-            topCategories: Object.entries(basicStats.byCategory)
-              .map(([category, count]) => ({ category, count: count as number }))
-              .sort((a, b) => b.count - a.count),
-            topTags: Object.entries(basicStats.byType)
-              .map(([tag, count]) => ({ tag, count: count as number }))
-              .sort((a, b) => b.count - a.count),
-            recentActivity: [], // This would need to come from a different API endpoint
-          };
-          setStats(extendedStats);
-        }
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-      } finally {
-        setLoading(false);
-=======
   // Compute stats from local templates.json
   const stats = useMemo(() => {
     const totalTemplates = Array.isArray(templates) ? templates.length : 0;
@@ -43,7 +13,6 @@ export default function TemplateStats() {
     templates.forEach((tpl: any) => {
       if (tpl.category) {
         categories[tpl.category] = (categories[tpl.category] || 0) + 1;
->>>>>>> Stashed changes
       }
       if (Array.isArray(tpl.tags)) {
         tpl.tags.forEach((tag: string) => {
