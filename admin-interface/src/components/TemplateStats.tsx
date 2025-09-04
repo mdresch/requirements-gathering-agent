@@ -21,10 +21,10 @@ export default function TemplateStats() {
             totalTemplates: basicStats.total,
             categoriesCount: Object.keys(basicStats.byCategory).length,
             topCategories: Object.entries(basicStats.byCategory)
-              .map(([category, count]) => ({ category, count }))
+              .map(([category, count]) => ({ category, count: count as number }))
               .sort((a, b) => b.count - a.count),
             topTags: Object.entries(basicStats.byType)
-              .map(([tag, count]) => ({ tag, count }))
+              .map(([tag, count]) => ({ tag, count: count as number }))
               .sort((a, b) => b.count - a.count),
             recentActivity: [], // This would need to come from a different API endpoint
           };

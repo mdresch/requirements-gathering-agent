@@ -1,7 +1,8 @@
 // Real-time Updates Service - WebSocket integration for live data
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\websocket.ts
 
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
 export interface RealTimeEvent {
   type: 'project_updated' | 'document_generated' | 'compliance_analyzed' | 'template_created' | 'system_status';
@@ -18,7 +19,7 @@ export interface SystemStatus {
 }
 
 class WebSocketService {
-  private socket: Socket | null = null;
+  private socket: any | null = null;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private eventHandlers: Map<string, Array<(data: any) => void>> = new Map();
