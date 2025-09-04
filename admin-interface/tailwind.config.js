@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -41,11 +41,35 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Modern color palette
+        electric: {
+          50: '#f0f7ff',
+          500: '#3b82f6',
+          600: '#2563eb',
+        },
+        neon: {
+          50: '#fdf4ff',
+          500: '#a855f7',
+          600: '#9333ea',
+        },
+        cyber: {
+          50: '#f0fdfa',
+          500: '#06b6d4',
+          600: '#0891b2',
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        '3xl': '1.5rem',
+        '4xl': '2rem',
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",
@@ -62,6 +86,13 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "glow": "glow 2s ease-in-out infinite alternate",
         "shimmer": "shimmer 2s linear infinite",
+        // Enhanced modern animations
+        "gradient-shift": "gradientShift 3s ease-in-out infinite",
+        "morphing": "morphing 4s ease-in-out infinite",
+        "text-glow": "textGlow 2s ease-in-out infinite alternate",
+        "levitate": "levitate 4s ease-in-out infinite",
+        "breath": "breath 3s ease-in-out infinite",
+        "magnetic": "magnetic 0.3s ease-out",
       },
       keyframes: {
         fadeIn: {
@@ -117,6 +148,33 @@ export default {
         shimmer: {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
+        },
+        // Enhanced modern keyframes
+        gradientShift: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        morphing: {
+          "0%, 100%": { borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" },
+          "50%": { borderRadius: "30% 60% 70% 40% / 50% 60% 30% 60%" },
+        },
+        textGlow: {
+          "0%": { textShadow: "0 0 10px rgba(59, 130, 246, 0.5)" },
+          "100%": { textShadow: "0 0 20px rgba(59, 130, 246, 1), 0 0 30px rgba(59, 130, 246, 0.5)" },
+        },
+        levitate: {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-10px) rotate(1deg)" },
+          "50%": { transform: "translateY(-20px) rotate(0deg)" },
+          "75%": { transform: "translateY(-10px) rotate(-1deg)" },
+        },
+        breath: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
+        magnetic: {
+          "0%": { transform: "translate(0, 0)" },
+          "100%": { transform: "translate(-4px, -4px)" },
         },
       },
     },

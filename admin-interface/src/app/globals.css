@@ -95,6 +95,19 @@
   animation: bounceSubtle 2s ease-in-out infinite;
 }
 
+/* Modern gradient utilities */
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+
+.bg-pos-0 {
+  background-position: 0% 50%;
+}
+
+.bg-pos-100 {
+  background-position: 100% 50%;
+}
+
 /* Card hover effects */
 .card-hover {
   @apply transition-all duration-300 ease-in-out;
