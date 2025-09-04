@@ -183,6 +183,7 @@ ADPA supports multiple AI providers with automatic failover:
 ✅ **Implemented**
 - Project Charter & Scope Management
 - Stakeholder Management Plans
+- **Stakeholder Analysis & Communication Plan** - Identifies stakeholders, analyzes their influence/interest levels, and defines engagement and communication strategies for PPPM context (see `stakeholder-analysis` document type)
 - Risk & Quality Management
 - Resource & Schedule Management
 - Cost Management & Control
@@ -244,6 +245,9 @@ adpa generate --category project-charter --output ./project-docs
 
 # Generate stakeholder analysis
 adpa generate --key stakeholder-analysis --format json
+
+# Generate stakeholder analysis and communication plan (PPPM)
+adpa generate --key stakeholder-analysis --format markdown --output ./stakeholder-docs
 
 
 
@@ -325,6 +329,23 @@ adpa sharepoint upload --folder "Project Documents" --file ./docs/
 adpa vcs commit --message "Generated project documentation"
 adpa vcs push --remote origin
 ```
+
+### Stakeholder Analysis & Communication Plan
+Generate a comprehensive stakeholder analysis and communication plan for Project, Program, and Portfolio Management (PPPM) contexts:
+
+```bash
+adpa generate --key stakeholder-analysis --format markdown
+```
+
+This document provides a complete stakeholder management strategy including:
+- **Stakeholder Analysis Matrix**: Detailed identification and analysis of all stakeholders with interest/influence levels
+- **Communication Plan**: Comprehensive communication strategy with methods, frequency, and responsible parties
+- **Stakeholder Engagement Activities**: Specific engagement strategies for different stakeholder categories
+- **Power/Interest Grid Analysis**: Strategic categorization for targeted engagement approaches  
+- **Communication Tools and Channels**: Technology and platform specifications for stakeholder communication
+- **Monitoring and Review Process**: Framework for ongoing stakeholder relationship management
+
+Ideal for project managers, program managers, and portfolio managers who need to effectively manage complex stakeholder relationships and ensure project success through strategic communication.
 
 ### Portfolio/Program Stakeholder Analysis
 Generate a stakeholder analysis at the portfolio or program level (multi-project, business unit, or enterprise-wide):
