@@ -1,3 +1,4 @@
+import templateRouter from './routes/templates.js';
 import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
@@ -9,15 +10,17 @@ import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 import rateLimitLib from 'express-rate-limit';
 // Protected API routes
-import documentRoutes from './routes/documents';
-import standardsComplianceRoutes from './routes/standards';
-import reviewRoutes from './routes/reviews';
-import reviewerRoutes from './routes/reviewers';
-import documentGenerationRoutes from './routes/documentGeneration';
-import scopeControlRoutes from './routes/scopeControl';
-import authMiddleware from './middleware/auth';
+import documentRoutes from './routes/documents.js';
+import standardsComplianceRoutes from './routes/standards.js';
+import reviewRoutes from './routes/reviews.js';
+import reviewerRoutes from './routes/reviewers.js';
+import documentGenerationRoutes from './routes/documentGeneration.js';
+import scopeControlRoutes from './routes/scopeControl.js';
+import authMiddleware from './middleware/auth.js';
 
 const app = express();
+// Register template API endpoint after app is declared
+app.use('/api/v1/templates', templateRouter);
 
 app.use(cors());
 app.use(helmet());
@@ -70,7 +73,7 @@ if (fs.existsSync(openApiPath)) {
 }
 
 // Health check endpoint (no auth required)
-import healthRoutes from './routes/health';
+import healthRoutes from './routes/health.js';
 app.use('/api/v1/health', healthRoutes);
 
 // Root endpoint
@@ -91,6 +94,9 @@ app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
 app.use('/api/v1', authMiddleware, scopeControlRoutes);
 // 404 handler
+
+// Global error handling middleware (must be last)
+// Catch-all 404 handler (must be last)
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not Found',
@@ -107,8 +113,6 @@ app.use('*', (req: Request, res: Response) => {
     }
   });
 });
-
-// Global error handling middleware (must be last)
 app.use((err: any, req: Request, res: Response, next: Function) => {
   console.error(err);
   res.status(err.status || 500).json({

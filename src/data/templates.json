@@ -1,0 +1,7 @@
+[
+  { "id": 101, "name": "Business Case Template", "description": "Template for business case documents.", "fields": ["Executive Summary", "Objectives", "Benefits", "Risks"] },
+  { "id": 102, "name": "Requirements Template", "description": "Template for requirements specification.", "fields": ["Requirement ID", "Description", "Priority", "Acceptance Criteria"] },
+  { "id": 103, "name": "Test Plan Template", "description": "Template for test planning.", "fields": ["Test Case ID", "Test Description", "Expected Result", "Status"] },
+  { "id": 104, "name": "Design Document Template", "description": "Template for system design documentation.", "fields": ["Architecture", "Components", "Interfaces", "Diagrams"] },
+  { "id": 105, "name": "Release Notes Template", "description": "Template for release notes.", "fields": ["Version", "Features", "Bug Fixes", "Known Issues"] }
+]

@@ -1,5 +1,9 @@
+<<<<<<< Updated upstream
 'use client';
 
+=======
+"use client";
+>>>>>>> Stashed changes
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
@@ -296,10 +300,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                      <button
+                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View Document"
+                      >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                      <button
+                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Download Document"
+                      >
                         <Download className="w-5 h-5" />
                       </button>
                       <button

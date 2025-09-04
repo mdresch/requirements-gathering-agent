@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Template, TemplateSearchParams } from '@/types/template';
-import { apiClient } from '@/lib/api';
+import templatesData from '../../../src/data/templates.json';
 import { toast } from 'react-hot-toast';
 import TemplateList from '@/components/TemplateList';
 import TemplateEditor from '@/components/TemplateEditor';
@@ -14,6 +14,7 @@ import ModernFeatureShowcase from '@/components/ModernFeatureShowcase';
 import ModernStatsOverview from '@/components/ModernStatsOverview';
 import { Plus, Search, Filter, BarChart3, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
@@ -47,87 +48,13 @@ export default function HomePage() {
   }, []);
 
 
-  const loadTemplates = useCallback(
-    async (params: TemplateSearchParams = searchParams) => {
-      console.log('🚀 loadTemplates called with params:', params);
-      setLoading(true);
-      try {
-        console.log('🔍 Loading templates with params:', params);
-        const response = await apiClient.getTemplates(params);
-        console.log('📡 API Response:', response);
-        
-        if (response.success && response.data) {
-          setTemplates(response.data.templates);
-          setTotalPages(response.data.totalPages || 1);
-          toast.success(`Loaded ${response.data.templates.length} templates`);
-        } else {
-          console.error('❌ Failed to load templates:', response);
-          toast.error(response.error || 'Failed to load templates');
-          
-          // Fallback to mock data for demo purposes
-          const mockTemplates = [
-            {
-              id: 'mock-1',
-              name: 'Demo Template 1',
-              description: 'This is a demo template for testing purposes',
-              category: 'demo',
-              tags: ['demo', 'test'],
-              content: 'Demo template content',
-              aiInstructions: 'Demo AI instructions',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              templateType: 'demo',
-              version: '1.0'
-            },
-            {
-              id: 'mock-2',
-              name: 'Demo Template 2',
-              description: 'Another demo template',
-              category: 'demo',
-              tags: ['demo'],
-              content: 'Demo template content 2',
-              aiInstructions: 'Demo AI instructions 2',
-              isActive: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              templateType: 'demo',
-              version: '1.0'
-            }
-          ];
-          setTemplates(mockTemplates);
-          setTotalPages(1);
-          toast.error('Using demo data - API connection failed');
-        }
-      } catch (error) {
-        console.error('❌ Network error loading templates:', error);
-        toast.error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        
-        // Fallback to mock data
-        const mockTemplates = [
-          {
-            id: 'offline-1',
-            name: 'Offline Demo Template',
-            description: 'Demo template - API server may be offline',
-            category: 'offline',
-            tags: ['offline', 'demo'],
-            content: 'Offline demo template content',
-            aiInstructions: 'Offline demo AI instructions',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            templateType: 'offline',
-            version: '1.0'
-          }
-        ];
-        setTemplates(mockTemplates);
-        setTotalPages(1);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [searchParams]
-  );
+  const loadTemplates = useCallback(() => {
+    setLoading(true);
+    setTemplates(templatesData);
+    setTotalPages(1);
+    toast.success(`Loaded ${templatesData.length} templates from local JSON`);
+    setLoading(false);
+  }, []);
 
   // Load templates when component mounts
   useEffect(() => {
@@ -145,41 +72,14 @@ export default function HomePage() {
     setIsEditing(true);
   };
 
+  // TODO: Implement delete functionality using Wix SDK if supported
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) {
-      return;
-    }
-
-    try {
-      const response = await apiClient.deleteTemplate(templateId);
-      if (response.success) {
-        toast.success('Template deleted successfully');
-        loadTemplates();
-      } else {
-        toast.error(response.error || 'Failed to delete template');
-      }
-    } catch (error) {
-      toast.error('Failed to delete template');
-    }
+    toast('Delete functionality for Wix templates is not implemented yet.');
   };
 
+  // TODO: Implement create/update functionality using Wix SDK if supported
   const handleSaveTemplate = async (templateData: any) => {
-    try {
-      const response = selectedTemplate
-        ? await apiClient.updateTemplate(selectedTemplate.id, templateData)
-        : await apiClient.createTemplate(templateData);
-
-      if (response.success) {
-        toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
-        setIsEditing(false);
-        setSelectedTemplate(null);
-        loadTemplates();
-      } else {
-        toast.error(response.error || 'Failed to save template');
-      }
-    } catch (error) {
-      toast.error('Failed to save template');
-    }
+    toast('Save functionality for Wix templates is not implemented yet.');
   };
 
   const handleSearch = (params: TemplateSearchParams) => {
@@ -251,6 +151,7 @@ export default function HomePage() {
     }
   };
 
+  console.log('Templates from local JSON:', templates);
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -322,68 +223,135 @@ export default function HomePage() {
           className="bg-white/60 backdrop-blur-sm rounded-4xl p-8 shadow-xl border border-gray-200/50 mb-12"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {/* Section Header */}
+          <div>
+            <motion.h1 
+              className="text-5xl font-bold gradient-text mb-3"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              Template Management
+            </motion.h1>
+            <motion.p 
+              className="text-gray-600 text-xl"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              Manage your ADPA enterprise framework templates
+            </motion.p>
+          </div>
+          
           <motion.div 
-            className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-12"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center space-x-4 mt-6 lg:mt-0"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <div>
-              <motion.h2 
-                className="text-4xl font-bold gradient-text mb-3"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1 }}
-              >
-                Template Management
-              </motion.h2>
-              <motion.p 
-                className="text-gray-600 text-xl"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1.2 }}
-              >
-                Manage your ADPA enterprise framework templates
-              </motion.p>
-            </div>
+            <motion.button
+              onClick={() => setShowStats(!showStats)}
+              className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              {showStats ? 'Hide Stats' : 'Show Stats'}
+            </motion.button>
             
+            <motion.button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </motion.button>
+            
+            <motion.button
+              onClick={handleCreateTemplate}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 btn-modern animate-glow"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Template
+            </motion.button>
+            
+            <motion.button
+              onClick={testApiConnection}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-green-600 hover:to-emerald-700 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              🧪 Test API
+            </motion.button>
+            
+            <motion.button
+              onClick={() => loadTemplates()}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-orange-600 hover:to-red-700 transition-all duration-300 btn-modern"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              🔄 Reload Templates
+            </motion.button>
+          </motion.div>
+        </motion.div>
+
+        {/* Header with Web Interface Access */}
+        <motion.div 
+          className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-2xl p-10 mb-12 shadow-2xl relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+        >
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-float"></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float animate-delay-1s"></div>
+          </div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center space-y-6 md:space-y-0">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
+              <h1 className="text-4xl font-bold mb-3">ADPA Enterprise Platform</h1>
+              <p className="text-blue-100 text-xl mb-2">Requirements Gathering Agent - Complete Web Interface</p>
+              <motion.p 
+                className="text-blue-200 text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
+                ✅ API Server Running • ✅ Adobe Integration Active • ✅ Standards Compliance Ready
+              </motion.p>
+            </motion.div>
             <motion.div 
-              className="flex items-center space-x-4 mt-6 lg:mt-0"
+              className="flex space-x-4"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 1.4 }}
+              transition={{ duration: 0.6, delay: 1.6 }}
             >
+              <motion.a
+                href="/web-interface"
+                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300 shadow-xl btn-modern"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                🚀 Launch Full Web Interface
+              </motion.a>
               <motion.button
                 onClick={() => setShowStats(!showStats)}
-                className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
+                className="bg-blue-500/80 backdrop-blur-sm hover:bg-blue-400 text-white px-6 py-4 rounded-xl transition-all duration-300 flex items-center space-x-2 shadow-lg btn-modern"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                {showStats ? 'Hide Stats' : 'Show Stats'}
-              </motion.button>
-              
-              <motion.button
-                onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300 btn-modern"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
-              </motion.button>
-              
-              <motion.button
-                onClick={handleCreateTemplate}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-electric-600 to-neon-600 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white hover:from-electric-700 hover:to-neon-700 transition-all duration-300 btn-modern animate-glow"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Template
+                <BarChart3 className="w-5 h-5" />
+                <span>{showStats ? 'Hide' : 'Show'} Stats</span>
               </motion.button>
             </motion.div>
           </motion.div>

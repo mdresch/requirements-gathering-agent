@@ -1,0 +1,50 @@
+[
+  {
+    "id": 201,
+    "name": "Digital Banking Transformation",
+    "description": "Upgrade legacy banking systems to a modern digital platform.",
+    "status": "active",
+    "framework": "babok",
+    "complianceScore": 94,
+    "createdAt": "2025-01-10",
+    "updatedAt": "2025-01-13",
+    "documents": 12,
+    "stakeholders": 8
+  },
+  {
+    "id": 202,
+    "name": "Healthcare Management System",
+    "description": "Develop a HIPAA-compliant patient management system.",
+    "status": "review",
+    "framework": "pmbok",
+    "complianceScore": 87,
+    "createdAt": "2025-01-08",
+    "updatedAt": "2025-01-12",
+    "documents": 9,
+    "stakeholders": 12
+  },
+  {
+    "id": 203,
+    "name": "E-commerce Platform Redesign",
+    "description": "Modernize e-commerce platform with AI-powered recommendations.",
+    "status": "completed",
+    "framework": "multi",
+    "complianceScore": 96,
+    "createdAt": "2024-12-15",
+    "updatedAt": "2025-01-05",
+    "documents": 18,
+    "stakeholders": 15
+  },
+  {
+    "id": 204,
+    "name": "ADPA Enterprise Automation Platform",
+    "description": "Automate enterprise processes with AI-driven workflows.",
+    "status": "completed",
+    "framework": "multi",
+    "complianceScore": 96,
+    "createdAt": "2024-12-15",
+    "updatedAt": "2025-01-05",
+    "documents": 18,
+    "stakeholders": 15
+  }
+]

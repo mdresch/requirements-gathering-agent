@@ -10,7 +10,7 @@ export interface OllamaGenerateOptions {
 export async function ollamaGenerate(prompt: string, options: OllamaGenerateOptions = {}): Promise<string> {
   try {
     const response = await axios.post(`${apiUrl}/api/generate`, {
-      model: 'llama3.3:latest',
+      model: 'llama3.1:latest',
       prompt,
       options: {
         temperature: options.temperature ?? 0.7,

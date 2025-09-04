@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { ReviewerProfileModel } from '../models/ReviewerProfile.js';
+import fs from 'fs';
+import path from 'path';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -501,7 +501,7 @@ interface IEscalationRule {
   isActive?: boolean;
 }
 
-export interface IReviewWorkflowConfig extends mongoose.Document {
+export interface ReviewWorkflowConfig {
   name: string;
   description?: string;
   documentTypes: string[];
@@ -517,115 +517,51 @@ export interface IReviewWorkflowConfig extends mongoose.Document {
   autoNotification?: boolean;
   isActive?: boolean;
   createdBy: string;
-  validateWorkflow(): { isValid: boolean; errors: string[] };
 }
 
-const ReviewWorkflowConfigSchema: mongoose.Schema<IReviewWorkflowConfig> = new mongoose.Schema<IReviewWorkflowConfig>({
-  name: { type: String, required: true },
-  description: { type: String },
-  documentTypes: [{ type: String }],
-  requiredRoles: [{ type: String }],
-  reviewStages: [
-    {
-      stageNumber: { type: Number, required: true },
-      name: { type: String, required: true },
-      description: { type: String },
-      requiredRole: { type: String, required: true },
-      isParallel: { type: Boolean, default: false },
-      isOptional: { type: Boolean, default: false },
-      canSkip: { type: Boolean, default: false },
-      estimatedHours: { type: Number },
-      maxDays: { type: Number },
-    criteria: [{ type: String }]
-  }
-],
-  defaultDueDays: { type: Number },
-  escalationRules: [
-    {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      condition: {
-        type: { type: String, required: true },
-        parameters: { type: Object }
-      },
-      action: {
-        type: { type: String, required: true },
-        parameters: { type: Object }
-      },
-      triggerAfterHours: { type: Number },
-      reminderIntervalHours: { type: Number },
-      maxReminders: { type: Number },
-      escalateTo: [{ type: String }],
-      notificationTemplate: { type: String },
-      isActive: { type: Boolean, default: true }
-    }
-  ],
-  minimumReviewers: { type: Number },
-  requiredApprovals: { type: Number },
-  qualityThreshold: { type: Number, min: 0, max: 100 },
-  autoAssignment: { type: Boolean, default: true },
-  autoEscalation: { type: Boolean, default: true },
-  autoNotification: { type: Boolean, default: true },
-  isActive: { type: Boolean, default: true },
-  createdBy: { type: String, required: true }
-});
+// Utility functions for file-based storage
+const workflowsFile = path.join(__dirname, '../data/reviewWorkflows.json');
+const reviewersFile = path.join(__dirname, '../data/reviewerProfiles.json');
 
-// Add instance method for workflow validation
-ReviewWorkflowConfigSchema.methods.validateWorkflow = function () {
-  const errors = [];
-  // Example validation logic
-  if (!this.name || typeof this.name !== 'string') {
+function readJsonFile(filePath: string) {
+  if (!fs.existsSync(filePath)) return [];
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function writeJsonFile(filePath: string, data: any) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function validateWorkflow(workflow: ReviewWorkflowConfig) {
+  const errors: string[] = [];
+  if (!workflow.name || typeof workflow.name !== 'string') {
     errors.push('Name is required and must be a string');
   }
-  if (!Array.isArray(this.reviewStages) || this.reviewStages.length === 0) {
+  if (!Array.isArray(workflow.reviewStages) || workflow.reviewStages.length === 0) {
     errors.push('At least one review stage is required');
   }
   // Add more validation as needed
-
   return {
     isValid: errors.length === 0,
     errors
   };
-};
-
-export const ReviewWorkflowConfigModel = mongoose.model('ReviewWorkflowConfig', ReviewWorkflowConfigSchema);
+}
 
 /**
  * Initialize the review system with sample data
  */
-export async function setupReviewSystem(): Promise<void> {
-  try {
-    logger.info('Setting up review system with sample data...');
-
-    // Clear existing data (optional - remove in production)
-    await ReviewWorkflowConfigModel.deleteMany({});
-    await ReviewerProfileModel.deleteMany({});
-    logger.info('Cleared existing review system data');
-
-    // Insert sample workflows
-    logger.info('Creating sample workflow configurations...');
-    for (const workflow of sampleWorkflows) {
-      const workflowDoc = new ReviewWorkflowConfigModel(workflow);
-      await workflowDoc.save();
-      logger.info(`Created workflow: ${workflow.name}`);
-    }
-
-    // Insert sample reviewers
-    logger.info('Creating sample reviewer profiles...');
-    for (const reviewer of sampleReviewers) {
-      const reviewerDoc = new ReviewerProfileModel(reviewer);
-      await reviewerDoc.save();
-      logger.info(`Created reviewer profile: ${reviewer.name}`);
-    }
-
-    logger.info('✅ Review system setup completed successfully');
-    logger.info(`Created ${sampleWorkflows.length} workflow configurations`);
-    logger.info(`Created ${sampleReviewers.length} reviewer profiles`);
-
-  } catch (error) {
-    logger.error('❌ Error setting up review system:', error);
-    throw error;
-  }
+try {
+  logger.info('Setting up review system with sample data...');
+  // Overwrite files with sample data
+  writeJsonFile(workflowsFile, sampleWorkflows);
+  writeJsonFile(reviewersFile, sampleReviewers);
+  logger.info('✅ Review system setup completed successfully');
+  logger.info(`Created ${sampleWorkflows.length} workflow configurations`);
+  logger.info(`Created ${sampleReviewers.length} reviewer profiles`);
+} catch (error) {
+  logger.error('❌ Error setting up review system:', error);
+  throw error;
 }
 
 /**
@@ -643,26 +579,21 @@ export async function validateReviewSystemSetup(): Promise<{
     reviewers: 0,
     errors: [] as string[]
   };
-
   try {
-    // Count workflows
-    result.workflows = await ReviewWorkflowConfigModel.countDocuments({ isActive: true });
-    
-    // Count reviewers
-    result.reviewers = await ReviewerProfileModel.countDocuments({ isActive: true });
-
+    // Read from JSON files
+    const workflows: ReviewWorkflowConfig[] = readJsonFile(workflowsFile).filter((w: any) => w.isActive);
+    const reviewers: any[] = readJsonFile(reviewersFile).filter((r: any) => r.isActive);
+    result.workflows = workflows.length;
+    result.reviewers = reviewers.length;
     // Validate workflows
-    const workflows = await ReviewWorkflowConfigModel.find({ isActive: true });
     for (const workflow of workflows) {
-      const validation = workflow.validateWorkflow();
+      const validation = validateWorkflow(workflow);
       if (!validation.isValid) {
         result.errors.push(`Workflow "${workflow.name}": ${validation.errors.join(', ')}`);
         result.isValid = false;
       }
     }
-
     // Validate reviewers
-    const reviewers = await ReviewerProfileModel.find({ isActive: true });
     for (const reviewer of reviewers) {
       if (!reviewer.roles || reviewer.roles.length === 0) {
         result.errors.push(`Reviewer "${reviewer.name}": No roles assigned`);
@@ -673,52 +604,45 @@ export async function validateReviewSystemSetup(): Promise<{
         result.isValid = false;
       }
     }
-
     logger.info(`Review system validation: ${result.isValid ? 'PASSED' : 'FAILED'}`);
     logger.info(`Workflows: ${result.workflows}, Reviewers: ${result.reviewers}`);
-    
     if (result.errors.length > 0) {
       logger.warn('Validation errors:', result.errors);
     }
-
   } catch (error) {
     logger.error('Error validating review system setup:', error);
     result.isValid = false;
     result.errors.push(error instanceof Error ? error.message : 'Unknown validation error');
   }
-
   return result;
 }
 
-// CLI execution
+// CLI execution (file-based)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  // Connect to database
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/adpa';
-  
-  mongoose.connect(mongoUri)
-    .then(async () => {
-      logger.info('Connected to MongoDB');
-      
-      if (process.argv.includes('--validate')) {
-        const validation = await validateReviewSystemSetup();
-        console.log('\n=== Review System Validation ===');
-        console.log(`Status: ${validation.isValid ? '✅ VALID' : '❌ INVALID'}`);
-        console.log(`Workflows: ${validation.workflows}`);
-        console.log(`Reviewers: ${validation.reviewers}`);
-        
-        if (validation.errors.length > 0) {
-          console.log('\nErrors:');
-          validation.errors.forEach(error => console.log(`  - ${error}`));
-        }
-      } else {
-        await setupReviewSystem();
-        await validateReviewSystemSetup();
+  if (process.argv.includes('--validate')) {
+    validateReviewSystemSetup().then(validation => {
+      console.log('\n=== Review System Validation ===');
+      console.log(`Status: ${validation.isValid ? '✅ VALID' : '❌ INVALID'}`);
+      console.log(`Workflows: ${validation.workflows}`);
+      console.log(`Reviewers: ${validation.reviewers}`);
+      if (validation.errors.length > 0) {
+        console.log('\nErrors:');
+        validation.errors.forEach(error => console.log(`  - ${error}`));
       }
-      
       process.exit(0);
-    })
-    .catch((error) => {
-      logger.error('Failed to connect to MongoDB:', error);
-      process.exit(1);
     });
+  } else {
+    try {
+      // Overwrite files with sample data
+      writeJsonFile(workflowsFile, sampleWorkflows);
+      writeJsonFile(reviewersFile, sampleReviewers);
+      logger.info('✅ Review system setup completed successfully');
+      logger.info(`Created ${sampleWorkflows.length} workflow configurations`);
+      logger.info(`Created ${sampleReviewers.length} reviewer profiles`);
+      validateReviewSystemSetup().then(() => process.exit(0));
+    } catch (error) {
+      logger.error('❌ Error setting up review system:', error);
+      process.exit(1);
+    }
+  }
 }

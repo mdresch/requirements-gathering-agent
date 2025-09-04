@@ -144,16 +144,26 @@ export class ProviderManager {
             name: 'ollama',
             check: async () => {
               const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+              const requiredModel = process.env.OLLAMA_MODEL || 'llama3.1';
               try {
                 const response = await fetch(`${apiUrl}/api/tags`, { method: 'GET' });
-                return response.ok;
+                if (!response.ok) return false;
+                const data = await response.json() as { models?: Array<{ name: string }> };
+                if (!data.models || !Array.isArray(data.models)) return false;
+                // Check for exact match or prefix match (for quantized variants)
+                const found = data.models.some((m: { name: string }) => m.name === requiredModel || m.name.startsWith(requiredModel));
+                if (!found) {
+                  console.warn(`Ollama health check: required model '${requiredModel}' not found in loaded models.`);
+                  return false;
+                }
+                return true;
               } catch (error) {
                 console.warn('Ollama check failed:', error instanceof Error ? error.message : String(error));
                 return false;
               }
             },
             priority: 1,
-            description: 'Ollama Llama 3.2 (Local AI provider)',
+            description: 'Ollama Llama 3.1 (Local AI provider)',
             endpoint: process.env.OLLAMA_API_URL || 'http://localhost:11434',
             tokenLimit: 32768,
             costPerToken: 0

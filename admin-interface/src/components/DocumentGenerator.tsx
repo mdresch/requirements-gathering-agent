@@ -3,9 +3,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Download, Eye, Settings, Wand2, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { getTemplates } from '../lib/api';
 
 interface Template {
   id: string;
@@ -28,36 +29,9 @@ interface GenerationJob {
 }
 
 export default function DocumentGenerator() {
-  const [templates] = useState<Template[]>([
-    {
-      id: '1',
-      name: 'Business Requirements Document',
-      category: 'Requirements',
-      description: 'Comprehensive business requirements analysis and documentation',
-      framework: 'babok',
-      outputFormats: ['PDF', 'DOCX', 'HTML', 'INDD'],
-      estimatedTime: '5-10 minutes'
-    },
-    {
-      id: '2',
-      name: 'Project Charter',
-      category: 'Project Management',
-      description: 'PMBOK-compliant project charter with stakeholder analysis',
-      framework: 'pmbok',
-      outputFormats: ['PDF', 'DOCX', 'AI', 'PSD'],
-      estimatedTime: '3-5 minutes'
-    },
-    {
-      id: '3',
-      name: 'Stakeholder Analysis Report',
-      category: 'Analysis',
-      description: 'Multi-standard stakeholder identification and analysis',
-      framework: 'multi',
-      outputFormats: ['PDF', 'DOCX', 'HTML'],
-      estimatedTime: '7-12 minutes'
-    }
-  ]);
-
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [outputFormat, setOutputFormat] = useState<string>('PDF');
   const [inputData, setInputData] = useState<string>('');
@@ -80,9 +54,24 @@ export default function DocumentGenerator() {
       createdAt: '2025-01-13T11:15:00Z'
     }
   ]);
-
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState<string>('');
+
+  useEffect(() => {
+    getTemplates()
+      .then((result) => {
+        if (result.success && result.data && result.data.templates) {
+          setTemplates(result.data.templates);
+        } else {
+          setError(result.error || 'Failed to load templates');
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message || 'Unknown error');
+        setLoading(false);
+      });
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -203,6 +192,7 @@ This is a preview of the document that would be generated using the ${selectedTe
     }
   };
 
+  // Render templates from backend
   return (
     <div className="space-y-6">
       {/* Header */}

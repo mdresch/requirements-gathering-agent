@@ -109,7 +109,7 @@ export default function TemplateList({
         
         <div className="space-y-6">
           <AnimatePresence>
-            {templates.map((template, index) => (
+            {templates.filter(template => template && template.name).map((template, index) => (
               <motion.div
                 key={template.id}
                 className="border border-gray-200/50 rounded-2xl p-6 card-hover bg-gradient-to-r from-white to-gray-50/50 shadow-lg"
@@ -120,96 +120,100 @@ export default function TemplateList({
                 whileHover={{ scale: 1.02, y: -4 }}
                 layout
               >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <motion.h3 
-                      className="text-xl font-semibold text-gray-900 truncate"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                      {template.name}
-                    </motion.h3>
-                    <motion.span 
-                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3, delay: 0.2, type: "spring", stiffness: 200 }}
-                      whileHover={{ scale: 1.1 }}
-                    >
-                      {template.category}
-                    </motion.span>
-                  </div>
-                  
-                  <motion.p 
-                    className="text-gray-600 mb-4 text-lg leading-relaxed"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                  >
-                    {truncateText(template.description, 150)}
-                  </motion.p>
-                  
-                  <motion.div 
-                    className="flex items-center space-x-6 text-sm text-gray-500"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{formatRelativeTime(template.updatedAt)}</span>
-                    </div>
-                    
-                    {template.tags.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        <Tag className="w-4 h-4" />
-                        <span>{template.tags.slice(0, 3).join(', ')}</span>
-                        {template.tags.length > 3 && (
-                          <span className="text-gray-400">+{template.tags.length - 3}</span>
-                        )}
-                      </div>
-                    )}
-                    
-                    {template.metadata?.framework && (
-                      <motion.span 
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                        whileHover={{ scale: 1.05 }}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <motion.h3 
+                        className="text-xl font-semibold text-gray-900 truncate"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
                       >
-                        {template.metadata.framework}
+                        {template.name}
+                      </motion.h3>
+                      <motion.span 
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.2, type: "spring", stiffness: 200 }}
+                        whileHover={{ scale: 1.1 }}
+                      >
+                        {template.category}
                       </motion.span>
-                    )}
+                    </div>
+                    <motion.p 
+                      className="text-gray-600 mb-4 text-lg leading-relaxed"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                    >
+                      {truncateText(template.description, 150)}
+                    </motion.p>
+                    {/* Debug: Display all available fields from Wix */}
+                    <div className="bg-gray-50 rounded p-3 mb-2 text-xs text-gray-700">
+                      <strong>All Fields:</strong>
+                      <ul>
+                        {Object.entries(template).map(([key, value]) => (
+                          <li key={key}><strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : String(value)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    {/* ...existing meta and tags rendering... */}
+                    <motion.div 
+                      className="flex items-center space-x-6 text-sm text-gray-500"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.4 }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatRelativeTime(template.updatedAt)}</span>
+                      </div>
+                      {Array.isArray(template.tags) && template.tags.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <Tag className="w-4 h-4" />
+                          <span>{template.tags.slice(0, 3).join(', ')}</span>
+                          {template.tags.length > 3 && (
+                            <span className="text-gray-400">+{template.tags.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+                      {template.metadata?.framework && (
+                        <motion.span 
+                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          {template.metadata.framework}
+                        </motion.span>
+                      )}
+                    </motion.div>
+                  </div>
+                  <motion.div 
+                    className="flex items-center space-x-3 ml-6"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 }}
+                  >
+                    <motion.button
+                      onClick={() => onEdit(template)}
+                      className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 btn-modern"
+                      title="Edit template"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Edit className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => onDelete(template.id)}
+                      className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 btn-modern"
+                      title="Delete template"
+                      whileHover={{ scale: 1.1, rotate: -5 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </motion.button>
                   </motion.div>
                 </div>
-                
-                <motion.div 
-                  className="flex items-center space-x-3 ml-6"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 }}
-                >
-                  <motion.button
-                    onClick={() => onEdit(template)}
-                    className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 btn-modern"
-                    title="Edit template"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Edit className="w-5 h-5" />
-                  </motion.button>
-                  
-                  <motion.button
-                    onClick={() => onDelete(template.id)}
-                    className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 btn-modern"
-                    title="Delete template"
-                    whileHover={{ scale: 1.1, rotate: -5 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </motion.button>
-                </motion.div>
-              </div>
               </motion.div>
             ))}
           </AnimatePresence>

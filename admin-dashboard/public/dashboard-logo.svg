@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="120" rx="24" fill="#1976d2"/>
+  <circle cx="60" cy="60" r="36" fill="#90caf9"/>
+  <path d="M60 36L72 60H48L60 36Z" fill="#fff"/>
+  <rect x="52" y="70" width="16" height="8" rx="2" fill="#fff"/>
+  <text x="60" y="110" text-anchor="middle" fill="#fff" font-size="16" font-family="Arial, Helvetica, sans-serif">Admin</text>
+</svg>

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TemplateStats as ITemplateStats, ExtendedTemplateStats } from '@/types/template';
-import { apiClient } from '@/lib/api';
+import { useMemo } from 'react';
+import templates from '../../../src/data/templates.json';
 import { BarChart3, FileText, Tags, Layers, Activity } from 'lucide-react';
 
 export default function TemplateStats() {
+<<<<<<< Updated upstream
   const [stats, setStats] = useState<ExtendedTemplateStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,37 +34,35 @@ export default function TemplateStats() {
         console.error('Failed to load stats:', error);
       } finally {
         setLoading(false);
+=======
+  // Compute stats from local templates.json
+  const stats = useMemo(() => {
+    const totalTemplates = Array.isArray(templates) ? templates.length : 0;
+    const categories: Record<string, number> = {};
+    const tags: Record<string, number> = {};
+    templates.forEach((tpl: any) => {
+      if (tpl.category) {
+        categories[tpl.category] = (categories[tpl.category] || 0) + 1;
+>>>>>>> Stashed changes
       }
+      if (Array.isArray(tpl.tags)) {
+        tpl.tags.forEach((tag: string) => {
+          tags[tag] = (tags[tag] || 0) + 1;
+        });
+      }
+    });
+    return {
+      totalTemplates,
+      categoriesCount: Object.keys(categories).length,
+      topCategories: Object.entries(categories)
+        .map(([category, count]) => ({ category, count }))
+        .sort((a, b) => b.count - a.count),
+      topTags: Object.entries(tags)
+        .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => b.count - a.count),
+      activeTemplates: totalTemplates, // All are active for now
     };
-
-    loadStats();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
-        <div className="text-center text-gray-500">
-          <BarChart3 className="w-8 h-8 mx-auto mb-2" />
-          <p>Unable to load statistics</p>
-        </div>
-      </div>
-    );
-  }
 
   const statCards = [
     {
