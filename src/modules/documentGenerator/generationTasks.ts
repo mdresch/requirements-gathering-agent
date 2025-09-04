@@ -1032,6 +1032,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     dependencies: []
   },
   {
+    key: 'portfolio-dashboard',
+    name: 'Portfolio Dashboard',
+    category: 'pppm',
+    func: 'generatePortfolioDashboard',
+    emoji: '📈',
+    priority: 17,
+    pmbokRef: 'PMBOK: Portfolio Dashboard',
+    dependencies: []
+  },
+  {
     key: 'detailed-planning-artifacts',
     name: 'Detailed Planning Artifacts',
     category: 'pppm',
