@@ -181,13 +181,13 @@ ADPA supports multiple AI providers with automatic failover:
 
 ### **PMBOK 7th Edition (Project Management)**  
 ✅ **Implemented**
-<<<<<<< Updated upstream
 - Project Charter & Scope Management
 - Stakeholder Management Plans
 - Risk & Quality Management
 - Resource & Schedule Management
 - Cost Management & Control
 - **Portfolio Dashboard** - Aggregates and visualizes performance, health, risks, and benefits across multiple projects/programs (see `portfolio-dashboard` document type)
+- **Lessons Learned** - Captures project/program outcomes, what went well, what went wrong, key insights, recommendations, metrics, and action items for future improvement (see `lessons-learned` document type)
 
 
 ### **DMBOK 2.0 (Data Management)**
@@ -352,6 +352,24 @@ This document creates an executive-level portfolio dashboard including:
 - Actionable recommendations for portfolio governance
 
 Perfect for portfolio managers, executives, and PMO teams who need comprehensive visibility across multiple projects and programs.
+
+### Lessons Learned
+Generate comprehensive lessons learned documentation to capture project/program outcomes and improve future delivery:
+
+```bash
+adpa generate --key lessons-learned --format markdown
+```
+
+This document captures institutional knowledge including:
+- Project information and summary
+- What went well and should be repeated
+- What went wrong and should be improved
+- Key insights and actionable recommendations
+- Performance metrics and variance analysis
+- Action items for organizational improvement
+- Knowledge artifacts and contacts for future reference
+
+Essential for project closure, organizational learning, and continuous improvement initiatives.
 
 ## 🧪 **Testing**
 
