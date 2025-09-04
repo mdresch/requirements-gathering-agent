@@ -1,9 +1,5 @@
-<<<<<<< Updated upstream
 'use client';
 
-=======
-"use client";
->>>>>>> Stashed changes
 import React, { useState, useEffect } from 'react';
 import { 
   FileText, 

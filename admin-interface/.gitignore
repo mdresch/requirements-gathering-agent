@@ -2,3 +2,5 @@
 .next/
 .next
 node_modules
+# Build output
+.next/
