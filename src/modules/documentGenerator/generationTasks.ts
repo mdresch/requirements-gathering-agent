@@ -83,6 +83,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
     pmbokRef: 'PMBOK: Program Risk Register',
     dependencies: []
   },
+  {
+    key: 'stakeholder-analysis',
+    name: 'Stakeholder Analysis & Communication Plan',
+    category: 'pppm',
+    func: 'generateStakeholderAnalysis',
+    emoji: '👥',
+    priority: 16,
+    pmbokRef: 'PMBOK: Stakeholder Analysis',
+    dependencies: []
+  },
   // DMBOK Introduction Data Management Body of Knowledge
   {
     key: 'introduction-data-management-body-of-knowledge',

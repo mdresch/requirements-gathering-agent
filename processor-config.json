@@ -845,5 +845,10 @@
     "module": "../documentTemplates/pppm/LessonsLearnedProcessor.ts#LessonsLearnedProcessor",
     "dependencies": [],
     "priority": 18
+  },
+  "stakeholder-analysis": {
+    "module": "../documentTemplates/pppm/StakeholderAnalysisProcessor.ts#StakeholderAnalysisProcessor",
+    "dependencies": [],
+    "priority": 16
   }
 }
