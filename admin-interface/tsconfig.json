@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "outDir": "./dist",
-    "rootDir": "./src",
     "lib": ["dom", "dom.iterable", "es6"],
     "allowJs": true,
     "skipLibCheck": true,

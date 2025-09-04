@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import templates from '../../../src/data/templates.json';
+import templates from '@/data/templates.json';
 import { BarChart3, FileText, Tags, Layers, Activity } from 'lucide-react';
 
 export default function TemplateStats() {
