@@ -187,6 +187,7 @@ ADPA supports multiple AI providers with automatic failover:
 - Risk & Quality Management
 - Resource & Schedule Management
 - Cost Management & Control
+- **Portfolio Dashboard** - Aggregates and visualizes performance, health, risks, and benefits across multiple projects/programs (see `portfolio-dashboard` document type)
 
 
 ### **DMBOK 2.0 (Data Management)**
@@ -333,6 +334,24 @@ adpa generate --key portfolio-stakeholder-analysis --format markdown
 ```
 
 This document provides a comprehensive analysis of stakeholders across multiple projects, programs, or business units, supporting portfolio management best practices.
+
+### Portfolio Dashboard
+Generate a comprehensive dashboard that aggregates and visualizes performance, health, risks, and benefits across multiple projects/programs:
+
+```bash
+adpa generate --key portfolio-dashboard --format markdown
+```
+
+This document creates an executive-level portfolio dashboard including:
+- Portfolio overview and strategic alignment
+- Performance metrics and KPIs
+- Resource utilization analysis
+- Benefits tracking and realization
+- Top risks and issues management
+- Upcoming strategic decisions
+- Actionable recommendations for portfolio governance
+
+Perfect for portfolio managers, executives, and PMO teams who need comprehensive visibility across multiple projects and programs.
 
 ## 🧪 **Testing**
 
