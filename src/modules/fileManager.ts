@@ -982,6 +982,13 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         category: DOCUMENT_CATEGORIES.PPPM,
         description: 'Aggregates and visualizes performance, health, risks, and benefits across multiple projects/programs.',
         generatedAt: ''
+    },
+    'lessons-learned': {
+        title: 'Lessons Learned',
+        filename: 'pppm/lessons-learned.md',
+        category: DOCUMENT_CATEGORIES.PPPM,
+        description: 'Captures project/program outcomes, what went well, what went wrong, key insights, recommendations, metrics, and action items for future improvement.',
+        generatedAt: ''
     }
 };
 

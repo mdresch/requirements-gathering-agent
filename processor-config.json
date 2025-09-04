@@ -840,5 +840,10 @@
     "module": "../documentTemplates/planningArtifacts/DetailedPlanningArtifactsProcessor.ts#DetailedPlanningArtifactsProcessor",
     "dependencies": ["project-charter", "stakeholder-register"],
     "priority": 5
+  },
+  "lessons-learned": {
+    "module": "../documentTemplates/pppm/LessonsLearnedProcessor.ts#LessonsLearnedProcessor",
+    "dependencies": [],
+    "priority": 18
   }
 }

@@ -1082,6 +1082,16 @@ export const GENERATION_TASKS: GenerationTask[] = [
       pmbokRef: 'DMBOK: Data Architecture & Quality',
       dependencies: []
     },
+    {
+      key: 'lessons-learned',
+      name: 'Lessons Learned',
+      category: 'pppm',
+      func: 'generateLessonsLearned',
+      emoji: '📝',
+      priority: 18,
+      pmbokRef: 'PMBOK: Lessons Learned',
+      dependencies: []
+    },
 ];
 
 /**
