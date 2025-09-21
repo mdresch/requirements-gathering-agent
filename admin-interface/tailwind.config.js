@@ -69,7 +69,7 @@ module.exports = {
         xs: '2px',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",
@@ -177,7 +177,37 @@ module.exports = {
           "100%": { transform: "translate(-4px, -4px)" },
         },
       },
+      // Graphics performance optimizations
+      transitionProperty: {
+        'transform': 'transform',
+        'opacity': 'opacity',
+        'colors': 'color, background-color, border-color, text-decoration-color, fill, stroke',
+      },
+      transitionTimingFunction: {
+        'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    // Add performance optimization plugin
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.gpu-accelerated': {
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px',
+        },
+        '.smooth-scroll': {
+          scrollBehavior: 'smooth',
+          '-webkit-overflow-scrolling': 'touch',
+        },
+        '.text-render-optimized': {
+          textRendering: 'optimizeLegibility',
+          fontFeatureSettings: '"rlig" 1, "calt" 1',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 };

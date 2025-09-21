@@ -226,7 +226,7 @@
     "priority": 999
   },
   "business-case": {
-    "module": "../documentTemplates/strategic-statements/BusinesscaseProcessor.ts#BusinesscaseProcessor",
+    "module": "../documentTemplates/strategic-statements/EnhancedBusinesscaseProcessor.ts#EnhancedBusinesscaseProcessor",
     "dependencies": [],
     "priority": 999
   },
@@ -846,7 +846,7 @@
     "dependencies": [],
     "priority": 18
   },
-  "stakeholder-analysis": {
+  "program-stakeholder-analysis": {
     "module": "../documentTemplates/pppm/StakeholderAnalysisProcessor.ts#StakeholderAnalysisProcessor",
     "dependencies": [],
     "priority": 16

@@ -1,11 +1,30 @@
 'use client';
 
-import { useMemo } from 'react';
-import templates from '@/data/templates.json';
+import { useMemo, useEffect, useState } from 'react';
 import { BarChart3, FileText, Tags, Layers, Activity } from 'lucide-react';
+import { apiClient } from '@/lib/api';
 
 export default function TemplateStats() {
-  // Compute stats from local templates.json
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const response = await apiClient.getTemplates();
+        if (response.success && response.data) {
+          setTemplates(response.data.templates || []);
+        }
+      } catch (error) {
+        console.error('Failed to load templates for stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  // Compute stats from API templates
   const stats = useMemo(() => {
     const totalTemplates = Array.isArray(templates) ? templates.length : 0;
     const categories: Record<string, number> = {};
@@ -31,7 +50,7 @@ export default function TemplateStats() {
         .sort((a, b) => b.count - a.count),
       activeTemplates: totalTemplates, // All are active for now
     };
-  }, []);
+  }, [templates]);
 
   const statCards = [
     {
@@ -69,6 +88,21 @@ export default function TemplateStats() {
     };
     return colorMap[color as keyof typeof colorMap] || colorMap.blue;
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+          <BarChart3 className="w-5 h-5 mr-2" />
+          Template Statistics
+        </h2>
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 mt-2">Loading template statistics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">

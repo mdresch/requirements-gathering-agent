@@ -13,9 +13,13 @@ interface Template {
   name: string;
   category: string;
   description: string;
-  framework: 'babok' | 'pmbok' | 'multi';
-  outputFormats: string[];
-  estimatedTime: string;
+  framework?: 'babok' | 'pmbok' | 'multi';
+  metadata?: {
+    framework?: string;
+    [key: string]: any;
+  };
+  outputFormats?: string[];
+  estimatedTime?: string;
 }
 
 interface GenerationJob {
@@ -94,7 +98,7 @@ export default function DocumentGenerator() {
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
-    setOutputFormat(template.outputFormats[0]);
+    setOutputFormat(template.outputFormats?.[0] || 'PDF');
   };
 
   const handleGenerate = async () => {
@@ -169,7 +173,7 @@ export default function DocumentGenerator() {
 
 ## Generated Preview
 
-**Framework:** ${selectedTemplate.framework.toUpperCase()}
+**Framework:** ${(selectedTemplate.framework || selectedTemplate.metadata?.framework || 'general').toUpperCase()}
 **Output Format:** ${outputFormat}
 
 ### Input Analysis
@@ -183,13 +187,344 @@ This is a preview of the document that would be generated using the ${selectedTe
     setShowPreview(true);
   };
 
-  const handleDownload = (job: GenerationJob) => {
-    if (job.downloadUrl) {
-      toast.success(`Downloading ${job.templateName}`);
-      // In a real implementation, this would trigger the actual download
-    } else {
+  const handleDownload = async (job: GenerationJob) => {
+    if (!job.downloadUrl) {
       toast.error('Download not available yet');
+      return;
     }
+
+    try {
+      // Find the template used for this job
+      const template = templates.find(t => t.name === job.templateName);
+      if (!template) {
+        toast.error('Template not found');
+        return;
+      }
+
+      // Generate document content based on template and format
+      const documentContent = generateDocumentContent(template, job.outputFormat, inputData);
+      
+      // Create and download the file
+      const blob = new Blob([documentContent.content], { type: documentContent.mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.templateName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.${documentContent.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Downloaded ${job.templateName}`);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Download failed. Please try again.');
+    }
+  };
+
+  const generateDocumentContent = (template: Template, format: string, inputData: string) => {
+    const framework = template.framework || template.metadata?.framework || 'general';
+    const category = template.category || 'General';
+    
+    // Generate comprehensive document content
+    const documentText = `# ${template.name}
+
+## Document Information
+- **Framework**: ${framework.toUpperCase()}
+- **Category**: ${category}
+- **Generated**: ${new Date().toLocaleString()}
+- **Format**: ${format}
+
+## Executive Summary
+
+This document has been generated using the ${template.name} template with the ${framework.toUpperCase()} framework. The content below is based on the provided input data and follows industry best practices for ${category.toLowerCase()} documentation.
+
+## Input Analysis
+
+${inputData}
+
+## Generated Content
+
+### 1. Project Overview
+Based on the input data provided, this document outlines the key aspects of the project or initiative being documented.
+
+### 2. Requirements and Specifications
+${generateRequirementsSection(inputData)}
+
+### 3. Stakeholder Analysis
+${generateStakeholderSection(inputData)}
+
+### 4. Implementation Plan
+${generateImplementationSection(inputData)}
+
+### 5. Risk Assessment
+${generateRiskSection(inputData)}
+
+### 6. Success Criteria
+${generateSuccessCriteriaSection(inputData)}
+
+## Conclusion
+
+This document serves as a comprehensive guide for the project or initiative outlined above. It follows the ${framework.toUpperCase()} framework principles and incorporates best practices for ${category.toLowerCase()} documentation.
+
+---
+
+*This document was generated on ${new Date().toLocaleString()} using the ADPA Document Generation System.*`;
+
+    // Return appropriate format
+    switch (format.toLowerCase()) {
+      case 'pdf':
+        // For PDF, we'll create an HTML file that can be easily converted to PDF by the browser
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${template.name}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #7f8c8d; }
+        .info { background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .info strong { color: #2c3e50; }
+        ul { margin: 10px 0; }
+        li { margin: 5px 0; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #bdc3c7; font-style: italic; color: #7f8c8d; }
+        @media print {
+            body { margin: 20px; }
+            .info { background: #f8f9fa; border: 1px solid #dee2e6; }
+        }
+    </style>
+</head>
+<body>
+    <h1>${template.name}</h1>
+    
+    <div class="info">
+        <strong>Framework:</strong> ${framework.toUpperCase()}<br>
+        <strong>Category:</strong> ${category}<br>
+        <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
+        <strong>Format:</strong> ${format}
+    </div>
+
+    <h2>Executive Summary</h2>
+    <p>This document has been generated using the ${template.name} template with the ${framework.toUpperCase()} framework. The content below is based on the provided input data and follows industry best practices for ${category.toLowerCase()} documentation.</p>
+
+    <h2>Input Analysis</h2>
+    <p>${inputData.replace(/\n/g, '<br>')}</p>
+
+    <h2>Generated Content</h2>
+    
+    <h3>1. Project Overview</h3>
+    <p>Based on the input data provided, this document outlines the key aspects of the project or initiative being documented.</p>
+
+    <h3>2. Requirements and Specifications</h3>
+    <div>${generateRequirementsSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>3. Stakeholder Analysis</h3>
+    <div>${generateStakeholderSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>4. Implementation Plan</h3>
+    <div>${generateImplementationSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>5. Risk Assessment</h3>
+    <div>${generateRiskSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>6. Success Criteria</h3>
+    <div>${generateSuccessCriteriaSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h2>Conclusion</h2>
+    <p>This document serves as a comprehensive guide for the project or initiative outlined above. It follows the ${framework.toUpperCase()} framework principles and incorporates best practices for ${category.toLowerCase()} documentation.</p>
+
+    <div class="footer">
+        <p><em>This document was generated on ${new Date().toLocaleString()} using the ADPA Document Generation System.</em></p>
+    </div>
+</body>
+</html>`;
+        return {
+          content: htmlContent,
+          mimeType: 'text/html',
+          extension: 'html'
+        };
+      case 'docx':
+        // For DOCX, we'll create an HTML file that can be opened in Word
+        const docxHtmlContent = `
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="UTF-8">
+    <meta name="ProgId" content="Word.Document">
+    <meta name="Generator" content="Microsoft Word 15">
+    <meta name="Originator" content="Microsoft Word 15">
+    <title>${template.name}</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.15; margin: 1in; }
+        h1 { font-size: 18pt; font-weight: bold; color: #2c3e50; margin-top: 0; margin-bottom: 12pt; }
+        h2 { font-size: 16pt; font-weight: bold; color: #34495e; margin-top: 12pt; margin-bottom: 6pt; }
+        h3 { font-size: 14pt; font-weight: bold; color: #7f8c8d; margin-top: 12pt; margin-bottom: 6pt; }
+        p { margin: 0 0 6pt 0; text-align: justify; }
+        .info { background: #f8f9fa; border: 1pt solid #dee2e6; padding: 6pt; margin: 6pt 0; }
+        .info strong { font-weight: bold; }
+        ul { margin: 6pt 0; padding-left: 18pt; }
+        li { margin: 3pt 0; }
+        .footer { margin-top: 24pt; padding-top: 12pt; border-top: 1pt solid #bdc3c7; font-style: italic; color: #6c757d; font-size: 10pt; }
+    </style>
+</head>
+<body>
+    <h1>${template.name}</h1>
+    
+    <div class="info">
+        <strong>Framework:</strong> ${framework.toUpperCase()}<br>
+        <strong>Category:</strong> ${category}<br>
+        <strong>Generated:</strong> ${new Date().toLocaleString()}<br>
+        <strong>Format:</strong> ${format}
+    </div>
+
+    <h2>Executive Summary</h2>
+    <p>This document has been generated using the ${template.name} template with the ${framework.toUpperCase()} framework. The content below is based on the provided input data and follows industry best practices for ${category.toLowerCase()} documentation.</p>
+
+    <h2>Input Analysis</h2>
+    <p>${inputData.replace(/\n/g, '<br>')}</p>
+
+    <h2>Generated Content</h2>
+    
+    <h3>1. Project Overview</h3>
+    <p>Based on the input data provided, this document outlines the key aspects of the project or initiative being documented.</p>
+
+    <h3>2. Requirements and Specifications</h3>
+    <div>${generateRequirementsSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>3. Stakeholder Analysis</h3>
+    <div>${generateStakeholderSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>4. Implementation Plan</h3>
+    <div>${generateImplementationSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>5. Risk Assessment</h3>
+    <div>${generateRiskSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h3>6. Success Criteria</h3>
+    <div>${generateSuccessCriteriaSection(inputData).replace(/\n/g, '<br>')}</div>
+
+    <h2>Conclusion</h2>
+    <p>This document serves as a comprehensive guide for the project or initiative outlined above. It follows the ${framework.toUpperCase()} framework principles and incorporates best practices for ${category.toLowerCase()} documentation.</p>
+
+    <div class="footer">
+        <p><em>This document was generated on ${new Date().toLocaleString()} using the ADPA Document Generation System.</em></p>
+    </div>
+</body>
+</html>`;
+        return {
+          content: docxHtmlContent,
+          mimeType: 'application/msword',
+          extension: 'doc'
+        };
+      case 'txt':
+        return {
+          content: documentText,
+          mimeType: 'text/plain',
+          extension: 'txt'
+        };
+      default:
+        return {
+          content: documentText,
+          mimeType: 'text/plain',
+          extension: 'txt'
+        };
+    }
+  };
+
+  const generateRequirementsSection = (inputData: string) => {
+    return `The requirements for this project are derived from the input data provided:
+
+${inputData}
+
+Key requirements identified:
+- Functional requirements based on the specified needs
+- Non-functional requirements for performance and reliability
+- Compliance requirements relevant to the project domain
+- Integration requirements with existing systems`;
+  };
+
+  const generateStakeholderSection = (inputData: string) => {
+    return `Stakeholders involved in this project include:
+
+Primary Stakeholders:
+- Project sponsors and decision makers
+- End users and beneficiaries
+- Technical team members
+- Quality assurance representatives
+
+Secondary Stakeholders:
+- External vendors and suppliers
+- Regulatory bodies (if applicable)
+- Community representatives (if applicable)
+
+Stakeholder engagement will be managed through regular communication, feedback sessions, and progress updates.`;
+  };
+
+  const generateImplementationSection = (inputData: string) => {
+    return `Implementation approach:
+
+Phase 1: Planning and Preparation
+- Detailed project planning
+- Resource allocation
+- Risk mitigation strategies
+
+Phase 2: Execution
+- Core implementation activities
+- Quality assurance processes
+- Stakeholder communication
+
+Phase 3: Testing and Validation
+- Comprehensive testing
+- User acceptance testing
+- Performance validation
+
+Phase 4: Deployment and Support
+- Production deployment
+- User training
+- Ongoing support and maintenance`;
+  };
+
+  const generateRiskSection = (inputData: string) => {
+    return `Risk assessment and mitigation:
+
+High Priority Risks:
+- Technical complexity and integration challenges
+- Resource availability and skill gaps
+- Timeline and scope changes
+
+Medium Priority Risks:
+- External dependencies
+- Regulatory compliance requirements
+- Market or business environment changes
+
+Mitigation Strategies:
+- Regular risk assessment and monitoring
+- Contingency planning for critical risks
+- Proactive stakeholder communication
+- Quality assurance and testing protocols`;
+  };
+
+  const generateSuccessCriteriaSection = (inputData: string) => {
+    return `Success criteria for this project:
+
+Functional Success Criteria:
+- All specified requirements are met
+- System performance meets defined benchmarks
+- User acceptance criteria are satisfied
+
+Non-Functional Success Criteria:
+- Project delivered within budget and timeline
+- Quality standards are maintained
+- Stakeholder satisfaction is achieved
+
+Measurement and Validation:
+- Regular progress reviews and assessments
+- Performance metrics and KPIs
+- Stakeholder feedback and satisfaction surveys
+- Post-implementation evaluation and lessons learned`;
   };
 
   // Render templates from backend
@@ -220,17 +555,17 @@ This is a preview of the document that would be generated using the ${selectedTe
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-medium text-gray-900">{template.name}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFrameworkColor(template.framework)}`}>
-                      {template.framework.toUpperCase()}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFrameworkColor(template.framework || template.metadata?.framework || 'general')}`}>
+                      {(template.framework || template.metadata?.framework || 'general').toUpperCase()}
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{template.description}</p>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Category: {template.category}</span>
-                    <span className="text-gray-500">{template.estimatedTime}</span>
+                    <span className="text-gray-500">Category: {template.category || 'General'}</span>
+                    <span className="text-gray-500">{template.estimatedTime || template.metadata?.estimatedTime || 'N/A'}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {template.outputFormats.map((format) => (
+                    {(template.outputFormats || ['PDF', 'DOCX', 'TXT']).map((format) => (
                       <span key={format} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
                         {format}
                       </span>
@@ -257,7 +592,7 @@ This is a preview of the document that would be generated using the ${selectedTe
                     title="Select output format"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {selectedTemplate.outputFormats.map((format) => (
+                    {(selectedTemplate.outputFormats || ['PDF', 'DOCX', 'TXT']).map((format) => (
                       <option key={format} value={format}>{format}</option>
                     ))}
                   </select>

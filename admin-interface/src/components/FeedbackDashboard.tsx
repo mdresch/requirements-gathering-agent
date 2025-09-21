@@ -18,6 +18,7 @@ import {
   FileText,
   Lightbulb
 } from 'lucide-react';
+import { apiClient } from '../lib/api';
 
 interface FeedbackItem {
   id: string;
@@ -64,10 +65,113 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
     search: ''
   });
 
-  // Mock data for demonstration
+  // Load real feedback data
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
+    const loadFeedbackData = async () => {
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log('Loading feedback data for project:', projectId);
+        
+        // Load feedback data from API
+        const response = await apiClient.getProjectFeedback(projectId);
+        
+        if (response.success && response.data) {
+          const feedbackData = response.data;
+          
+          // Calculate stats from real data
+          const totalFeedback = feedbackData.length;
+          const averageRating = totalFeedback > 0 
+            ? feedbackData.reduce((sum: number, item: any) => sum + item.rating, 0) / totalFeedback
+            : 0;
+          const openFeedback = feedbackData.filter((item: any) => item.status === 'open').length;
+          const criticalFeedback = feedbackData.filter((item: any) => item.priority === 'critical').length;
+          
+          // Get recent feedback (last 5 items)
+          const recentFeedback = feedbackData
+            .sort((a: any, b: any) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+            .slice(0, 5)
+            .map((item: any) => ({
+              id: item._id || item.id,
+              title: item.title,
+              rating: item.rating,
+              status: item.status,
+              priority: item.priority,
+              feedbackType: item.feedbackType,
+              submittedAt: item.submittedAt,
+              submittedByName: item.submittedByName,
+              documentType: item.documentType,
+              submittedBy: item.submittedBy,
+              description: item.description,
+              suggestedImprovement: item.suggestedImprovement
+            }));
+
+          const stats: FeedbackStats = {
+            totalFeedback,
+            averageRating: Math.round(averageRating * 10) / 10,
+            openFeedback,
+            criticalFeedback,
+            recentFeedback
+          };
+
+          // Transform feedback data to match interface
+          const transformedFeedback: FeedbackItem[] = feedbackData.map((item: any) => ({
+            id: item._id || item.id,
+            title: item.title,
+            description: item.description,
+            rating: item.rating,
+            status: item.status,
+            priority: item.priority,
+            feedbackType: item.feedbackType,
+            submittedAt: item.submittedAt,
+            submittedByName: item.submittedByName,
+            documentType: item.documentType,
+            submittedBy: item.submittedBy,
+            tags: item.tags || [],
+            suggestedImprovement: item.suggestedImprovement
+          }));
+
+          setStats(stats);
+          setFeedback(transformedFeedback);
+          console.log('Loaded feedback data:', { stats, feedback: transformedFeedback });
+        } else {
+          console.warn('No feedback data found for project');
+          setStats({
+            totalFeedback: 0,
+            averageRating: 0,
+            openFeedback: 0,
+            criticalFeedback: 0,
+            recentFeedback: []
+          });
+          setFeedback([]);
+        }
+      } catch (error) {
+        console.error('Failed to load feedback data:', error);
+        setStats({
+          totalFeedback: 0,
+          averageRating: 0,
+          openFeedback: 0,
+          criticalFeedback: 0,
+          recentFeedback: []
+        });
+        setFeedback([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFeedbackData();
+  }, [projectId]);
+
+  // Fallback to mock data if no projectId (for testing)
+  useEffect(() => {
+    if (!projectId) {
+      // Simulate API call
+      setTimeout(() => {
       const mockStats: FeedbackStats = {
         totalFeedback: 47,
         averageRating: 3.8,
@@ -127,6 +231,7 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
       setFeedback(mockFeedback);
       setLoading(false);
     }, 1000);
+    }
   }, [projectId]);
 
   const getStatusColor = (status: string) => {

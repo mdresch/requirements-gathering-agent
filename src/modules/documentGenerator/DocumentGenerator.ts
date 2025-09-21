@@ -36,6 +36,8 @@ import {
     generateIndexFile, 
     cleanupOldFiles,
 } from '../fileManager.js';
+import { ProjectDocument } from '../../models/ProjectDocument.js';
+import { GenerationJobService } from '../../services/GenerationJobService.js';
 import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
 // Import all processor functions
@@ -65,14 +67,15 @@ import { GENERATION_TASKS, getAvailableCategories, getTasksByCategory, getTaskBy
 export class DocumentGenerator {
     private processorConfig: Record<string, any> = {};
     private options: Required<GenerationOptions>;
-    private context: string;
+    private context: string | any;
     private results: GenerationResult;
     private aiProcessor: AIProcessor;
     private configManager: ConfigurationManager;
     protected complianceService: ComplianceValidationService;
+    private jobService: GenerationJobService;
     // ...existing code...
     constructor(
-        context: string,
+        context: string | any,
         options: Partial<GenerationOptions> = {},
         aiProcessor?: AIProcessor,
         configManager?: ConfigurationManager
@@ -80,6 +83,7 @@ export class DocumentGenerator {
         this.context = context;
         this.aiProcessor = aiProcessor || AIProcessor.getInstance();
         this.configManager = configManager || ConfigurationManager.getInstance();
+        this.jobService = GenerationJobService.getInstance();
         this.options = {
             includeCategories: options.includeCategories || [],
             excludeCategories: options.excludeCategories || [],
@@ -155,6 +159,59 @@ export class DocumentGenerator {
             return true;
         } catch (error) {
             console.error('Error generating Data Governance Plan:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Save document to MongoDB database
+     * @param documentKey Document key
+     * @param content Document content
+     * @param task Generation task
+     * @returns Promise<boolean> Success status
+     */
+    private async saveDocumentToDatabase(documentKey: string, content: string, task: GenerationTask): Promise<boolean> {
+        try {
+            const config = DOCUMENT_CONFIG[documentKey];
+            if (!config) {
+                console.warn(`⚠️ No config found for document key: ${documentKey}`);
+                return false;
+            }
+
+            // Extract project ID from context
+            const projectId = typeof this.context === 'string' ? this.context : (this.context as any).projectId || 'default-project';
+            
+            const documentData = {
+                projectId: projectId,
+                name: config.title,
+                type: documentKey,
+                category: task.category,
+                content: content,
+                status: 'draft',
+                version: '1.0',
+                framework: typeof this.context === 'string' ? 'multi' : (this.context as any).framework || 'multi',
+                qualityScore: 0, // Will be updated by compliance validation
+                wordCount: content.split(' ').length,
+                tags: [config.category, 'generated'],
+                generatedAt: new Date(),
+                generatedBy: 'ADPA-System',
+                lastModified: new Date(),
+                lastModifiedBy: 'ADPA-System',
+                metadata: {
+                    templateId: documentKey,
+                    generationJobId: `job-${Date.now()}`,
+                    complianceScore: 0,
+                    automatedChecks: []
+                }
+            };
+
+            const document = new ProjectDocument(documentData);
+            await document.save();
+
+            console.log(`✅ Saved to database: ${config.title} (ID: ${document._id})`);
+            return true;
+        } catch (error: any) {
+            console.error(`❌ Error saving document to database: ${error.message}`);
             return false;
         }
     }
@@ -508,11 +565,27 @@ export class DocumentGenerator {
      * @param task Task to generate document for
      * @returns Whether generation was successful
      */
-    private async generateSingleDocument(task: GenerationTask): Promise<boolean> {
+    private async generateSingleDocument(task: GenerationTask, jobId?: string): Promise<boolean> {
         try {
             console.log(`${task.emoji} Generating ${task.name}...`);
+            
+            // Update job status to processing if jobId provided
+            if (jobId) {
+                await this.jobService.updateJob(jobId, {
+                    status: 'processing',
+                    progress: 10
+                });
+                await this.jobService.addLog(jobId, 'info', `Started generating ${task.name}`);
+            }
+
             // Use generic ProcessorFactory to create and run the processor
             const processor = await createProcessor(task.key);
+            
+            // Update progress
+            if (jobId) {
+                await this.jobService.updateJob(jobId, { progress: 30 });
+            }
+            
             const output = await processor.process({ projectName: this.context });
             const content = output.content;
             if (content && content.trim().length > 0) {
@@ -541,25 +614,82 @@ export class DocumentGenerator {
                     console.warn(`⚠️ Compliance validation failed for ${task.name}:`, complianceError);
                     // Continue with document generation even if compliance validation fails
                 }
+                // Update progress
+                if (jobId) {
+                    await this.jobService.updateJob(jobId, { progress: 70 });
+                }
+
+                // Save to database first
+                const dbSaved = await this.saveDocumentToDatabase(documentKey, content, task);
+                
                 if (!config) {
                     console.error(`❌ Unknown document key: ${documentKey}`);
+                    // Fallback to file save for unknown documents
                     saveDocument(documentKey, content);
                     this.results.generatedFiles.push(`${task.category}/${documentKey}.md`);
                     console.log(`✅ Generated: ${task.name} (using default filename)`);
-                    return true;
+                    
+                    // Update job status
+                    if (jobId) {
+                        await this.jobService.updateJob(jobId, {
+                            status: dbSaved ? 'completed' : 'failed',
+                            progress: 100,
+                            error: dbSaved ? undefined : 'Failed to save to database'
+                        });
+                        await this.jobService.addLog(jobId, dbSaved ? 'info' : 'error', 
+                            dbSaved ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
+                    }
+                    
+                    return dbSaved; // Return database save status
                 }
+                
+                // Also save to file for backward compatibility (can be removed later)
                 saveDocument(documentKey, content);
                 this.results.generatedFiles.push(`${task.category}/${config.filename}`);
                 console.log(`✅ Generated: ${task.name}`);
-                return true;
+                
+                // Update job status
+                if (jobId) {
+                    await this.jobService.updateJob(jobId, {
+                        status: dbSaved ? 'completed' : 'failed',
+                        progress: 100,
+                        error: dbSaved ? undefined : 'Failed to save to database'
+                    });
+                    await this.jobService.addLog(jobId, dbSaved ? 'info' : 'error', 
+                        dbSaved ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
+                }
+                
+                return dbSaved; // Return database save status
             } else {
                 console.log(`⚠️ No content generated for ${task.name}`);
+                
+                // Update job status for no content
+                if (jobId) {
+                    await this.jobService.updateJob(jobId, {
+                        status: 'failed',
+                        progress: 100,
+                        error: 'No content generated'
+                    });
+                    await this.jobService.addLog(jobId, 'warning', `No content generated for ${task.name}`);
+                }
+                
                 return false;
             }
         } catch (error: any) {
             const errorMsg = error.message || 'Unknown error';
             console.error(`❌ Error generating ${task.name}: ${errorMsg}`);
             this.results.errors.push({ task: task.name, error: errorMsg });
+            
+            // Update job status for error
+            if (jobId) {
+                await this.jobService.updateJob(jobId, {
+                    status: 'failed',
+                    progress: 100,
+                    error: errorMsg
+                });
+                await this.jobService.addLog(jobId, 'error', `Error generating ${task.name}: ${errorMsg}`);
+            }
+            
             return false;
         }
     }
@@ -809,9 +939,10 @@ ${validation.recommendations.map(rec => `
     /**
      * Generate a single document by key
      * @param documentKey The key of the document to generate (e.g., 'summary', 'user-stories', 'project-charter')
+     * @param jobId Optional job ID for tracking
      * @returns Whether generation was successful
      */
-    public async generateOne(documentKey: string): Promise<boolean> {
+    public async generateOne(documentKey: string, jobId?: string): Promise<boolean> {
         // Map common document keys to actual task keys
         const keyMapping: Record<string, string> = {
             'summary': 'project-summary',
@@ -836,7 +967,7 @@ ${validation.recommendations.map(rec => `
         console.log(`🚀 Generating single document: ${task.name}...`);
         
         try {
-            const success = await this.generateSingleDocument(task);
+            const success = await this.generateSingleDocument(task, jobId);
             
             if (success) {
                 console.log(`✅ Successfully generated: ${task.name}`);

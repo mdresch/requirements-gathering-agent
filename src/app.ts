@@ -1,4 +1,6 @@
 import templateRouter from './routes/templates.js';
+import projectRouter from './api/routes/projects.js';
+import projectDocumentRouter from './api/routes/projectDocuments.js';
 import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
@@ -16,17 +18,23 @@ import reviewRoutes from './routes/reviews.js';
 import reviewerRoutes from './routes/reviewers.js';
 import documentGenerationRoutes from './routes/documentGeneration.js';
 import scopeControlRoutes from './routes/scopeControl.js';
-import authMiddleware from './middleware/auth.js';
+import feedbackRoutes from './api/routes/feedback.js';
+import generationJobRoutes from './api/routes/generationJobs.js';
+import { authMiddleware } from './api/middleware/auth.js';
 
 const app = express();
-// Register template API endpoint after app is declared
-app.use('/api/v1/templates', templateRouter);
 
+// Middleware must come before routes
 app.use(cors());
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Register project documents API endpoint first (more specific routes)
+app.use('/api/v1/projects', projectDocumentRouter);
+// Register project API endpoint
+app.use('/api/v1/projects', projectRouter);
 
 // Explicit OPTIONS handler for all routes (for CORS preflight)
 app.options('*', cors({
@@ -92,7 +100,12 @@ app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
 app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
 app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
-app.use('/api/v1', authMiddleware, scopeControlRoutes);
+app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
+app.use('/api/v1/feedback', authMiddleware, feedbackRoutes);
+app.use('/api/v1/generation-jobs', authMiddleware, generationJobRoutes);
+
+// Register template API endpoint after all other routes (no auth required for templates)
+app.use('/api/v1/templates', templateRouter);
 // 404 handler
 
 // Global error handling middleware (must be last)
@@ -109,6 +122,8 @@ app.use('*', (req: Request, res: Response) => {
       reviewers: '/api/v1/reviewers',
       documentGeneration: '/api/v1/document-generation',
       scopeControl: '/api/v1/scope-control',
+          feedback: '/api/v1/feedback',
+          generationJobs: '/api/v1/generation-jobs',
       documentation: '/api-docs'
     }
   });

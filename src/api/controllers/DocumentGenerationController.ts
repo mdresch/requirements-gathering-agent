@@ -204,7 +204,16 @@ export class DocumentGenerationController {
 
       // Use the existing DocumentGenerator directly
       const { DocumentGenerator } = await import('../../modules/documentGenerator/DocumentGenerator.js');
-      const generator = new DocumentGenerator(context);
+      
+      // Create a proper project context object
+      const projectContext = {
+        projectId: req.body.projectId || context, // Use projectId if provided, otherwise use context
+        projectName: context,
+        framework: req.body.framework || 'multi',
+        ...req.body
+      };
+      
+      const generator = new DocumentGenerator(projectContext);
 
       let result;
       if (generateAll) {

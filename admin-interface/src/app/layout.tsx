@@ -1,9 +1,15 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
+import { Inter } from 'next/font/google';
 
-// Use local font fallback to avoid network issues
-const inter = { className: 'font-sans' };
+// Optimize font loading with Next.js font optimization
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+});
 
 export const metadata: Metadata = {
   title: 'ADPA Template Admin',
@@ -16,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={inter.variable}>
+      <body className={`${inter.className} antialiased`}>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
           {/* Background decorative elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">

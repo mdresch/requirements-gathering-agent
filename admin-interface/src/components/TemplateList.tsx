@@ -9,6 +9,7 @@ interface TemplateListProps {
   templates: Template[];
   loading: boolean;
   onEdit: (template: Template) => void;
+  onViewDetails: (template: Template) => void;
   onDelete: (templateId: string) => void;
   onPageChange: (page: number) => void;
   currentPage: number;
@@ -19,6 +20,7 @@ export default function TemplateList({
   templates,
   loading,
   onEdit,
+  onViewDetails,
   onDelete,
   onPageChange,
   currentPage,
@@ -142,48 +144,103 @@ export default function TemplateList({
                       </motion.span>
                     </div>
                     <motion.p 
-                      className="text-gray-600 mb-4 text-lg leading-relaxed"
+                      className="text-gray-600 mb-4 text-base leading-relaxed"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.3 }}
                     >
-                      {truncateText(template.description, 150)}
+                      {truncateText(template.description, 120)}
                     </motion.p>
-                    {/* Debug: Display all available fields from Wix */}
-                    <div className="bg-gray-50 rounded p-3 mb-2 text-xs text-gray-700">
-                      <strong>All Fields:</strong>
-                      <ul>
-                        {Object.entries(template).map(([key, value]) => (
-                          <li key={key}><strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : String(value)}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    {/* ...existing meta and tags rendering... */}
+                    
+                    {/* Template Summary Information */}
                     <motion.div 
-                      className="flex items-center space-x-6 text-sm text-gray-500"
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.4 }}
                     >
+                      {/* Template Type */}
                       <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatRelativeTime(template.updatedAt)}</span>
+                        <FileText className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-gray-600">
+                          {template.templateType || 'Document Template'}
+                        </span>
                       </div>
-                      {Array.isArray(template.tags) && template.tags.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                          <Tag className="w-4 h-4" />
-                          <span>{template.tags.slice(0, 3).join(', ')}</span>
-                          {template.tags.length > 3 && (
-                            <span className="text-gray-400">+{template.tags.length - 3}</span>
+                      
+                      {/* Context Priority */}
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          template.contextPriority === 'critical' ? 'bg-red-500' :
+                          template.contextPriority === 'high' ? 'bg-orange-500' :
+                          template.contextPriority === 'medium' ? 'bg-yellow-500' :
+                          'bg-gray-400'
+                        }`}></div>
+                        <span className="text-sm text-gray-600">
+                          {template.contextPriority || 'medium'} priority
+                        </span>
+                      </div>
+                      
+                      {/* Version */}
+                      <div className="flex items-center space-x-2">
+                        <Tag className="w-4 h-4 text-green-500" />
+                        <span className="text-sm text-gray-600">
+                          v{template.version || '1.0'}
+                        </span>
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        <span className="text-sm text-gray-600">
+                          {template.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </motion.div>
+                    
+                    {/* Key Fields Preview */}
+                    {template.contextRequirements && Array.isArray(template.contextRequirements) && template.contextRequirements.length > 0 && (
+                      <motion.div 
+                        className="mb-4"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.5 }}
+                      >
+                        <div className="flex flex-wrap gap-2">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Key Fields:</span>
+                          {template.contextRequirements.slice(0, 4).map((field: string, index: number) => (
+                            <span 
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"
+                            >
+                              {field}
+                            </span>
+                          ))}
+                          {template.contextRequirements.length > 4 && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                              +{template.contextRequirements.length - 4} more
+                            </span>
                           )}
                         </div>
-                      )}
+                      </motion.div>
+                    )}
+                    
+                    {/* Footer with last updated and framework */}
+                    <motion.div 
+                      className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-100"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.6 }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>Updated {formatRelativeTime(template.updatedAt)}</span>
+                      </div>
                       {template.metadata?.framework && (
                         <motion.span 
-                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
                           whileHover={{ scale: 1.05 }}
                         >
-                          {template.metadata.framework}
+                          {template.metadata.framework.toUpperCase()}
                         </motion.span>
                       )}
                     </motion.div>
@@ -194,6 +251,15 @@ export default function TemplateList({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.5 }}
                   >
+                    <motion.button
+                      onClick={() => onViewDetails(template)}
+                      className="p-3 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-300 btn-modern"
+                      title="View details"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Eye className="w-5 h-5" />
+                    </motion.button>
                     <motion.button
                       onClick={() => onEdit(template)}
                       className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 btn-modern"

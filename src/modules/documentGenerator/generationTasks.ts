@@ -84,7 +84,7 @@ export const GENERATION_TASKS: GenerationTask[] = [
     dependencies: []
   },
   {
-    key: 'stakeholder-analysis',
+    key: 'program-stakeholder-analysis',
     name: 'Stakeholder Analysis & Communication Plan',
     category: 'pppm',
     func: 'generateStakeholderAnalysis',

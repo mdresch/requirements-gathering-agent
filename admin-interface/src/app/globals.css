@@ -55,6 +55,24 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improve graphics rendering */
+  * {
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Optimize animations for better performance */
+  .animate-float,
+  .animate-glow,
+  .animate-scale-in {
+    will-change: transform;
+    transform: translateZ(0);
   }
 }
 

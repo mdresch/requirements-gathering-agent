@@ -1,5 +1,6 @@
 import app from './app.js';
 import { logger } from './config/logger.js';
+import { dbConnection } from './config/database.js';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -8,17 +9,45 @@ dotenv.config();
 const PORT = process.env.PORT || process.env.API_PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Start the server
-const server = app.listen(PORT, () => {
-  logger.info(`🚀 ADPA API Server running in ${NODE_ENV} mode`);
-  logger.info(`📡 Server listening on port ${PORT}`);
-  logger.info(`📖 API Documentation available at http://localhost:${PORT}/api-docs`);
-  logger.info(`🔍 Health check available at http://localhost:${PORT}/api/v1/health`);
-  
-  if (NODE_ENV === 'development') {
-    logger.info(`🛠️  Development mode - enhanced logging and debugging enabled`);
+// Initialize database connection
+async function initializeDatabase() {
+  try {
+    await dbConnection.connect();
+    logger.info('✅ Database connection established');
+  } catch (error) {
+    logger.error('❌ Failed to connect to database:', error);
+    process.exit(1);
   }
-});
+}
+
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database connection first
+    await initializeDatabase();
+    
+    // Start the server
+    const server = app.listen(PORT, () => {
+      logger.info(`🚀 ADPA API Server running in ${NODE_ENV} mode`);
+      logger.info(`📡 Server listening on port ${PORT}`);
+      logger.info(`📖 API Documentation available at http://localhost:${PORT}/api-docs`);
+      logger.info(`🔍 Health check available at http://localhost:${PORT}/api/v1/health`);
+      logger.info(`🗄️  Database: MongoDB connected`);
+      
+      if (NODE_ENV === 'development') {
+        logger.info(`🛠️  Development mode - enhanced logging and debugging enabled`);
+      }
+    });
+    
+    return server;
+  } catch (error) {
+    logger.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+const server = await startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

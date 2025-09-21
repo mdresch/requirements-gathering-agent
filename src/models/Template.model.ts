@@ -8,6 +8,7 @@ export interface ITemplate extends Document {
   ai_instructions: string;
   prompt_template: string;
   generation_function: string;
+  contextPriority?: 'low' | 'medium' | 'high' | 'critical';
   metadata: {
     tags?: string[];
     variables: any[];
@@ -32,6 +33,11 @@ const TemplateSchema: Schema = new Schema({
   ai_instructions: { type: String },
   prompt_template: { type: String },
   generation_function: { type: String },
+  contextPriority: { 
+    type: String, 
+    enum: ['low', 'medium', 'high', 'critical'], 
+    default: 'medium' 
+  },
   metadata: {
     tags: { type: [String], required: false },
     variables: [Schema.Types.Mixed],

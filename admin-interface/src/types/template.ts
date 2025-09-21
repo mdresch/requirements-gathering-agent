@@ -11,6 +11,8 @@ export interface Template {
   updatedAt: string;
   version: string;
   templateType: string;
+  // Context building priority for LLM processing
+  contextPriority?: 'low' | 'medium' | 'high' | 'critical';
   // Add missing properties for the editor
   contextRequirements?: string[];
   variables?: Record<string, any>;
@@ -34,6 +36,7 @@ export interface CreateTemplateRequest {
   aiInstructions?: string;
   tags?: string[];
   templateType?: string;
+  contextPriority?: 'low' | 'medium' | 'high' | 'critical';
   // Add missing properties for the editor
   contextRequirements?: string[];
   variables?: Record<string, any>;

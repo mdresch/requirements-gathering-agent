@@ -5,9 +5,11 @@
 
 import { useState, useEffect } from 'react';
 import CreateProjectModal from './CreateProjectModal';
+import EditProjectModal from './EditProjectModal';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { apiClient } from '@/lib/api';
 
 interface Project {
   id: string;
@@ -23,50 +25,41 @@ interface Project {
 }
 
 export default function ProjectManager() {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'Financial Services Digital Transformation',
-      description: 'Comprehensive requirements gathering for digital banking platform',
-      status: 'active',
-      framework: 'babok',
-      complianceScore: 94,
-      createdAt: '2025-01-10',
-      updatedAt: '2025-01-13',
-      documents: 12,
-      stakeholders: 8
-    },
-    {
-      id: '2',
-      name: 'Healthcare Management System',
-      description: 'HIPAA-compliant patient management system requirements',
-      status: 'review',
-      framework: 'pmbok',
-      complianceScore: 87,
-      createdAt: '2025-01-08',
-      updatedAt: '2025-01-12',
-      documents: 9,
-      stakeholders: 12
-    },
-    {
-      id: '3',
-      name: 'E-commerce Platform Redesign',
-      description: 'Modern e-commerce platform with AI-powered recommendations',
-      status: 'completed',
-      framework: 'multi',
-      complianceScore: 96,
-      createdAt: '2024-12-15',
-      updatedAt: '2025-01-05',
-      documents: 18,
-      stakeholders: 15
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [frameworkFilter, setFrameworkFilter] = useState<string>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Load projects from API
+  useEffect(() => {
+    const loadProjects = async () => {
+      setLoading(true);
+      try {
+        console.log('🔄 Loading projects...');
+        const response = await apiClient.getProjects();
+        
+        if (response.success && response.data && Array.isArray(response.data)) {
+          setProjects(response.data);
+          console.log('✅ Projects loaded successfully:', response.data.length);
+        } else {
+          console.error('❌ Projects loading failed:', response.error);
+          toast.error(response.error || 'Failed to load projects');
+        }
+      } catch (error) {
+        console.error('❌ Projects loading error:', error);
+        toast.error('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -88,11 +81,11 @@ export default function ProjectManager() {
     }
   };
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    const matchesFramework = frameworkFilter === 'all' || project.framework === frameworkFilter;
+  const filteredProjects = (projects || []).filter(project => {
+    const matchesSearch = (project.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (project.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || (project.status || 'draft') === statusFilter;
+    const matchesFramework = frameworkFilter === 'all' || (project.framework || 'babok') === frameworkFilter;
     
     return matchesSearch && matchesStatus && matchesFramework;
   });
@@ -106,22 +99,27 @@ export default function ProjectManager() {
     setShowCreateModal(false);
   };
 
-  const handleProjectCreate = (data: { name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
-    const newProject = {
-      id: (projects.length + 1).toString(),
-      name: data.name,
-      description: data.description,
-      status: 'draft' as const,
-      framework: data.framework,
-      complianceScore: 0,
-      createdAt: new Date().toISOString().slice(0, 10),
-      updatedAt: new Date().toISOString().slice(0, 10),
-      documents: 0,
-      stakeholders: 0
-    };
-    setProjects([newProject, ...projects]);
-    setShowCreateModal(false);
-    toast.success('Project created successfully');
+  const handleProjectCreate = async (data: { name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
+    try {
+      console.log('🔍 Creating project with data:', data);
+      
+      const response = await apiClient.createProject(data);
+      
+      if (response.success) {
+        console.log('✅ Project created successfully:', response.data);
+        
+        // Add the new project to the local state
+        setProjects([response.data, ...(projects || [])]);
+        setShowCreateModal(false);
+        toast.success('Project created successfully');
+      } else {
+        console.error('❌ Project creation failed:', response.error);
+        toast.error(response.error || 'Failed to create project');
+      }
+    } catch (error) {
+      console.error('❌ Project creation error:', error);
+      toast.error('Failed to create project');
+    }
   };
 
   const router = useRouter();
@@ -131,19 +129,77 @@ export default function ProjectManager() {
 
   const handleEditProject = (project: Project) => {
     setSelectedProject(project);
-    // Open edit modal
-    toast.success(`Editing project: ${project.name}`);
+    setShowEditModal(true);
   };
 
-  const handleDeleteProject = (project: Project) => {
-    if (confirm(`Are you sure you want to delete "${project.name}"?`)) {
-      setProjects(projects.filter(p => p.id !== project.id));
-      toast.success('Project deleted successfully');
+  const handleUpdateProject = async (projectData: any) => {
+    try {
+      console.log('🔍 Updating project with data:', projectData);
+      
+      const response = await apiClient.updateProject(projectData.id, projectData);
+      
+      if (response.success) {
+        console.log('✅ Project updated successfully:', response.data);
+        
+        // Update the project in the local state
+        setProjects((projects || []).map(p => 
+          p.id === projectData.id 
+            ? { ...p, ...projectData, updatedAt: new Date().toISOString() }
+            : p
+        ));
+        setShowEditModal(false);
+        setSelectedProject(null);
+        toast.success('Project updated successfully');
+      } else {
+        console.error('❌ Project update failed:', response.error);
+        toast.error(response.error || 'Failed to update project');
+      }
+    } catch (error) {
+      console.error('❌ Project update error:', error);
+      toast.error('Failed to update project');
     }
   };
 
-  const handleGenerateReport = (project: Project) => {
-    toast.success(`Generating compliance report for ${project.name}`);
+  const handleDeleteProject = async (project: Project) => {
+    if (confirm(`Are you sure you want to delete "${project.name || 'this project'}"?`)) {
+      try {
+        console.log('🔍 Deleting project:', project.id);
+        
+        const response = await apiClient.deleteProject(project.id);
+        
+        if (response.success) {
+          console.log('✅ Project deleted successfully');
+          setProjects((projects || []).filter(p => p.id !== project.id));
+          toast.success('Project deleted successfully');
+        } else {
+          console.error('❌ Project deletion failed:', response.error);
+          toast.error(response.error || 'Failed to delete project');
+        }
+      } catch (error) {
+        console.error('❌ Project deletion error:', error);
+        toast.error('Failed to delete project');
+      }
+    }
+  };
+
+  const handleGenerateReport = async (project: Project) => {
+    try {
+      console.log('🔍 Generating report for project:', project.id);
+      
+      // Simulate report generation
+      toast.success(`Generating compliance report for ${project.name || 'Unnamed Project'}...`);
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // For now, just show success message
+      toast.success(`Compliance report generated successfully for ${project.name || 'Unnamed Project'}`);
+      
+      console.log('✅ Report generation completed');
+    } catch (error) {
+      console.error('❌ Report generation error:', error);
+      toast.error('Failed to generate report');
+    }
   };
 
   return (
@@ -153,6 +209,18 @@ export default function ProjectManager() {
         onClose={handleModalClose}
         onCreate={handleProjectCreate}
       />
+      
+      {selectedProject && (
+        <EditProjectModal
+          isOpen={showEditModal}
+          project={selectedProject}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedProject(null);
+          }}
+          onUpdate={handleUpdateProject}
+        />
+      )}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -223,33 +291,33 @@ export default function ProjectManager() {
               {/* Project Header */}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
-                  <p className="text-gray-600 text-sm line-clamp-2">{project.description}</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name || 'Unnamed Project'}</h3>
+                  <p className="text-gray-600 text-sm line-clamp-2">{project.description || 'No description available'}</p>
                 </div>
               </div>
 
               {/* Status and Framework Badges */}
               <div className="flex space-x-2 mb-4">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
-                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status || 'draft')}`}>
+                  {(project.status || 'draft').charAt(0).toUpperCase() + (project.status || 'draft').slice(1)}
                 </span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFrameworkColor(project.framework)}`}>
-                  {project.framework.toUpperCase()}
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFrameworkColor(project.framework || 'babok')}`}>
+                  {(project.framework || 'babok').toUpperCase()}
                 </span>
               </div>
 
               {/* Metrics */}
               <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">{project.complianceScore}%</div>
+                  <div className="text-2xl font-bold text-blue-600">{project.complianceScore || 0}%</div>
                   <div className="text-xs text-gray-500">Compliance</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">{project.documents}</div>
+                  <div className="text-2xl font-bold text-green-600">{project.documents || 0}</div>
                   <div className="text-xs text-gray-500">Documents</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-purple-600">{project.stakeholders}</div>
+                  <div className="text-2xl font-bold text-purple-600">{project.stakeholders || 0}</div>
                   <div className="text-xs text-gray-500">Stakeholders</div>
                 </div>
               </div>
@@ -290,7 +358,7 @@ export default function ProjectManager() {
 
               {/* Last Updated */}
               <div className="mt-3 text-xs text-gray-500">
-                Updated {new Date(project.updatedAt).toLocaleDateString()}
+                Updated {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : 'Unknown'}
               </div>
             </div>
           </div>

@@ -49,6 +49,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         content: template.content,
         aiInstructions: template.aiInstructions || '',
         templateType: template.templateType || 'ai_instruction',
+        contextPriority: template.contextPriority || 'medium',
         contextRequirements: template.contextRequirements || [],
         variables: template.variables || {},
         metadata: {
@@ -286,9 +287,6 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category <span className="text-red-500">*</span>
-              </label>
               <label htmlFor="category-select" className="block text-sm font-medium text-gray-700 mb-1">
                 Category <span className="text-red-500">*</span>
               </label>
@@ -322,6 +320,26 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 <option value="form">Form Template</option>
                 <option value="report">Report Template</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="context-priority-select" className="block text-sm font-medium text-gray-700 mb-1">
+                Context Priority <span className="text-gray-500 text-sm">(for LLM context building)</span>
+              </label>
+              <select
+                id="context-priority-select"
+                value={formData.contextPriority || 'medium'}
+                onChange={(e) => handleInputChange('contextPriority', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="low">Low - Minimal context value</option>
+                <option value="medium">Medium - Standard context value</option>
+                <option value="high">High - Important for context</option>
+                <option value="critical">Critical - Essential for context</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Higher priority documents will be prioritized when building context for new document generation.
+              </p>
             </div>
 
             <div>
@@ -415,7 +433,6 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Complexity</label>
                 <label htmlFor="complexity-select" className="block text-sm font-medium text-gray-700 mb-1">Complexity</label>
                 <select
                   id="complexity-select"

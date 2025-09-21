@@ -106,6 +106,9 @@ app.get('/admin-api/v1/documents/stats', DocumentController.getStats);
 // Public frontend API endpoint for templates
 import templateRouter from '../routes/templates.js';
 app.use('/api/v1/templates', templateRouter);
+
+// Feedback routes
+app.use('/api/v1/feedback', feedbackRoutes);
 // API documentation route
 app.get('/api/docs', (req: Request, res: Response) => {
     res.type('text/markdown').send(`

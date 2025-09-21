@@ -4,7 +4,7 @@
 import mongoose from 'mongoose';
 import { logger } from '../utils/logger.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/requirements-gathering-agent';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:password@localhost:27017/requirements-gathering-agent?authSource=admin';
 
 export class DatabaseConnection {
   private static instance: DatabaseConnection;

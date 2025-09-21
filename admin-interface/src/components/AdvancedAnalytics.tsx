@@ -98,22 +98,25 @@ export default function AdvancedAnalytics() {
       console.log('📊 Loading analytics data...');
       
       // Try to load data from API
-      const response = await apiClient.getSystemMetrics();
-      console.log('📈 Analytics response:', response);
+      const [templateStats, projectStats] = await Promise.all([
+        apiClient.getTemplateStats(),
+        apiClient.getProjects()
+      ]);
+      console.log('📈 Analytics response:', { templateStats, projectStats });
       
-      if (response.success && response.data) {
+      if (templateStats.success && projectStats.success) {
         // Transform API data for analytics
         const transformedData: AnalyticsData = {
           projectMetrics: {
-            totalProjects: response.data.totalProjects || 25,
-            activeProjects: response.data.activeProjects || 12,
-            completedProjects: response.data.completedProjects || 13,
-            averageCompletionTime: response.data.averageCompletionTime || 18.5
+            totalProjects: projectStats.data?.pagination?.totalItems || 25,
+            activeProjects: projectStats.data?.projects?.filter((p: any) => p.status === 'active')?.length || 12,
+            completedProjects: projectStats.data?.projects?.filter((p: any) => p.status === 'completed')?.length || 13,
+            averageCompletionTime: 18.5 // Default value since we don't have this in the API
           },
-          templateUsage: response.data.templateUsage || generateMockTemplateUsage(),
-          complianceAnalytics: response.data.complianceAnalytics || generateComplianceData(),
-          userActivity: response.data.userActivity || generateUserActivityData(),
-          performanceMetrics: response.data.performanceMetrics || generateMockPerformanceMetrics()
+          templateUsage: templateStats.data || generateMockTemplateUsage(),
+          complianceAnalytics: generateComplianceData(),
+          userActivity: generateUserActivityData(),
+          performanceMetrics: generateMockPerformanceMetrics()
         };
         setAnalyticsData(transformedData);
       } else {

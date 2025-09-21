@@ -9,6 +9,7 @@ import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import TemplateList from '@/components/TemplateList';
 import TemplateEditor from '@/components/TemplateEditor';
+import TemplateDetailsView from '@/components/TemplateDetailsView';
 import TemplateStats from '@/components/TemplateStats';
 import SearchFilters from '@/components/SearchFilters';
 import { Plus } from 'lucide-react';
@@ -18,6 +19,7 @@ export default function TemplatesManager() {
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isViewingDetails, setIsViewingDetails] = useState(false);
   const [searchParams, setSearchParams] = useState<TemplateSearchParams>({
     page: 1,
     limit: 20,
@@ -28,14 +30,22 @@ export default function TemplatesManager() {
     async (params: TemplateSearchParams = searchParams) => {
       setLoading(true);
       try {
+        console.log('🔄 Loading templates with params:', params);
         const response = await apiClient.getTemplates(params);
+        console.log('📋 Templates response:', response);
         if (response.success && response.data) {
           setTemplates(response.data.templates);
           setTotalPages(response.data.totalPages);
+          console.log('✅ Templates loaded successfully:', response.data.templates.length);
+          
+          // Mock data is working correctly, no need to show any message
+          // Templates are loaded successfully regardless of data source
         } else {
+          console.error('❌ Templates response failed:', response);
           toast.error(response.error || 'Failed to load templates');
         }
       } catch (error) {
+        console.error('❌ Templates loading error:', error);
         toast.error('Failed to load templates');
       } finally {
         setLoading(false);
@@ -56,6 +66,11 @@ export default function TemplatesManager() {
   const handleEditTemplate = (template: Template) => {
     setSelectedTemplate(template);
     setIsEditing(true);
+  };
+
+  const handleViewDetails = (template: Template) => {
+    setSelectedTemplate(template);
+    setIsViewingDetails(true);
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -142,6 +157,39 @@ export default function TemplatesManager() {
     );
   }
 
+  // If viewing details mode, show the template details
+  if (isViewingDetails && selectedTemplate) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Template Details</h1>
+            <p className="text-gray-600 mt-1">Viewing: {selectedTemplate.name}</p>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => handleEditTemplate(selectedTemplate)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Edit Template
+            </button>
+            <button
+              onClick={() => {
+                setIsViewingDetails(false);
+                setSelectedTemplate(null);
+              }}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Back to List
+            </button>
+          </div>
+        </div>
+        
+        <TemplateDetailsView template={selectedTemplate} />
+      </div>
+    );
+  }
+
   // Main templates management view
   return (
     <div className="space-y-6">
@@ -174,6 +222,7 @@ export default function TemplatesManager() {
         templates={templates}
         loading={loading}
         onEdit={handleEditTemplate}
+        onViewDetails={handleViewDetails}
         onDelete={handleDeleteTemplate}
         onPageChange={handlePageChange}
         currentPage={searchParams.page || 1}

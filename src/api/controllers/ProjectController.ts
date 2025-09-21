@@ -51,8 +51,7 @@ export class ProjectController {
         Project.find(filter)
           .sort(sort)
           .skip(skip)
-          .limit(limitNum)
-          .lean(),
+          .limit(limitNum),
         Project.countDocuments(filter)
       ]);
 
@@ -98,7 +97,7 @@ export class ProjectController {
     try {
       const { id } = req.params;
 
-      const project = await Project.findById(id).lean();
+      const project = await Project.findById(id);
       
       if (!project) {
         res.status(404).json({

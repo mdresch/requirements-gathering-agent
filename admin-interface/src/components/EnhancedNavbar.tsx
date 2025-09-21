@@ -18,11 +18,11 @@ import {
 } from 'lucide-react';
 
 interface NavbarProps {
-  currentPage: string;
-  onPageChange: (page: string) => void;
+  currentPage?: string;
+  onPageChange?: (page: string) => void;
 }
 
-export default function EnhancedNavbar({ currentPage, onPageChange }: NavbarProps) {
+export default function EnhancedNavbar({ currentPage = 'projects', onPageChange }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigationItems = [
@@ -67,7 +67,7 @@ export default function EnhancedNavbar({ currentPage, onPageChange }: NavbarProp
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onPageChange(item.id)}
+                    onClick={() => onPageChange ? onPageChange(item.id) : window.location.href = `/web-interface`}
                     className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 transition-all duration-200 group relative ${
                       isActive
                         ? 'bg-blue-100 text-blue-700 shadow-sm'
@@ -123,7 +123,11 @@ export default function EnhancedNavbar({ currentPage, onPageChange }: NavbarProp
                   <button
                     key={item.id}
                     onClick={() => {
-                      onPageChange(item.id);
+                      if (onPageChange) {
+                        onPageChange(item.id);
+                      } else {
+                        window.location.href = `/web-interface`;
+                      }
                       setMobileMenuOpen(false);
                     }}
                     className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${

@@ -64,6 +64,11 @@ export default function HomePage() {
     setIsEditing(true);
   };
 
+  const handleViewTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setIsEditing(false);
+  };
+
   const handleDeleteTemplate = async (templateId: string) => {
     toast('Delete functionality for Wix templates is not implemented yet.');
   };
@@ -184,6 +189,7 @@ export default function HomePage() {
               templates={templates}
               loading={loading}
               onEdit={handleEditTemplate}
+              onViewDetails={handleViewTemplate}
               onDelete={handleDeleteTemplate}
               onPageChange={handlePageChange}
               currentPage={searchParams.page || 1}

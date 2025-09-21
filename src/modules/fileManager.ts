@@ -151,9 +151,9 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
         description: 'Analysis of stakeholder needs and expectations.',
         generatedAt: ''
     },
-    'stakeholder-analysis': {
+    'program-stakeholder-analysis': {
         title: 'Stakeholder Analysis & Communication Plan',
-        filename: 'pppm/stakeholder-analysis.md',
+        filename: 'pppm/program-stakeholder-analysis.md',
         category: DOCUMENT_CATEGORIES.PPPM,
         description: 'Identifies stakeholders, analyzes their influence/interest, and defines engagement and communication strategies.',
         generatedAt: ''
