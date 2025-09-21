@@ -41,18 +41,41 @@ export default function HomePage() {
     setMounted(true);
   }, []);
 
-  const loadTemplates = useCallback(() => {
+  const loadTemplates = useCallback(async (params?: TemplateSearchParams) => {
     setLoading(true);
-    setTemplates(templatesData as Template[]);
-    setTotalPages(1);
-    toast.success(`Loaded ${templatesData.length} templates from local JSON`);
-    setLoading(false);
-  }, []);
+    const page = params?.page ?? searchParams.page ?? 1;
+    const limit = params?.limit ?? searchParams.limit ?? 20;
 
-  // Load templates when component mounts
+    // Try API first
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = `${base}/api/v1/templates?page=${page}&limit=${limit}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        // Support both { templates: [...] } and plain array responses
+        const fetched = Array.isArray(data) ? data : data.templates || [];
+        setTemplates(fetched as Template[]);
+        const total = typeof data.total === 'number' ? data.total : fetched.length;
+        setTotalPages(Math.max(1, Math.ceil(total / limit)));
+        toast.success(`Loaded ${fetched.length} templates from API`);
+        setLoading(false);
+        return;
+      }
+      throw new Error(`API returned ${res.status}`);
+    } catch (err) {
+      // Fallback to bundled JSON
+      setTemplates(templatesData as Template[]);
+      setTotalPages(Math.max(1, Math.ceil((templatesData as Template[]).length / (searchParams.limit || 20))));
+      toast(`Using local templates (API unavailable)`);
+      setLoading(false);
+    }
+  }, [searchParams.limit, searchParams.page]);
+
+  // Load templates when component mounts or when searchParams change
   useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+    loadTemplates(searchParams);
+  }, [loadTemplates, searchParams]);
 
   const handleCreateTemplate = () => {
     setSelectedTemplate(null);

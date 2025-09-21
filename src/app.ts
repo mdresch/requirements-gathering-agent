@@ -18,9 +18,14 @@ import reviewRoutes from './routes/reviews.js';
 import reviewerRoutes from './routes/reviewers.js';
 import documentGenerationRoutes from './routes/documentGeneration.js';
 import scopeControlRoutes from './routes/scopeControl.js';
+<<<<<<< Updated upstream
 import feedbackRoutes from './api/routes/feedback.js';
 import generationJobRoutes from './api/routes/generationJobs.js';
 import { authMiddleware } from './api/middleware/auth.js';
+=======
+import templatesRoutes from './routes/templates.js';
+import authMiddleware from './middleware/auth.js';
+>>>>>>> Stashed changes
 
 const app = express();
 
@@ -100,12 +105,17 @@ app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
 app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
 app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
+<<<<<<< Updated upstream
 app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
 app.use('/api/v1/feedback', authMiddleware, feedbackRoutes);
 app.use('/api/v1/generation-jobs', authMiddleware, generationJobRoutes);
 
 // Register template API endpoint after all other routes (no auth required for templates)
 app.use('/api/v1/templates', templateRouter);
+=======
+app.use('/api/v1', authMiddleware, scopeControlRoutes);
+app.use('/api/v1/templates', authMiddleware, templatesRoutes);
+>>>>>>> Stashed changes
 // 404 handler
 
 // Global error handling middleware (must be last)
