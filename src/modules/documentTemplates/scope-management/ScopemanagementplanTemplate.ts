@@ -13,19 +13,23 @@ export class ScopemanagementplanTemplate {
     const projectName = this.context.projectName || 'Project';
     const projectType = this.context.projectType || 'Application';
     const description = this.context.description || 'No description provided';
+    const programName = this.context.programName || 'Not specified';
 
     return `# Scope Management Plan
 
-## Project Overview
-**Project Name:** ${projectName}
-**Project Type:** ${projectType}
-**Project Description:** ${description}
-
-## Document Information
+## Document Control Information
+- **Document Title:** Scope Management Plan
+- **Project Name:** ${projectName}
+- **Program Name:** ${programName}
+- **Project Type:** ${projectType}
+- **Project Description:** ${description}
+- **Framework:** PMBOK (Project Management Body of Knowledge)
 - **Version:** 1.0
 - **Date:** ${new Date().toLocaleDateString()}
 - **Prepared By:** Project Management Team
 - **Approved By:** Project Sponsor
+- **Document Classification:** Internal Use
+- **Review Cycle:** Monthly
 
 ---
 
@@ -47,22 +51,35 @@ This Scope Management Plan defines how the project scope will be planned, develo
 
 ### Scope Planning Activities
 1. **Requirements Collection**
+   - Stakeholder identification and analysis
    - Stakeholder interviews and workshops
+   - Requirements elicitation techniques (interviews, surveys, observation)
    - Requirements documentation and analysis
-   - Requirements prioritization and validation
+   - Requirements prioritization and validation (MoSCoW method)
    - Requirements traceability establishment
+   - Requirements change management setup
 
 2. **Scope Definition**
    - Project scope statement development
-   - Work Breakdown Structure (WBS) creation
-   - WBS dictionary preparation
-   - Scope baseline establishment
+   - Product scope vs project scope delineation
+   - Work Breakdown Structure (WBS) creation using decomposition
+   - WBS dictionary preparation with detailed descriptions
+   - Scope baseline establishment and approval
+   - Scope boundaries definition (in-scope vs out-of-scope)
 
 3. **Acceptance Criteria Definition**
    - Deliverable acceptance criteria specification
    - Quality standards and metrics definition
    - Verification and validation procedures
    - Sign-off criteria establishment
+   - User acceptance testing (UAT) planning
+   - Quality gates and checkpoints definition
+
+4. **Scope Validation Planning**
+   - Scope verification process design
+   - Acceptance testing strategy development
+   - Stakeholder review and approval procedures
+   - Quality assurance integration planning
 
 ### Scope Planning Inputs
 - Project charter and business case
@@ -159,16 +176,27 @@ The project scope statement will include comprehensive explicit exclusions organ
 
 ### WBS Development Process
 1. **Top-Down Decomposition**
-   - Start with project deliverables
-   - Decompose into manageable work packages
+   - Start with project deliverables and objectives
+   - Decompose into major deliverables (Level 2)
+   - Break down into sub-deliverables (Level 3)
    - Continue until appropriate level of detail achieved
-   - Ensure 100% scope coverage
+   - Ensure 100% scope coverage (no gaps or overlaps)
+   - Apply the 100% rule at each level
 
 2. **WBS Structure Guidelines**
-   - Each level represents increasing detail
-   - Work packages should be 8-80 hours of effort
-   - Each element should have clear deliverables
+   - Each level represents increasing detail and specificity
+   - Work packages should be 8-80 hours of effort (1-2 weeks)
+   - Each element should have clear, measurable deliverables
    - WBS should facilitate assignment of responsibility
+   - Use noun-based naming (deliverables, not activities)
+   - Maintain consistent numbering scheme throughout
+
+3. **WBS Quality Criteria**
+   - Mutually exclusive elements (no overlap)
+   - Collectively exhaustive coverage (complete scope)
+   - Appropriate level of detail for management
+   - Clear deliverable orientation
+   - Logical hierarchical structure
 
 ### WBS Organization
 The WBS will be organized using a deliverable-oriented structure:
@@ -263,22 +291,28 @@ For each WBS element, the following information will be documented:
 
 ### Change Control Procedure
 1. **Change Request Submission**
-   - Formal change request documentation
-   - Change impact analysis
-   - Cost and schedule impact assessment
-   - Risk assessment and mitigation
+   - Formal change request documentation using standardized forms
+   - Change impact analysis (scope, time, cost, quality, risk)
+   - Cost and schedule impact assessment with detailed estimates
+   - Risk assessment and mitigation strategies
+   - Stakeholder impact identification and communication plan
+   - Business justification and benefit analysis
 
 2. **Change Review and Approval**
-   - Change control board review
-   - Stakeholder impact assessment
-   - Business case evaluation
-   - Approval or rejection decision
+   - Change control board review within 5 business days
+   - Technical feasibility assessment by technical lead
+   - Stakeholder impact assessment and approval
+   - Business case evaluation and ROI analysis
+   - Resource availability confirmation
+   - Approval or rejection decision with documented rationale
 
 3. **Change Implementation**
-   - Scope baseline updates
-   - Work plan modifications
-   - Resource allocation adjustments
-   - Communication to project team
+   - Scope baseline updates and version control
+   - Work plan modifications and schedule adjustments
+   - Resource allocation adjustments and budget updates
+   - Communication to project team and stakeholders
+   - Documentation updates and configuration management
+   - Implementation tracking and progress monitoring
 
 ### Change Control Board (CCB)
 **Members:**
@@ -340,6 +374,48 @@ The exclusion management process ensures that all stakeholders understand what i
 - Impact analysis (scope, time, cost, quality, risk)
 - Recommended response
 - Approval status and date
+
+---
+
+## Stakeholder Engagement in Scope Management
+
+### Stakeholder Roles and Responsibilities
+1. **Project Sponsor**
+   - Approve scope baseline and major scope changes
+   - Provide business direction and priorities
+   - Resolve scope conflicts and make final decisions
+   - Ensure alignment with business objectives
+
+2. **Project Manager**
+   - Manage day-to-day scope activities
+   - Facilitate scope definition and validation
+   - Monitor scope performance and report status
+   - Coordinate with stakeholders on scope matters
+
+3. **Business Analyst**
+   - Elicit and document requirements
+   - Analyze stakeholder needs and expectations
+   - Facilitate scope definition workshops
+   - Maintain requirements traceability
+
+4. **Technical Lead**
+   - Validate technical feasibility of scope
+   - Assess technical impact of scope changes
+   - Define technical acceptance criteria
+   - Provide technical expertise for scope decisions
+
+5. **End Users/Customers**
+   - Participate in requirements gathering
+   - Validate scope definition and acceptance criteria
+   - Provide feedback during scope verification
+   - Approve deliverables and scope completion
+
+### Stakeholder Communication Strategy
+- **Regular Scope Reviews:** Monthly scope status meetings
+- **Change Communication:** Immediate notification of approved changes
+- **Requirements Workshops:** Quarterly requirements validation sessions
+- **Acceptance Reviews:** Formal acceptance reviews at major milestones
+- **Escalation Procedures:** Clear escalation path for scope conflicts
 
 ---
 
@@ -430,18 +506,44 @@ The exclusion management process ensures that all stakeholders understand what i
 ## Tools and Techniques
 
 ### Scope Management Tools
-- **Requirements Management:** [Tool Name]
-- **Work Breakdown Structure:** Microsoft Project / Visio
-- **Change Control:** [Change Management System]
-- **Document Management:** SharePoint / Confluence
-- **Communication:** Email, meetings, dashboards
+- **Requirements Management:** Jira, Azure DevOps, or IBM DOORS
+- **Work Breakdown Structure:** Microsoft Project, Visio, or WBS Chart Pro
+- **Change Control:** Change management systems, Jira Service Management
+- **Document Management:** SharePoint, Confluence, or Google Workspace
+- **Communication:** Teams, Slack, email, project dashboards
+- **Requirements Traceability:** Requirements traceability matrix tools
+- **Prototyping:** Figma, Adobe XD, or Balsamiq for UI/UX validation
+- **Collaboration:** Miro, Mural, or Lucidchart for workshops
 
 ### Scope Management Techniques
-- Interviews and workshops for requirements gathering
-- Prototyping for requirements validation
-- Decomposition for WBS development
-- Inspection for scope verification
-- Variance analysis for scope control
+1. **Requirements Gathering Techniques**
+   - Interviews and workshops with stakeholders
+   - Surveys and questionnaires for large groups
+   - Observation and job shadowing
+   - Document analysis and review
+   - Focus groups and brainstorming sessions
+   - User story mapping and storyboarding
+
+2. **Scope Definition Techniques**
+   - Decomposition for WBS development
+   - Expert judgment and historical data analysis
+   - Product analysis and value engineering
+   - Alternatives analysis for scope options
+   - Facilitation techniques for stakeholder alignment
+
+3. **Scope Verification Techniques**
+   - Inspection and walkthroughs
+   - Peer reviews and technical reviews
+   - User acceptance testing (UAT)
+   - Prototyping and proof of concepts
+   - Quality gates and checkpoints
+
+4. **Scope Control Techniques**
+   - Variance analysis and trend analysis
+   - Change control board reviews
+   - Configuration management
+   - Performance measurement and reporting
+   - Stakeholder analysis and engagement
 
 ---
 
@@ -466,13 +568,91 @@ The exclusion management process ensures that all stakeholders understand what i
 ## Appendices
 
 ### A. Requirements Traceability Matrix Template
-### B. Change Request Form Template  
+| Requirement ID | Description | Priority | Source | Deliverable | Test Case | Status | Notes |
+|----------------|-------------|----------|--------|-------------|-----------|---------|-------|
+| REQ-001 | [Requirement Description] | High | Stakeholder | [Deliverable] | TC-001 | Approved | [Notes] |
+
+### B. Change Request Form Template
+**Change Request ID:** [Auto-generated]
+**Date Submitted:** [Date]
+**Submitted By:** [Name/Role]
+**Change Title:** [Brief Title]
+**Description:** [Detailed description]
+**Business Justification:** [Why this change is needed]
+**Impact Analysis:** [Scope, Time, Cost, Quality, Risk impacts]
+**Recommendation:** [Approval/Rejection recommendation]
+**CCB Decision:** [Approved/Rejected/Deferred]
+**Implementation Date:** [If approved]
+
 ### C. WBS Dictionary Template
+| WBS ID | WBS Element Name | Description | Deliverables | Acceptance Criteria | Responsible | Dependencies | Resources | Duration |
+|--------|------------------|-------------|--------------|-------------------|-------------|--------------|-----------|----------|
+| 1.0 | [Element Name] | [Description] | [Deliverables] | [Criteria] | [Person/Team] | [Dependencies] | [Resources] | [Duration] |
+
 ### D. Acceptance Criteria Checklist
+- [ ] All functional requirements implemented and tested
+- [ ] Non-functional requirements met (performance, security, etc.)
+- [ ] Quality standards achieved
+- [ ] Documentation complete and accurate
+- [ ] User acceptance testing completed successfully
+- [ ] Stakeholder sign-off obtained
+- [ ] Configuration management requirements met
+- [ ] Training requirements satisfied
+
 ### E. Scope Verification Checklist
+- [ ] Deliverable meets defined acceptance criteria
+- [ ] Technical review completed and approved
+- [ ] Quality assurance validation passed
+- [ ] Stakeholder review and feedback incorporated
+- [ ] Compliance and standards verification completed
+- [ ] Documentation reviewed and approved
+- [ ] Change control procedures followed (if applicable)
+- [ ] Formal acceptance obtained from designated approver
+
+### F. Scope Change Impact Assessment Template
+**Change Request:** [ID and Title]
+**Impact Assessment Date:** [Date]
+**Assessed By:** [Name/Role]
+
+**Scope Impact:**
+- [ ] No scope change required
+- [ ] Minor scope adjustment (within 5%)
+- [ ] Major scope change (5-15%)
+- [ ] Significant scope change (>15%)
+
+**Schedule Impact:** [Days/weeks added/removed]
+**Cost Impact:** [Budget increase/decrease]
+**Resource Impact:** [Additional/reduced resources needed]
+**Quality Impact:** [Potential quality implications]
+**Risk Impact:** [New risks or risk changes]
+**Stakeholder Impact:** [Affected stakeholders and communication needs]
 
 ---
 
-*This Scope Management Plan will be reviewed and updated as needed throughout the project lifecycle to ensure it remains current and effective for managing project scope.*`;
+## Document Review and Updates
+
+### Review Schedule
+- **Monthly Reviews:** Scope performance and metrics review
+- **Quarterly Reviews:** Stakeholder engagement and process effectiveness
+- **Milestone Reviews:** Scope baseline validation at major milestones
+- **Change-Triggered Reviews:** Updates following significant scope changes
+
+### Update Triggers
+- Significant scope changes approved by CCB
+- Process improvements identified through lessons learned
+- Stakeholder feedback indicating process gaps
+- Organizational policy or standard changes
+- Project phase transitions
+
+### Approval Process
+1. **Draft Updates:** Project Manager prepares proposed changes
+2. **Review:** CCB reviews and provides feedback
+3. **Approval:** Project Sponsor approves final version
+4. **Communication:** Updated plan communicated to all stakeholders
+5. **Implementation:** New processes and procedures implemented
+
+---
+
+*This Scope Management Plan will be reviewed and updated as needed throughout the project lifecycle to ensure it remains current and effective for managing project scope. All updates will be version controlled and communicated to relevant stakeholders.*`;
   }
 }

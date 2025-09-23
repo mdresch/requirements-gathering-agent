@@ -1,7 +1,7 @@
 import { AIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
-import { BusinesscaseTemplate } from '../strategic-statements/BusinesscaseTemplate.js';
+import { TemplateRepository } from '../../../repositories/TemplateRepository.js';
 
 class ExpectedError extends Error {
   constructor(message: string) {
@@ -15,13 +15,15 @@ class ExpectedError extends Error {
  */
 export class BusinesscaseProcessor implements DocumentProcessor {
   private aiProcessor: AIProcessor;
+  private templateRepository: TemplateRepository;
 
   constructor() {
     this.aiProcessor = AIProcessor.getInstance();
+    this.templateRepository = new TemplateRepository();
   }
   async process(context: ProjectContext): Promise<DocumentOutput> {
     try {
-      const prompt = this.createPrompt(context);
+      const prompt = await this.createPrompt(context);
       const content = await this.aiProcessor.makeAICall([
         { 
           role: 'system', 
@@ -58,41 +60,46 @@ Generate a formal "Business Case" document using the provided template based on 
     }
   }
 
-  private createPrompt(context: ProjectContext): string {
-    // Get the template as an example structure
-    const template = new BusinesscaseTemplate(context);
-    const exampleStructure = template.generateContent();
+  private async createPrompt(context: ProjectContext): Promise<string> {
+    // Fetch the template from the database
+    const templateId = '68cf6a63a14fd05622cf3cc5'; // Business Case template ID
+    const template = await this.templateRepository.getTemplateById(templateId);
+    
+    if (!template) {
+      throw new ExpectedError('Business Case template not found in database');
+    }
 
-    // Extract any available context properties safely
-    const contextDetails = JSON.stringify(context, null, 2);
+    // Get the template content from the database
+    // The enhanced template content is stored in templateData.content
+    const templateContent = (template as any).templateData?.content || template.prompt_template || '';
+    
+    if (!templateContent) {
+      throw new ExpectedError('Template content is empty in database');
+    }
 
-    return `Based on the comprehensive project context below, generate a professional, investment-grade Business Case document. This document will be presented to senior executives for funding approval.
+    return `Based on the comprehensive project context below, generate a professional, investment-grade Business Case document following the template structure provided.
 
-**COMPREHENSIVE PROJECT CONTEXT:**
-
-**Core Project Information:**
+Project Context:
 - Name: ${context.projectName || 'Untitled Project'}
-- Type: ${(context as any).projectType || 'Not specified'}
-- Description: ${(context as any).description || 'No description provided'}
+- Type: ${context.projectType || 'Not specified'}
+- Description: ${context.description || 'No description provided'}
+- Program: ${context.programName || 'Not specified'}
 
-**Full Project Context:**
-${contextDetails}
+IMPORTANT: You must follow the EXACT template structure provided below. Replace the template variables with project-specific content, but maintain the exact same structure, sections, and formatting.
 
-**Template Structure to Follow:**
+Template Structure to Follow:
 
-${exampleStructure}
+${templateContent}
 
-**CRITICAL INSTRUCTIONS:**
-- Replace ALL instructional placeholders [brackets] with actual, project-specific content
-- Generate concrete, realistic financial estimates where possible based on the project context
-- Create authentic risk assessments based on the project's actual characteristics
-- Write for a senior executive audience - confident, data-driven, decision-oriented
-- Ensure every section provides genuine business value and insight
-- Make specific references to the project's actual capabilities and benefits
-- Remove all template instructions and commentary from the final output
-- The final document must be ready for immediate executive presentation
+Instructions:
+1. Replace template variables (like {{projectName}}, {{projectType}}, etc.) with the actual project context provided above
+2. Customize the content within each section to be specific to this project
+3. Maintain the exact same markdown structure, headers, and formatting
+4. Generate realistic and detailed business case content based on the project context
+5. Use professional, executive-level language appropriate for funding approval
+6. Make the content immediately usable for executive presentation
 
-Generate the complete Business Case document now:`;
+Generate the Business Case following this template structure exactly.`;
   }
 
   private async validateOutput(content: string): Promise<void> {

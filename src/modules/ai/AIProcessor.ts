@@ -26,6 +26,7 @@ import { RetryManager } from "./RetryManager.js";
 import { ConfigurationManager } from "./ConfigurationManager.js";
 import { ProviderManager } from "./ProviderManager.js";
 import { ProviderFallbackManager } from "./ProviderFallbackManager.js";
+import { AIContextTrackingService, ContextTrackingOptions, AIResponseData } from "../../services/AIContextTrackingService.js";
 
 export class AIProcessor {
     private static instance: AIProcessor;
@@ -158,6 +159,131 @@ export class AIProcessor {
         }, 'AI_Call');
     }
 
+    /**
+     * Make an AI call with comprehensive context tracking
+     */
+    async makeAICallWithContextTracking(
+        messages: ChatMessage[], 
+        contextOptions: ContextTrackingOptions,
+        maxTokens?: number
+    ): Promise<AIResponse> {
+        await this.ensureInitialized();
+        
+        const defaultTokens = this.config.getMaxResponseTokens();
+        maxTokens = maxTokens ?? defaultTokens;
+        
+        const startTime = Date.now();
+        let generationJobId: string | null = null;
+        let usedProvider: AIProvider | null = null;
+        
+        try {
+            // Start context tracking
+            const providerConfig = this.getProviderConfig(contextOptions.aiProvider);
+            generationJobId = await AIContextTrackingService.startTracking({
+                ...contextOptions,
+                providerConfig: {
+                    modelName: contextOptions.aiModel,
+                    maxTokens: maxTokens,
+                    temperature: providerConfig.temperature || 0.7,
+                    topP: providerConfig.topP,
+                    frequencyPenalty: providerConfig.frequencyPenalty,
+                    presencePenalty: providerConfig.presencePenalty
+                }
+            });
+
+            // Use enhanced fallback manager for automatic provider switching
+            const response = await this.fallbackManager.executeWithFallback(async (provider: AIProvider) => {
+                usedProvider = provider;
+                
+                // Ensure the client for the provider is initialized
+                let client = this.clientManager.getClient(provider);
+                if (!client) {
+                    console.log(`🔧 Initializing client for provider: ${provider}`);
+                    await this.clientManager.initializeSpecificProvider(provider);
+                    client = this.clientManager.getClient(provider);
+                    if (!client) {
+                        throw new Error(`Failed to initialize client for provider: ${provider}`);
+                    }
+                }
+
+                // Check provider status
+                const status = this.providerManager.getProviderStatus(provider);
+                if (!status.withinRateLimit) {
+                    throw new Error(`Rate limit exceeded for provider ${provider}`);
+                }
+                if (!status.withinQuota) {
+                    throw new Error(`Quota exceeded for provider ${provider}`);
+                }
+
+                // Make the AI call
+                const result = await this.routeProviderCall(provider, client, messages, maxTokens);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                const tokensUsed = this.estimateTokens(result);
+
+                // Update provider metrics on success
+                this.providerManager.updateMetrics(provider, true, responseTime, tokensUsed);
+                
+                return {
+                    content: result,
+                    metadata: {
+                        provider,
+                        responseTime,
+                        tokensUsed
+                    }
+                };
+            }, 'AI_Call');
+
+            // Update context tracking with response data
+            if (generationJobId && usedProvider) {
+                const responseData: AIResponseData = {
+                    rawResponse: response.content,
+                    processedResponse: response.content,
+                    responseMetadata: {
+                        finishReason: 'stop',
+                        usage: {
+                            promptTokens: this.estimateTokens(messages.map(m => m.content).join(' ')),
+                            completionTokens: response.metadata.tokensUsed,
+                            totalTokens: response.metadata.tokensUsed + this.estimateTokens(messages.map(m => m.content).join(' '))
+                        },
+                        model: contextOptions.aiModel,
+                        timestamp: new Date().toISOString()
+                    },
+                    generationTimeMs: response.metadata.responseTime
+                };
+
+                await AIContextTrackingService.updateWithResponse(generationJobId, responseData);
+            }
+
+            return response;
+
+        } catch (error: any) {
+            // Mark context tracking as failed
+            if (generationJobId) {
+                await AIContextTrackingService.markAsFailed(generationJobId, {
+                    errorCode: 'AI_CALL_FAILED',
+                    errorMessage: error.message,
+                    stackTrace: error.stack
+                });
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Get provider configuration
+     */
+    private getProviderConfig(provider: string): any {
+        // This would typically come from the configuration manager
+        // For now, return default values
+        return {
+            temperature: 0.7,
+            topP: 1.0,
+            frequencyPenalty: 0,
+            presencePenalty: 0
+        };
+    }
+
     private async routeProviderCall(
         provider: AIProvider, 
         client: any, 
@@ -165,6 +291,7 @@ export class AIProcessor {
         maxTokens: number
     ): Promise<string> {        const callMethods: Record<AIProvider, () => Promise<string>> = {
             'google-ai': () => this.makeGoogleAICall(client, messages, maxTokens),
+            'google-gemini': () => this.makeGoogleAICall(client, messages, maxTokens),
             'azure-openai': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-openai-key': () => this.makeAzureOpenAICall(client, messages, maxTokens),
             'azure-openai-entra': () => this.makeAzureOpenAICall(client, messages, maxTokens),
@@ -182,7 +309,9 @@ export class AIProcessor {
     }
 
     private async makeGoogleAICall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
-        const modelName = "gemini-1.5-flash";
+        // Use gemini-pro for google-gemini provider, otherwise use gemini-1.5-flash
+        const currentProvider = this.config.getAIProvider();
+        const modelName = currentProvider === 'google-gemini' ? "gemini-pro" : "gemini-1.5-flash";
         const model = client.getGenerativeModel({ model: modelName });
         const modelMaxTokens = this.config.getModelTokenLimit(modelName);
         
@@ -259,17 +388,25 @@ export class AIProcessor {
 
     private async makeOllamaCall(client: any, messages: ChatMessage[], maxTokens: number): Promise<string> {
         const { endpoint } = client;
-        const modelName = 'llama2';
+        const modelName = 'llama3.1:latest';
         const modelMaxTokens = this.config.getModelTokenLimit(modelName);
         
-        const response = await fetch(`${endpoint}/api/chat`, {
+        // Convert messages to Ollama format
+        const prompt = messages.map(msg => {
+            if (msg.role === 'system') return `System: ${msg.content}`;
+            if (msg.role === 'user') return `Human: ${msg.content}`;
+            if (msg.role === 'assistant') return `Assistant: ${msg.content}`;
+            return msg.content;
+        }).join('\n\n') + '\n\nAssistant:';
+        
+        const response = await fetch(`${endpoint}/api/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 model: modelName,
-                messages: messages,
+                prompt: prompt,
                 stream: false,
                 options: {
                     temperature: 0.7,
@@ -281,8 +418,8 @@ export class AIProcessor {
         if (!response.ok) {
             throw new Error(`Ollama call failed: ${response.status}`);
         }
-        const result = await response.json() as { message?: { content?: string } };
-        return result.message?.content || '';
+        const result = await response.json() as { response?: string };
+        return result.response || '';
     }
 
     private convertMessagesToGoogleFormat(messages: ChatMessage[]): any[] {

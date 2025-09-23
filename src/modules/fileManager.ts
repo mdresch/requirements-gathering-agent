@@ -61,6 +61,7 @@ function getAIProviderDisplayName(): string {
             'azure-openai-entra': 'Azure OpenAI (Entra ID)',
             'azure-ai-studio': 'Azure AI Studio',
             'google-ai': 'Google AI (Gemini)',
+            'google-gemini': 'Google Gemini Pro',
             'github-ai': 'GitHub AI',
             'ollama': 'Ollama'
         };
@@ -345,8 +346,8 @@ export const DOCUMENT_CONFIG: Record<string, DocumentMetadata> = {
     'risk-register': { title: 'RiskRegister', filename: 'risk-management/risk-register.md', category: DOCUMENT_CATEGORIES.RISK_MANAGEMENT, description: '', generatedAt: '' },
     'scope-statement': { title: 'ScopeStatement', filename: 'scope-management/scope-statement.md', category: DOCUMENT_CATEGORIES.SCOPE_MANAGEMENT, description: '', generatedAt: '' },
     'purpose-statement': { title: 'PurposeStatement', filename: 'strategic-statements/purpose-statement.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
-    'company-values': { title: 'CompanyValues', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
-    'mission-vision-core-values': { title: 'MissionVisionCoreValues', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'company-values': { title: 'Company Values', filename: 'strategic-statements/company-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
+    'mission-vision-core-values': { title: 'Mission, Vision & Core Values', filename: 'strategic-statements/mission-vision-core-values.md', category: DOCUMENT_CATEGORIES.STRATEGIC_STATEMENTS, description: '', generatedAt: '' },
     'new-test-doc': { title: 'NewTestDoc', filename: 'quality-assurance/new-test-doc.md', category: DOCUMENT_CATEGORIES.QUALITY_ASSURANCE, description: '', generatedAt: '' },
     'project-summary': {
         title: 'Project Summary and Goals',

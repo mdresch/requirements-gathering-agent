@@ -34,7 +34,9 @@ const generateWithReviewSchema = Joi.object({
 const generateOnlySchema = Joi.object({
   context: Joi.string().required(),
   generateAll: Joi.boolean().default(false),
-  documentKeys: Joi.array().items(Joi.string()).optional()
+  documentKeys: Joi.array().items(Joi.string()).optional(),
+  projectId: Joi.string().optional(),
+  framework: Joi.string().optional()
 });
 
 const regenerateWithFeedbackSchema = Joi.object({

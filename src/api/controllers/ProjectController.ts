@@ -3,6 +3,7 @@
 
 import { Request, Response } from 'express';
 import { Project, IProject } from '../../models/Project.js';
+import { ProjectDocument } from '../../models/ProjectDocument.js';
 import { logger } from '../../utils/logger.js';
 import { validationResult } from 'express-validator';
 
@@ -55,6 +56,79 @@ export class ProjectController {
         Project.countDocuments(filter)
       ]);
 
+      // Calculate accurate document and stakeholder counts for each project
+      const projectsWithCounts = await Promise.all(
+        projects.map(async (project) => {
+          try {
+            // Count non-deleted documents (handle both null and undefined deletedAt)
+            const documentCount = await ProjectDocument.countDocuments({ 
+              projectId: project._id.toString(),
+              $or: [
+                { deletedAt: { $exists: false } },
+                { deletedAt: null }
+              ]
+            });
+            
+            
+            // Count active stakeholders (with fallback if collection doesn't exist)
+            let stakeholderCount = 0;
+            try {
+              // Try to import and use Stakeholder model
+              const { Stakeholder } = await import('../../models/Stakeholder.js');
+              stakeholderCount = await Stakeholder.countDocuments({ 
+                projectId: project._id.toString(),
+                isActive: true
+              });
+            } catch (error) {
+              console.log(`⚠️ Stakeholder collection not available for project ${project._id}, using 0`);
+              stakeholderCount = 0;
+            }
+
+            // Calculate compliance score from individual document compliance scores
+            let calculatedComplianceScore = 0;
+            if (documentCount > 0) {
+              const documents = await ProjectDocument.find({ 
+                projectId: project._id.toString(),
+                $or: [
+                  { deletedAt: { $exists: false } },
+                  { deletedAt: null }
+                ]
+              });
+              
+              // Calculate average compliance score from documents
+              const complianceScores = documents.map(doc => {
+                // Use metadata.complianceScore first, then qualityScore as fallback
+                return doc.metadata?.complianceScore || doc.qualityScore || 0;
+              });
+              
+              if (complianceScores.length > 0) {
+                calculatedComplianceScore = Math.round(
+                  complianceScores.reduce((sum, score) => sum + score, 0) / complianceScores.length
+                );
+              }
+            }
+
+            console.log(`📊 Project ${project.name}: docs=${documentCount}, stakeholders=${stakeholderCount}, compliance=${calculatedComplianceScore}%`);
+
+            return {
+              ...project.toJSON(),
+              documents: documentCount,
+              stakeholders: stakeholderCount,
+              complianceScore: calculatedComplianceScore
+            };
+          } catch (error) {
+            console.error(`❌ Error calculating counts for project ${project._id}:`, error);
+            // Fallback to existing values
+            return {
+              ...project.toJSON(),
+              documents: project.documents || 0,
+              stakeholders: project.stakeholders || 0,
+              complianceScore: project.complianceScore || 0
+            };
+          }
+        })
+      );
+
       // Calculate pagination info
       const totalPages = Math.ceil(total / limitNum);
       const hasNextPage = pageNum < totalPages;
@@ -62,7 +136,7 @@ export class ProjectController {
 
       res.json({
         success: true,
-        data: projects,
+        data: projectsWithCounts,
         pagination: {
           currentPage: pageNum,
           totalPages,

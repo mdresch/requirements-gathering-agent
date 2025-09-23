@@ -9,11 +9,21 @@ dotenv.config();
 const PORT = process.env.PORT || process.env.API_PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Initialize database connection
+// Initialize database connection and services
 async function initializeDatabase() {
   try {
     await dbConnection.connect();
     logger.info('✅ Database connection established');
+    
+    // Initialize TemplateRepository and connect it to TemplateController
+    const { TemplateRepository } = await import('./repositories/TemplateRepository.js');
+    const templateRepository = new TemplateRepository();
+    const { TemplateController } = await import('./api/controllers/TemplateController.js');
+    
+    // Set the repository in the controller
+    TemplateController.setTemplateRepository(templateRepository);
+    logger.info('✅ TemplateRepository initialized and connected to TemplateController');
+    
   } catch (error) {
     logger.error('❌ Failed to connect to database:', error);
     process.exit(1);

@@ -13,14 +13,22 @@ import fs from 'fs';
 import rateLimitLib from 'express-rate-limit';
 // Protected API routes
 import documentRoutes from './routes/documents.js';
-import standardsComplianceRoutes from './routes/standards.js';
+import standardsComplianceRoutes from './api/routes/standardsCompliance.js';
 import reviewRoutes from './routes/reviews.js';
 import reviewerRoutes from './routes/reviewers.js';
-import documentGenerationRoutes from './routes/documentGeneration.js';
+import documentGenerationRoutes from './api/routes/documentGeneration.js';
 import scopeControlRoutes from './routes/scopeControl.js';
+<<<<<<< Updated upstream
 import feedbackRoutes from './api/routes/feedback.js';
 import generationJobRoutes from './api/routes/generationJobs.js';
+import qualityRoutes from './api/routes/quality.js';
+import stakeholderRoutes from './api/routes/stakeholders.js';
+import contextTrackingRoutes from './api/routes/contextTracking.js';
 import { authMiddleware } from './api/middleware/auth.js';
+=======
+import templatesRoutes from './routes/templates.js';
+import authMiddleware from './middleware/auth.js';
+>>>>>>> Stashed changes
 
 const app = express();
 
@@ -100,12 +108,20 @@ app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
 app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
 app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
+<<<<<<< Updated upstream
 app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
 app.use('/api/v1/feedback', authMiddleware, feedbackRoutes);
 app.use('/api/v1/generation-jobs', authMiddleware, generationJobRoutes);
+app.use('/api/v1/quality', authMiddleware, qualityRoutes);
+app.use('/api/v1/stakeholders', authMiddleware, stakeholderRoutes);
+app.use('/api/v1/context-tracking', authMiddleware, contextTrackingRoutes);
 
 // Register template API endpoint after all other routes (no auth required for templates)
 app.use('/api/v1/templates', templateRouter);
+=======
+app.use('/api/v1', authMiddleware, scopeControlRoutes);
+app.use('/api/v1/templates', authMiddleware, templatesRoutes);
+>>>>>>> Stashed changes
 // 404 handler
 
 // Global error handling middleware (must be last)
@@ -114,18 +130,19 @@ app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Route ${req.originalUrl} not found`,
-    availableEndpoints: {
-      health: '/api/v1/health',
-      documents: '/api/v1/documents',
-      standards: '/api/v1/standards',
-      reviews: '/api/v1/reviews',
-      reviewers: '/api/v1/reviewers',
-      documentGeneration: '/api/v1/document-generation',
-      scopeControl: '/api/v1/scope-control',
-          feedback: '/api/v1/feedback',
-          generationJobs: '/api/v1/generation-jobs',
-      documentation: '/api-docs'
-    }
+      availableEndpoints: {
+        health: '/api/v1/health',
+        documents: '/api/v1/documents',
+        standards: '/api/v1/standards',
+        reviews: '/api/v1/reviews',
+        reviewers: '/api/v1/reviewers',
+        documentGeneration: '/api/v1/document-generation',
+        scopeControl: '/api/v1/scope-control',
+        feedback: '/api/v1/feedback',
+        generationJobs: '/api/v1/generation-jobs',
+        quality: '/api/v1/quality',
+        documentation: '/api-docs'
+      }
   });
 });
 app.use((err: any, req: Request, res: Response, next: Function) => {

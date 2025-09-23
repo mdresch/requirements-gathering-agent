@@ -116,6 +116,13 @@ export interface ValidationResult {
 export interface DocumentOutput {
     title: string;
     content: string;
+    documentId?: string;
+    contextData?: {
+        systemPrompt: string;
+        userPrompt: string;
+        projectContext: string;
+        template: string;
+    };
     // Optionally, add more fields as needed (e.g., metadata, summary, etc.)
 }
 

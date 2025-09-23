@@ -225,6 +225,98 @@ export class FeedbackController {
   }
 
   /**
+   * Get feedback summary statistics
+   */
+  public static async getFeedbackSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Get overall feedback statistics
+      const totalFeedback = await DocumentFeedback.countDocuments();
+      
+      // Get average rating
+      const avgRatingResult = await DocumentFeedback.aggregate([
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+            totalCount: { $sum: 1 }
+          }
+        }
+      ]);
+      
+      const averageRating = avgRatingResult.length > 0 ? avgRatingResult[0].averageRating : 0;
+      
+      // Get rating distribution
+      const ratingDistribution = await DocumentFeedback.aggregate([
+        {
+          $group: {
+            _id: '$rating',
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]);
+      
+      // Get recent feedback (last 10)
+      const recentFeedback = await DocumentFeedback.find()
+        .sort({ submittedAt: -1 })
+        .limit(10)
+        .select('title rating feedbackType status submittedAt projectId documentId')
+        .lean();
+      
+      // Get feedback by type
+      const feedbackByType = await DocumentFeedback.aggregate([
+        {
+          $group: {
+            _id: '$feedbackType',
+            count: { $sum: 1 },
+            averageRating: { $avg: '$rating' }
+          }
+        },
+        { $sort: { count: -1 } }
+      ]);
+      
+      // Get feedback by status
+      const feedbackByStatus = await DocumentFeedback.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { count: -1 } }
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          totalFeedback,
+          averageRating: Math.round(averageRating * 10) / 10,
+          ratingDistribution: ratingDistribution.reduce((acc, item) => {
+            acc[`rating_${item._id}`] = item.count;
+            return acc;
+          }, {}),
+          recentFeedback,
+          feedbackByType,
+          feedbackByStatus,
+          summary: {
+            totalFeedback,
+            averageRating: Math.round(averageRating * 10) / 10,
+            ratingDistribution,
+            recentCount: recentFeedback.length
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error getting feedback summary:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get feedback summary',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
    * Get feedback analytics for a project
    */
   public static async getFeedbackAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -305,68 +397,6 @@ export class FeedbackController {
     }
   }
 
-  /**
-   * Get feedback summary for dashboard
-   */
-  public static async getFeedbackSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { userId } = req.query;
-
-      // Get overall feedback stats
-      const overallStats = await DocumentFeedback.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalFeedback: { $sum: 1 },
-            averageRating: { $avg: '$rating' },
-            openFeedback: {
-              $sum: { $cond: [{ $eq: ['$status', 'open'] }, 1, 0] }
-            },
-            criticalFeedback: {
-              $sum: { $cond: [{ $eq: ['$priority', 'critical'] }, 1, 0] }
-            }
-          }
-        }
-      ]);
-
-      // Get recent feedback
-      const recentFeedback = await DocumentFeedback.find()
-        .sort({ submittedAt: -1 })
-        .limit(10)
-        .select('title documentType rating status submittedAt submittedByName');
-
-      // Get user's feedback if userId provided
-      let userFeedback = null;
-      if (userId) {
-        userFeedback = await DocumentFeedback.find({ submittedBy: userId })
-          .sort({ submittedAt: -1 })
-          .limit(5)
-          .select('title documentType rating status submittedAt');
-      }
-
-      res.json({
-        success: true,
-        data: {
-          overallStats: overallStats[0] || {
-            totalFeedback: 0,
-            averageRating: 0,
-            openFeedback: 0,
-            criticalFeedback: 0
-          },
-          recentFeedback,
-          userFeedback
-        }
-      });
-
-    } catch (error: any) {
-      console.error('Error getting feedback summary:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve feedback summary',
-        details: error.message
-      });
-    }
-  }
 
   /**
    * Search feedback across projects

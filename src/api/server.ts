@@ -17,6 +17,9 @@ import { apiKeyAuth } from './middleware/auth.js';
 // ...existing code...
 import projectRoutes from './routes/projects.js';
 import feedbackRoutes from './routes/feedback.js';
+import contextTrackingRoutes from './routes/contextTracking.js';
+import templateRouter from '../routes/templates.js';
+import auditTrailRoutes from './routes/auditTrail.js';
 
 
 
@@ -42,10 +45,10 @@ app.use(cors({
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - Very generous for development
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: process.env.NODE_ENV === 'production' ? 100 : 10000, // Very high limit for development
     message: {
         success: false,
         error: {
@@ -104,11 +107,16 @@ app.get('/admin-api/v1/documents/jobs', DocumentController.listJobs);
 app.get('/admin-api/v1/documents/stats', DocumentController.getStats);
 
 // Public frontend API endpoint for templates
-import templateRouter from '../routes/templates.js';
 app.use('/api/v1/templates', templateRouter);
 
 // Feedback routes
 app.use('/api/v1/feedback', feedbackRoutes);
+
+// Context tracking routes
+app.use('/api/v1/context-tracking', contextTrackingRoutes);
+
+// Audit trail routes
+app.use('/api/v1/audit-trail', auditTrailRoutes);
 // API documentation route
 app.get('/api/docs', (req: Request, res: Response) => {
     res.type('text/markdown').send(`

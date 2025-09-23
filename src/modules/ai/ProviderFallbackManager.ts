@@ -147,7 +147,20 @@ export class ProviderFallbackManager {
         }
 
         // Find the best healthy provider from fallback order
+        // Prioritize Ollama if it's available and healthy
+        if (this.config.fallbackOrder.includes('ollama') && 
+            this.isProviderHealthy('ollama') && 
+            await this.isProviderConfigured('ollama')) {
+            if (this.currentProvider !== 'ollama') {
+                await this.switchToProvider('ollama', 'health_check');
+            }
+            return 'ollama';
+        }
+        
+        // Then try other providers in fallback order
         for (const provider of this.config.fallbackOrder) {
+            if (provider === 'ollama') continue; // Already checked above
+            
             if (this.isProviderHealthy(provider) && await this.isProviderConfigured(provider)) {
                 if (this.currentProvider !== provider) {
                     await this.switchToProvider(provider, 'health_check');
@@ -389,8 +402,21 @@ export class ProviderFallbackManager {
      */
     private isProviderHealthy(provider: AIProvider): boolean {
         const health = this.providerHealth.get(provider);
-        if (!health) return false;
-
+        
+        // If no health record exists, consider it healthy (first time use)
+        if (!health) return true;
+        
+        // If provider has consecutive failures, it's unhealthy
+        if (health.consecutiveFailures >= this.config.maxConsecutiveFailures) {
+            return false;
+        }
+        
+        // For Ollama, be more lenient with performance thresholds
+        if (provider === 'ollama') {
+            return health.isHealthy;
+        }
+        
+        // For other providers, use strict performance thresholds
         return health.isHealthy && 
                health.successRate >= this.config.performanceThreshold.minSuccessRate &&
                health.averageResponseTime <= this.config.performanceThreshold.maxResponseTime;

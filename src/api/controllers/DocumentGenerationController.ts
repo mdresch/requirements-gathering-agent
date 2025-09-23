@@ -207,11 +207,17 @@ export class DocumentGenerationController {
       
       // Create a proper project context object
       const projectContext = {
-        projectId: req.body.projectId || context, // Use projectId if provided, otherwise use context
-        projectName: context,
+        projectId: req.body.projectId || req.params.projectId || context, // Use projectId from body, params, or context
+        projectName: req.body.projectName || context,
         framework: req.body.framework || 'multi',
         ...req.body
       };
+      
+      // Ensure we have a valid project ID
+      if (!projectContext.projectId || projectContext.projectId === 'default-project') {
+        console.warn('⚠️ No valid project ID provided for document generation. Using context as project ID.');
+        projectContext.projectId = context;
+      }
       
       const generator = new DocumentGenerator(projectContext);
 
@@ -225,6 +231,7 @@ export class DocumentGenerationController {
           successCount: 0,
           failureCount: 0,
           generatedFiles: [] as string[],
+          generatedDocuments: [] as Array<{ id: string; name: string; type: string; category: string }>,
           errors: [] as Array<{ task: string; error: string }>,
           duration: 0,
           message: ''
@@ -236,6 +243,26 @@ export class DocumentGenerationController {
           if (success) {
             result.successCount++;
             result.generatedFiles.push(`${documentKey}.md`);
+            
+            // Try to get the generated document from the database
+            try {
+              const { ProjectDocument } = await import('../../models/ProjectDocument.js');
+              const recentDocument = await ProjectDocument.findOne({
+                type: documentKey,
+                projectId: projectContext.projectId
+              }).sort({ generatedAt: -1 }).exec();
+              
+              if (recentDocument) {
+                result.generatedDocuments.push({
+                  id: recentDocument._id.toString(),
+                  name: recentDocument.name,
+                  type: recentDocument.type,
+                  category: recentDocument.category
+                });
+              }
+            } catch (dbError) {
+              console.warn(`Could not retrieve document ID for ${documentKey}:`, dbError);
+            }
           } else {
             result.failureCount++;
             result.errors.push({ task: documentKey, error: 'Generation failed' });
@@ -252,6 +279,7 @@ export class DocumentGenerationController {
         documentsGenerated: result.successCount,
         documentsFailed: result.failureCount,
         generatedFiles: result.generatedFiles,
+        generatedDocuments: (result as any).generatedDocuments || [],
         duration: result.duration,
         errors: result.errors
       });

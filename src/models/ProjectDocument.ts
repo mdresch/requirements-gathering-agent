@@ -25,6 +25,23 @@ export interface IProjectDocument extends Document {
     generationJobId?: string;
     complianceScore?: number;
     automatedChecks?: any[];
+    qualityAssessment?: any;
+    contextMetrics?: {
+      inputTokens: number;
+      systemPromptTokens: number;
+      userPromptTokens: number;
+      projectContextTokens: number;
+      templateTokens: number;
+      outputTokens: number;
+      responseTokens: number;
+      totalTokensUsed: number;
+      contextWindowSize: number;
+      contextUtilizationPercentage: number;
+      provider: string;
+      model: string;
+      generatedAt: Date;
+      processingTimeMs: number;
+    };
   };
   deletedAt?: Date;
   createdAt: Date;

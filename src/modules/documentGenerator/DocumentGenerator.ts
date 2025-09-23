@@ -38,8 +38,10 @@ import {
 } from '../fileManager.js';
 import { ProjectDocument } from '../../models/ProjectDocument.js';
 import { GenerationJobService } from '../../services/GenerationJobService.js';
+import QualityAssessmentService from '../../services/QualityAssessmentService.js';
 import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
+import { AIContextTrackingService } from '../../services/AIContextTrackingService.js';
 // Import all processor functions
 import * as processors from '../ai/processors/index.js';
 // Utility to load processor-config.json asynchronously
@@ -164,22 +166,42 @@ export class DocumentGenerator {
     }
 
     /**
+     * Extract and validate project ID from context
+     * @returns Valid project ID or 'default-project' as fallback
+     */
+    private extractProjectId(): string {
+        if (typeof this.context === 'string') {
+            // If context is a string, use it as project ID
+            return this.context;
+        } else if (this.context && typeof this.context === 'object') {
+            // If context is an object, extract projectId or id
+            const projectId = (this.context as any).projectId || (this.context as any).id;
+            if (projectId && projectId !== 'default-project') {
+                return projectId;
+            }
+        }
+        
+        console.warn(`⚠️ No valid project ID found in context. Using 'default-project'. Context:`, this.context);
+        return 'default-project';
+    }
+
+    /**
      * Save document to MongoDB database
      * @param documentKey Document key
      * @param content Document content
      * @param task Generation task
      * @returns Promise<boolean> Success status
      */
-    private async saveDocumentToDatabase(documentKey: string, content: string, task: GenerationTask): Promise<boolean> {
+    private async saveDocumentToDatabase(documentKey: string, content: string, task: GenerationTask): Promise<string | null> {
         try {
             const config = DOCUMENT_CONFIG[documentKey];
             if (!config) {
                 console.warn(`⚠️ No config found for document key: ${documentKey}`);
-                return false;
+                return null;
             }
 
-            // Extract project ID from context
-            const projectId = typeof this.context === 'string' ? this.context : (this.context as any).projectId || 'default-project';
+            // Extract project ID from context using helper method
+            const projectId = this.extractProjectId();
             
             const documentData = {
                 projectId: projectId,
@@ -208,11 +230,37 @@ export class DocumentGenerator {
             const document = new ProjectDocument(documentData);
             await document.save();
 
-            console.log(`✅ Saved to database: ${config.title} (ID: ${document._id})`);
-            return true;
+            console.log(`✅ Saved to database: ${config.title} (ID: ${document._id}, Project ID: ${projectId})`);
+
+            // Perform quality assessment after document is saved
+            try {
+                console.log(`🔍 Starting quality assessment for ${config.title}...`);
+                const qualityService = QualityAssessmentService.getInstance();
+                
+                const projectContext = typeof this.context === 'string' 
+                    ? { projectId: this.context } 
+                    : this.context;
+                
+                const qualityResult = await qualityService.assessDocumentQuality(
+                    content,
+                    documentKey,
+                    projectContext,
+                    documentData.framework
+                );
+
+                // Update document with quality assessment results
+                await qualityService.updateDocumentQualityScore(document._id.toString(), qualityResult);
+                
+                console.log(`✅ Quality assessment completed for ${config.title}: ${qualityResult.overallScore}%`);
+            } catch (qualityError) {
+                console.warn(`⚠️ Quality assessment failed for ${config.title}:`, qualityError);
+                // Don't fail the entire process if quality assessment fails
+            }
+
+            return document._id.toString();
         } catch (error: any) {
             console.error(`❌ Error saving document to database: ${error.message}`);
-            return false;
+            return null;
         }
     }
 
@@ -586,7 +634,12 @@ export class DocumentGenerator {
                 await this.jobService.updateJob(jobId, { progress: 30 });
             }
             
+            // Track context usage for this generation
+            const startTime = Date.now();
+            
             const output = await processor.process({ projectName: this.context });
+            
+            const processingTime = Date.now() - startTime;
             const content = output.content;
             if (content && content.trim().length > 0) {
                 const documentKey = task.key;
@@ -620,7 +673,57 @@ export class DocumentGenerator {
                 }
 
                 // Save to database first
-                const dbSaved = await this.saveDocumentToDatabase(documentKey, content, task);
+                const documentId = await this.saveDocumentToDatabase(documentKey, content, task);
+                
+                // Track context usage if document was saved successfully
+                if (documentId) {
+                    try {
+                        const configManager = ConfigurationManager.getInstance();
+                        const provider = configManager.getAIProvider();
+                        const model = 'default'; // TODO: Get actual model from config
+                        
+                        // Start context tracking
+                        const trackingId = await AIContextTrackingService.startTracking({
+                            projectId: this.extractProjectId(),
+                            documentId: documentId,
+                            templateId: documentKey,
+                            aiProvider: provider || 'unknown',
+                            aiModel: model || 'unknown',
+                            providerConfig: {
+                                modelName: model || 'unknown',
+                                maxTokens: 4096, // Default context window
+                                temperature: 0.7,
+                                topP: 0.9
+                            },
+                            systemPrompt: output.contextData?.systemPrompt || 'Generate comprehensive document content',
+                            userPrompt: output.contextData?.userPrompt || `Generate ${task.name} for project ${this.context}`,
+                            projectContext: output.contextData?.projectContext || (typeof this.context === 'string' ? this.context : JSON.stringify(this.context)),
+                            templateContent: output.contextData?.template || `Template for ${task.name}`
+                        });
+                        
+                        // Complete context tracking with response data
+                        await AIContextTrackingService.updateWithResponse(trackingId, {
+                            rawResponse: content,
+                            processedResponse: content,
+                            responseMetadata: {
+                                finishReason: 'stop',
+                                usage: {
+                                    promptTokens: 0, // Will be calculated by the service
+                                    completionTokens: 0, // Will be calculated by the service
+                                    totalTokens: 0 // Will be calculated by the service
+                                },
+                                model: model || 'unknown',
+                                timestamp: new Date().toISOString()
+                            },
+                            generationTimeMs: processingTime
+                        });
+                        
+                        console.log(`📊 Context tracking completed for ${task.name}`);
+                    } catch (contextError) {
+                        console.warn(`⚠️ Context tracking failed for ${task.name}:`, contextError);
+                        // Continue with document generation even if context tracking fails
+                    }
+                }
                 
                 if (!config) {
                     console.error(`❌ Unknown document key: ${documentKey}`);
@@ -632,15 +735,15 @@ export class DocumentGenerator {
                     // Update job status
                     if (jobId) {
                         await this.jobService.updateJob(jobId, {
-                            status: dbSaved ? 'completed' : 'failed',
+                            status: documentId ? 'completed' : 'failed',
                             progress: 100,
-                            error: dbSaved ? undefined : 'Failed to save to database'
+                            error: documentId ? undefined : 'Failed to save to database'
                         });
-                        await this.jobService.addLog(jobId, dbSaved ? 'info' : 'error', 
-                            dbSaved ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
+                        await this.jobService.addLog(jobId, documentId ? 'info' : 'error', 
+                            documentId ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
                     }
                     
-                    return dbSaved; // Return database save status
+                    return !!documentId; // Return database save status
                 }
                 
                 // Also save to file for backward compatibility (can be removed later)
@@ -651,15 +754,15 @@ export class DocumentGenerator {
                 // Update job status
                 if (jobId) {
                     await this.jobService.updateJob(jobId, {
-                        status: dbSaved ? 'completed' : 'failed',
+                        status: documentId ? 'completed' : 'failed',
                         progress: 100,
-                        error: dbSaved ? undefined : 'Failed to save to database'
+                        error: documentId ? undefined : 'Failed to save to database'
                     });
-                    await this.jobService.addLog(jobId, dbSaved ? 'info' : 'error', 
-                        dbSaved ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
+                    await this.jobService.addLog(jobId, documentId ? 'info' : 'error', 
+                        documentId ? `Successfully generated ${task.name}` : `Failed to generate ${task.name}`);
                 }
                 
-                return dbSaved; // Return database save status
+                return !!documentId; // Return database save status
             } else {
                 console.log(`⚠️ No content generated for ${task.name}`);
                 
