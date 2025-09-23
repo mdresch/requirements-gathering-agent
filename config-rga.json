@@ -7,7 +7,7 @@
     "defaultOutputDir": "Default directory for generated documents.",
     "preferredFormat": "Default output format for generated documents (markdown, json, yaml, etc.)."
   },
-  "currentProvider": "azure-openai-key",
+  "currentProvider": "ollama",
   "defaultOutputDir": "generated-documents",
   "preferredFormat": "markdown",
   "showMetrics": true,

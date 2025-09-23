@@ -59,7 +59,7 @@ export class ConfigurationManager {
         ['phi3', 131072]          // 128k tokens
     ]);
 
-    private currentProvider: AIProvider = 'google-gemini';
+    private currentProvider: AIProvider = 'ollama';
 
     private constructor() {
         this.loadUserConfig();
