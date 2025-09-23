@@ -74,36 +74,10 @@ export default function HomePage() {
     }
   }, []);
 
-    // Try API first
-    try {
-      const base = process.env.NEXT_PUBLIC_API_URL || '';
-      const url = `${base}/api/v1/templates?page=${page}&limit=${limit}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        // Support both { templates: [...] } and plain array responses
-        const fetched = Array.isArray(data) ? data : data.templates || [];
-        setTemplates(fetched as Template[]);
-        const total = typeof data.total === 'number' ? data.total : fetched.length;
-        setTotalPages(Math.max(1, Math.ceil(total / limit)));
-        toast.success(`Loaded ${fetched.length} templates from API`);
-        setLoading(false);
-        return;
-      }
-      throw new Error(`API returned ${res.status}`);
-    } catch (err) {
-      // Fallback to bundled JSON
-      setTemplates(templatesData as Template[]);
-      setTotalPages(Math.max(1, Math.ceil((templatesData as Template[]).length / (searchParams.limit || 20))));
-      toast(`Using local templates (API unavailable)`);
-      setLoading(false);
-    }
-  }, [searchParams.limit, searchParams.page]);
-
-  // Load templates when component mounts or when searchParams change
+  // Load templates when component mounts
   useEffect(() => {
-    loadTemplates(searchParams);
-  }, [loadTemplates, searchParams]);
+    loadTemplates();
+  }, [loadTemplates]);
 
   const handleCreateTemplate = () => {
     setSelectedTemplate(null);

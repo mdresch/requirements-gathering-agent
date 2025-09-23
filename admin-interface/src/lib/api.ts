@@ -705,7 +705,6 @@ export async function getProjects(params?: any): Promise<any> {
   }
 }
 
-<<<<<<< Updated upstream
 // Fetch a single project by ID
 export async function getProjectById(id: string): Promise<any> {
   try {
@@ -717,25 +716,6 @@ export async function getProjectById(id: string): Promise<any> {
     console.log('✅ Project retrieved from MongoDB database:', response);
     
     // Return the project data directly, not the full API response
-=======
-
-// Projects API endpoints
-export async function getProjects(params?: any): Promise<any> {
-  // Fetch projects from API
-  const query = params && params.page ? `?page=${params.page}&limit=${params.limit || 20}` : '';
-  try {
-    const response = await request(`/api/v1/projects${query}`);
-    return { success: true, data: response };
-  } catch (error) {
-    return { success: false, error: 'Failed to load projects' };
-  }
-}
-
-// Fetch a single project by ID
-export async function getProjectById(id: string): Promise<any> {
-  try {
-    const response = await request(`/api/v1/projects/${id}`);
->>>>>>> Stashed changes
     if (response.success && response.data) {
       return response.data;
     } else {
@@ -750,7 +730,6 @@ export async function getProjectById(id: string): Promise<any> {
 
 // Create a new project
 export async function createProject(projectData: any): Promise<any> {
-<<<<<<< Updated upstream
   try {
     console.log('🔍 createProject called with:', projectData);
     
@@ -781,29 +760,6 @@ export async function createProject(projectData: any): Promise<any> {
 }
 
 export async function updateProject(id: string, projectData: any): Promise<any> {
-=======
-  return request(`/api/v1/projects`, {
-    method: 'POST',
-    body: JSON.stringify(projectData),
-  });
-}
-
-export async function updateProject(id: string, projectData: any): Promise<any> {
-  return request(`/api/v1/projects/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(projectData),
-  });
-}
-
-export async function deleteProject(id: string): Promise<any> {
-  return request(`/api/v1/projects/${id}`, {
-    method: 'DELETE',
-  });
-}
-
-// Template statistics endpoint
-export async function getTemplateStats(): Promise<any> {
->>>>>>> Stashed changes
   try {
     console.log(`🔍 updateProject called for id: ${id} with:`, projectData);
     
