@@ -3,11 +3,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import CreateProjectModal from './CreateProjectModal';
 import EditProjectModal from './EditProjectModal';
+import ProjectReportModal from './ProjectReportModal';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3 } from 'lucide-react';
+import { Plus, Search, Filter, Download, Eye, Edit, Trash2, FileText, BarChart3, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/lib/api';
 
@@ -34,32 +35,109 @@ export default function ProjectManager() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
-  // Load projects from API
-  useEffect(() => {
-    const loadProjects = async () => {
-      setLoading(true);
-      try {
-        console.log('🔄 Loading projects...');
-        const response = await apiClient.getProjects();
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage] = useState(9);
+  
+  // Ref to track if this is the initial mount
+  const isInitialMount = useRef(true);
+  // Ref to prevent multiple simultaneous API calls
+  const isLoadingRef = useRef(false);
+
+  // Load projects function - memoized to prevent infinite loops
+  const loadProjects = useCallback(async (page: number = currentPage) => {
+    // Prevent multiple simultaneous calls
+    if (isLoadingRef.current) {
+      console.log('🔄 API call already in progress, skipping...');
+      return;
+    }
+    
+    isLoadingRef.current = true;
+    setLoading(true);
+    
+    try {
+      console.log('🔄 Loading projects...', { page, itemsPerPage, statusFilter, frameworkFilter, searchTerm });
+      
+      const params = {
+        page,
+        limit: itemsPerPage,
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(frameworkFilter !== 'all' && { framework: frameworkFilter }),
+        ...(searchTerm && { search: searchTerm })
+      };
+      
+      const response = await apiClient.getProjects(params);
+      
+      console.log('📊 API Response:', response);
+      
+      if (response.success && response.data) {
+        // Handle both array response and paginated response structures
+        const projectsData = Array.isArray(response.data) 
+          ? response.data 
+          : response.data.projects || response.data.data || [];
         
-        if (response.success && response.data && Array.isArray(response.data)) {
-          setProjects(response.data);
-          console.log('✅ Projects loaded successfully:', response.data.length);
+        if (Array.isArray(projectsData)) {
+          setProjects(projectsData);
+          
+          // Update pagination info if available
+          if (response.pagination) {
+            setTotalPages(response.pagination.totalPages || 1);
+            setTotalItems(response.pagination.totalItems || projectsData.length);
+            setCurrentPage(response.pagination.currentPage || page);
+          } else {
+            // Fallback pagination calculation
+            setTotalPages(1);
+            setTotalItems(projectsData.length);
+            setCurrentPage(page);
+          }
+          
+          console.log('✅ Projects loaded successfully:', projectsData.length);
+          toast.success(`Loaded ${projectsData.length} projects`);
         } else {
-          console.error('❌ Projects loading failed:', response.error);
-          toast.error(response.error || 'Failed to load projects');
+          console.error('❌ Projects data is not an array:', projectsData);
+          toast.error('Invalid projects data format');
         }
-      } catch (error) {
-        console.error('❌ Projects loading error:', error);
-        toast.error('Failed to load projects');
-      } finally {
-        setLoading(false);
+      } else {
+        console.error('❌ Projects loading failed:', response.error || 'Unknown error');
+        toast.error(response.error || 'Failed to load projects');
       }
-    };
+    } catch (error) {
+      console.error('❌ Projects loading error:', error);
+      toast.error(`Failed to load projects: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, [currentPage, itemsPerPage, statusFilter, frameworkFilter, searchTerm]);
 
+  // Refresh projects handler
+  const handleRefreshProjects = () => {
     loadProjects();
-  }, []);
+  };
+
+  // Load projects from API on component mount and when filters change
+  useEffect(() => {
+    if (isInitialMount.current) {
+      // Initial mount - just load projects
+      isInitialMount.current = false;
+      loadProjects(1);
+    } else {
+      // Filters changed - reset to page 1 and load
+      setCurrentPage(1);
+      loadProjects(1);
+    }
+  }, [searchTerm, statusFilter, frameworkFilter]);
+
+  // Load projects when page changes (but not on initial mount)
+  useEffect(() => {
+    if (!isInitialMount.current) {
+      loadProjects(currentPage);
+    }
+  }, [currentPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,14 +159,22 @@ export default function ProjectManager() {
     }
   };
 
-  const filteredProjects = (projects || []).filter(project => {
-    const matchesSearch = (project.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (project.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || (project.status || 'draft') === statusFilter;
-    const matchesFramework = frameworkFilter === 'all' || (project.framework || 'babok') === frameworkFilter;
-    
-    return matchesSearch && matchesStatus && matchesFramework;
-  });
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
 
   const handleCreateProject = () => {
@@ -182,24 +268,10 @@ export default function ProjectManager() {
     }
   };
 
-  const handleGenerateReport = async (project: Project) => {
-    try {
-      console.log('🔍 Generating report for project:', project.id);
-      
-      // Simulate report generation
-      toast.success(`Generating compliance report for ${project.name || 'Unnamed Project'}...`);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For now, just show success message
-      toast.success(`Compliance report generated successfully for ${project.name || 'Unnamed Project'}`);
-      
-      console.log('✅ Report generation completed');
-    } catch (error) {
-      console.error('❌ Report generation error:', error);
-      toast.error('Failed to generate report');
-    }
+  const handleGenerateReport = (project: Project) => {
+    console.log('🔍 Opening report modal for project:', project.id);
+    setSelectedProject(project);
+    setShowReportModal(true);
   };
 
   return (
@@ -221,19 +293,40 @@ export default function ProjectManager() {
           onUpdate={handleUpdateProject}
         />
       )}
+
+      {selectedProject && (
+        <ProjectReportModal
+          isOpen={showReportModal}
+          project={selectedProject}
+          onClose={() => {
+            setShowReportModal(false);
+            setSelectedProject(null);
+          }}
+        />
+      )}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
           <p className="text-gray-600 mt-1">Manage your requirements gathering projects</p>
         </div>
-        <button
-          onClick={handleCreateProject}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>New Project</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleRefreshProjects}
+            disabled={loading}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={handleCreateProject}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Project</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -278,14 +371,25 @@ export default function ProjectManager() {
 
           <div className="flex items-center text-gray-600">
             <Filter className="w-5 h-5 mr-2" />
-            <span>{filteredProjects.length} projects</span>
+            <span>{totalItems} projects</span>
           </div>
         </div>
       </div>
 
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="inline-flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600">Loading projects...</span>
+          </div>
+        </div>
+      )}
+
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
+      {!loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {projects.map((project) => (
           <div key={project.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
             <div className="p-6">
               {/* Project Header */}
@@ -363,10 +467,55 @@ export default function ProjectManager() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex justify-center items-center space-x-4 py-6">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Previous
+          </button>
+          
+          <div className="flex space-x-2">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
+                    pageNum === currentPage
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+          
+          <div className="text-sm text-gray-600 ml-4">
+            Page {currentPage} of {totalPages} ({totalItems} total projects)
+          </div>
+        </div>
+      )}
 
       {/* Empty State */}
-      {filteredProjects.length === 0 && (
+      {!loading && projects.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
@@ -386,3 +535,4 @@ export default function ProjectManager() {
     </div>
   );
 }
+

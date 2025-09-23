@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Settings, FileText, BarChart3, Users, HelpCircle, Menu, X } from 'lucide-react';
+import { Settings, FileText, BarChart3, Users, HelpCircle, Menu, X, Brain, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -13,6 +13,8 @@ export default function Navbar() {
   const navItems = [
     { href: '/', icon: FileText, label: 'Templates' },
     { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { href: '/context-utilization', icon: Brain, label: 'AI Context' },
+    { href: '/audit-trail', icon: Shield, label: 'Audit Trail' },
     { href: '/users', icon: Users, label: 'Users' },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];

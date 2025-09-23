@@ -1,4 +1,5 @@
 import './globals.css';
+import '../styles/chart-tooltips.css';
 import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import { Inter } from 'next/font/google';

@@ -18,8 +18,17 @@ import {
   Search,
   Filter,
   SortAsc,
-  Trash2
+  Trash2,
+  MessageSquare,
+  BarChart3,
+  Users
 } from 'lucide-react';
+import { apiClient } from '../lib/api';
+import DocumentStatusModal from './DocumentStatusModal';
+import ShareModal from './ShareModal';
+import FeedbackModal from './FeedbackModal';
+import QualityReportModal from './QualityReportModal';
+import BulkQualityAssessmentModal from './BulkQualityAssessmentModal';
 
 interface GeneratedDocument {
   id: string;
@@ -44,6 +53,7 @@ interface DocumentViewerProps {
   projectName: string;
   documents: GeneratedDocument[];
   onDocumentSelect?: (document: GeneratedDocument) => void;
+  selectedDocument?: GeneratedDocument | null;
 }
 
 const DocumentViewer: React.FC<DocumentViewerProps> = ({
@@ -52,7 +62,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   projectId,
   projectName,
   documents,
-  onDocumentSelect
+  onDocumentSelect,
+  selectedDocument: initialSelectedDocument
 }) => {
   const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,12 +72,21 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showDeletedDocuments, setShowDeletedDocuments] = useState(false);
   const [deletedDocuments, setDeletedDocuments] = useState<GeneratedDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [documentToEdit, setDocumentToEdit] = useState<GeneratedDocument | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [documentToShare, setDocumentToShare] = useState<GeneratedDocument | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [documentToFeedback, setDocumentToFeedback] = useState<GeneratedDocument | null>(null);
+  const [showQualityReportModal, setShowQualityReportModal] = useState(false);
+  const [documentForQualityReport, setDocumentForQualityReport] = useState<GeneratedDocument | null>(null);
+  const [showBulkAssessmentModal, setShowBulkAssessmentModal] = useState(false);
 
   // Load deleted documents
   useEffect(() => {
     const loadDeletedDocuments = async () => {
       try {
-        const { apiClient } = await import('../lib/api.js');
         const response = await apiClient.getDeletedProjectDocuments(projectId);
         
         if (response.success) {
@@ -99,6 +119,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     }
   }, [isOpen, projectId]);
 
+  // Set initial selected document when provided
+  useEffect(() => {
+    if (initialSelectedDocument) {
+      setSelectedDocument(initialSelectedDocument);
+    }
+  }, [initialSelectedDocument]);
+
   // Filter and sort documents based on active/deleted view
   const currentDocuments = showDeletedDocuments ? deletedDocuments : documents;
   const filteredDocuments = currentDocuments
@@ -128,12 +155,54 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+  // Auto-select first document when modal opens (if no initial document provided)
+  useEffect(() => {
+    if (isOpen && !initialSelectedDocument && filteredDocuments.length > 0 && !selectedDocument) {
+      // Immediately select the first document without loading delay
+      setSelectedDocument(filteredDocuments[0]);
+    }
+  }, [isOpen, initialSelectedDocument, filteredDocuments, selectedDocument]);
+
   const categories = ['all', ...Array.from(new Set(documents.map(doc => doc.category)))];
 
   const handleDocumentSelect = (document: GeneratedDocument) => {
+    // Immediately select the document without loading delay
     setSelectedDocument(document);
     if (onDocumentSelect) {
       onDocumentSelect(document);
+    }
+  };
+
+  const handleEditDocument = (document: GeneratedDocument) => {
+    setDocumentToEdit(document);
+    setShowStatusModal(true);
+  };
+
+  const handleCloseStatusModal = () => {
+    setShowStatusModal(false);
+    setDocumentToEdit(null);
+  };
+
+  const handleStatusUpdate = async (documentId: string, status: string, comments?: string) => {
+    try {
+      // TODO: Implement API call to update document status
+      console.log('Updating document status:', { documentId, status, comments });
+      
+      // For now, just update the local state
+      setSelectedDocument(prev => 
+        prev && prev.id === documentId 
+          ? { ...prev, status: status as GeneratedDocument['status'] }
+          : prev
+      );
+
+      // Update in the documents list
+      // This would need to be passed up to the parent component in a real implementation
+      
+      toast.success('Document status updated successfully');
+    } catch (error) {
+      console.error('Failed to update document status:', error);
+      toast.error('Failed to update document status');
+      throw error;
     }
   };
 
@@ -157,9 +226,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     try {
       // Show loading toast
       const loadingToast = toast.loading('Moving document to trash...');
-      
-      // Import apiClient dynamically to avoid circular imports
-      const { apiClient } = await import('../lib/api.js');
       
       const response = await apiClient.deleteProjectDocument(doc.id);
       
@@ -205,7 +271,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     try {
       const loadingToast = toast.loading('Restoring document...');
       
-      const { apiClient } = await import('../lib/api.js');
       const response = await apiClient.restoreProjectDocument(documentId);
       
       if (response.success) {
@@ -233,6 +298,81 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       toast.dismiss();
       toast.error(`Failed to restore document: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
+
+  const handleShareDocument = (doc: GeneratedDocument) => {
+    setDocumentToShare(doc);
+    setShowShareModal(true);
+  };
+
+  const handleCloseShareModal = () => {
+    setShowShareModal(false);
+    setDocumentToShare(null);
+  };
+
+  const handleFeedbackDocument = (doc: GeneratedDocument) => {
+    setDocumentToFeedback(doc);
+    setShowFeedbackModal(true);
+  };
+
+  const handleCloseFeedbackModal = () => {
+    setShowFeedbackModal(false);
+    setDocumentToFeedback(null);
+  };
+
+  const handleSubmitFeedback = async (feedbackData: any) => {
+    try {
+      console.log('Submitting feedback:', feedbackData);
+      
+      const response = await apiClient.submitFeedback(feedbackData);
+      
+      if (response.success) {
+        console.log('Feedback submitted successfully:', response.data);
+        toast.success('Feedback submitted successfully!', {
+          duration: 3000,
+          position: 'top-center',
+          style: {
+            background: '#10B981',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: '500'
+          }
+        });
+        
+        // Close the modal
+        handleCloseFeedbackModal();
+      } else {
+        throw new Error(response.message || 'Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error(`Failed to submit feedback: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
+  };
+
+  const handleQualityReport = (doc: GeneratedDocument) => {
+    setDocumentForQualityReport(doc);
+    setShowQualityReportModal(true);
+  };
+
+  const handleCloseQualityReportModal = () => {
+    setShowQualityReportModal(false);
+    setDocumentForQualityReport(null);
+  };
+
+  const handleBulkAssessment = () => {
+    setShowBulkAssessmentModal(true);
+  };
+
+  const handleCloseBulkAssessmentModal = () => {
+    setShowBulkAssessmentModal(false);
+  };
+
+  const handleAssessmentComplete = (result: any) => {
+    console.log('Bulk assessment completed:', result);
+    // You could trigger a document list refresh here if needed
+    // or show a success toast
   };
 
   const handlePrint = (doc: GeneratedDocument) => {
@@ -299,18 +439,31 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               <h2 className="text-2xl font-bold text-gray-900">Generated Documents</h2>
               <p className="text-gray-600 mt-1">Project: <span className="font-medium">{projectName}</span></p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleBulkAssessment}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 text-sm"
+                title="Assess Quality for All Documents"
+              >
+                <Users className="w-4 h-4" />
+                <span>Assess All Quality</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
           
           {/* Tabs */}
           <div className="flex space-x-1">
             <button
-              onClick={() => setShowDeletedDocuments(false)}
+              onClick={() => {
+                setShowDeletedDocuments(false);
+                setSelectedDocument(null);
+              }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 !showDeletedDocuments
                   ? 'bg-blue-100 text-blue-700'
@@ -320,7 +473,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
               Active Documents ({documents.length})
             </button>
             <button
-              onClick={() => setShowDeletedDocuments(true)}
+              onClick={() => {
+                setShowDeletedDocuments(true);
+                setSelectedDocument(null);
+              }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 showDeletedDocuments
                   ? 'bg-red-100 text-red-700'
@@ -471,9 +627,42 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                         <span>Category: {selectedDocument.category}</span>
                         <span>Framework: {selectedDocument.framework.toUpperCase()}</span>
                         <span>Generated: {new Date(selectedDocument.generatedAt).toLocaleDateString()}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">Quality Score:</span>
+                          <span className={`px-2 py-1 rounded-full text-sm font-semibold ${
+                            selectedDocument.qualityScore >= 90 ? 'bg-green-100 text-green-800' :
+                            selectedDocument.qualityScore >= 80 ? 'bg-blue-100 text-blue-800' :
+                            selectedDocument.qualityScore >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                            selectedDocument.qualityScore >= 60 ? 'bg-orange-100 text-orange-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {selectedDocument.qualityScore}%
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditDocument(selectedDocument)}
+                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit Document Status"
+                      >
+                        <Edit3 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleQualityReport(selectedDocument)}
+                        className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Quality Report"
+                      >
+                        <BarChart3 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleFeedbackDocument(selectedDocument)}
+                        className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Review Feedback"
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                      </button>
                       <button
                         onClick={() => handlePrint(selectedDocument)}
                         className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -489,6 +678,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                         <Download className="w-5 h-5" />
                       </button>
                       <button
+                        onClick={() => handleShareDocument(selectedDocument)}
                         className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Share Document"
                       >
@@ -548,9 +738,18 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
                     {/* Document Content */}
                     <div className="prose max-w-none">
-                      <div className="whitespace-pre-wrap text-gray-900 leading-relaxed">
-                        {selectedDocument.content}
-                      </div>
+                      {isLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="flex flex-col items-center space-y-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <p className="text-gray-600 text-sm">Loading document content...</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-wrap text-gray-900 leading-relaxed">
+                          {selectedDocument.content}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -566,6 +765,54 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             )}
           </div>
         </div>
+
+        {/* Document Status Modal */}
+        <DocumentStatusModal
+          isOpen={showStatusModal}
+          onClose={handleCloseStatusModal}
+          document={documentToEdit}
+          onStatusUpdate={handleStatusUpdate}
+        />
+
+        {/* Share Modal */}
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={handleCloseShareModal}
+          document={documentToShare}
+          projectName={projectName}
+          projectId={projectId}
+          onDownload={handleDownload}
+          onPrint={handlePrint}
+        />
+
+        {/* Feedback Modal */}
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={handleCloseFeedbackModal}
+          onSubmit={handleSubmitFeedback}
+          projectId={projectId}
+          documentType={documentToFeedback?.type || ''}
+          documentPath={documentToFeedback?.id || ''}
+          documentTitle={documentToFeedback?.name || ''}
+        />
+
+        {/* Quality Report Modal */}
+        <QualityReportModal
+          isOpen={showQualityReportModal}
+          onClose={handleCloseQualityReportModal}
+          documentId={documentForQualityReport?.id || ''}
+          documentName={documentForQualityReport?.name || ''}
+          documentType={documentForQualityReport?.type || ''}
+        />
+
+        {/* Bulk Quality Assessment Modal */}
+        <BulkQualityAssessmentModal
+          isOpen={showBulkAssessmentModal}
+          onClose={handleCloseBulkAssessmentModal}
+          projectId={projectId}
+          projectName={projectName}
+          onAssessmentComplete={handleAssessmentComplete}
+        />
       </div>
     </div>
   );

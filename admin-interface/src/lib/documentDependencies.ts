@@ -48,6 +48,83 @@ export const DOCUMENT_DEPENDENCIES: Record<string, DocumentDependency> = {
     description: 'Strategic justification and financial analysis',
     estimatedTime: '4-6 hours'
   },
+  // User Personas Template (MongoDB ID: tpl_1750661686417_eddew42zv)
+  'tpl_1750661686417_eddew42zv': {
+    templateId: 'tpl_1750661686417_eddew42zv',
+    templateName: 'User Personas',
+    category: 'Requirements Management',
+    priority: 'high',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68cfa8a98c7ab32ee7fc3a80', '68cfa8fd8c7ab32ee7fc3a93'], // Depends on stakeholder analysis and scope statement
+    description: 'User persona identification and analysis for requirements gathering',
+    estimatedTime: '2-3 hours'
+  },
+  // User Personas Template (current MongoDB ID: 68cfa0be8c7ab32ee7fc39ef)
+  '68cfa0be8c7ab32ee7fc39ef': {
+    templateId: '68cfa0be8c7ab32ee7fc39ef',
+    templateName: 'User Personas',
+    category: 'Requirements Management',
+    priority: 'high',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68cfa8a98c7ab32ee7fc3a80', '68cfa8fd8c7ab32ee7fc3a93'], // Depends on stakeholder analysis and scope statement
+    description: 'User persona identification and analysis for requirements gathering',
+    estimatedTime: '2-3 hours'
+  },
+  // User Personas Template (metadata ID: user-personas)
+  'user-personas': {
+    templateId: 'user-personas',
+    templateName: 'User Personas',
+    category: 'Requirements Management',
+    priority: 'high',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68cfa8a98c7ab32ee7fc3a80', '68cfa8fd8c7ab32ee7fc3a93'], // Depends on stakeholder analysis and scope statement
+    description: 'User persona identification and analysis for requirements gathering',
+    estimatedTime: '2-3 hours'
+  },
+  // User Stories Template (current MongoDB ID: 68cf9f7e0b991a497873ef9d)
+  '68cf9f7e0b991a497873ef9d': {
+    templateId: '68cf9f7e0b991a497873ef9d',
+    templateName: 'User Stories',
+    category: 'Requirements Management',
+    priority: 'high',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68cfa0be8c7ab32ee7fc39ef'], // Depends on user personas
+    description: 'User stories for agile development and requirements gathering',
+    estimatedTime: '2-3 hours'
+  },
+  // API Test Template (current MongoDB ID: 68cf9eff0b991a497873ef87)
+  '68cf9eff0b991a497873ef87': {
+    templateId: '68cf9eff0b991a497873ef87',
+    templateName: 'API Test Template',
+    category: 'Testing',
+    priority: 'low',
+    pmbokKnowledgeArea: 'Quality Management',
+    dependencies: [], // Test template has no dependencies
+    description: 'Template for API testing documentation',
+    estimatedTime: '1-2 hours'
+  },
+  // Scope Management Template (current MongoDB ID: 68cfa8fd8c7ab32ee7fc3a93)
+  '68cfa8fd8c7ab32ee7fc3a93': {
+    templateId: '68cfa8fd8c7ab32ee7fc3a93',
+    templateName: 'Scope Management',
+    category: 'Scope Management',
+    priority: 'critical',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68cfa8a98c7ab32ee7fc3a80'], // Depends on stakeholder analysis
+    description: 'Project scope definition and boundaries',
+    estimatedTime: '3-5 hours'
+  },
+  // Stakeholder Analysis Template (current MongoDB ID: 68cfa8a98c7ab32ee7fc3a80)
+  '68cfa8a98c7ab32ee7fc3a80': {
+    templateId: '68cfa8a98c7ab32ee7fc3a80',
+    templateName: 'Stakeholder Analysis Template',
+    category: 'Stakeholder Management',
+    priority: 'critical',
+    pmbokKnowledgeArea: 'Stakeholder Management',
+    dependencies: [], // No dependencies - foundation document
+    description: 'Stakeholder identification and engagement strategy',
+    estimatedTime: '3-4 hours'
+  },
   // Legacy Business Case Template (ID: 101) - for backward compatibility
   '101': {
     templateId: '101',
@@ -172,6 +249,33 @@ export const DOCUMENT_DEPENDENCIES: Record<string, DocumentDependency> = {
 };
 
 /**
+ * Mapping between document types/keys and their MongoDB ObjectIds for dependency validation
+ */
+const DOCUMENT_TYPE_TO_TEMPLATE_ID: Record<string, string> = {
+  'stakeholder-analysis': '68cfa8a98c7ab32ee7fc3a80',
+  'scope-management-plan': '68cfa8fd8c7ab32ee7fc3a93',
+  'user-personas': '68cfa0be8c7ab32ee7fc39ef',
+  'user-stories': '68cf9f7e0b991a497873ef9d',
+  'api-test-template': '68cf9eff0b991a497873ef87',
+  'business-case': '68cf6a63a14fd05622cf3cc5',
+  '101': '68cf6a63a14fd05622cf3cc5', // Legacy Business Case
+  '102': '68cfa8a98c7ab32ee7fc3a80', // Legacy Stakeholder Analysis
+  '103': '68cfa8fd8c7ab32ee7fc3a93', // Legacy Scope Statement
+};
+
+/**
+ * Reverse mapping from MongoDB ObjectIds to document keys for validation
+ */
+const TEMPLATE_ID_TO_DOCUMENT_KEY: Record<string, string> = {
+  '68cfa8a98c7ab32ee7fc3a80': 'stakeholder-analysis',
+  '68cfa8fd8c7ab32ee7fc3a93': 'scope-management-plan',
+  '68cfa0be8c7ab32ee7fc39ef': 'user-personas',
+  '68cf9f7e0b991a497873ef9d': 'user-stories',
+  '68cf9eff0b991a497873ef87': 'api-test-template',
+  '68cf6a63a14fd05622cf3cc5': 'business-case',
+};
+
+/**
  * Validates if all required dependencies are available for a given document template
  */
 export function validateDocumentDependencies(
@@ -198,7 +302,31 @@ export function validateDocumentDependencies(
     };
   }
 
-  const availableTemplateIds = availableDocuments.map(doc => doc.templateId || doc.id);
+  // Map available documents to their template IDs
+  const availableTemplateIds = availableDocuments.map(doc => {
+    // First try to use the templateId if it exists
+    if (doc.templateId) {
+      // If templateId is a document key (like "stakeholder-analysis"), map it to MongoDB ObjectId
+      const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[doc.templateId];
+      if (mappedTemplateId) {
+        return mappedTemplateId;
+      }
+      // If templateId is already a MongoDB ObjectId, use it directly
+      return doc.templateId;
+    }
+    
+    // If templateId is not available, try to map from document type
+    // This handles cases where documents have type field but no templateId
+    const documentType = (doc as any).type || (doc as any).name?.toLowerCase().replace(/\s+/g, '-');
+    const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[documentType || ''];
+    if (mappedTemplateId) {
+      return mappedTemplateId;
+    }
+    
+    // Fallback to document ID (MongoDB ObjectId)
+    return doc.id;
+  });
+  
   const missingDependencies: DocumentDependency[] = [];
   const warnings: string[] = [];
   const recommendations: string[] = [];

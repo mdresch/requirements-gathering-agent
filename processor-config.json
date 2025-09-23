@@ -453,7 +453,7 @@
     "priority": 999
   },
   "user-personas": {
-    "module": "../documentTemplates/requirements/UserpersonasProcessor.ts#UserpersonasProcessor",
+    "module": "../documentTemplates/basic-docs/UserpersonasProcessor.ts#UserpersonasProcessor",
     "dependencies": [],
     "priority": 999
   },

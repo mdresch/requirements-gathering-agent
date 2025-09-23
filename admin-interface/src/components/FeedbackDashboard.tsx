@@ -19,6 +19,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { apiClient } from '../lib/api';
+import FeedbackDetailModal from './FeedbackDetailModal';
 
 interface FeedbackItem {
   id: string;
@@ -33,6 +34,9 @@ interface FeedbackItem {
   submittedAt: string;
   description: string;
   suggestedImprovement?: string;
+  tags?: string[];
+  category?: string;
+  documentPath?: string;
 }
 
 interface FeedbackStats {
@@ -58,6 +62,8 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
   
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
@@ -81,7 +87,8 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
         const response = await apiClient.getProjectFeedback(projectId);
         
         if (response.success && response.data) {
-          const feedbackData = response.data;
+          const feedbackData = response.data.feedback || response.data;
+          console.log('Raw feedback data from API:', feedbackData);
           
           // Calculate stats from real data
           const totalFeedback = feedbackData.length;
@@ -104,10 +111,13 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
               feedbackType: item.feedbackType,
               submittedAt: item.submittedAt,
               submittedByName: item.submittedByName,
-              documentType: item.documentType,
-              submittedBy: item.submittedBy,
-              description: item.description,
-              suggestedImprovement: item.suggestedImprovement
+            documentType: item.documentType,
+            submittedBy: item.submittedBy,
+            description: item.description,
+            suggestedImprovement: item.suggestedImprovement,
+            tags: item.tags || [],
+            category: item.category,
+            documentPath: item.documentPath
             }));
 
           const stats: FeedbackStats = {
@@ -132,12 +142,15 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
             documentType: item.documentType,
             submittedBy: item.submittedBy,
             tags: item.tags || [],
-            suggestedImprovement: item.suggestedImprovement
+            suggestedImprovement: item.suggestedImprovement,
+            category: item.category,
+            documentPath: item.documentPath
           }));
 
           setStats(stats);
           setFeedback(transformedFeedback);
           console.log('Loaded feedback data:', { stats, feedback: transformedFeedback });
+          console.log('Feedback array length:', transformedFeedback.length);
         } else {
           console.warn('No feedback data found for project');
           setStats({
@@ -252,6 +265,68 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
       case 'medium': return 'text-yellow-600';
       case 'low': return 'text-green-600';
       default: return 'text-gray-600';
+    }
+  };
+
+  const handleFeedbackClick = (item: FeedbackItem) => {
+    setSelectedFeedback(item);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedFeedback(null);
+  };
+
+  const handleStatusUpdate = async (feedbackId: string, status: string, reviewerComments: string) => {
+    try {
+      // TODO: Implement API call to update feedback status
+      console.log('Updating feedback:', { feedbackId, status, reviewerComments });
+      
+      // For now, just update the local state
+      setFeedback(prevFeedback => 
+        prevFeedback.map(item => 
+          item.id === feedbackId 
+            ? { ...item, status: status as any }
+            : item
+        )
+      );
+
+      // Update stats if needed
+      const updatedStats = {
+        ...stats,
+        openFeedback: status === 'open' ? stats.openFeedback + 1 : stats.openFeedback - 1
+      };
+      setStats(updatedStats);
+
+      // Refresh the feedback data
+      if (projectId) {
+        const response = await apiClient.getProjectFeedback(projectId);
+        if (response.success && response.data) {
+          const feedbackData = response.data.feedback || response.data;
+          const transformedFeedback: FeedbackItem[] = feedbackData.map((item: any) => ({
+            id: item._id || item.id,
+            title: item.title,
+            description: item.description,
+            rating: item.rating,
+            status: item.status,
+            priority: item.priority,
+            feedbackType: item.feedbackType,
+            submittedAt: item.submittedAt,
+            submittedByName: item.submittedByName,
+            documentType: item.documentType,
+            submittedBy: item.submittedBy,
+            tags: item.tags || [],
+            suggestedImprovement: item.suggestedImprovement,
+            category: item.category,
+            documentPath: item.documentPath
+          }));
+          setFeedback(transformedFeedback);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update feedback status:', error);
+      throw error;
     }
   };
 
@@ -406,7 +481,14 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
             <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">{item.title}</h3>
+                  <button
+                    onClick={() => handleFeedbackClick(item)}
+                    className="text-left group"
+                  >
+                    <h3 className="text-lg font-medium text-gray-900 mb-1 group-hover:text-blue-600 transition-colors cursor-pointer">
+                      {item.title}
+                    </h3>
+                  </button>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
                     <span className="flex items-center">
                       <FileText className="w-4 h-4 mr-1" />
@@ -474,6 +556,14 @@ export default function FeedbackDashboard({ projectId }: FeedbackDashboardProps)
           </div>
         )}
       </div>
+
+      {/* Feedback Detail Modal */}
+      <FeedbackDetailModal
+        isOpen={showDetailModal}
+        onClose={handleCloseDetailModal}
+        feedback={selectedFeedback}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

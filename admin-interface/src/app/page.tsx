@@ -12,13 +12,13 @@ import Navbar from '@/components/Navbar';
 import ModernHero from '@/components/ModernHero';
 import ModernFeatureShowcase from '@/components/ModernFeatureShowcase';
 import ModernStatsOverview from '@/components/ModernStatsOverview';
-import { Plus, Search, Filter, BarChart3, Sparkles } from 'lucide-react';
+import DeletedTemplatesModal from '@/components/DeletedTemplatesModal';
+import { Plus, Search, Filter, BarChart3, Sparkles, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api';
 
 export default function HomePage() {
-  console.log('🏠 HomePage component mounted/re-rendered');
-  
   const router = useRouter();
   
   // All state declarations first
@@ -35,24 +35,75 @@ export default function HomePage() {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
+
+  console.log('🏠 HomePage component mounted/re-rendered');
+  console.log('🗑️ showDeletedTemplates state:', showDeletedTemplates);
 
   // Ensure we're fully mounted on client side
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const loadTemplates = useCallback(() => {
+  const loadTemplates = useCallback(async () => {
     setLoading(true);
-    setTemplates(templatesData as Template[]);
-    setTotalPages(1);
-    toast.success(`Loaded ${templatesData.length} templates from local JSON`);
-    setLoading(false);
+    try {
+      console.log('HomePage: Loading templates from API...');
+      const response = await apiClient.getTemplates({ page: 1, limit: 20 });
+      
+      if (response.success && response.data) {
+        setTemplates(response.data.templates);
+        setTotalPages(response.data.totalPages);
+        console.log('HomePage: Templates loaded successfully:', response.data.templates.length);
+        toast.success(`Loaded ${response.data.templates.length} templates from API`);
+      } else {
+        console.error('HomePage: Templates response failed:', response);
+        toast.error(response.error || 'Failed to load templates');
+        // Fallback to local data
+        setTemplates(templatesData as Template[]);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error('HomePage: Templates loading error:', error);
+      toast.error('Failed to load templates from API, using local data');
+      // Fallback to local data
+      setTemplates(templatesData as Template[]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Load templates when component mounts
+    // Try API first
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL || '';
+      const url = `${base}/api/v1/templates?page=${page}&limit=${limit}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        // Support both { templates: [...] } and plain array responses
+        const fetched = Array.isArray(data) ? data : data.templates || [];
+        setTemplates(fetched as Template[]);
+        const total = typeof data.total === 'number' ? data.total : fetched.length;
+        setTotalPages(Math.max(1, Math.ceil(total / limit)));
+        toast.success(`Loaded ${fetched.length} templates from API`);
+        setLoading(false);
+        return;
+      }
+      throw new Error(`API returned ${res.status}`);
+    } catch (err) {
+      // Fallback to bundled JSON
+      setTemplates(templatesData as Template[]);
+      setTotalPages(Math.max(1, Math.ceil((templatesData as Template[]).length / (searchParams.limit || 20))));
+      toast(`Using local templates (API unavailable)`);
+      setLoading(false);
+    }
+  }, [searchParams.limit, searchParams.page]);
+
+  // Load templates when component mounts or when searchParams change
   useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+    loadTemplates(searchParams);
+  }, [loadTemplates, searchParams]);
 
   const handleCreateTemplate = () => {
     setSelectedTemplate(null);
@@ -70,11 +121,51 @@ export default function HomePage() {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    toast('Delete functionality for Wix templates is not implemented yet.');
+    try {
+      console.log('HomePage: Deleting template with id:', templateId);
+      
+      const response = await apiClient.deleteTemplate(templateId, 'Deleted from homepage');
+      
+      if (response.success) {
+        toast.success('Template deleted successfully');
+        // Reload templates
+        loadTemplates();
+      } else {
+        toast.error(response.error || 'Failed to delete template');
+      }
+    } catch (error) {
+      console.error('HomePage: Delete template error:', error);
+      toast.error('Failed to delete template');
+    }
+  };
+
+  const handleTemplateRestored = () => {
+    // Reload templates when one is restored
+    loadTemplates();
+    toast.success('Template restored successfully');
   };
 
   const handleSaveTemplate = async (templateData: any) => {
-    toast('Save functionality for Wix templates is not implemented yet.');
+    try {
+      console.log('HomePage: Saving template with data:', templateData);
+      
+      const response = selectedTemplate
+        ? await apiClient.updateTemplate(selectedTemplate.id, templateData)
+        : await apiClient.createTemplate(templateData);
+
+      if (response.success) {
+        toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
+        setIsEditing(false);
+        setSelectedTemplate(null);
+        // Reload templates
+        loadTemplates();
+      } else {
+        toast.error(response.error || 'Failed to save template');
+      }
+    } catch (error) {
+      console.error('HomePage: Save template error:', error);
+      toast.error('Failed to save template');
+    }
   };
 
   const handleSearch = (params: TemplateSearchParams) => {
@@ -133,7 +224,12 @@ export default function HomePage() {
             Manage your ADPA enterprise framework templates
           </p>
           
-          <div className="flex items-center space-x-4 mt-6">
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            {/* Debug info */}
+            <div className="text-xs text-gray-500 bg-yellow-100 p-2 rounded">
+              Debug: showDeletedTemplates = {showDeletedTemplates.toString()}
+            </div>
+            
             <button
               onClick={() => setShowStats(!showStats)}
               className="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-xl shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all duration-300"
@@ -148,6 +244,18 @@ export default function HomePage() {
             >
               <Filter className="w-4 h-4 mr-2" />
               Filters
+            </button>
+            
+            <button
+              onClick={() => {
+                console.log('🗑️ Deleted Templates button clicked!');
+                setShowDeletedTemplates(true);
+              }}
+              className="inline-flex items-center px-6 py-3 bg-red-500 border-2 border-red-600 rounded-xl shadow-lg text-sm font-bold text-white hover:bg-red-600 transition-all duration-300 z-50"
+              style={{ minWidth: '200px', height: '48px' }}
+            >
+              <Trash2 className="w-5 h-5 mr-2" />
+              🗑️ Deleted Templates
             </button>
             
             <button
@@ -240,6 +348,13 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Deleted Templates Modal */}
+      <DeletedTemplatesModal
+        isOpen={showDeletedTemplates}
+        onClose={() => setShowDeletedTemplates(false)}
+        onTemplateRestored={handleTemplateRestored}
+      />
     </div>
   );
 }

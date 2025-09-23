@@ -12,7 +12,9 @@ import TemplateEditor from '@/components/TemplateEditor';
 import TemplateDetailsView from '@/components/TemplateDetailsView';
 import TemplateStats from '@/components/TemplateStats';
 import SearchFilters from '@/components/SearchFilters';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import TemplateDeleteModal from './TemplateDeleteModal';
+import DeletedTemplatesModal from './DeletedTemplatesModal';
 
 export default function TemplatesManager() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -20,11 +22,15 @@ export default function TemplatesManager() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchParams, setSearchParams] = useState<TemplateSearchParams>({
     page: 1,
-    limit: 20,
+    limit: 6,
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
 
   const loadTemplates = useCallback(
     async (params: TemplateSearchParams = searchParams) => {
@@ -74,21 +80,41 @@ export default function TemplatesManager() {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) {
+    // Find the template to get its name
+    const template = templates.find(t => t.id === templateId);
+    if (!template) {
+      toast.error('Template not found');
       return;
     }
 
+    setTemplateToDelete({ id: templateId, name: template.name });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (reason: string) => {
+    if (!templateToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const response = await apiClient.deleteTemplate(templateId);
+      const response = await apiClient.deleteTemplate(templateToDelete.id, reason);
       if (response.success) {
         toast.success('Template deleted successfully');
         loadTemplates();
+        setDeleteModalOpen(false);
+        setTemplateToDelete(null);
       } else {
         toast.error(response.error || 'Failed to delete template');
       }
     } catch (error) {
       toast.error('Failed to delete template');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setTemplateToDelete(null);
   };
 
   const handleSaveTemplate = async (templateData: any) => {
@@ -116,6 +142,12 @@ export default function TemplatesManager() {
 
   const handlePageChange = (page: number) => {
     setSearchParams(prev => ({ ...prev, page }));
+  };
+
+  const handleTemplateRestored = () => {
+    // Reload templates when one is restored
+    loadTemplates();
+    toast.success('Template restored successfully');
   };
 
   // If editing mode, show the editor
@@ -199,13 +231,22 @@ export default function TemplatesManager() {
           <h1 className="text-3xl font-bold text-gray-900">Template Management</h1>
           <p className="text-gray-600 mt-1">Manage and organize your document templates</p>
         </div>
-        <button
-          onClick={handleCreateTemplate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>New Template</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowDeletedTemplates(true)}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            <span>Deleted Templates</span>
+          </button>
+          <button
+            onClick={handleCreateTemplate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Template</span>
+          </button>
+        </div>
       </div>
 
       {/* Template Statistics */}
@@ -227,6 +268,22 @@ export default function TemplatesManager() {
         onPageChange={handlePageChange}
         currentPage={searchParams.page || 1}
         totalPages={totalPages}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <TemplateDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        templateName={templateToDelete?.name || ''}
+        isLoading={isDeleting}
+      />
+
+      {/* Deleted Templates Modal */}
+      <DeletedTemplatesModal
+        isOpen={showDeletedTemplates}
+        onClose={() => setShowDeletedTemplates(false)}
+        onTemplateRestored={handleTemplateRestored}
       />
     </div>
   );

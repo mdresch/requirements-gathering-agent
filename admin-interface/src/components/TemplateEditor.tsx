@@ -41,12 +41,20 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
 
   useEffect(() => {
     if (template) {
+      console.log('TemplateEditor: Loading template data:', template);
+      console.log('TemplateEditor: Template content length:', template.content?.length || 0);
+      console.log('TemplateEditor: Template content:', template.content);
+      console.log('TemplateEditor: Template aiInstructions:', template.aiInstructions);
+      console.log('TemplateEditor: Template metadata:', template.metadata);
+      console.log('TemplateEditor: Template metadata author:', template.metadata?.author);
+      console.log('TemplateEditor: Template metadata framework:', template.metadata?.framework);
+      
       setFormData({
-        name: template.name,
-        description: template.description,
-        category: template.category,
+        name: template.name || '',
+        description: template.description || '',
+        category: template.category || '',
         tags: template.tags || [],
-        content: template.content,
+        content: template.content || '', // Ensure content is preserved
         aiInstructions: template.aiInstructions || '',
         templateType: template.templateType || 'ai_instruction',
         contextPriority: template.contextPriority || 'medium',
@@ -61,6 +69,8 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
           author: template.metadata?.author || '',
         },
       });
+      
+      console.log('TemplateEditor: Form data set with content length:', template.content?.length || 0);
     }
   }, [template]);
 
@@ -146,15 +156,49 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
     setIsSaving(true);
     
     try {
+      console.log('TemplateEditor: Saving template with form data:', formData);
+      console.log('TemplateEditor: Content length being saved:', formData.content?.length || 0);
+      
       const validation = validateTemplate(formData);
       if (!validation.isValid) {
+        console.log('TemplateEditor: Validation failed:', validation.errors);
         setErrors(validation.errors);
         return;
       }
 
+          // Restructure data to match backend API expectations
+          const apiData = {
+            name: formData.name,
+            description: formData.description,
+            category: formData.category,
+            tags: formData.tags,
+            templateData: {
+              content: formData.content || '',
+              aiInstructions: formData.aiInstructions || '',
+              variables: Array.isArray(formData.variables) ? formData.variables : Object.keys(formData.variables || {}),
+              layout: {}
+            },
+            templateType: formData.templateType,
+            contextPriority: formData.contextPriority,
+            contextRequirements: formData.contextRequirements,
+            metadata: {
+              ...formData.metadata,
+              author: formData.metadata?.author || 'System', // Ensure author is included
+              framework: formData.metadata?.framework || 'general' // Ensure framework has a default
+            },
+            isActive: true
+          };
+
+      console.log('TemplateEditor: Restructured data for API:', apiData);
+      console.log('TemplateEditor: Content in templateData:', apiData.templateData.content?.length || 0);
+      console.log('TemplateEditor: Metadata being sent:', apiData.metadata);
+      console.log('TemplateEditor: Author field:', apiData.metadata?.author);
+      console.log('TemplateEditor: Framework field:', apiData.metadata?.framework);
+
       setErrors([]);
-      await onSave(formData);
+      await onSave(apiData);
     } catch (error) {
+      console.error('TemplateEditor: Save error:', error);
       setErrors(['Failed to save template. Please try again.']);
     } finally {
       setIsSaving(false);

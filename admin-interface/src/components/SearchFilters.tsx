@@ -22,7 +22,7 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
   const handleClearFilters = () => {
     const clearedFilters: TemplateSearchParams = {
       page: 1,
-      limit: 20,
+      limit: 6,
     };
     setFilters(clearedFilters);
     onSearch(clearedFilters);
@@ -129,11 +129,12 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Results per page</label>
               <select
-                value={filters.limit || 20}
+                value={filters.limit || 6}
                 onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 title="Select number of results per page"
               >
+                <option value={6}>6 per page</option>
                 <option value={10}>10 per page</option>
                 <option value={20}>20 per page</option>
                 <option value={50}>50 per page</option>

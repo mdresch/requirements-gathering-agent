@@ -32,7 +32,7 @@ export interface CreateTemplateRequest {
   name: string;
   description: string;
   category: string;
-  content: string;
+  content?: string; // Make optional since we're using templateData
   aiInstructions?: string;
   tags?: string[];
   templateType?: string;
@@ -41,6 +41,13 @@ export interface CreateTemplateRequest {
   contextRequirements?: string[];
   variables?: Record<string, any>;
   metadata?: TemplateMetadata;
+  templateData?: {
+    content: string;
+    aiInstructions: string;
+    variables: any[];
+    layout: any;
+  };
+  isActive?: boolean;
 }
 
 export interface UpdateTemplateRequest extends CreateTemplateRequest {

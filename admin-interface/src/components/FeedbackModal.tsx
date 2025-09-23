@@ -21,7 +21,6 @@ interface FeedbackData {
   projectId: string;
   documentType: string;
   documentPath: string;
-  documentTitle: string;
   feedbackType: 'quality' | 'accuracy' | 'completeness' | 'clarity' | 'compliance' | 'suggestion';
   rating: number;
   title: string;
@@ -88,7 +87,6 @@ export default function FeedbackModal({
         projectId,
         documentType,
         documentPath,
-        documentTitle, // Add the document title
         ...formData,
         submittedBy: 'current-user-id', // TODO: Get from auth context
         submittedByName: 'Current User' // TODO: Get from auth context
