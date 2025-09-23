@@ -1,6 +1,9 @@
 import templateRouter from './routes/templates.js';
 import projectRouter from './api/routes/projects.js';
 import projectDocumentRouter from './api/routes/projectDocuments.js';
+import stakeholderRouter from './api/routes/stakeholders.js';
+import feedbackRouter from './api/routes/feedback.js';
+// import auditTrailRouter from './api/routes/auditTrail.js';
 import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
@@ -16,19 +19,10 @@ import documentRoutes from './routes/documents.js';
 import standardsComplianceRoutes from './api/routes/standardsCompliance.js';
 import reviewRoutes from './routes/reviews.js';
 import reviewerRoutes from './routes/reviewers.js';
-import documentGenerationRoutes from './api/routes/documentGeneration.js';
+import documentGenerationRoutes from './routes/documentGeneration.js';
 import scopeControlRoutes from './routes/scopeControl.js';
-<<<<<<< Updated upstream
-import feedbackRoutes from './api/routes/feedback.js';
-import generationJobRoutes from './api/routes/generationJobs.js';
-import qualityRoutes from './api/routes/quality.js';
-import stakeholderRoutes from './api/routes/stakeholders.js';
-import contextTrackingRoutes from './api/routes/contextTracking.js';
-import { authMiddleware } from './api/middleware/auth.js';
-=======
 import templatesRoutes from './routes/templates.js';
 import authMiddleware from './middleware/auth.js';
->>>>>>> Stashed changes
 
 const app = express();
 
@@ -43,6 +37,12 @@ app.use(morgan('dev'));
 app.use('/api/v1/projects', projectDocumentRouter);
 // Register project API endpoint
 app.use('/api/v1/projects', projectRouter);
+// Register stakeholders API endpoint
+app.use('/api/v1/stakeholders', authMiddleware, stakeholderRouter);
+// Register feedback API endpoint
+app.use('/api/v1/feedback', authMiddleware, feedbackRouter);
+// Register audit trail API endpoint (temporarily disabled due to import issues)
+// app.use('/api/v1/audit-trail', authMiddleware, auditTrailRouter);
 
 // Explicit OPTIONS handler for all routes (for CORS preflight)
 app.options('*', cors({
@@ -108,20 +108,8 @@ app.use('/api/v1/standards', authMiddleware, standardsComplianceRoutes);
 app.use('/api/v1/reviews', authMiddleware, reviewRoutes);
 app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
-<<<<<<< Updated upstream
 app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
-app.use('/api/v1/feedback', authMiddleware, feedbackRoutes);
-app.use('/api/v1/generation-jobs', authMiddleware, generationJobRoutes);
-app.use('/api/v1/quality', authMiddleware, qualityRoutes);
-app.use('/api/v1/stakeholders', authMiddleware, stakeholderRoutes);
-app.use('/api/v1/context-tracking', authMiddleware, contextTrackingRoutes);
-
-// Register template API endpoint after all other routes (no auth required for templates)
-app.use('/api/v1/templates', templateRouter);
-=======
-app.use('/api/v1', authMiddleware, scopeControlRoutes);
 app.use('/api/v1/templates', authMiddleware, templatesRoutes);
->>>>>>> Stashed changes
 // 404 handler
 
 // Global error handling middleware (must be last)
@@ -138,7 +126,9 @@ app.use('*', (req: Request, res: Response) => {
         reviewers: '/api/v1/reviewers',
         documentGeneration: '/api/v1/document-generation',
         scopeControl: '/api/v1/scope-control',
+        stakeholders: '/api/v1/stakeholders',
         feedback: '/api/v1/feedback',
+        // auditTrail: '/api/v1/audit-trail',
         generationJobs: '/api/v1/generation-jobs',
         quality: '/api/v1/quality',
         documentation: '/api-docs'

@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const PORT = process.env.PORT || process.env.API_PORT || 3001;
+const PORT = process.env.PORT || process.env.API_PORT || 3002;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Initialize database connection and services

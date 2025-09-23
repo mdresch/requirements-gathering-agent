@@ -1,4 +1,4 @@
-import { DocumentAuditTrail, IDocumentAuditTrail } from '../models/DocumentAuditTrail.model';
+import { DocumentAuditTrail, IDocumentAuditTrail } from '../models/DocumentAuditTrail.model.js';
 
 export interface AuditTrailEntry {
   documentId: string;

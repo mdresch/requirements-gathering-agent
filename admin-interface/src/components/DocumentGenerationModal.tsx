@@ -13,6 +13,7 @@ interface DocumentTemplate {
   name: string;
   description: string;
   category: string;
+  documentKey?: string;
   estimatedTime: string;
   framework: string[];
   required: boolean;
@@ -790,20 +791,51 @@ This document contains the generated content for ${template.name} based on the $
 
   // Function to map template IDs to document keys
   const getDocumentKeyFromTemplateId = (templateId: string, templateName: string): string => {
-    // Map template names to document keys that the DocumentGenerator expects
+    // First, try to find the template in the available templates to get the documentKey
+    const template = availableTemplates.find(t => t.id === templateId);
+    
+    if (template && template.documentKey) {
+      // Check if we need to map the documentKey to a backend-compatible key
+      const documentKeyMapping: Record<string, string> = {
+        'company-mission-vision-and-core-values': 'mission-vision-core-values',
+        'project-charter-template': 'project-charter',
+        'api-documentation-template': 'api-documentation',
+        'data-governance-policy': 'data-governance-plan',
+        'test-plan-document': 'test-plan',
+        'risk-assessment-report': 'risk-assessment',
+        'system-architecture-doc': 'system-architecture',
+        'functional-requirements-spec': 'functional-requirements',
+        'technical-requirements-template': 'technical-requirements',
+        'business-case-template': 'business-case',
+        'user-stories-template': 'user-stories'
+      };
+      
+      // Use mapped key if available, otherwise use the original documentKey
+      return documentKeyMapping[template.documentKey] || template.documentKey;
+    }
+
+    // Fallback: Map template names to document keys that the DocumentGenerator expects
     const nameToKeyMap: Record<string, string> = {
       'Stakeholder Analysis Template': 'stakeholder-analysis',
       'Stakeholder Analysis': 'stakeholder-analysis',
-      'Scope Management': 'scope-management-plan', // Use scope-management-plan instead of scope-management
+      'Scope Management': 'scope-management-plan',
       'User Personas': 'user-personas',
       'User Stories': 'user-stories',
       'API Test Template': 'api-test-template',
       'Business Case Template': 'business-case',
-      'Business Case': 'business-case'
+      'Business Case': 'business-case',
+      'Company Mission Vision and Core Values': 'mission-vision-core-values',
+      'Project Charter Template': 'project-charter',
+      'API Documentation Template': 'api-documentation',
+      'Data Governance Policy': 'data-governance-plan',
+      'Test Plan Document': 'test-plan',
+      'Risk Assessment Report': 'risk-assessment',
+      'System Architecture Document': 'system-architecture',
+      'Functional Requirements Specification': 'functional-requirements',
+      'Technical Requirements Template': 'technical-requirements'
     };
 
-    // Try to find the template in the available templates to get the name
-    const template = availableTemplates.find(t => t.id === templateId);
+
     const templateNameToUse = template?.name || templateName;
 
     // Return mapped key or create a kebab-case version of the name
@@ -814,15 +846,26 @@ This document contains the generated content for ${template.name} based on the $
   const getDocumentKeyFromTemplateName = (templateName: string): string => {
     const nameToKeyMap: { [key: string]: string } = {
       'Mission, Vision & Core Values': 'mission-vision-core-values',
+      'Company Mission Vision and Core Values': 'mission-vision-core-values',
       'Company Values': 'company-values',
       'Project Charter': 'project-charter',
+      'Project Charter Template': 'project-charter',
       'Stakeholder Analysis': 'stakeholder-analysis',
       'Requirements Document': 'requirements-document',
       'Risk Management Plan': 'risk-management-plan',
       'Scope Management Plan': 'scope-management-plan',
       'Business Case': 'business-case',
+      'Business Case Template': 'business-case',
       'User Personas': 'user-personas',
-      'User Stories': 'user-stories'
+      'User Stories': 'user-stories',
+      'User Stories Template': 'user-stories',
+      'API Documentation Template': 'api-documentation',
+      'Data Governance Policy': 'data-governance-plan',
+      'Test Plan Document': 'test-plan',
+      'Risk Assessment Report': 'risk-assessment',
+      'System Architecture Document': 'system-architecture',
+      'Functional Requirements Specification': 'functional-requirements',
+      'Technical Requirements Template': 'technical-requirements'
     };
     
     return nameToKeyMap[templateName] || templateName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');

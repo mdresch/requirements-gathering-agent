@@ -31,7 +31,7 @@ export interface IProject extends Document {
   name: string;
   description: string;
   status: 'draft' | 'active' | 'review' | 'completed' | 'archived';
-  framework: 'babok' | 'pmbok' | 'multi';
+  framework: 'babok' | 'pmbok' | 'dmbok' | 'multi';
   complianceScore: number;
   documents: number;
   stakeholders: number;
@@ -83,7 +83,7 @@ const ProjectSchema: Schema = new Schema({
   },
   framework: {
     type: String,
-    enum: ['babok', 'pmbok', 'multi'],
+    enum: ['babok', 'pmbok', 'dmbok', 'multi'],
     required: true
   },
   complianceScore: {

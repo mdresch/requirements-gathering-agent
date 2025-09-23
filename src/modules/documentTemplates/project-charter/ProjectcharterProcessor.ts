@@ -29,7 +29,25 @@ export class ProjectcharterProcessor implements DocumentProcessor {
 
   async process(context: ProjectContext): Promise<DocumentOutput> {
     try {
-      const prompt = this.createPrompt(context);
+      // Use ContextManager to get enriched context including stakeholders
+      const { ContextManager } = await import('../../contextManager.js');
+      const contextManager = ContextManager.getInstance();
+      
+      // Get enriched context that includes stakeholder information
+      const enrichedContext = contextManager.buildContextForDocument('project-charter', [
+        'business-case',
+        'stakeholder-register',
+        'stakeholder-analysis',
+        'scope-management-plan'
+      ]);
+      
+      console.log(`🔍 Project Charter Processor - Enriched context length: ${enrichedContext ? enrichedContext.length : 0}`);
+      console.log(`🔍 Project Charter Processor - Context contains stakeholders: ${enrichedContext ? enrichedContext.includes('PROJECT-STAKEHOLDERS') : false}`);
+      
+      // Use enriched context if available, otherwise fall back to basic context
+      const contextToUse = enrichedContext || JSON.stringify(context);
+      
+      const prompt = this.createPrompt(context, contextToUse);
       const content = await this.aiProcessor.makeAICall([
         { 
           role: 'system', 
@@ -90,7 +108,7 @@ This Project Charter formally authorizes project execution and commits organizat
     }
   }
 
-  private createPrompt(context: ProjectContext): string {
+  private createPrompt(context: ProjectContext, enrichedContext?: string): string {
     // Get the template as an example structure
     const template = new ProjectcharterTemplate(context);
     const templateStructure = template.generateContent();
@@ -101,6 +119,11 @@ This Project Charter formally authorizes project execution and commits organizat
 - **Project Name**: ${context.projectName || 'Strategic Initiative'}
 - **Project Type**: ${context.projectType || 'Technology Implementation'}
 - **Project Description**: ${context.description || 'Strategic project requiring executive authorization'}
+
+**COMPREHENSIVE PROJECT INFORMATION:**
+${enrichedContext ? enrichedContext : 'No additional context available'}
+
+**CRITICAL REQUIREMENTS:**
 
 **FOUNDATIONAL DOCUMENTS TO SYNTHESIZE:**
 You have access to comprehensive foundational analysis including:

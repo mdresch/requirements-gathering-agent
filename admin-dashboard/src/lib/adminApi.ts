@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/admin-api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
 
 export async function getAdminTemplates() {

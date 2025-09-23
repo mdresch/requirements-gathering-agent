@@ -3,7 +3,249 @@ import { DocumentReviewIntegration, DocumentGenerationWithReviewOptions } from '
 import { logger } from '../../utils/logger.js';
 
 export class DocumentGenerationController {
-  private static integrationService = new DocumentReviewIntegration();
+  private static integrationService = new DocumentReviewIntegration()
+
+  /**
+   * Determines if a document type requires stakeholder context
+   */
+  private static documentRequiresStakeholderContext(documentType: string): boolean {
+    const stakeholderCriticalDocuments = [
+      'project-charter',
+      'stakeholder-engagement-plan',
+      'stakeholder-analysis',
+      'stakeholder-register',
+      'communication-management-plan',
+      'project-management-plan',
+      'business-case',
+      'requirements-documentation',
+      'acceptance-criteria',
+      'change-request',
+      'risk-management-plan',
+      'quality-management-plan',
+      'procurement-management-plan',
+      'scope-management-plan',
+      'schedule-management-plan',
+      'cost-management-plan',
+      'resource-management-plan'
+    ];
+    
+    return stakeholderCriticalDocuments.includes(documentType);
+  }
+
+  /**
+   * Load existing stakeholders and inject them as context for LLM generation
+   * This is especially important for documents requiring stakeholder sign-offs or approvals
+   */
+  private static async loadProjectStakeholdersAsContext(projectId: string, documentTypes?: string[]): Promise<void> {
+    try {
+      // Check if any of the documents being generated require stakeholder context
+      const requiresStakeholderContext = documentTypes ? 
+        documentTypes.some(docType => this.documentRequiresStakeholderContext(docType)) : 
+        true; // Default to true if no specific document types provided
+      
+      if (!requiresStakeholderContext) {
+        console.log('👥 Skipping stakeholder context injection - no stakeholder-critical documents being generated');
+        return;
+      }
+      
+      console.log(`👥 Loading stakeholders for project ${projectId} as context...`);
+      
+      // Import Stakeholder model
+      const { Stakeholder } = await import('../../models/Stakeholder.js');
+      
+      // Find all active stakeholders for this project, prioritized by influence and role
+      const stakeholders = await Stakeholder.find({
+        projectId: projectId,
+        isActive: true
+      }).sort({ 
+        role: 1, // Prioritize sponsors and project managers
+        influence: -1, // Then by influence level
+        powerLevel: -1, // Then by power level
+        engagementLevel: -1 // Finally by engagement level
+      }).exec();
+      
+      if (stakeholders.length === 0) {
+        console.log('👥 No stakeholders found for context injection');
+        return;
+      }
+      
+      console.log(`👥 Found ${stakeholders.length} stakeholders for context injection`);
+      console.log(`👥 Stakeholder details:`, stakeholders.map(s => ({ name: s.name, role: s.role, title: s.title })));
+      
+      // Import ContextManager to inject the stakeholders as context
+      const { ContextManager } = await import('../../modules/contextManager.js');
+      const contextManager = ContextManager.getInstance();
+      
+      // Check if we have a large context window available
+      const maxTokens = contextManager.getEffectiveTokenLimit('enriched');
+      
+      let totalTokensInjected = 0;
+      let stakeholdersInjected = 0;
+      
+      // Group stakeholders by role for better organization
+      const stakeholdersByRole = {
+        sponsors: stakeholders.filter(s => s.role === 'sponsor'),
+        project_managers: stakeholders.filter(s => s.role === 'project_manager'),
+        team_members: stakeholders.filter(s => s.role === 'team_member'),
+        end_users: stakeholders.filter(s => s.role === 'end_user'),
+        other_stakeholders: stakeholders.filter(s => s.role === 'stakeholder')
+      };
+      
+      // Create structured stakeholder context content
+      let stakeholderContextContent = `# Project Stakeholders
+
+This section provides comprehensive stakeholder information for document generation, including roles, influence levels, communication preferences, and requirements.
+
+`;
+      
+      // Add stakeholders by role with detailed information
+      for (const [roleGroup, roleStakeholders] of Object.entries(stakeholdersByRole)) {
+        if (roleStakeholders.length === 0) continue;
+        
+        const roleDisplayName = roleGroup.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        stakeholderContextContent += `## ${roleDisplayName} (${roleStakeholders.length})\n\n`;
+        
+        for (const stakeholder of roleStakeholders) {
+          stakeholderContextContent += `### ${stakeholder.name}
+- **Title:** ${stakeholder.title}
+- **Role:** ${stakeholder.role}
+- **Department:** ${stakeholder.department || 'Not specified'}
+- **Influence Level:** ${stakeholder.influence} (Power: ${stakeholder.powerLevel}/5, Engagement: ${stakeholder.engagementLevel}/5)
+- **Communication Preference:** ${stakeholder.communicationPreference}
+- **Availability:** ${stakeholder.availability.workingHours} ${stakeholder.availability.timezone}
+- **Email:** ${stakeholder.email || 'Not provided'}
+- **Phone:** ${stakeholder.phone || 'Not provided'}
+
+**Requirements:**
+${stakeholder.requirements.length > 0 ? stakeholder.requirements.map(req => `- ${req}`).join('\n') : '- None specified'}
+
+**Concerns:**
+${stakeholder.concerns.length > 0 ? stakeholder.concerns.map(concern => `- ${concern}`).join('\n') : '- None specified'}
+
+**Expectations:**
+${stakeholder.expectations.length > 0 ? stakeholder.expectations.map(expectation => `- ${expectation}`).join('\n') : '- None specified'}
+
+${stakeholder.notes ? `**Notes:** ${stakeholder.notes}\n` : ''}
+${stakeholder.lastContact ? `**Last Contact:** ${stakeholder.lastContact.toISOString()}\n` : ''}
+
+`;
+        }
+      }
+      
+      // Estimate tokens for stakeholder context
+      const estimatedTokens = this.estimateTokens(stakeholderContextContent);
+      
+      // Check if we have room for stakeholder context
+      if (estimatedTokens < maxTokens * 0.3) { // Use up to 30% of context window for stakeholders
+        contextManager.addEnrichedContext('PROJECT-STAKEHOLDERS', stakeholderContextContent);
+        totalTokensInjected += estimatedTokens;
+        stakeholdersInjected = stakeholders.length;
+        console.log(`✅ Added ${stakeholdersInjected} stakeholders as context - ~${estimatedTokens.toLocaleString()} tokens`);
+      } else {
+        console.log(`⚠️ Skipping stakeholder context due to token limit - would use ${estimatedTokens.toLocaleString()} tokens`);
+      }
+      
+      console.log(`🎯 Successfully injected stakeholder context for LLM generation`);
+      
+    } catch (error) {
+      console.error('❌ Error loading project stakeholders for context:', error);
+      // Don't throw error - stakeholder context injection is enhancement, not critical
+    }
+  }
+
+  /**
+   * Load existing project documents and inject them as context for LLM generation
+   * This ensures that available documents are used as context even when there are no dependencies
+   * Optimized for large context windows like Gemini with intelligent token management
+   */
+  private static async loadExistingProjectDocumentsAsContext(projectId: string): Promise<void> {
+    try {
+      console.log(`🔍 Loading existing documents for project ${projectId} as context...`);
+      
+      // Import ProjectDocument model
+      const { ProjectDocument } = await import('../../models/ProjectDocument.js');
+      
+      // Find all existing documents for this project, prioritized by quality and recency
+      const existingDocuments = await ProjectDocument.find({
+        projectId: projectId,
+        deletedAt: null, // Only non-deleted documents
+        status: { $in: ['draft', 'review', 'approved', 'published'] } // Only active documents
+      }).sort({ 
+        status: 1, // Prioritize approved/published documents
+        qualityScore: -1, // Then by quality score
+        lastModified: -1 // Finally by recency
+      }).exec();
+      
+      if (existingDocuments.length === 0) {
+        console.log('📄 No existing documents found for context injection');
+        return;
+      }
+      
+      console.log(`📚 Found ${existingDocuments.length} existing documents for context injection`);
+      
+      // Import ContextManager to inject the documents as context
+      const { ContextManager } = await import('../../modules/contextManager.js');
+      const contextManager = ContextManager.getInstance();
+      
+      // Check if we have a large context window available
+      const supportsLargeContext = contextManager.supportsLargeContext();
+      const maxTokens = contextManager.getEffectiveTokenLimit('enriched');
+      
+      console.log(`🧠 Context window: ${supportsLargeContext ? 'Large' : 'Standard'} (${maxTokens.toLocaleString()} tokens)`);
+      
+      let totalTokensInjected = 0;
+      let documentsInjected = 0;
+      
+      // Add each document as high-priority context, respecting token limits
+      for (const doc of existingDocuments) {
+        const contextKey = `PRIORITY-EXISTING-${doc.type}`;
+        
+        // Create structured context content with metadata
+        const contextContent = `# ${doc.name}
+
+**Document Type:** ${doc.type}
+**Category:** ${doc.category}
+**Status:** ${doc.status}
+**Quality Score:** ${doc.qualityScore || 'N/A'}%
+**Last Modified:** ${doc.lastModified.toISOString()}
+**Word Count:** ${doc.wordCount || 'N/A'}
+
+## Content
+
+${doc.content}`;
+        
+        // Estimate tokens for this document
+        const estimatedTokens = this.estimateTokens(contextContent);
+        
+        // Check if we have room for this document
+        if (totalTokensInjected + estimatedTokens < maxTokens * 0.8) { // Use 80% of available tokens
+          contextManager.addEnrichedContext(contextKey, contextContent);
+          totalTokensInjected += estimatedTokens;
+          documentsInjected++;
+          console.log(`✅ Added existing document as context: ${doc.name} (${doc.type}) - ~${estimatedTokens.toLocaleString()} tokens`);
+        } else {
+          console.log(`⚠️ Skipping document due to token limit: ${doc.name} (${doc.type}) - would exceed context window`);
+          break; // Stop adding more documents to avoid exceeding limits
+        }
+      }
+      
+      console.log(`🎯 Successfully injected ${documentsInjected}/${existingDocuments.length} existing documents as context for LLM generation`);
+      console.log(`📊 Total context tokens injected: ${totalTokensInjected.toLocaleString()}/${maxTokens.toLocaleString()} (${((totalTokensInjected / maxTokens) * 100).toFixed(1)}%)`);
+      
+    } catch (error) {
+      console.error('❌ Error loading existing project documents for context:', error);
+      // Don't throw error - context injection is enhancement, not critical
+    }
+  }
+
+  /**
+   * Simple token estimation function (rough approximation)
+   */
+  private static estimateTokens(text: string): number {
+    // Rough estimation: 1 token ≈ 4 characters for English text
+    // This is a simplified approach - in production, you might want to use a more accurate tokenizer
+    return Math.ceil(text.length / 4);
+  };
 
   /**
    * Generate documents with automatic review creation
@@ -40,6 +282,10 @@ export class DocumentGenerationController {
       }
 
       logger.info(`Starting document generation with review for project: ${options.projectName}`);
+
+      // Load existing project documents and stakeholders for context injection
+      await DocumentGenerationController.loadExistingProjectDocumentsAsContext(options.projectId);
+      await DocumentGenerationController.loadProjectStakeholdersAsContext(options.projectId, options.documentKeys);
 
       const result = await DocumentGenerationController.integrationService.generateDocumentsWithReview(options);
 
@@ -190,6 +436,7 @@ export class DocumentGenerationController {
    */
   static async generateDocumentsOnly(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log(`🚀 generateDocumentsOnly called with body:`, JSON.stringify(req.body, null, 2));
       const { context, generateAll, documentKeys } = req.body;
 
       if (!context) {
@@ -218,6 +465,12 @@ export class DocumentGenerationController {
         console.warn('⚠️ No valid project ID provided for document generation. Using context as project ID.');
         projectContext.projectId = context;
       }
+      
+      // Load existing project documents and stakeholders for context injection
+      console.log(`🔧 Starting context injection for project ${projectContext.projectId}...`);
+      await DocumentGenerationController.loadExistingProjectDocumentsAsContext(projectContext.projectId);
+      await DocumentGenerationController.loadProjectStakeholdersAsContext(projectContext.projectId, documentKeys);
+      console.log(`✅ Context injection completed for project ${projectContext.projectId}`);
       
       const generator = new DocumentGenerator(projectContext);
 
@@ -319,6 +572,10 @@ export class DocumentGenerationController {
       }
 
       logger.info(`Starting document generation with PMBOK validation and review for project: ${options.projectName}`);
+
+      // Load existing project documents and stakeholders for context injection
+      await DocumentGenerationController.loadExistingProjectDocumentsAsContext(options.projectId);
+      await DocumentGenerationController.loadProjectStakeholdersAsContext(options.projectId, options.documentKeys);
 
       // Step 1: Generate documents with review
       const result = await DocumentGenerationController.integrationService.generateDocumentsWithReview(options);

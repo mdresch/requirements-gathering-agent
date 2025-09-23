@@ -68,8 +68,10 @@ export class EnhancedBusinesscaseProcessor implements DocumentProcessor {
     try {
       // Try multiple possible identifiers for business case template
       const possibleIdentifiers = [
+        'business-case-template',
         'business-case',
         'business_case',
+        'Business Case Template',
         'Business Case',
         'BusinessCase',
         'businesscase'

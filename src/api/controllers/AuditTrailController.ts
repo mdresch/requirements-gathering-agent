@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuditTrailService, AuditTrailFilters } from '../../services/AuditTrailService';
+import { AuditTrailService, AuditTrailFilters } from '../../services/AuditTrailService.js';
 
 export class AuditTrailController {
   private auditTrailService: AuditTrailService;

@@ -1,7 +1,7 @@
 // Simple API Connection Test Script
 // Run this with: node test-api-connection.js
 
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+const API_BASE_URL = 'http://localhost:3002/api/v1';
 
 async function testApiConnection() {
   console.log('🧪 Testing API Connection...');

@@ -233,11 +233,11 @@ export class ContextManager {
         }
     }
 
-    private supportsLargeContext(): boolean {
+    public supportsLargeContext(): boolean {
         return this.maxContextTokens > 50000;
     }
 
-    private getEffectiveTokenLimit(operation: 'core' | 'enriched' | 'full'): number {
+    public getEffectiveTokenLimit(operation: 'core' | 'enriched' | 'full'): number {
         const baseLimit = this.maxContextTokens;
         switch (operation) {
             case 'core':

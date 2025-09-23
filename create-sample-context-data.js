@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { AIContextTracking } from './dist/models/AIContextTracking.model.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:password@localhost:27017/requirements-gathering-agent?authSource=admin';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/requirements-gathering-agent';
 
 async function createSampleData() {
   try {

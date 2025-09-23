@@ -18,7 +18,6 @@
     "removeComments": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "allowImportingTsExtensions": false,
     "noEmitOnError": false,
     "preserveConstEnums": true,
     "isolatedModules": true,

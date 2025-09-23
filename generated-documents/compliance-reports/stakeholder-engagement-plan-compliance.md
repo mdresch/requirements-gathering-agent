@@ -1,8 +1,8 @@
 # Compliance Validation Report
 
-**Document:** project-charter  
-**Document Type:** project-charter  
-**Validation Date:** 2025-09-23T11:25:22.453Z  
+**Document:** stakeholder-engagement-plan  
+**Document Type:** stakeholder-management  
+**Validation Date:** 2025-09-23T11:00:57.626Z  
 **Compliance Score:** 98%  
 **Compliance Status:** FULLY_COMPLIANT  
 
@@ -19,10 +19,10 @@ This document has been validated against enterprise governance policies, regulat
 
 ### Policy Violations
 
-- **Mandatory requirement 'Risk assessment' of policy 'Document Quality Standards' not satisfied**
+- **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
   - Severity: HIGH
   - Impact: MAJOR
-  - Remediation: Ensure document includes required element: Risk assessment
+  - Remediation: Ensure document includes required element: Approval process
 
 
 
@@ -48,11 +48,11 @@ This document has been validated against enterprise governance policies, regulat
 
 ### Critical Issues (1)
 
-- **Mandatory requirement 'Risk assessment' of policy 'Document Quality Standards' not satisfied**
+- **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
   - Category: GOVERNANCE
   - Severity: HIGH
   - Impact: MAJOR
-  - Recommendation: Ensure document includes required element: Risk assessment
+  - Recommendation: Ensure document includes required element: Approval process
 
 
 ### Recommendations (0)

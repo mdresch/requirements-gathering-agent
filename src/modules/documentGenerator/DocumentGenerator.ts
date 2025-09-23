@@ -637,7 +637,12 @@ export class DocumentGenerator {
             // Track context usage for this generation
             const startTime = Date.now();
             
-            const output = await processor.process({ projectName: this.context });
+            // Pass project ID so processor can use ContextManager to get enriched context
+            const projectId = this.extractProjectId();
+            const output = await processor.process({ 
+                projectName: this.context,
+                projectId: projectId
+            });
             
             const processingTime = Date.now() - startTime;
             const content = output.content;
