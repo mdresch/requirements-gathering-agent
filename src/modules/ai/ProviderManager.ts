@@ -60,7 +60,7 @@ export class ProviderManager {
     }
   }
   private initializeProviders(): void {
-    // Google AI Studio
+    // Google AI Studio (google-ai)
     const googleAI: ProviderConfig = {
       name: 'google-ai',
       check: async () => {
@@ -74,7 +74,8 @@ export class ProviderManager {
           console.warn('Google AI check failed:', error instanceof Error ? error.message : String(error));
           return false;
         }
-      },      priority: 5, // Lower priority than Azure OpenAI
+      },
+      priority: 5, // Lower priority than Azure OpenAI
       description: 'Google AI with Gemini models - supports ultra-large context',
       setupGuide: 'Visit https://makersuite.google.com/app/apikey to get your API key',
       endpoint: 'https://generativelanguage.googleapis.com/v1beta',
@@ -82,6 +83,30 @@ export class ProviderManager {
       costPerToken: 0.00001
     };
     this.addProvider(googleAI);
+
+    // Google Gemini (google-gemini) - Alternative name for Google AI
+    const googleGemini: ProviderConfig = {
+      name: 'google-gemini',
+      check: async () => {
+        if (!process.env.GOOGLE_AI_API_KEY) return false;
+        try {
+          const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+            headers: { 'x-goog-api-key': process.env.GOOGLE_AI_API_KEY }
+          });
+          return response.ok;
+        } catch (error) {
+          console.warn('Google Gemini check failed:', error instanceof Error ? error.message : String(error));
+          return false;
+        }
+      },
+      priority: 4, // Higher priority than google-ai
+      description: 'Google Gemini Pro - supports ultra-large context (1M tokens)',
+      setupGuide: 'Visit https://makersuite.google.com/app/apikey to get your API key',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta',
+      tokenLimit: 1048576, // 1M tokens for Gemini Pro
+      costPerToken: 0.0005 // $0.0005 per 1K tokens as you specified
+    };
+    this.addProvider(googleGemini);
 
     // Azure OpenAI with Entra ID
     const azureOpenAI: ProviderConfig = {
@@ -133,42 +158,45 @@ export class ProviderManager {
       description: 'Azure OpenAI with API key authentication',
       endpoint: process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT,
       tokenLimit: (process.env.REQUIREMENTS_AGENT_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT_NAME)?.includes('32k') ? 32000 : 8000,
-      costPerToken: 0.00002    };
-    this.addProvider(azureAIStudio);    // Azure OpenAI (API Key) - matching interactive menu ID
+      costPerToken: 0.00002
+    };
+    this.addProvider(azureAIStudio);
+
+    // Ollama Llama 3.1 (Local)
+    const ollamaProvider: ProviderConfig = {
+      name: 'ollama',
+      check: async () => {
+        const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+        const requiredModel = process.env.OLLAMA_MODEL || 'llama3.1';
+        try {
+          const response = await fetch(`${apiUrl}/api/tags`, { method: 'GET' });
+          if (!response.ok) return false;
+          const data = await response.json() as { models?: Array<{ name: string }> };
+          if (!data.models || !Array.isArray(data.models)) return false;
+          // Check for exact match or prefix match (for quantized variants)
+          const found = data.models.some((m: { name: string }) => m.name === requiredModel || m.name.startsWith(requiredModel));
+          if (!found) {
+            console.warn(`Ollama health check: required model '${requiredModel}' not found in loaded models.`);
+            return false;
+          }
+          return true;
+        } catch (error) {
+          console.warn('Ollama check failed:', error instanceof Error ? error.message : String(error));
+          return false;
+        }
+      },
+      priority: 1,
+      description: 'Ollama Llama 3.1 (Local AI provider)',
+      endpoint: process.env.OLLAMA_API_URL || 'http://localhost:11434',
+      tokenLimit: 32768,
+      costPerToken: 0
+    };
+    this.addProvider(ollamaProvider);
+
+    // Azure OpenAI (API Key) - matching interactive menu ID
     const azureOpenAIKey: ProviderConfig = {
       name: 'azure-openai-key',
       check: async () => {
-
-          // Ollama Llama 3.2 (Local)
-          const ollamaProvider: ProviderConfig = {
-            name: 'ollama',
-            check: async () => {
-              const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
-              const requiredModel = process.env.OLLAMA_MODEL || 'llama3.1';
-              try {
-                const response = await fetch(`${apiUrl}/api/tags`, { method: 'GET' });
-                if (!response.ok) return false;
-                const data = await response.json() as { models?: Array<{ name: string }> };
-                if (!data.models || !Array.isArray(data.models)) return false;
-                // Check for exact match or prefix match (for quantized variants)
-                const found = data.models.some((m: { name: string }) => m.name === requiredModel || m.name.startsWith(requiredModel));
-                if (!found) {
-                  console.warn(`Ollama health check: required model '${requiredModel}' not found in loaded models.`);
-                  return false;
-                }
-                return true;
-              } catch (error) {
-                console.warn('Ollama check failed:', error instanceof Error ? error.message : String(error));
-                return false;
-              }
-            },
-            priority: 1,
-            description: 'Ollama Llama 3.1 (Local AI provider)',
-            endpoint: process.env.OLLAMA_API_URL || 'http://localhost:11434',
-            tokenLimit: 32768,
-            costPerToken: 0
-          };
-          this.addProvider(ollamaProvider);
         // Check for either AZURE_AI_* or AZURE_OPENAI_* variables
         const endpoint = process.env.AZURE_AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT;
         const apiKey = process.env.AZURE_AI_API_KEY || process.env.AZURE_OPENAI_API_KEY;

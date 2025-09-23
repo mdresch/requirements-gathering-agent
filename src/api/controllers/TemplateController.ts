@@ -2,6 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { TemplateRepository } from '../../repositories/TemplateRepository.js';
 import { dbConnection } from '../../config/database.js';
+import { SoftDeleteService } from '../../services/SoftDeleteService.js';
+import { DependencyRegistryService } from '../../services/DependencyRegistryService.js';
+import { 
+    UnifiedTemplate, 
+    CreateTemplateRequest, 
+    UpdateTemplateRequest, 
+    TemplateApiResponse,
+    TemplateConverter 
+} from '../../types/UnifiedTemplate.js';
 
 /**
  * Template Management API Controller
@@ -11,12 +20,14 @@ import { dbConnection } from '../../config/database.js';
  */
 export class TemplateController {
     private static templateRepository: any;
+    private static softDeleteService: SoftDeleteService;
 
     /**
      * Set the TemplateRepository instance after DB connection is established
      */
     static setTemplateRepository(repo: any) {
         TemplateController.templateRepository = repo;
+        TemplateController.softDeleteService = new SoftDeleteService(repo);
     }
     
     /**
@@ -25,60 +36,111 @@ export class TemplateController {
      */
     static async createTemplate(req: Request, res: Response, next: NextFunction) {
         try {
-            const { name, description, category, tags, templateData, isActive } = req.body;
+            const { name, description, category, tags, templateData, metadata, isActive } = req.body;
+            
+            // Debug: Log the incoming metadata
+            console.log('🔍 TemplateController: Received metadata:', JSON.stringify(metadata, null, 2));
             const requestId = req.headers['x-request-id'] as string || uuidv4();
             const userId = req.user?.id || 'api-user';
 
-            // Create template using actual TemplateRepository
-            const templateRecord = {
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Validate required fields
+            if (!name || !category) {
+                return res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'VALIDATION_ERROR',
+                        message: 'Template name and category are required'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Generate documentKey from template name
+            const documentKey = name
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+
+            // Create unified template request
+            const createRequest: CreateTemplateRequest = {
                 name,
                 description: description || `API-created template: ${name}`,
-                category: category || 'api-created',
-                template_type: 'api_created',
-                ai_instructions: templateData?.aiInstructions || `Generate a ${name}`,
-                prompt_template: templateData?.content || `# ${name}\n\n{{content}}`,
-                generation_function: 'getAiGenericDocument',
+                category,
+                documentKey,
+                templateType: 'api_created',
+                content: {
+                    aiInstructions: templateData?.aiInstructions || `Generate a ${name}`,
+                    promptTemplate: templateData?.content || `# ${name}\n\n{{content}}`,
+                    variables: templateData?.variables || [],
+                    layout: templateData?.layout || {}
+                },
                 metadata: {
                     tags: tags || [],
-                    variables: templateData?.variables || [],
-                    layout: templateData?.layout || {},
-                    emoji: '🆕',
                     priority: 200,
-                    source: 'api'
+                    emoji: '🆕',
+                    source: 'api',
+                    contextPriority: 'medium',
+                    author: metadata?.author || userId,
+                    framework: metadata?.framework || 'general',
+                    complexity: metadata?.complexity || 'medium',
+                    estimatedTime: metadata?.estimatedTime || '2-4 hours',
+                    dependencies: metadata?.dependencies || [],
+                    version: metadata?.version || '1.0.0'
                 },
-                version: 1,
-                is_active: isActive !== false,
-                is_system: false,
-                created_by: userId
+                isActive: isActive !== false,
+                isSystem: false,
+                createdBy: userId
             };
 
-            const createdTemplate = await TemplateController.templateRepository.createTemplate(templateRecord);
+            // Debug: Log the created request metadata
+            console.log('🔍 TemplateController: Created request metadata:', JSON.stringify(createRequest.metadata, null, 2));
 
-            // Convert to API format
-            const apiTemplate = {
-                id: createdTemplate.id,
-                name: createdTemplate.name,
-                description: createdTemplate.description,
-                category: createdTemplate.category,
-                tags: createdTemplate.metadata?.tags || [],
-                templateData: {
-                    content: createdTemplate.prompt_template,
-                    aiInstructions: createdTemplate.ai_instructions,
-                    variables: createdTemplate.metadata?.variables || [],
-                    layout: createdTemplate.metadata?.layout || {}
-                },
-                isActive: createdTemplate.is_active,
-                createdBy: createdTemplate.created_by,
-                createdAt: createdTemplate.created_at,
-                updatedAt: createdTemplate.updated_at,
-                version: createdTemplate.version,
-                templateType: createdTemplate.template_type
-            };
+            // Convert to database format and save
+            console.log('🔄 Converting template to database format...');
+            const dbTemplate = TemplateConverter.toDatabase(createRequest);
+            console.log('📄 Database template format:', JSON.stringify(dbTemplate, null, 2));
+            
+            console.log('💾 Saving template to database...');
+            const createdTemplate = await TemplateController.templateRepository.createTemplate(dbTemplate);
+            console.log('✅ Template saved to database:', {
+                id: createdTemplate._id,
+                name: createdTemplate.name
+            });
 
-            console.log('Template created:', {
+            // Update dependency registry with new template
+            try {
+                console.log('🔄 Updating dependency registry...');
+                await DependencyRegistryService.addTemplateToRegistry(createdTemplate);
+                console.log('✅ Dependency registry updated successfully');
+            } catch (error) {
+                console.warn('⚠️ Failed to update dependency registry:', error);
+                // Don't fail the template creation if registry update fails
+            }
+
+            // Convert back to unified format
+            const unifiedTemplate = TemplateConverter.fromDatabase(createdTemplate);
+            const apiTemplate = TemplateConverter.toApiResponse(unifiedTemplate);
+
+            console.log('Template created successfully:', {
                 requestId,
-                templateId: createdTemplate.id,
-                name,
+                templateId: unifiedTemplate.id,
+                name: unifiedTemplate.name,
+                category: unifiedTemplate.category,
                 userId,
                 timestamp: new Date().toISOString()
             });
@@ -92,7 +154,17 @@ export class TemplateController {
 
         } catch (error) {
             console.error('Error creating template:', error);
-            next(error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'TEMPLATE_CREATION_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to create template'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
         }
     }/**
      * Get a template by ID
@@ -129,6 +201,19 @@ export class TemplateController {
                         aiInstructions: template.ai_instructions,
                         variables: template.metadata?.variables || [],
                         layout: template.metadata?.layout || {}
+                    },
+                    metadata: {
+                        tags: template.metadata?.tags || [],
+                        priority: template.metadata?.priority || 100,
+                        emoji: template.metadata?.emoji || '📄',
+                        source: template.metadata?.source || 'unknown',
+                        contextPriority: template.contextPriority || 'medium',
+                        author: template.metadata?.author,
+                        framework: template.metadata?.framework,
+                        complexity: template.metadata?.complexity,
+                        estimatedTime: template.metadata?.estimatedTime,
+                        dependencies: template.metadata?.dependencies,
+                        version: template.metadata?.version
                     },
                     isActive: template.is_active,
                     createdBy: template.created_by,
@@ -170,34 +255,126 @@ export class TemplateController {
             const { templateId } = req.params;
             const updates = req.body;
             const requestId = req.headers['x-request-id'] as string || uuidv4();
-            const userId = req.user?.id;
+            const userId = req.user?.id || 'api-user';
 
-            // TODO: Implement actual template update in database
-            console.log('Template update requested:', {
+            // Debug: Log the incoming request body
+            console.log('🔍 TemplateController: Received update request body:', JSON.stringify(updates, null, 2));
+            console.log('🔍 TemplateController: templateData field:', updates.templateData);
+            console.log('🔍 TemplateController: content in templateData:', updates.templateData?.content);
+            console.log('🔍 TemplateController: metadata field:', JSON.stringify(updates.metadata, null, 2));
+
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Check if template exists
+            const existingTemplate = await TemplateController.templateRepository.getTemplateById(templateId);
+            if (!existingTemplate) {
+                return res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'TEMPLATE_NOT_FOUND',
+                        message: 'Template not found'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Convert updates to database format
+            const updateRequest: UpdateTemplateRequest = {
+                name: updates.name,
+                description: updates.description,
+                category: updates.category,
+                templateType: updates.templateType,
+                content: updates.templateData ? {
+                    aiInstructions: updates.templateData.aiInstructions,
+                    promptTemplate: updates.templateData.content,
+                    variables: updates.templateData.variables,
+                    layout: updates.templateData.layout
+                } : undefined,
+                metadata: updates.metadata ? {
+                    tags: updates.tags || updates.metadata?.tags,
+                    priority: updates.metadata?.priority,
+                    emoji: updates.metadata?.emoji,
+                    source: updates.metadata?.source,
+                    contextPriority: updates.metadata?.contextPriority,
+                    author: updates.metadata?.author,
+                    framework: updates.metadata?.framework,
+                    complexity: updates.metadata?.complexity,
+                    estimatedTime: updates.metadata?.estimatedTime,
+                    dependencies: updates.metadata?.dependencies,
+                    version: updates.metadata?.version
+                } : undefined,
+                isActive: updates.isActive
+            };
+
+            // Remove undefined fields
+            const cleanUpdateRequest = Object.fromEntries(
+                Object.entries(updateRequest).filter(([_, value]) => value !== undefined)
+            );
+
+            // Convert to database format
+            const dbUpdates = TemplateConverter.toDatabase(cleanUpdateRequest);
+            
+            // Update the template
+            const updatedTemplate = await TemplateController.templateRepository.updateTemplate(
+                templateId, 
+                dbUpdates
+            );
+
+            if (!updatedTemplate) {
+                return res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'TEMPLATE_NOT_FOUND',
+                        message: 'Template not found after update'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Convert back to unified format
+            const unifiedTemplate = TemplateConverter.fromDatabase(updatedTemplate);
+            const apiTemplate = TemplateConverter.toApiResponse(unifiedTemplate);
+
+            console.log('Template updated successfully:', {
                 requestId,
                 templateId,
-                updates: Object.keys(updates),
+                updatedFields: Object.keys(cleanUpdateRequest),
                 userId,
                 timestamp: new Date().toISOString()
             });
 
-            // Mock successful update
-            const updatedTemplate = {
-                id: templateId,
-                ...updates,
-                updatedAt: new Date().toISOString(),
-                version: 2
-            };
-
             res.json({
                 success: true,
-                data: updatedTemplate,
+                data: apiTemplate,
                 timestamp: new Date().toISOString(),
                 requestId
             });
 
         } catch (error) {
-            next(error);
+            console.error('Error updating template:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'TEMPLATE_UPDATE_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to update template'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
         }
     }
 
@@ -208,30 +385,120 @@ export class TemplateController {
     static async deleteTemplate(req: Request, res: Response, next: NextFunction) {
         try {
             const { templateId } = req.params;
+            const { permanent } = req.query;
+            const { reason } = req.body || {};
             const requestId = req.headers['x-request-id'] as string || uuidv4();
-            const userId = req.user?.id;
+            const userId = req.user?.id || 'api-user';
 
-            // TODO: Implement actual template deletion in database
-            console.log('Template deletion requested:', {
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized. Please try again later.'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Check if template exists
+            const existingTemplate = await TemplateController.templateRepository.getTemplateById(templateId);
+            if (!existingTemplate) {
+                return res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'TEMPLATE_NOT_FOUND',
+                        message: 'Template not found'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Check if user has permission to delete system templates
+            if (existingTemplate.is_system && !req.user?.isAdmin) {
+                return res.status(403).json({
+                    success: false,
+                    error: {
+                        code: 'INSUFFICIENT_PERMISSIONS',
+                        message: 'System templates can only be deleted by administrators'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Perform deletion (soft delete by default, permanent if requested)
+            if (permanent === 'true') {
+                const deleted = await TemplateController.templateRepository.hardDeleteTemplate(templateId);
+                if (!deleted) {
+                    return res.status(500).json({
+                        success: false,
+                        error: {
+                            code: 'DELETE_FAILED',
+                            message: 'Failed to permanently delete template'
+                        },
+                        requestId,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } else {
+                // Use soft delete service for proper audit trail
+                const deleteResult = await TemplateController.softDeleteService.softDeleteTemplate(templateId, {
+                    userId,
+                    reason: reason || 'Deleted via API'
+                });
+
+                if (!deleteResult.success) {
+                    return res.status(500).json({
+                        success: false,
+                        error: {
+                            code: 'SOFT_DELETE_FAILED',
+                            message: 'Failed to soft delete template'
+                        },
+                        requestId,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+
+            console.log('Template deleted successfully:', {
                 requestId,
                 templateId,
+                templateName: existingTemplate.name,
+                permanent: permanent === 'true',
+                reason: reason || 'Deleted via API',
                 userId,
                 timestamp: new Date().toISOString()
             });
 
             res.json({
                 success: true,
-                message: 'Template deleted successfully',
+                message: permanent === 'true' ? 'Template permanently deleted' : 'Template deleted successfully',
                 data: {
                     templateId,
-                    deletedAt: new Date().toISOString()
+                    templateName: existingTemplate.name,
+                    deletedAt: new Date().toISOString(),
+                    permanent: permanent === 'true'
                 },
                 timestamp: new Date().toISOString(),
                 requestId
             });
 
         } catch (error) {
-            next(error);
+            console.error('Error deleting template:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'TEMPLATE_DELETE_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to delete template'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
         }
     }
 
@@ -272,19 +539,20 @@ export class TemplateController {
             };
             const templates = await TemplateController.templateRepository.searchTemplates(searchQuery);
 
-            // Convert to API format
-            const apiTemplates = templates.map((template: any) => ({
-                id: template.id,
-                name: template.name,
-                description: template.description,
-                category: template.category,
-                tags: template.metadata?.tags || [],
-                isActive: template.is_active,
-                createdAt: template.created_at,
-                updatedAt: template.updated_at,
-                templateType: template.template_type,
-                version: template.version
-            }));            console.log('Template list requested:', {
+            // Get total count for pagination (without limit/offset)
+            const totalCountQuery = {
+                category: category as string,
+                search_text: search as string,
+                is_system: undefined
+            };
+            const totalTemplates = await TemplateController.templateRepository.searchTemplates(totalCountQuery);
+            const totalCount = totalTemplates.length;
+
+            // Convert to unified format and then to API format
+            const apiTemplates = templates.map((template: any) => {
+                const unifiedTemplate = TemplateConverter.fromDatabase(template);
+                return TemplateConverter.toApiResponse(unifiedTemplate);
+            });            console.log('Template list requested:', {
                 requestId,
                 filters: { category, tag, search, isActive },
                 pagination: { page, limit, sort, order },
@@ -298,8 +566,8 @@ export class TemplateController {
                 pagination: {
                     page: parseInt(page as string),
                     limit: parseInt(limit as string),
-                    total: apiTemplates.length,
-                    pages: Math.ceil(apiTemplates.length / parseInt(limit as string))
+                    total: totalCount,
+                    pages: Math.ceil(totalCount / parseInt(limit as string))
                 },
                 timestamp: new Date().toISOString(),
                 requestId
@@ -789,6 +1057,341 @@ export class TemplateController {
         } catch (error) {
             console.error('Error importing templates:', error);
             next(error);
+        }
+    }
+
+    /**
+     * Get soft-deleted templates
+     * GET /api/v1/templates/deleted
+     */
+    static async getSoftDeletedTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const {
+                category,
+                deletedBy,
+                daysSinceDeleted,
+                limit = 20,
+                offset = 0
+            } = req.query;
+
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            if (!TemplateController.softDeleteService) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'SERVICE_NOT_INITIALIZED',
+                        message: 'Soft delete service is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const deletedTemplates = await TemplateController.softDeleteService.getSoftDeletedTemplates({
+                category: category as string,
+                deletedBy: deletedBy as string,
+                daysSinceDeleted: daysSinceDeleted ? parseInt(daysSinceDeleted as string) : undefined,
+                limit: parseInt(limit as string),
+                offset: parseInt(offset as string)
+            });
+
+            res.json({
+                success: true,
+                data: deletedTemplates,
+                pagination: {
+                    limit: parseInt(limit as string),
+                    offset: parseInt(offset as string),
+                    total: deletedTemplates.length
+                },
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting soft-deleted templates:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'GET_DELETED_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to get soft-deleted templates'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Restore a soft-deleted template
+     * POST /api/v1/templates/:templateId/restore
+     */
+    static async restoreTemplate(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { templateId } = req.params;
+            const { reason } = req.body;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            const userId = req.user?.id || 'api-user';
+
+            if (!TemplateController.softDeleteService) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'SERVICE_NOT_INITIALIZED',
+                        message: 'Soft delete service is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const restoreResult = await TemplateController.softDeleteService.restoreTemplate(templateId, {
+                userId,
+                reason: reason || 'Restored via API'
+            });
+
+            res.json({
+                success: true,
+                data: restoreResult,
+                message: 'Template restored successfully',
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error restoring template:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'RESTORE_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to restore template'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Batch restore templates
+     * POST /api/v1/templates/batch-restore
+     */
+    static async batchRestoreTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { templateIds, reason } = req.body;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            const userId = req.user?.id || 'api-user';
+
+            if (!Array.isArray(templateIds)) {
+                return res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'INVALID_REQUEST',
+                        message: 'templateIds must be an array'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            if (!TemplateController.softDeleteService) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'SERVICE_NOT_INITIALIZED',
+                        message: 'Soft delete service is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const restoreResult = await TemplateController.softDeleteService.batchRestoreTemplates(
+                templateIds,
+                {
+                    userId,
+                    reason: reason || 'Batch restored via API'
+                }
+            );
+
+            res.json({
+                success: restoreResult.success,
+                data: {
+                    totalRequested: templateIds.length,
+                    restored: restoreResult.restored,
+                    failed: restoreResult.failed,
+                    errors: restoreResult.errors
+                },
+                message: `Restored ${restoreResult.restored}/${templateIds.length} templates`,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error batch restoring templates:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'BATCH_RESTORE_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to batch restore templates'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Get soft delete statistics
+     * GET /api/v1/templates/deleted/stats
+     */
+    static async getSoftDeleteStats(req: Request, res: Response, next: NextFunction) {
+        try {
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            if (!TemplateController.softDeleteService) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'SERVICE_NOT_INITIALIZED',
+                        message: 'Soft delete service is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const stats = await TemplateController.softDeleteService.getSoftDeleteStatistics();
+
+            res.json({
+                success: true,
+                data: stats,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting soft delete stats:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'GET_STATS_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to get soft delete statistics'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Permanently delete old soft-deleted templates
+     * DELETE /api/v1/templates/cleanup
+     */
+    static async cleanupOldDeletedTemplates(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { olderThanDays = 30 } = req.body;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            const userId = req.user?.id || 'api-user';
+
+            if (!TemplateController.softDeleteService) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'SERVICE_NOT_INITIALIZED',
+                        message: 'Soft delete service is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const cleanupResult = await TemplateController.softDeleteService.permanentDeleteOldTemplates(
+                parseInt(olderThanDays),
+                {
+                    userId,
+                    reason: `Cleanup of templates older than ${olderThanDays} days`
+                }
+            );
+
+            res.json({
+                success: true,
+                data: cleanupResult,
+                message: `Permanently deleted ${cleanupResult.deletedCount} old templates`,
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error cleaning up old templates:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'CLEANUP_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to cleanup old templates'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Get template audit trail
+     * GET /api/v1/templates/:templateId/audit
+     */
+    static async getTemplateAuditTrail(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { templateId } = req.params;
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+
+            if (!TemplateController.templateRepository) {
+                return res.status(500).json({
+                    success: false,
+                    error: {
+                        code: 'REPOSITORY_NOT_INITIALIZED',
+                        message: 'Template repository is not initialized'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            const auditTrail = await TemplateController.templateRepository.getTemplateAuditTrail(templateId);
+
+            res.json({
+                success: true,
+                data: {
+                    templateId,
+                    auditTrail
+                },
+                timestamp: new Date().toISOString(),
+                requestId
+            });
+
+        } catch (error) {
+            console.error('Error getting audit trail:', error);
+            
+            const requestId = req.headers['x-request-id'] as string || uuidv4();
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'GET_AUDIT_FAILED',
+                    message: error instanceof Error ? error.message : 'Failed to get audit trail'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
         }
     }
 }

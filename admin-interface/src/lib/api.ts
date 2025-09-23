@@ -2,7 +2,7 @@
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
 
-const API_BASE_URL = typeof window !== 'undefined' ? 'http://localhost:3002/api/v1' : 'http://localhost:3002/api/v1';
+const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
 console.log('🔧 API Configuration:', {
@@ -11,48 +11,106 @@ console.log('🔧 API Configuration:', {
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
 });
 
-// Generic request helper function
+// Request queue and rate limiting
+const requestQueue: Array<() => Promise<any>> = [];
+let isProcessingQueue = false;
+const REQUEST_DELAY = 100; // 100ms delay between requests
+
+// Generic request helper function with rate limiting
 async function request(endpoint: string, options: RequestInit = {}): Promise<any> {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'X-API-Key': API_KEY,
-  };
+  return new Promise((resolve, reject) => {
+    const makeRequest = async () => {
+      const url = `${API_BASE_URL}${endpoint}`;
+      
+      const defaultHeaders = {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+      };
 
-  const config: RequestInit = {
-      ...options,
-      headers: {
-      ...defaultHeaders,
-      ...options.headers,
-      },
-  };
+      const config: RequestInit = {
+          ...options,
+          headers: {
+          ...defaultHeaders,
+          ...options.headers,
+          },
+      };
 
-  try {
-    console.log(`🌐 Making API request to: ${url}`, config.method || 'GET');
-    
-    const response = await fetch(url, config);
+      try {
+        console.log(`🌐 Making API request to: ${url}`, config.method || 'GET');
+        
+        const response = await fetch(url, config);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ API Error Response: "${errorText}"`);
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ API Error Response: "${errorText}"`);
+          
+          // Handle specific status codes with better error messages
+          if (response.status === 429) {
+            try {
+              const errorData = JSON.parse(errorText);
+              throw new Error(`Rate limit exceeded: ${errorData.error?.message || 'Too many requests, please try again later.'}`);
+            } catch {
+              throw new Error('Rate limit exceeded: Too many requests, please try again later.');
+            }
+          } else if (response.status === 401) {
+            throw new Error('Authentication failed: Please check your API key.');
+          } else if (response.status === 403) {
+            throw new Error('Access forbidden: You do not have permission to perform this action.');
+          } else if (response.status === 404) {
+            throw new Error('Resource not found: The requested endpoint does not exist.');
+          } else if (response.status >= 500) {
+            throw new Error('Server error: Please try again later or contact support.');
+          } else {
+            throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+          }
+        }
 
-    const data = await response.json();
-    console.log('✅ API Response received:', data);
-    return data;
-  } catch (error) {
-    console.error('❌ API request failed:', error);
-    console.error('❌ Error type:', typeof error);
-    console.error('❌ Error constructor:', error?.constructor?.name);
-    
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('❌ Network error - check if API server is running on', API_BASE_URL);
-    }
-    
-    throw error;
+        const data = await response.json();
+        console.log('✅ API Response received:', data);
+        resolve(data);
+      } catch (error) {
+        console.error('❌ API request failed:', error);
+        console.error('❌ Error type:', typeof error);
+        console.error('❌ Error constructor:', error?.constructor?.name);
+        
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          console.error('❌ Network error - check if API server is running on', API_BASE_URL);
+        }
+        
+        reject(error);
+      }
+    };
+
+    requestQueue.push(makeRequest);
+    processQueue();
+  });
+}
+
+// Process request queue with rate limiting
+async function processQueue() {
+  if (isProcessingQueue || requestQueue.length === 0) {
+    return;
   }
+
+  isProcessingQueue = true;
+
+  while (requestQueue.length > 0) {
+    const request = requestQueue.shift();
+    if (request) {
+      try {
+        await request();
+      } catch (error) {
+        // Error is already logged in the request function
+      }
+      
+      // Add delay between requests to prevent rate limiting
+      if (requestQueue.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY));
+      }
+    }
+  }
+
+  isProcessingQueue = false;
 }
 
 // Templates API endpoints - now connected to MongoDB database
@@ -78,27 +136,28 @@ export async function getTemplates(params?: {
     console.log('✅ Templates loaded from MongoDB database:', response);
     
            // Transform the API response to match expected Template interface
-           const transformedTemplates = (response.templates || []).map((template: any) => ({
+           const transformedTemplates = (response.data || []).map((template: any) => ({
              id: template.id.toString(),
              name: template.name,
              description: template.description,
              category: template.category || 'General', // Default category if not provided
              tags: template.tags || [template.category || 'general'], // Use category as tag if no tags
-             content: template.content || `# ${template.name}\n\n${template.description}\n\n## Fields\n${(template.fields || []).map((field: string) => `- ${field}`).join('\n')}`,
-             aiInstructions: template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             content: template.templateData?.content || template.content || '',
+             aiInstructions: template.templateData?.aiInstructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
              templateType: template.templateType || 'ai_instruction',
              isActive: template.isActive !== undefined ? template.isActive : true,
              version: template.version || '1.0.0',
              contextPriority: template.contextPriority || 'medium', // Default priority for context building
              contextRequirements: template.contextRequirements || [],
-             variables: template.variables || {},
-             metadata: template.metadata || {
-               framework: 'general',
-               complexity: 'medium',
-               estimatedTime: '2-4 hours',
-               dependencies: [],
-               version: '1.0.0',
-               author: 'System'
+             variables: template.templateData?.variables || template.variables || {},
+             metadata: {
+               framework: template.metadata?.framework || 'general',
+               complexity: template.metadata?.complexity || 'medium',
+               estimatedTime: template.metadata?.estimatedTime || '2-4 hours',
+               dependencies: template.metadata?.dependencies || [],
+               version: template.metadata?.version || '1.0.0',
+               author: template.metadata?.author || 'System',
+               ...template.metadata // Include any other metadata fields
              },
              createdAt: template.createdAt || new Date().toISOString(),
              updatedAt: template.updatedAt || new Date().toISOString()
@@ -108,10 +167,10 @@ export async function getTemplates(params?: {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.total || 0,
-        page: response.page || 1,
-        limit: response.limit || 20,
-        totalPages: Math.ceil((response.total || 0) / (response.limit || 20))
+        total: response.pagination?.total || 0,
+        page: response.pagination?.page || 1,
+        limit: response.pagination?.limit || 20,
+        totalPages: response.pagination?.pages || Math.ceil((response.pagination?.total || 0) / (response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
@@ -516,14 +575,16 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
   }
 }
 
-export async function deleteTemplate(id: string): Promise<any> {
+export async function deleteTemplate(id: string, reason?: string): Promise<any> {
   try {
-    console.log(`🔍 deleteTemplate called for id: ${id}`);
+    console.log(`🔍 deleteTemplate called for id: ${id}, reason: ${reason}`);
     
     // Make real API call to backend server which deletes from MongoDB
     const response = await request(`/templates/${id}`, {
-    method: 'DELETE',
-  });
+      method: 'DELETE',
+      body: reason ? JSON.stringify({ reason }) : undefined,
+      headers: reason ? { 'Content-Type': 'application/json' } : undefined
+    });
     
     console.log('✅ Template deleted from MongoDB database:', response);
     return response;
@@ -750,12 +811,12 @@ export async function deleteProject(id: string): Promise<any> {
 
 // Standards Compliance API endpoints
 export async function getStandardsCompliance(projectId?: string): Promise<any> {
-  const endpoint = projectId ? `/api/v1/standards/analyze?projectId=${projectId}` : '/api/v1/standards/dashboard';
+  const endpoint = projectId ? `/standards/analyze?projectId=${projectId}` : '/standards/dashboard';
   return request(endpoint);
 }
 
 export async function generateComplianceReport(projectId: string, standards?: string[]): Promise<any> {
-  return request('/api/v1/standards/report', {
+  return request('/standards/report', {
     method: 'POST',
     body: JSON.stringify({ projectId, standards }),
   });
@@ -763,7 +824,7 @@ export async function generateComplianceReport(projectId: string, standards?: st
 
 // Feedback API endpoints
 export async function submitFeedback(feedbackData: any): Promise<any> {
-  return request('/api/v1/feedback', {
+  return request('/feedback', {
     method: 'POST',
     body: JSON.stringify(feedbackData),
   });
@@ -799,20 +860,20 @@ export async function getProjectFeedback(projectId: string): Promise<any> {
 }
 
 export async function getDocumentFeedback(projectId: string, documentType: string): Promise<any> {
-  return request(`/api/v1/feedback/project/${projectId}/document/${documentType}`);
+  return request(`/feedback/project/${projectId}/document/${documentType}`);
 }
 
 export async function getFeedbackSummary(): Promise<any> {
-  return request('/api/v1/feedback/summary');
+  return request('/feedback/summary');
 }
 
 // Template Statistics API endpoints
 export async function getTemplateStats(): Promise<any> {
-  return request('/api/v1/templates/stats');
+  return request('/templates/stats');
 }
 
 export async function getTemplateCategories(): Promise<any> {
-  return request('/api/v1/templates/categories');
+  return request('/templates/categories');
 }
 
 // Project Documents API functions
@@ -1158,6 +1219,7 @@ export const apiClient = {
   restoreProjectDocument,
   getDeletedProjectDocuments,
   getProjectDocumentStats,
+  getDocumentById,
   
   // Standards Compliance
   getStandardsCompliance,
@@ -1180,6 +1242,223 @@ export const apiClient = {
   getActiveGenerationJobs,
   cancelGenerationJob,
   getGenerationJobStats,
+  
+  // Stakeholder Management
+  getProjectStakeholders,
+  createStakeholder,
+  updateStakeholder,
+  deleteStakeholder,
+  getStakeholderAnalytics,
 };
+
+// Quality Assessment API functions
+export async function assessDocumentQuality(documentId: string): Promise<any> {
+  try {
+    console.log('🔍 assessDocumentQuality called for document:', documentId);
+    const response = await request(`/quality/assess/${documentId}`, {
+      method: 'POST',
+    });
+    console.log('✅ Document quality assessment response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error assessing document quality:', error);
+    throw error;
+  }
+}
+
+export async function getDocumentQuality(documentId: string): Promise<any> {
+  try {
+    console.log('🔍 getDocumentQuality called for document:', documentId);
+    const response = await request(`/quality/document/${documentId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Document quality response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting document quality:', error);
+    throw error;
+  }
+}
+
+export async function getProjectQualityStats(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getProjectQualityStats called for project:', projectId);
+    const response = await request(`/quality/project/${projectId}/stats`, {
+      method: 'GET',
+    });
+    console.log('✅ Project quality stats response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting project quality stats:', error);
+    throw error;
+  }
+}
+
+export async function reassessProjectQuality(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 reassessProjectQuality called for project:', projectId);
+    const response = await request(`/quality/project/${projectId}/reassess`, {
+      method: 'POST',
+    });
+    console.log('✅ Project quality reassessment response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error reassessing project quality:', error);
+    throw error;
+  }
+}
+
+export async function getDocumentById(documentId: string): Promise<any> {
+  try {
+    console.log('🔍 getDocumentById called for document:', documentId);
+    const response = await request(`/projects/documents/${documentId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Document by ID response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting document by ID:', error);
+    throw error;
+  }
+}
+
+// Stakeholder Management API functions
+export async function getProjectStakeholders(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getProjectStakeholders called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Project stakeholders response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting project stakeholders:', error);
+    throw error;
+  }
+}
+
+export async function createStakeholder(projectId: string, stakeholderData: any): Promise<any> {
+  try {
+    console.log('🔍 createStakeholder called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}`, {
+      method: 'POST',
+      body: JSON.stringify(stakeholderData),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('✅ Create stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function updateStakeholder(stakeholderId: string, stakeholderData: any): Promise<any> {
+  try {
+    console.log('🔍 updateStakeholder called for stakeholder:', stakeholderId);
+    const response = await request(`/stakeholders/${stakeholderId}`, {
+      method: 'PUT',
+      body: JSON.stringify(stakeholderData),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('✅ Update stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function deleteStakeholder(stakeholderId: string): Promise<any> {
+  try {
+    console.log('🔍 deleteStakeholder called for stakeholder:', stakeholderId);
+    const response = await request(`/stakeholders/${stakeholderId}`, {
+      method: 'DELETE',
+    });
+    console.log('✅ Delete stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error deleting stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function getStakeholderAnalytics(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getStakeholderAnalytics called for project:', projectId);
+    const response = await request(`/stakeholders/analytics/${projectId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Stakeholder analytics response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting stakeholder analytics:', error);
+    throw error;
+  }
+}
+
+// Soft deleted templates API endpoints
+export async function getDeletedTemplates(params?: {
+  category?: string;
+  deletedBy?: string;
+  daysSinceDeleted?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<any> {
+  try {
+    console.log('🔍 Get deleted templates with params:', params);
+    
+    const queryParams = new URLSearchParams();
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.deletedBy) queryParams.append('deletedBy', params.deletedBy);
+    if (params?.daysSinceDeleted) queryParams.append('daysSinceDeleted', params.daysSinceDeleted.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    
+    const url = `/templates/deleted${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const response = await request(url);
+    
+    console.log('✅ Deleted templates retrieved:', response);
+    
+    return {
+      success: true,
+      data: response.data || [],
+      pagination: response.pagination || {}
+    };
+  } catch (error) {
+    console.error('❌ getDeletedTemplates error:', error);
+    return {
+      success: false,
+      error: 'Failed to retrieve deleted templates'
+    };
+  }
+}
+
+export async function restoreTemplate(templateId: string): Promise<any> {
+  try {
+    console.log(`🔍 Restore template: ${templateId}`);
+    
+    const response = await request(`/templates/${templateId}/restore`, {
+      method: 'PUT'
+    });
+    
+    console.log('✅ Template restored:', response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error('❌ restoreTemplate error:', error);
+    return {
+      success: false,
+      error: 'Failed to restore template'
+    };
+  }
+}
 
 export default apiClient;

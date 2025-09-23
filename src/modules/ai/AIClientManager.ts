@@ -90,6 +90,7 @@ class AIClientManager {
 
     private async initializeProvider(provider: AIProvider): Promise<void> {        const initMethods: Record<AIProvider, () => Promise<void>> = {
             'google-ai': () => this.initializeGoogleAI(),
+            'google-gemini': () => this.initializeGoogleAI(), // Same initialization as google-ai
             'azure-openai': () => this.initializeAzureOpenAIWithEntra(),
             'azure-openai-key': () => this.initializeAzureOpenAIWithKey(),
             'azure-openai-entra': () => this.initializeAzureOpenAIWithEntra(),
@@ -197,9 +198,9 @@ class AIClientManager {
         const client = ModelClient(endpoint, new AzureKeyCredential(token));
         this.setClient('github-ai', client);
         await this.validateConnection('github-ai');
-    }private async initializeOllama(): Promise<void> {
+    }    private async initializeOllama(): Promise<void> {
         try {
-            const endpoint = this.config.get<string>('OLLAMA_ENDPOINT') || 'http://127.0.0.1:11434';
+            const endpoint = this.config.get<string>('OLLAMA_ENDPOINT') || 'http://localhost:11434';
             
             const response = await fetch(`${endpoint}/api/tags`);
             if (!response.ok) {
@@ -257,6 +258,7 @@ class AIClientManager {
             'azure-ai-studio': () => this.healthCheckAzureAIStudio(client),
             'github-ai': () => this.healthCheckGitHubAI(client),
             'google-ai': () => Promise.resolve(), // Google AI doesn't need health check
+            'google-gemini': () => Promise.resolve(), // Google Gemini doesn't need health check
             'ollama': () => Promise.resolve() // Ollama doesn't need health check
         };
 

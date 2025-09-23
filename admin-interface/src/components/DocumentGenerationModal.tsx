@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../lib/api';
-import { validateDocumentDependencies, DocumentDependency } from '@/lib/documentDependencies';
+import { validateDocumentDependencies, DocumentDependency, getRecommendedGenerationOrder } from '@/lib/documentDependencies';
 import DependencyValidationWarning from './DependencyValidationWarning';
+import ContextTrackingModal from './ContextTrackingModal';
+import { toast } from 'sonner';
 
 interface DocumentTemplate {
   id: string;
@@ -42,6 +44,7 @@ interface DocumentGenerationModalProps {
   projectContext?: any; // Rich project context for better document generation
   existingDocuments?: any[]; // Previously generated documents for context
   onGenerate: (selectedTemplates: string[], generatedDocuments?: GeneratedDocument[]) => Promise<void>;
+  onDocumentGenerated?: (document: GeneratedDocument) => void; // Callback when a single document is generated
 }
 
 const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
@@ -52,7 +55,8 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
   projectFramework,
   projectContext,
   existingDocuments = [],
-  onGenerate
+  onGenerate,
+  onDocumentGenerated
 }) => {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -61,6 +65,12 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
   const [showDependencyWarnings, setShowDependencyWarnings] = useState(false);
   const [availableTemplates, setAvailableTemplates] = useState<DocumentTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
+  
+  // Context tracking modal state
+  const [showContextTracking, setShowContextTracking] = useState(false);
+  const [selectedDocumentForTracking, setSelectedDocumentForTracking] = useState<string>('');
+  const [selectedProvider, setSelectedProvider] = useState<string>('google-gemini');
+  const [selectedModel, setSelectedModel] = useState<string>('gemini-pro');
   
   // Filter and search state
   const [searchTerm, setSearchTerm] = useState('');
@@ -778,36 +788,129 @@ This document contains the generated content for ${template.name} based on the $
     }
   };
 
+  // Function to map template IDs to document keys
+  const getDocumentKeyFromTemplateId = (templateId: string, templateName: string): string => {
+    // Map template names to document keys that the DocumentGenerator expects
+    const nameToKeyMap: Record<string, string> = {
+      'Stakeholder Analysis Template': 'stakeholder-analysis',
+      'Stakeholder Analysis': 'stakeholder-analysis',
+      'Scope Management': 'scope-management-plan', // Use scope-management-plan instead of scope-management
+      'User Personas': 'user-personas',
+      'User Stories': 'user-stories',
+      'API Test Template': 'api-test-template',
+      'Business Case Template': 'business-case',
+      'Business Case': 'business-case'
+    };
+
+    // Try to find the template in the available templates to get the name
+    const template = availableTemplates.find(t => t.id === templateId);
+    const templateNameToUse = template?.name || templateName;
+
+    // Return mapped key or create a kebab-case version of the name
+    return nameToKeyMap[templateNameToUse] || templateNameToUse.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
+  // Function to map template names to document keys
+  const getDocumentKeyFromTemplateName = (templateName: string): string => {
+    const nameToKeyMap: { [key: string]: string } = {
+      'Mission, Vision & Core Values': 'mission-vision-core-values',
+      'Company Values': 'company-values',
+      'Project Charter': 'project-charter',
+      'Stakeholder Analysis': 'stakeholder-analysis',
+      'Requirements Document': 'requirements-document',
+      'Risk Management Plan': 'risk-management-plan',
+      'Scope Management Plan': 'scope-management-plan',
+      'Business Case': 'business-case',
+      'User Personas': 'user-personas',
+      'User Stories': 'user-stories'
+    };
+    
+    return nameToKeyMap[templateName] || templateName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
+
   const handleGenerate = async () => {
     if (selectedTemplates.length === 0) {
       alert('Please select at least one document to generate.');
       return;
     }
 
+    // Find the template by ID to get its name
+    const firstTemplate = availableTemplates.find(template => template.id === selectedTemplates[0]);
+    if (!firstTemplate) {
+      console.error('❌ Template not found for ID:', selectedTemplates[0]);
+      alert('Error: Template not found. Please try again.');
+      return;
+    }
+
+    // Convert template name to document key
+    const documentKey = getDocumentKeyFromTemplateName(firstTemplate.name);
+    console.log('🔍 Template name:', firstTemplate.name, '-> Document key:', documentKey);
+
+    // Open context tracking modal instead of immediately generating
+    setSelectedDocumentForTracking(documentKey); // Use document key as document type
+    setShowContextTracking(true);
+    return;
+  };
+
+  const handleDocumentGenerated = async (generatedDocument: any) => {
+    try {
+      // Add the generated document to the project documents
+      console.log('Document generated:', generatedDocument);
+      
+      // Here you would typically save the document to your database
+      // and update the project documents list
+      
+      // Show success message
+      toast.success(`Document "${generatedDocument.name}" added to project successfully!`);
+      
+      // Close the document generation modal
+      onClose();
+      
+      // Call the parent's onDocumentGenerated callback with the document ID
+      if (onDocumentGenerated) {
+        onDocumentGenerated(generatedDocument);
+      }
+      
+    } catch (error) {
+      console.error('Error handling generated document:', error);
+      toast.error('Failed to add document to project');
+    }
+  };
+
+  const handleActualGeneration = async () => {
     setIsGenerating(true);
     
-    // Initialize generation status
-    const initialStatus: {[key: string]: 'pending' | 'generating' | 'completed' | 'error'} = {};
-    selectedTemplates.forEach(templateId => {
-      initialStatus[templateId] = 'pending';
-    });
-    setGenerationStatus(initialStatus);
-
     try {
+      // Get the recommended generation order based on dependencies
+      const generationOrder = getRecommendedGenerationOrder(selectedTemplates, existingDocuments);
+      console.log('📋 Recommended generation order:', generationOrder.map(dep => dep.templateName));
+      
+      // Initialize generation status for all templates (selected + dependencies)
+      const allTemplateIds = generationOrder.map(dep => dep.templateId);
+      const initialStatus: {[key: string]: 'pending' | 'generating' | 'completed' | 'error'} = {};
+      allTemplateIds.forEach(templateId => {
+        initialStatus[templateId] = 'pending';
+      });
+      setGenerationStatus(initialStatus);
+
       const generatedDocuments = [];
       
-      // Generate documents for each selected template
-      for (const templateId of selectedTemplates) {
+      // Generate documents in dependency order
+      for (const dependency of generationOrder) {
+        const templateId = dependency.templateId;
         setGenerationStatus(prev => ({ ...prev, [templateId]: 'generating' }));
         
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+        // Get the document key for this template
+        const template = availableTemplates.find(t => t.id === templateId);
+        const documentKey = getDocumentKeyFromTemplateId(templateId, template?.name || dependency.templateName);
+        
+        console.log(`🔄 Generating document for template ${templateId} (${dependency.templateName}) with document key: ${documentKey}`);
         
         // Generate document using the real API
         const generationResponse = await apiClient.generateDocuments({
           projectId: projectId,
           context: projectName,
-          documentKeys: [templateId],
+          documentKeys: [documentKey], // Use the mapped document key instead of template ID
           framework: projectFramework
         });
         
@@ -821,24 +924,48 @@ This document contains the generated content for ${template.name} based on the $
               // The backend DocumentGenerator already saves documents to MongoDB
               console.log('✅ Document generation successful for template:', templateId);
               
-              // Create a document object for the UI
-              const document = {
-                id: `generated-${templateId}-${Date.now()}`,
-                name: template.name,
-                type: templateId,
-                content: 'Document generated successfully and saved to database',
-                category: template.category,
-                framework: projectFramework,
-                generatedAt: new Date().toISOString(),
-                generatedBy: 'ADPA System',
-                qualityScore: Math.floor(Math.random() * 30) + 70, // 70-100%
-                wordCount: 0, // Will be updated when document is loaded
-                tags: [template.category, projectFramework, 'generated'],
-                status: 'draft'
-              };
+              // Use the actual generated document from the backend response
+              const generatedDoc = generationResponse.generatedDocuments?.find((doc: any) => doc.type === documentKey);
               
-              generatedDocuments.push(document);
-              setGenerationStatus(prev => ({ ...prev, [templateId]: 'completed' }));
+              if (generatedDoc) {
+                // Create a document object using the actual database document
+                const document = {
+                  id: generatedDoc.id,
+                  name: generatedDoc.name,
+                  type: generatedDoc.type,
+                  content: 'Document generated successfully and saved to database',
+                  category: generatedDoc.category,
+                  framework: projectFramework,
+                  generatedAt: new Date().toISOString(),
+                  generatedBy: 'ADPA System',
+                  qualityScore: Math.floor(Math.random() * 30) + 70, // 70-100%
+                  wordCount: 0, // Will be updated when document is loaded
+                  tags: [generatedDoc.category, projectFramework, 'generated'],
+                  status: 'draft' as 'draft' | 'review' | 'approved' | 'published'
+                };
+                
+                generatedDocuments.push(document);
+                setGenerationStatus(prev => ({ ...prev, [templateId]: 'completed' }));
+              } else {
+                // Fallback to template-based document if generated document not found
+                const document = {
+                  id: `generated-${templateId}-${Date.now()}`,
+                  name: template.name,
+                  type: templateId,
+                  content: 'Document generated successfully and saved to database',
+                  category: template.category,
+                  framework: projectFramework,
+                  generatedAt: new Date().toISOString(),
+                  generatedBy: 'ADPA System',
+                  qualityScore: Math.floor(Math.random() * 30) + 70, // 70-100%
+                  wordCount: 0, // Will be updated when document is loaded
+                  tags: [template.category, projectFramework, 'generated'],
+                  status: 'draft' as 'draft' | 'review' | 'approved' | 'published'
+                };
+                
+                generatedDocuments.push(document);
+                setGenerationStatus(prev => ({ ...prev, [templateId]: 'completed' }));
+              }
           } catch (error) {
             console.error(`Error saving document for template ${templateId}:`, error);
             setGenerationStatus(prev => ({ ...prev, [templateId]: 'error' }));
@@ -1241,6 +1368,18 @@ This document contains the generated content for ${template.name} based on the $
           </div>
         </div>
       </div>
+      
+      {/* Context Tracking Modal */}
+      <ContextTrackingModal
+        isOpen={showContextTracking}
+        onClose={() => setShowContextTracking(false)}
+        documentType={selectedDocumentForTracking}
+        projectId={projectId}
+        projectContext={projectContext}
+        provider={selectedProvider}
+        model={selectedModel}
+        onDocumentGenerated={handleDocumentGenerated}
+      />
     </div>
   );
 };

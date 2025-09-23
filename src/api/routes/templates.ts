@@ -22,6 +22,13 @@ export function createTemplatesRouter(TemplateController: any) {
     TemplateController.getOverallTemplateStats
   );
 
+  // Soft deleted templates (must come before /:templateId route)
+  router.get(
+    '/deleted',
+    requirePermission('read'),
+    TemplateController.getSoftDeletedTemplates
+  );
+
   // Template CRUD operations
   router.post(
     '/',
@@ -65,6 +72,13 @@ export function createTemplatesRouter(TemplateController: any) {
     requirePermission('read'),
     validate(templateValidateSchema),
     TemplateController.validateTemplate
+  );
+
+  // Restore soft deleted template
+  router.put(
+    '/:templateId/restore',
+    requirePermission('write'),
+    TemplateController.restoreTemplate
   );
 
   return router;

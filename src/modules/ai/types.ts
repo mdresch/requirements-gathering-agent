@@ -43,7 +43,7 @@ export interface RetryConfig {
     retryableErrors: string[];
 }
 
-export type AIProvider = 'azure-openai' | 'azure-openai-key' | 'azure-openai-entra' | 'github-ai' | 'ollama' | 'azure-ai-studio' | 'google-ai';
+export type AIProvider = 'azure-openai' | 'azure-openai-key' | 'azure-openai-entra' | 'github-ai' | 'ollama' | 'azure-ai-studio' | 'google-ai' | 'google-gemini';
 
 export interface AIClientConfig {
     provider: AIProvider;
