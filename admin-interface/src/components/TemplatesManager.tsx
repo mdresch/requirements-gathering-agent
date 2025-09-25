@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Template, TemplateSearchParams } from '@/types/template';
 import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
@@ -12,11 +13,12 @@ import TemplateEditor from '@/components/TemplateEditor';
 import TemplateDetailsView from '@/components/TemplateDetailsView';
 import TemplateStats from '@/components/TemplateStats';
 import SearchFilters from '@/components/SearchFilters';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, FolderOpen } from 'lucide-react';
 import TemplateDeleteModal from './TemplateDeleteModal';
 import DeletedTemplatesModal from './DeletedTemplatesModal';
 
 export default function TemplatesManager() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -67,6 +69,10 @@ export default function TemplatesManager() {
   const handleCreateTemplate = () => {
     setSelectedTemplate(null);
     setIsEditing(true);
+  };
+
+  const handleManageCategories = () => {
+    router.push('/categories');
   };
 
   const handleEditTemplate = (template: Template) => {
@@ -234,10 +240,17 @@ export default function TemplatesManager() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowDeletedTemplates(true)}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
+            title="Deleted Templates"
           >
             <Trash2 className="w-5 h-5" />
-            <span>Deleted Templates</span>
+          </button>
+          <button
+            onClick={handleManageCategories}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+          >
+            <FolderOpen className="w-5 h-5" />
+            <span>Categories</span>
           </button>
           <button
             onClick={handleCreateTemplate}

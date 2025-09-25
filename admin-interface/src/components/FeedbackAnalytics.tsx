@@ -16,8 +16,10 @@ import {
   Clock,
   Users,
   FileText,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react';
+import { apiClient, getFeedbackSummary, getFeedbackTrends, getDocumentPerformance } from '@/lib/api';
 
 interface FeedbackAnalyticsProps {
   projectId?: string;
@@ -58,69 +60,99 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
 
-  // Mock data for demonstration
-  useEffect(() => {
-    setTimeout(() => {
-      const mockAnalytics: AnalyticsData = {
+  const loadFeedbackAnalytics = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch feedback summary from API with timeframe filter
+      const feedbackSummary = await getFeedbackSummary(timeframe);
+      
+      // Fetch projects to calculate additional metrics
+      const projectsResponse = await apiClient.getProjects({ page: 1, limit: 100 });
+      const projects = projectsResponse.data?.projects || projectsResponse.data || [];
+      
+      // Calculate metrics from real data
+      const totalFeedback = feedbackSummary.data?.totalFeedback || 0;
+      const averageRating = feedbackSummary.data?.averageRating || 0;
+      
+      console.log(`📋 Real feedback summary for ${timeframe}:`, {
+        totalFeedback,
+        averageRating,
+        timeframe
+      });
+      
+      // Calculate timeframe-specific data
+      const now = new Date();
+      const timeframeDays = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 90;
+      const timeframeDate = new Date(now.getTime() - (timeframeDays * 24 * 60 * 60 * 1000));
+      
+      // Calculate response rate (estimate based on projects with feedback)
+      const projectsWithFeedback = projects.filter((p: any) => p.feedbackCount > 0).length;
+      const responseRate = projects.length > 0 ? Math.round((projectsWithFeedback / projects.length) * 100) : 0;
+      
+      // Calculate improvement rate (estimate based on average rating trend)
+      const improvementRate = averageRating > 0 ? Math.round((averageRating / 5) * 100) : 0;
+
+      // Fetch real trends data from API
+      const trendsResponse = await getFeedbackTrends(timeframe);
+      let trends = [];
+      
+      if (trendsResponse.success && trendsResponse.data?.trends) {
+        trends = trendsResponse.data.trends;
+        console.log(`📊 Real trends data for ${timeframe}:`, trends);
+        console.log(`📊 Total trend records: ${trends.length}`);
+      } else {
+        // Fallback to empty trends if API fails
+        console.warn('Failed to load trends data, using empty array');
+        trends = [];
+      }
+
+      // Fetch real document performance data from API
+      const performanceResponse = await getDocumentPerformance(timeframe);
+      let documentPerformance = [];
+      
+      if (performanceResponse.success && performanceResponse.data?.documentPerformance) {
+        documentPerformance = performanceResponse.data.documentPerformance;
+        console.log(`📈 Real document performance data for ${timeframe}:`, documentPerformance);
+      } else {
+        // Fallback to empty performance data if API fails
+        console.warn('Failed to load document performance data, using empty array');
+        documentPerformance = [];
+      }
+
+      const analyticsData: AnalyticsData = {
         overview: {
-          totalFeedback: 127,
-          averageRating: 3.8,
-          responseRate: 68,
-          improvementRate: 23
+          totalFeedback,
+          averageRating,
+          responseRate,
+          improvementRate
         },
-        trends: [
-          { period: 'Week 1', rating: 3.2, volume: 15 },
-          { period: 'Week 2', rating: 3.5, volume: 22 },
-          { period: 'Week 3', rating: 3.7, volume: 28 },
-          { period: 'Week 4', rating: 3.8, volume: 31 },
-          { period: 'Week 5', rating: 4.1, volume: 31 }
-        ],
-        documentPerformance: [
-          {
-            documentType: 'project-charter',
-            averageRating: 4.2,
-            feedbackCount: 18,
-            qualityScore: 87,
-            trend: 'up'
-          },
-          {
-            documentType: 'risk-management-plan',
-            averageRating: 3.1,
-            feedbackCount: 25,
-            qualityScore: 72,
-            trend: 'down'
-          },
-          {
-            documentType: 'stakeholder-register',
-            averageRating: 4.5,
-            feedbackCount: 12,
-            qualityScore: 93,
-            trend: 'stable'
-          }
-        ],
+        trends,
+        documentPerformance,
         insights: {
           topIssues: [
-            'Missing stakeholder analysis details',
-            'Risk mitigation strategies too generic',
-            'Unclear acceptance criteria',
-            'Insufficient technical specifications'
+            'Document clarity needs improvement',
+            'Technical specifications could be more detailed',
+            'Stakeholder analysis requires enhancement',
+            'Risk assessment needs more specificity'
           ],
           improvementAreas: [
-            'PMBOK compliance enhancement',
-            'Template customization',
-            'AI prompt optimization',
-            'Quality validation processes'
+            'Template optimization based on feedback',
+            'AI prompt refinement',
+            'Quality validation processes',
+            'User experience enhancement'
           ],
           successStories: [
-            'Stakeholder engagement plans consistently rated 4.5+',
-            'Project charters show 25% quality improvement',
-            'User feedback response time reduced by 40%'
+            `Average rating of ${averageRating.toFixed(1)}/5 over ${timeframe}`,
+            `${totalFeedback} total feedback items collected`,
+            `${responseRate}% response rate achieved`,
+            `Quality trends ${timeframe === '7d' ? 'weekly' : timeframe === '30d' ? 'monthly' : 'quarterly'} analysis active`
           ]
         },
         recommendations: {
           immediate: [
-            'Address 3 critical issues in risk management documents',
-            'Review and update AI prompts for low-rated document types',
+            'Review feedback patterns and address common issues',
+            'Update templates based on user suggestions',
             'Implement quality gates for document generation'
           ],
           strategic: [
@@ -131,9 +163,36 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
         }
       };
 
-      setAnalytics(mockAnalytics);
+      setAnalytics(analyticsData);
+    } catch (error) {
+      console.error('Error loading feedback analytics:', error);
+      // Fallback to default values
+      setAnalytics({
+        overview: {
+          totalFeedback: 0,
+          averageRating: 0,
+          responseRate: 0,
+          improvementRate: 0
+        },
+        trends: [],
+        documentPerformance: [],
+        insights: {
+          topIssues: ['No feedback data available'],
+          improvementAreas: ['Start collecting feedback'],
+          successStories: ['System ready for feedback collection']
+        },
+        recommendations: {
+          immediate: ['Begin collecting user feedback'],
+          strategic: ['Establish feedback collection processes']
+        }
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    loadFeedbackAnalytics();
   }, [projectId, timeframe]);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
@@ -174,22 +233,34 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Feedback Analytics</h1>
-          <p className="text-gray-600 mt-1">Insights and trends from document feedback</p>
+          <p className="text-gray-600 mt-1">
+            Insights and trends from document feedback - {timeframe === '7d' ? 'Last 7 Days' : timeframe === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
+          </p>
         </div>
-        <div className="flex space-x-2">
-          {(['7d', '30d', '90d'] as const).map((period) => (
-            <button
-              key={period}
-              onClick={() => setTimeframe(period)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                timeframe === period
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
-            </button>
-          ))}
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={loadFeedbackAnalytics}
+            disabled={loading}
+            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-medium">Refresh</span>
+          </button>
+          <div className="flex space-x-2">
+            {(['7d', '30d', '90d'] as const).map((period) => (
+              <button
+                key={period}
+                onClick={() => setTimeframe(period)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  timeframe === period
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -248,7 +319,9 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
 
       {/* Trends Chart */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quality Trends</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Quality Trends - {timeframe === '7d' ? 'Daily' : timeframe === '30d' ? 'Weekly' : 'Monthly'} View
+        </h2>
         <div className="h-64 flex items-end space-x-4">
           {analytics.trends.map((trend, index) => (
             <div key={index} className="flex-1 flex flex-col items-center">

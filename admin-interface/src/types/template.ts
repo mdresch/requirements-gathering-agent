@@ -6,6 +6,9 @@ export interface Template {
   tags: string[];
   content: string;
   aiInstructions: string;
+  promptTemplate?: string;
+  generationFunction?: string;
+  documentKey?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +37,9 @@ export interface CreateTemplateRequest {
   category: string;
   content?: string; // Make optional since we're using templateData
   aiInstructions?: string;
+  promptTemplate?: string;
+  generationFunction?: string;
+  documentKey?: string;
   tags?: string[];
   templateType?: string;
   contextPriority?: 'low' | 'medium' | 'high' | 'critical';

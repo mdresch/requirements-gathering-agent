@@ -36,6 +36,8 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.get('/summary', FeedbackController.getFeedbackSummary);
+router.get('/trends', FeedbackController.getFeedbackTrends);
+router.get('/performance', FeedbackController.getDocumentPerformance);
 
 /**
  * @swagger

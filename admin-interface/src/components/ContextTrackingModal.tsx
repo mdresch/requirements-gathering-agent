@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
@@ -144,6 +145,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [generationCompleted, setGenerationCompleted] = useState(false);
+  const [overallProgress, setOverallProgress] = useState(0);
   const [generatedDocument, setGeneratedDocument] = useState<any>(null);
   const [showingError, setShowingError] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -249,6 +251,15 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
 
     setGenerationSteps(steps);
     setCurrentStep(0);
+    setOverallProgress(0);
+    setGenerationCompleted(false);
+  };
+
+  const calculateOverallProgress = (steps: ContextGenerationStep[]) => {
+    const completedSteps = steps.filter(step => step.status === 'completed').length;
+    const totalSteps = steps.length;
+    const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
+    return progressPercentage;
   };
 
   const startGeneration = async () => {
@@ -270,9 +281,17 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         // Update step with results
         const stepResults = await processGenerationStep(i);
         
-        setGenerationSteps(prev => prev.map((step, index) => 
-          index === i ? { ...step, ...stepResults, status: 'completed' } : step
-        ));
+        setGenerationSteps(prev => {
+          const updatedSteps = prev.map((step, index) =>
+            index === i ? { ...step, ...stepResults, status: 'completed' as const } : step                                                                       
+          );
+          
+          // Calculate and update overall progress
+          const newProgress = calculateOverallProgress(updatedSteps);
+          setOverallProgress(newProgress);
+          
+          return updatedSteps;
+        });
 
         // Update context components and optimization data
         if (i === 1) {
@@ -286,8 +305,10 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         }
       }
 
-      // Mark generation as completed and call real document generation API
-      setGenerationCompleted(true);
+      // Only mark generation as completed when all steps are done and progress is 100%
+      if (overallProgress === 100) {
+        setGenerationCompleted(true);
+      }
       
       let actualGeneratedDocument;
       
@@ -356,7 +377,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         console.log('📄 Generated document:', generatedDoc);
         
         // Now fetch the actual document content from the database
-        const documentResponse = await fetch(`/api/v1/projects/documents/${generatedDoc.id}`, {
+        const documentResponse = await fetch(`http://localhost:3002/api/v1/projects/documents/${generatedDoc.id}`, {
           headers: {
             'X-API-Key': 'dev-api-key-123'
           }
@@ -415,7 +436,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
       
       // Log audit trail entry for document generation
       try {
-        await fetch('/api/v1/audit-trail', {
+        await fetch('http://localhost:3002/api/v1/audit-trail', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1058,6 +1079,55 @@ Type: Digital Transformation
     }
   };
 
+  const handleViewGeneratedDocument = () => {
+    if (!generatedDocument) {
+      toast.error('No document generated yet');
+      return;
+    }
+
+    // Create a new window/tab to view the document
+    const documentWindow = window.open('', '_blank');
+    if (documentWindow) {
+      documentWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${generatedDocument.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+            h1 { color: #2563eb; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+            h2 { color: #374151; margin-top: 30px; }
+            h3 { color: #4b5563; margin-top: 20px; }
+            .metadata { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .metadata h4 { margin: 0 0 10px 0; color: #374151; }
+            .metadata p { margin: 5px 0; color: #6b7280; }
+            pre { background: #f9fafb; padding: 15px; border-radius: 6px; overflow-x: auto; }
+            .quality-score { color: #059669; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>${generatedDocument.name}</h1>
+          <div class="metadata">
+            <h4>Document Information</h4>
+            <p><strong>Type:</strong> ${documentType}</p>
+            <p><strong>Quality Score:</strong> <span class="quality-score">${generatedDocument.qualityScore}%</span></p>
+            <p><strong>Generated By:</strong> ADPA-System</p>
+            <p><strong>Provider:</strong> ${provider}</p>
+            <p><strong>Model:</strong> ${model}</p>
+            <p><strong>Generated At:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+          <div>
+            ${generatedDocument.content.replace(/\n/g, '<br>')}
+          </div>
+        </body>
+        </html>
+      `);
+      documentWindow.document.close();
+    } else {
+      toast.error('Unable to open document viewer. Please check your popup blocker settings.');
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
@@ -1066,6 +1136,9 @@ Type: Digital Transformation
             <Brain className="h-6 w-6 text-blue-600" />
             <span>Context Generation & Injection Tracking</span>
           </DialogTitle>
+          <DialogDescription>
+            Monitor and analyze AI context utilization, generation jobs, and document traceability for your project.
+          </DialogDescription>
           <div className="text-sm text-gray-600">
             Document: {documentType} | Provider: {provider} | Model: {model}
           </div>
@@ -1082,19 +1155,84 @@ Type: Digital Transformation
                 </span>
                 <Button
                   onClick={startGeneration}
-                  disabled={isGenerating}
+                  disabled={isGenerating && overallProgress < 100}
                   size="sm"
                 >
-                  {isGenerating ? (
+                  {isGenerating && overallProgress < 100 ? (
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Zap className="h-4 w-4 mr-2" />
                   )}
-                  {isGenerating ? 'Generating...' : 'Start Generation'}
+                  {isGenerating && overallProgress < 100 ? 'Generating...' : 'Start Generation'}
                 </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Overall Progress Bar */}
+              {(isGenerating || overallProgress > 0) && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      Overall Progress
+                      {isGenerating && currentStep < generationSteps.length && (
+                        <span className="ml-2 text-xs text-blue-600">
+                          ({generationSteps[currentStep]?.name})
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {overallProgress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-500 ease-out ${
+                        overallProgress === 100 
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 animate-pulse' 
+                          : 'bg-gradient-to-r from-blue-500 to-green-500'
+                      }`}
+                      style={{ width: `${overallProgress}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Starting...</span>
+                    <span>Generating...</span>
+                    <span className={overallProgress === 100 ? 'text-green-600 font-semibold' : ''}>
+                      {overallProgress === 100 ? '✓ Complete' : 'Complete'}
+                    </span>
+                  </div>
+                  {overallProgress === 100 && (
+                    <div className="mt-2 text-center">
+                      <span className="text-sm text-green-600 font-medium">
+                        🎉 All generation stages completed successfully!
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* View Generated Document Button - Shows when generation is complete */}
+              {overallProgress === 100 && generationCompleted && !showingError && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                      <div>
+                        <h4 className="font-medium text-green-900">Generation Complete!</h4>
+                        <p className="text-sm text-green-700">Your document has been successfully generated.</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleViewGeneratedDocument}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Document
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               <div className="space-y-3">
                 {generationSteps.map((step, index) => (
                   <div
@@ -1257,7 +1395,7 @@ Type: Digital Transformation
           )}
 
           {/* Generation Completed - Continue Button */}
-          {generationCompleted && !showingError && (
+          {generationCompleted && overallProgress === 100 && !showingError && (
             <Card className="border-green-200 bg-green-50">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -1268,17 +1406,26 @@ Type: Digital Transformation
                         Document Generated Successfully!
                       </h3>
                       <p className="text-sm text-green-700">
-                        Context optimization completed with 96% quality score. Ready to add to project.
+                        All generation stages completed successfully with 96% quality score. Ready to add to project.
                       </p>
                     </div>
                   </div>
-                  <Button
-                    onClick={handleContinueToDocumentOutput}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Continue to Document Output
-                  </Button>
+                  <div className="flex space-x-3">
+                    <Button
+                      onClick={handleViewGeneratedDocument}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Document
+                    </Button>
+                    <Button
+                      onClick={handleContinueToDocumentOutput}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Continue to Document Output
+                    </Button>
+                  </div>
                 </div>
                 
                 {generatedDocument && (

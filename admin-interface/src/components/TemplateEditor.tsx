@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Template, CreateTemplateRequest, TemplateMetadata } from '@/types/template';
+import { Category } from '@/types/category';
 import { validateTemplate } from '@/lib/utils';
+import { categoryApiClient } from '@/lib/categoryApi';
 import { Save, X, Eye, Code, FileText, AlertCircle } from 'lucide-react';
 
 interface TemplateEditorProps {
@@ -19,9 +21,14 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
     tags: [],
     content: '',
     aiInstructions: '',
+    promptTemplate: '',
+    generationFunction: 'getAiGenericDocument',
+    documentKey: '',
     templateType: 'ai_instruction',
+    contextPriority: 'medium',
     contextRequirements: [],
     variables: {},
+    isActive: false, // Default new templates to Inactive for review
     metadata: {
       framework: '',
       complexity: 'simple',
@@ -38,6 +45,39 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
   const [contextInput, setContextInput] = useState('');
   const [dependencyInput, setDependencyInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Load categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const response = await categoryApiClient.getActiveCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // Fallback to predefined categories
+        setCategories([
+          { _id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '8', name: 'documentation', description: 'Documentation templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '9', name: 'testing', description: 'Testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '10', name: 'deployment', description: 'Deployment templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '11', name: 'api-testing', description: 'API testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
+        ]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (template) {
@@ -56,10 +96,14 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         tags: template.tags || [],
         content: template.content || '', // Ensure content is preserved
         aiInstructions: template.aiInstructions || '',
+        promptTemplate: template.promptTemplate || '',
+        generationFunction: template.generationFunction || 'getAiGenericDocument',
+        documentKey: template.documentKey || '',
         templateType: template.templateType || 'ai_instruction',
         contextPriority: template.contextPriority || 'medium',
         contextRequirements: template.contextRequirements || [],
         variables: template.variables || {},
+        isActive: template.isActive !== undefined ? template.isActive : false, // Default to inactive for review
         metadata: {
           framework: template.metadata?.framework || '',
           complexity: template.metadata?.complexity || 'simple',
@@ -79,6 +123,28 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
       ...prev,
       [field]: value,
     }));
+    
+    // Auto-generate document key when name changes
+    if (field === 'name' && value) {
+      const documentKey = value
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      // Ensure document key is not empty and follows proper format
+      if (documentKey && /^[a-z0-9-]+$/.test(documentKey)) {
+        setFormData(prev => ({
+          ...prev,
+          documentKey: documentKey
+        }));
+        console.log(`✅ Auto-generated document key: "${documentKey}" from template name: "${value}"`);
+      } else {
+        console.warn(`⚠️ Failed to generate valid document key from template name: "${value}"`);
+      }
+    }
+    
     // Clear errors when user starts typing
     if (errors.length > 0) {
       setErrors([]);
@@ -172,6 +238,11 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
             description: formData.description,
             category: formData.category,
             tags: formData.tags,
+            // Required fields for document generation
+            aiInstructions: formData.aiInstructions || '',
+            promptTemplate: formData.promptTemplate || '',
+            generationFunction: formData.generationFunction || 'getAiGenericDocument',
+            documentKey: formData.documentKey || '', // Send empty string if not set
             templateData: {
               content: formData.content || '',
               aiInstructions: formData.aiInstructions || '',
@@ -186,7 +257,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               author: formData.metadata?.author || 'System', // Ensure author is included
               framework: formData.metadata?.framework || 'general' // Ensure framework has a default
             },
-            isActive: true
+            isActive: formData.isActive !== undefined ? formData.isActive : false // Default to inactive for review
           };
 
       console.log('TemplateEditor: Restructured data for API:', apiData);
@@ -205,11 +276,6 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
     }
   };
 
-  const predefinedCategories = [
-    'pmbok', 'babok', 'requirements', 'technical-design', 
-    'quality-assurance', 'project-management', 'business-analysis',
-    'documentation', 'testing', 'deployment', 'api-testing'
-  ];
 
   // Fixed: Define tabs array properly
   const tabs = [
@@ -340,10 +406,13 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 onChange={(e) => handleInputChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 aria-label="Category"
+                disabled={categoriesLoading}
               >
-                <option value="">Select a category</option>
-                {predefinedCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                <option value="">{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
+                {categories.map(cat => (
+                  <option key={cat._id} value={cat.name}>
+                    {cat.name} - {cat.description}
+                  </option>
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
@@ -367,8 +436,150 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
             </div>
 
             <div>
+              <label htmlFor="document-key-input" className="block text-sm font-medium text-gray-700 mb-1">
+                Document Key <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="document-key-input"
+                type="text"
+                value={formData.documentKey || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Validate document key format
+                  if (value === '' || /^[a-z0-9-]+$/.test(value)) {
+                    handleInputChange('documentKey', value);
+                  } else {
+                    // Show error for invalid format
+                    console.warn(`❌ Invalid document key format: "${value}". Must be lowercase with hyphens only.`);
+                  }
+                }}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${
+                  formData.documentKey && !/^[a-z0-9-]+$/.test(formData.documentKey) 
+                    ? 'border-red-500 bg-red-50' 
+                    : 'border-gray-300'
+                }`}
+                placeholder="business-case"
+                pattern="^[a-z0-9-]+$"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Unique identifier for document generation (lowercase with hyphens). Auto-generated from template name.
+                {formData.documentKey && !/^[a-z0-9-]+$/.test(formData.documentKey) && (
+                  <span className="text-red-500 block mt-1">
+                    ⚠️ Invalid format. Use lowercase letters, numbers, and hyphens only.
+                  </span>
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="generation-function-select" className="block text-sm font-medium text-gray-700 mb-1">
+                Generation Function <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="generation-function-select"
+                value={formData.generationFunction}
+                onChange={(e) => handleInputChange('generationFunction', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              >
+                <optgroup label="Core Analysis Documents">
+                  <option value="getAiGenericDocument">Generic Document (Default)</option>
+                  <option value="getAiSummaryAndGoals">Summary and Goals</option>
+                  <option value="getAiUserStories">User Stories</option>
+                  <option value="getAiUserPersonas">User Personas</option>
+                  <option value="getAiKeyRolesAndNeeds">Key Roles and Needs</option>
+                  <option value="getAiProjectStatementOfWork">Project Statement of Work</option>
+                  <option value="getAiBusinessCase">Business Case</option>
+                </optgroup>
+                
+                <optgroup label="Strategic Statements">
+                  <option value="getMissionVisionAndCoreValues">Mission, Vision & Core Values</option>
+                  <option value="getProjectPurpose">Project Purpose</option>
+                </optgroup>
+                
+                <optgroup label="Project Charter">
+                  <option value="getAiProjectCharter">Project Charter</option>
+                  <option value="getAiProjectManagementPlan">Project Management Plan</option>
+                </optgroup>
+                
+                <optgroup label="PMBOK Process Functions">
+                  <option value="getAiDirectAndManageProjectWorkProcess">Direct and Manage Project Work</option>
+                  <option value="getAiPerformIntegratedChangeControlProcess">Perform Integrated Change Control</option>
+                  <option value="getAiCloseProjectOrPhaseProcess">Close Project or Phase</option>
+                  <option value="getAiValidateScopeProcess">Validate Scope Process</option>
+                  <option value="getAiControlScopeProcess">Control Scope Process</option>
+                </optgroup>
+                
+                <optgroup label="Management Plans">
+                  <option value="getAiScopeManagementPlan">Scope Management Plan</option>
+                  <option value="getAiRiskManagementPlan">Risk Management Plan</option>
+                  <option value="getAiCostManagementPlan">Cost Management Plan</option>
+                  <option value="getAiQualityManagementPlan">Quality Management Plan</option>
+                  <option value="getAiResourceManagementPlan">Resource Management Plan</option>
+                  <option value="getAiCommunicationManagementPlan">Communication Management Plan</option>
+                  <option value="getAiProcurementManagementPlan">Procurement Management Plan</option>
+                </optgroup>
+                
+                <optgroup label="Stakeholder Management">
+                  <option value="getAiStakeholderEngagementPlan">Stakeholder Engagement Plan</option>
+                  <option value="getAiStakeholderRegister">Stakeholder Register</option>
+                  <option value="getAiStakeholderAnalysis">Stakeholder Analysis</option>
+                </optgroup>
+                
+                <optgroup label="Planning Artifacts">
+                  <option value="getAiWbs">Work Breakdown Structure</option>
+                  <option value="getAiWbsDictionary">WBS Dictionary</option>
+                  <option value="getAiActivityList">Activity List</option>
+                  <option value="getAiActivityDurationEstimates">Activity Duration Estimates</option>
+                  <option value="getAiActivityResourceEstimates">Activity Resource Estimates</option>
+                  <option value="getAiScheduleNetworkDiagram">Schedule Network Diagram</option>
+                  <option value="getAiMilestoneList">Milestone List</option>
+                  <option value="getAiDevelopScheduleInput">Develop Schedule Input</option>
+                </optgroup>
+                
+                <optgroup label="Technical Analysis">
+                  <option value="getAiDataModelSuggestions">Data Model Suggestions</option>
+                  <option value="getAiTechStackAnalysis">Tech Stack Analysis</option>
+                  <option value="getAiRiskAnalysis">Risk Analysis</option>
+                  <option value="getAiAcceptanceCriteria">Acceptance Criteria</option>
+                  <option value="getAiComplianceConsiderations">Compliance Considerations</option>
+                  <option value="getAiUiUxConsiderations">UI/UX Considerations</option>
+                </optgroup>
+                
+                <optgroup label="Technical Recommendations">
+                  <option value="getAiTechnicalRecommendations">Technical Recommendations</option>
+                  <option value="getAiTechnologySelectionCriteria">Technology Selection Criteria</option>
+                  <option value="getAiTechnicalImplementationRoadmap">Technical Implementation Roadmap</option>
+                  <option value="getAiTechnologyGovernanceFramework">Technology Governance Framework</option>
+                </optgroup>
+                
+                <optgroup label="Requirements Management">
+                  <option value="getAiRequirementsManagementPlan">Requirements Management Plan</option>
+                  <option value="getAiCollectRequirementsProcess">Collect Requirements Process</option>
+                  <option value="getAiRequirementsDocumentation">Requirements Documentation</option>
+                  <option value="getAiRequirementsTraceabilityMatrix">Requirements Traceability Matrix</option>
+                </optgroup>
+                
+                <optgroup label="Scope Management">
+                  <option value="getAiPlanScopeManagement">Plan Scope Management</option>
+                  <option value="getAiDefineScopeProcess">Define Scope Process</option>
+                  <option value="getAiProjectScopeStatement">Project Scope Statement</option>
+                  <option value="getAiCreateWbsProcess">Create WBS Process</option>
+                  <option value="getAiScopeBaseline">Scope Baseline</option>
+                  <option value="getAiWorkPerformanceInformationScope">Work Performance Information Scope</option>
+                </optgroup>
+                
+                <optgroup label="DMBOK Data Management">
+                  <option value="getAiDmbokDataManagementStrategy">DMBOK Data Management Strategy</option>
+                </optgroup>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Select the document processor function that will generate this type of document.
+              </p>
+            </div>
+
+            <div>
               <label htmlFor="context-priority-select" className="block text-sm font-medium text-gray-700 mb-1">
-                Context Priority <span className="text-gray-500 text-sm">(for LLM context building)</span>
+                Priority <span className="text-red-500">*</span>
               </label>
               <select
                 id="context-priority-select"
@@ -383,6 +594,35 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Higher priority documents will be prioritized when building context for new document generation.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Template Status</label>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    checked={formData.isActive === true}
+                    onChange={() => handleInputChange('isActive', true)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Active</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="isActive"
+                    checked={formData.isActive === false}
+                    onChange={() => handleInputChange('isActive', false)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Inactive</span>
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Active templates are available for document generation. Inactive templates are hidden but preserved.
               </p>
             </div>
 
@@ -446,16 +686,36 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">AI Instructions</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                AI Instructions (System Prompt) <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={formData.aiInstructions}
                 onChange={(e) => handleInputChange('aiInstructions', e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Special instructions for AI processing..."
+                placeholder="You are a Project Management Professional with extensive knowledge..."
+                minLength={10}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Provide context and guidance for AI when processing this template
+                Define the AI's role and expertise for generating this type of document (minimum 10 characters)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prompt Template (AI Prompt) <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={formData.promptTemplate}
+                onChange={(e) => handleInputChange('promptTemplate', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Generate a comprehensive [Document Type] following [Framework] standards..."
+                minLength={10}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                The specific prompt that will be sent to the AI for document generation (minimum 10 characters)
               </p>
             </div>
           </div>

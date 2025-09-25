@@ -82,7 +82,8 @@ export class TemplateRepository {
                 version: 1,
                 created_at: new Date(),
                 updated_at: new Date(),
-                is_deleted: false  // Ensure it's not marked as deleted
+                is_deleted: false,  // Ensure it's not marked as deleted
+                is_active: templateData.is_active !== undefined ? templateData.is_active : false  // Default to inactive for review
             });
 
             console.log('💾 Saving template to database...');
@@ -162,12 +163,11 @@ export class TemplateRepository {
         try {
             const filter: any = {};
 
-            // Apply filters - by default only show active, non-deleted templates
+            // Apply filters - show all templates by default, filter by active status only when specified
             if (query.is_active !== undefined) {
                 filter.is_active = query.is_active;
-            } else {
-                filter.is_active = true; // Default to active templates
             }
+            // No default filter for is_active - show both active and inactive templates
 
             // Exclude soft-deleted templates by default
             if (query.is_deleted !== undefined) {

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { DocumentReviewIntegration, DocumentGenerationWithReviewOptions } from '../../services/DocumentReviewIntegration.js';
 import { logger } from '../../utils/logger.js';
+import { EnhancedContextInjectionService } from '../../services/EnhancedContextInjectionService.js';
 
 export class DocumentGenerationController {
   private static integrationService = new DocumentReviewIntegration()
@@ -155,12 +156,55 @@ ${stakeholder.lastContact ? `**Last Contact:** ${stakeholder.lastContact.toISOSt
 
   /**
    * Load existing project documents and inject them as context for LLM generation
-   * This ensures that available documents are used as context even when there are no dependencies
-   * Optimized for large context windows like Gemini with intelligent token management
+   * Enhanced to utilize large context windows for comprehensive document loading
    */
   private static async loadExistingProjectDocumentsAsContext(projectId: string): Promise<void> {
     try {
       console.log(`🔍 Loading existing documents for project ${projectId} as context...`);
+      
+      // Use enhanced context injection service
+      const contextInjectionService = EnhancedContextInjectionService.getInstance();
+      
+      const result = await contextInjectionService.injectAllProjectDocuments(projectId, {
+        targetDocumentType: 'comprehensive-document',
+        maxUtilizationPercentage: 90, // Use up to 90% of available context window
+        enableIntelligentPrioritization: true,
+        enableContentSummarization: true,
+        enableChunking: true,
+        preserveCriticalContext: true,
+        includeStakeholders: true,
+        includeComplianceData: true
+      });
+      
+      if (result.success) {
+        console.log(`🎯 Enhanced context injection completed:`);
+        console.log(`   Documents loaded: ${result.documentsLoaded}/${result.totalDocuments}`);
+        console.log(`   Tokens used: ${result.totalTokensUsed.toLocaleString()}`);
+        console.log(`   Utilization: ${result.contextWindowUtilization.toFixed(1)}%`);
+        console.log(`   Strategy: ${result.strategy}`);
+        
+        if (result.warnings) {
+          result.warnings.forEach(warning => console.log(`   ⚠️ ${warning}`));
+        }
+      } else {
+        console.error(`❌ Enhanced context injection failed: ${result.errors?.join(', ')}`);
+        // Fallback to basic context injection
+        await this.loadExistingProjectDocumentsAsContextFallback(projectId);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error during enhanced context injection:', error);
+      // Fallback to basic context injection
+      await this.loadExistingProjectDocumentsAsContextFallback(projectId);
+    }
+  }
+
+  /**
+   * Fallback method for basic context injection (original implementation)
+   */
+  private static async loadExistingProjectDocumentsAsContextFallback(projectId: string): Promise<void> {
+    try {
+      console.log(`🔄 Using fallback context injection for project ${projectId}...`);
       
       // Import ProjectDocument model
       const { ProjectDocument } = await import('../../models/ProjectDocument.js');
@@ -449,6 +493,16 @@ ${doc.content}`;
         });
       }
 
+      // Validate document keys format
+      if (documentKeys && Array.isArray(documentKeys)) {
+        const invalidKeys = documentKeys.filter(key => !/^[a-z0-9-]+$/.test(key));
+        if (invalidKeys.length > 0) {
+          return res.status(400).json({
+            error: `Invalid document key format: ${invalidKeys.join(', ')}. Document keys should be lowercase with hyphens (e.g., "business-case")`
+          });
+        }
+      }
+
       // Use the existing DocumentGenerator directly
       const { DocumentGenerator } = await import('../../modules/documentGenerator/DocumentGenerator.js');
       
@@ -497,8 +551,11 @@ ${doc.content}`;
             result.successCount++;
             result.generatedFiles.push(`${documentKey}.md`);
             
-            // Try to get the generated document from the database
+            // Try to get the generated document from the database with a small delay
             try {
+              // Add a small delay to ensure the document is saved
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
               const { ProjectDocument } = await import('../../models/ProjectDocument.js');
               const recentDocument = await ProjectDocument.findOne({
                 type: documentKey,
@@ -512,9 +569,26 @@ ${doc.content}`;
                   type: recentDocument.type,
                   category: recentDocument.category
                 });
+                console.log(`✅ Found generated document: ${recentDocument.name} (ID: ${recentDocument._id})`);
+              } else {
+                console.warn(`⚠️ Could not find generated document for ${documentKey} in database`);
+                // Add a fallback document entry
+                result.generatedDocuments.push({
+                  id: `generated-${documentKey}-${Date.now()}`,
+                  name: `${documentKey.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`,
+                  type: documentKey,
+                  category: 'generated'
+                });
               }
             } catch (dbError) {
               console.warn(`Could not retrieve document ID for ${documentKey}:`, dbError);
+              // Add a fallback document entry
+              result.generatedDocuments.push({
+                id: `generated-${documentKey}-${Date.now()}`,
+                name: `${documentKey.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}`,
+                type: documentKey,
+                category: 'generated'
+              });
             }
           } else {
             result.failureCount++;
@@ -537,9 +611,36 @@ ${doc.content}`;
         errors: result.errors
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating documents only:', error);
-      next(error);
+      
+      // Provide more specific error messages
+      if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+        res.status(503).json({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Database connection error. Please try again later.',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+        return;
+      }
+      
+      if (error.name === 'ValidationError') {
+        res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          message: 'Invalid input data',
+          details: error.errors || error.message
+        });
+        return;
+      }
+      
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Document generation failed',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 

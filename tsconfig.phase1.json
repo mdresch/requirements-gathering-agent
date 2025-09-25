@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/phase1/**/*",
+    "src/config/database.ts",
+    "src/services/ComplianceDataService.ts",
+    "src/services/DataQualityService.ts", 
+    "src/services/RealTimeDataService.ts",
+    "src/utils/logger.ts",
+    "src/database/migrations/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/api/**/*",
+    "src/controllers/**/*",
+    "src/middleware/**/*",
+    "src/models/**/*",
+    "src/modules/**/*",
+    "src/scripts/**/*",
+    "src/server.ts"
+  ]
+}

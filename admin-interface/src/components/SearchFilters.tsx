@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TemplateSearchParams } from '@/types/template';
 import { Search, Filter, X } from 'lucide-react';
+import { categoryApiClient } from '@/lib/categoryApi';
+import { Category } from '@/types/category';
 
 interface SearchFiltersProps {
   onSearch: (params: TemplateSearchParams) => void;
@@ -12,6 +14,35 @@ interface SearchFiltersProps {
 export default function SearchFilters({ onSearch, initialParams }: SearchFiltersProps) {
   const [filters, setFilters] = useState<TemplateSearchParams>(initialParams);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Load categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const response = await categoryApiClient.getActiveCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        // Fallback to predefined categories
+        setCategories([
+          { _id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { _id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
+        ]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handleFilterChange = (key: keyof TemplateSearchParams, value: string | number | string[] | undefined) => {
     const newFilters = { ...filters, [key]: value };
@@ -81,24 +112,34 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <input
-            type="text"
+          <select
             value={filters.category || ''}
             onChange={(e) => handleFilterChange('category', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Filter by category"
-          />
+            disabled={categoriesLoading}
+          >
+            <option value="">{categoriesLoading ? 'Loading categories...' : 'All categories'}</option>
+            {categories.map(category => (
+              <option key={category._id} value={category.name}>
+                {category.name} - {category.description}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Template Type</label>
-          <input
-            type="text"
+          <select
             value={filters.templateType || ''}
             onChange={(e) => handleFilterChange('templateType', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Filter by template type"
-          />
+          >
+            <option value="">All template types</option>
+            <option value="ai_instruction">AI Instruction</option>
+            <option value="document">Document Template</option>
+            <option value="form">Form Template</option>
+            <option value="report">Report Template</option>
+          </select>
         </div>
       </div>
 

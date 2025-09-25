@@ -27,7 +27,7 @@ import { AIProcessor } from '../ai/AIProcessor.js';
 import { ContextManager } from '../contextManager.js';
 import type { ChatMessage } from '../ai/types.js';
 import { TemplateRepository } from '../../repositories/TemplateRepository.js';
-import { dbConnection } from '../../config/database.js';
+import dbConnection from '../../config/database.js';
 
 export interface ContextDependency {
     documentKey: string;

@@ -119,7 +119,7 @@ Generate the complete Benefits Realization Plan now:`;
       'Benefits Overview',
       'Benefits Analysis',
       'Measurement Framework',
-      'Benefits Timeline',
+      'Benefits Realization Timeline',
       'Stakeholder Benefits',
       'Financial Analysis'
     ];

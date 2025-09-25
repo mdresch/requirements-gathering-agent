@@ -17,6 +17,7 @@ import {
   ProjectData
 } from '../../types/standardsCompliance.js';
 import { logger } from '../../config/logger.js';
+import enhancedStandardsComplianceRoutes from './enhancedStandardsCompliance.js';
 
 // Additional type definitions for the API
 interface DeviationApprovalRequest {
@@ -927,5 +928,8 @@ router.get('/health', (req: Request, res: Response) => {
     }
   });
 });
+
+// Enhanced routes for Phase 1 & 2 compliance features
+router.use('/enhanced', enhancedStandardsComplianceRoutes);
 
 export default router;

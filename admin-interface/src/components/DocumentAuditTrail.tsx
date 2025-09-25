@@ -130,12 +130,12 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
       });
 
       try {
-        const response = await fetch(`/api/v1/audit-trail?${queryParams}`);
+        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple?${queryParams}`);
         const data = await response.json();
 
         if (data.success) {
-          setAuditEntries(data.data);
-          setPagination(data.pagination);
+          setAuditEntries(data.data.entries);
+          setPagination(data.data.pagination);
         } else {
           throw new Error('API returned error');
         }
@@ -238,7 +238,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
       });
 
       try {
-        const response = await fetch(`/api/v1/audit-trail/stats?${queryParams}`);
+        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple/analytics?${queryParams}`);
         const data = await response.json();
 
         if (data.success) {
@@ -371,7 +371,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
       });
 
       try {
-        const response = await fetch(`/api/v1/audit-trail/export?${queryParams}`);
+        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/export?${queryParams}`);
         
         if (response.ok) {
           const blob = await response.blob();
@@ -472,7 +472,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Entries</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalEntries}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.totalEntries || 0}</p>
                 </div>
                 <FileText className="h-8 w-8 text-blue-600" />
               </div>
@@ -485,7 +485,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
                 <div>
                   <p className="text-sm font-medium text-gray-600">Avg Quality Score</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.averageQualityScore ? `${stats.averageQualityScore.toFixed(1)}%` : 'N/A'}
+                    {stats?.averageQualityScore ? `${stats.averageQualityScore.toFixed(1)}%` : 'N/A'}
                   </p>
                 </div>
                 <Star className="h-8 w-8 text-yellow-600" />
@@ -499,7 +499,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Tokens</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalTokensUsed ? stats.totalTokensUsed.toLocaleString() : 'N/A'}
+                    {stats?.totalTokensUsed ? stats.totalTokensUsed.toLocaleString() : 'N/A'}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-green-600" />
@@ -512,7 +512,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Users</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.mostActiveUsers.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.mostActiveUsers?.length || 0}</p>
                 </div>
                 <User className="h-8 w-8 text-purple-600" />
               </div>

@@ -8,8 +8,21 @@ export const templateCreateSchema = {
     description: Joi.string().max(500).optional(),
     category: Joi.string().max(50).optional(),
     tags: Joi.array().items(Joi.string().max(30)).max(10).optional(),
+    // Required for document generation
+    aiInstructions: Joi.string().min(10).required().messages({
+      'string.min': 'AI instructions must be at least 10 characters long',
+      'any.required': 'AI instructions are required for document generation'
+    }),
+    promptTemplate: Joi.string().min(10).required().messages({
+      'string.min': 'Prompt template must be at least 10 characters long',
+      'any.required': 'Prompt template is required for document generation'
+    }),
+    generationFunction: Joi.string().required().messages({
+      'any.required': 'Generation function is required to map to document processor'
+    }),
     templateData: Joi.object({
       content: Joi.string().required(),
+      aiInstructions: Joi.string().min(10).required(),
       variables: Joi.array().items(
         Joi.object({
           name: Joi.string().required(),

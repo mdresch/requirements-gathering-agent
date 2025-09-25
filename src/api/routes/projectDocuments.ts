@@ -4,6 +4,9 @@ import { body, param, query } from 'express-validator';
 
 const router = Router();
 
+// Health check endpoint
+router.get('/health', ProjectDocumentController.healthCheck);
+
 // Validation middleware
 const validateProjectId = [
   param('projectId').isMongoId().withMessage('Invalid project ID format')

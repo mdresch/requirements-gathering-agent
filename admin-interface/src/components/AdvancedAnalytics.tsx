@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
+import ComplianceAnalyticsDashboard from './ComplianceAnalyticsDashboard';
 
 interface AnalyticsData {
   projectMetrics: {
@@ -97,36 +98,58 @@ export default function AdvancedAnalytics() {
     try {
       console.log('📊 Loading analytics data...');
       
-      // Try to load data from API
-      const [templateStats, projectStats] = await Promise.all([
-        apiClient.getTemplateStats(),
-        apiClient.getProjects()
+      // Load data from working API endpoints
+      const [templatesResponse, projectsResponse] = await Promise.all([
+        apiClient.getTemplates({ page: 1, limit: 100 }),
+        apiClient.getProjects({ page: 1, limit: 100 })
       ]);
-      console.log('📈 Analytics response:', { templateStats, projectStats });
       
-      if (templateStats.success && projectStats.success) {
-        // Transform API data for analytics
-        const transformedData: AnalyticsData = {
-          projectMetrics: {
-            totalProjects: projectStats.data?.pagination?.totalItems || 25,
-            activeProjects: projectStats.data?.projects?.filter((p: any) => p.status === 'active')?.length || 12,
-            completedProjects: projectStats.data?.projects?.filter((p: any) => p.status === 'completed')?.length || 13,
-            averageCompletionTime: 18.5 // Default value since we don't have this in the API
-          },
-          templateUsage: templateStats.data || generateMockTemplateUsage(),
-          complianceAnalytics: generateComplianceData(),
-          userActivity: generateUserActivityData(),
-          performanceMetrics: generateMockPerformanceMetrics()
-        };
-        setAnalyticsData(transformedData);
-      } else {
-        // Fallback to demo data if API fails
-        console.warn('⚠️ Using fallback analytics data');
-        const mockData = generateMockAnalyticsData();
-        mockData.complianceAnalytics = generateComplianceData();
-        mockData.userActivity = generateUserActivityData();
-        setAnalyticsData(mockData);
-      }
+      console.log('📈 Analytics response:', { templatesResponse, projectsResponse });
+      
+      const templates = templatesResponse.data?.templates || templatesResponse.data || [];
+      const projects = projectsResponse.data?.projects || projectsResponse.data || [];
+      
+      // Calculate project metrics from real data
+      const totalProjects = projects.length;
+      const activeProjects = projects.filter((p: any) => p.status === 'active' || p.status === 'in_progress').length;
+      const completedProjects = projects.filter((p: any) => p.status === 'completed').length;
+      
+      // Calculate average completion time (estimate based on project creation dates)
+      const projectsWithDates = projects.filter((p: any) => p.createdAt && p.updatedAt);
+      const averageCompletionTime = projectsWithDates.length > 0 
+        ? projectsWithDates.reduce((sum: number, p: any) => {
+            const created = new Date(p.createdAt);
+            const updated = new Date(p.updatedAt);
+            const daysDiff = Math.ceil((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+            return sum + daysDiff;
+          }, 0) / projectsWithDates.length
+        : 18.5; // Default fallback
+      
+      // Generate template usage data from real templates
+      const templateUsage = templates.map((template: any) => ({
+        name: template.name,
+        usage: Math.floor(Math.random() * 20) + 1, // Simulate usage data
+        category: template.category || 'General',
+        trend: Math.random() > 0.5 ? 1 : -1
+      }));
+      
+      // Transform API data for analytics
+      const transformedData: AnalyticsData = {
+        projectMetrics: {
+          totalProjects,
+          activeProjects,
+          completedProjects,
+          averageCompletionTime: Math.round(averageCompletionTime * 10) / 10
+        },
+        templateUsage: templateUsage.length > 0 ? templateUsage : generateMockTemplateUsage(),
+        complianceAnalytics: generateComplianceData(),
+        userActivity: generateUserActivityData(),
+        performanceMetrics: generateMockPerformanceMetrics()
+      };
+      
+      setAnalyticsData(transformedData);
+      console.log('✅ Analytics data loaded successfully');
+      
     } catch (error) {
       console.error('❌ Error loading analytics data:', error);
       toast.error('Using demo data - Analytics API connection failed');
@@ -403,18 +426,9 @@ export default function AdvancedAnalytics() {
             )}
 
             {selectedChart === 'compliance' && (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analyticsData.complianceAnalytics}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={[60, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Area type="monotone" dataKey="overall" stackId="1" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} name="Overall" />
-                  <Area type="monotone" dataKey="babok" stackId="2" stroke="#10B981" fill="#10B981" fillOpacity={0.6} name="BABOK" />
-                  <Area type="monotone" dataKey="pmbok" stackId="3" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.6} name="PMBOK" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <div className="w-full h-full">
+                <ComplianceAnalyticsDashboard />
+              </div>
             )}
 
             {selectedChart === 'performance' && (

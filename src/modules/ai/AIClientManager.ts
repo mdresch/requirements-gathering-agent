@@ -270,11 +270,28 @@ class AIClientManager {
 
     private async healthCheckAzureOpenAI(client: any): Promise<void> {
         const deployment = this.config.get<string>('deployment_name');
-        await client.chat.completions.create({
-            model: deployment,
-            messages: [{ role: 'system', content: 'ping' }, { role: 'user', content: 'ping' }],
-            max_tokens: 1
-        });
+        if (!deployment) {
+            throw new Error('Azure OpenAI deployment name not configured');
+        }
+        
+        try {
+            await client.chat.completions.create({
+                model: deployment,
+                messages: [{ role: 'system', content: 'ping' }, { role: 'user', content: 'ping' }],
+                max_tokens: 1,
+                timeout: 10000 // 10 second timeout
+            });
+        } catch (error: any) {
+            if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+                throw new Error(`Network error connecting to azure-openai-key. Please check connectivity.`);
+            } else if (error.status === 401) {
+                throw new Error('Azure OpenAI authentication failed. Please check your API key.');
+            } else if (error.status === 404) {
+                throw new Error(`Azure OpenAI deployment '${deployment}' not found. Please check your deployment name.`);
+            } else {
+                throw new Error(`Azure OpenAI health check failed: ${error.message || 'Unknown error'}`);
+            }
+        }
     }    private async healthCheckAzureAIStudio(client: any): Promise<void> {
         const deployment = this.config.get<string>('deployment_name');
         const apiVersion = this.config.get<string>('api_version');
