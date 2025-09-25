@@ -33,10 +33,25 @@ import {
   Award,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  BookOpen,
+  Briefcase,
+  Database,
+  Shield,
+  Bell,
+  Filter,
+  Plus,
+  BarChart3
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { toast } from 'react-hot-toast';
+import EnhancedComplianceDataIntegration from './EnhancedComplianceDataIntegration';
+import ComplianceDrillDown from './ComplianceDrillDown'; // Phase 2 import
+import IssueManagementModal from './IssueManagementModal'; // Phase 2 import
+import StandardSpecificAnalysis from './StandardSpecificAnalysis'; // Phase 2 import
+import ComplianceWorkflowEngine from './ComplianceWorkflowEngine'; // Phase 2 import
+import RealTimeNotificationSystem from './RealTimeNotificationSystem'; // Phase 2 import
+import AdvancedComplianceFiltering from './AdvancedComplianceFiltering'; // Phase 2 import
 
 interface ComplianceMetrics {
   overallScore: number;
@@ -93,6 +108,17 @@ export default function StandardsComplianceDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Phase 2: Interactive Drill-down Features State
+  const [showDrillDown, setShowDrillDown] = useState(false);
+  const [selectedStandard, setSelectedStandard] = useState<'BABOK' | 'PMBOK' | 'DMBOK' | 'ISO' | 'OVERALL' | null>(null);
+  const [showIssueModal, setShowIssueModal] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [showStandardAnalysis, setShowStandardAnalysis] = useState(false);
+  const [showWorkflowEngine, setShowWorkflowEngine] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdvancedFiltering, setShowAdvancedFiltering] = useState(false);
+  const [activePhase2Tab, setActivePhase2Tab] = useState<'dashboard' | 'drilldown' | 'issues' | 'analysis' | 'workflows' | 'notifications' | 'filtering'>('dashboard');
 
   useEffect(() => {
     loadComplianceData();
@@ -101,9 +127,16 @@ export default function StandardsComplianceDashboard() {
   const loadComplianceData = async () => {
     setLoading(true);
     try {
-      // Load compliance metrics
-      const metricsResponse = await apiClient.getStandardsCompliance();
-      console.log('📊 Compliance metrics response:', metricsResponse);
+      // Try enhanced API first, fallback to original API
+      let metricsResponse;
+      try {
+        metricsResponse = await fetch('http://localhost:3002/api/v1/standards/enhanced/dashboard?projectId=current-project');
+        metricsResponse = await metricsResponse.json();
+        console.log('📊 Enhanced compliance metrics response:', metricsResponse);
+      } catch (error) {
+        console.warn('⚠️ Enhanced API failed, falling back to original API');
+        metricsResponse = await apiClient.getStandardsCompliance();
+      }
       
       if (metricsResponse.success && metricsResponse.data) {
         // Transform backend data to frontend format
@@ -228,6 +261,20 @@ export default function StandardsComplianceDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Enhanced Data Integration */}
+        <EnhancedComplianceDataIntegration 
+          projectId="current-project"
+          onDataUpdate={(data) => {
+            console.log('📊 Real-time data update received:', data);
+            // Refresh dashboard data when real-time updates are received
+            loadComplianceData();
+          }}
+          onQualityChange={(quality) => {
+            console.log('🔍 Data quality update received:', quality);
+            // Handle quality changes if needed
+          }}
+        />
+        
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -267,26 +314,155 @@ export default function StandardsComplianceDashboard() {
           </div>
         </div>
 
-        {/* Overall Score Card */}
+        {/* Phase 2: Interactive Drill-down Features Navigation */}
         <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div 
-                className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold text-white ${
-                  metrics.overallScore >= 90 ? 'bg-green-500' :
-                  metrics.overallScore >= 75 ? 'bg-yellow-500' :
-                  metrics.overallScore >= 60 ? 'bg-blue-500' : 'bg-red-500'
-                }`}
-              >
-                {metrics.overallScore}%
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8">
+              {[
+                { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+                { id: 'drilldown', label: 'Drill Down', icon: Eye },
+                { id: 'issues', label: 'Issues', icon: AlertTriangle },
+                { id: 'analysis', label: 'Analysis', icon: TrendingUp },
+                { id: 'workflows', label: 'Workflows', icon: RefreshCw },
+                { id: 'notifications', label: 'Notifications', icon: Bell },
+                { id: 'filtering', label: 'Filtering', icon: Filter }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActivePhase2Tab(tab.id as any)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                    activePhase2Tab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Phase 2 Content */}
+        {activePhase2Tab === 'dashboard' && (
+          <>
+            {/* Compliance Score Cards */}
+        <div className="mb-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Standards Compliance Overview</h2>
+            <p className="text-gray-600">Individual compliance scores for each standard framework</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {/* Overall Compliance Score */}
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${
+                    metrics.overallScore >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                    metrics.overallScore >= 75 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
+                    metrics.overallScore >= 60 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                  }`}
+                >
+                  <Award className="w-8 h-8" />
+                </div>
               </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Overall</h3>
+              <p className="text-sm text-gray-600">
+                {metrics.overallScore >= 90 ? 'Excellent' :
+                 metrics.overallScore >= 75 ? 'Good' :
+                 metrics.overallScore >= 60 ? 'Fair' : 'Needs improvement'}
+              </p>
+              <div className="mt-2 text-xs text-gray-500">{metrics.overallScore}%</div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Overall Compliance Score</h2>
-            <p className="text-gray-600">
-              {metrics.overallScore >= 90 ? 'Excellent compliance' :
-               metrics.overallScore >= 75 ? 'Good compliance' :
-               metrics.overallScore >= 60 ? 'Fair compliance' : 'Needs improvement'}
-            </p>
+
+            {/* BABOK Circle Diagram */}
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${
+                    metrics.standardsCompliance.babok >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                    metrics.standardsCompliance.babok >= 75 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
+                    metrics.standardsCompliance.babok >= 60 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                  }`}
+                >
+                  <BookOpen className="w-8 h-8" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">BABOK v3</h3>
+              <p className="text-sm text-gray-600">
+                {metrics.standardsCompliance.babok >= 90 ? 'Excellent' :
+                 metrics.standardsCompliance.babok >= 75 ? 'Good' :
+                 metrics.standardsCompliance.babok >= 60 ? 'Fair' : 'Needs improvement'}
+              </p>
+              <div className="mt-2 text-xs text-gray-500">{metrics.standardsCompliance.babok}%</div>
+            </div>
+
+            {/* PMBOK Circle Diagram */}
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${
+                    metrics.standardsCompliance.pmbok >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                    metrics.standardsCompliance.pmbok >= 75 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
+                    metrics.standardsCompliance.pmbok >= 60 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                  }`}
+                >
+                  <Briefcase className="w-8 h-8" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">PMBOK 7th</h3>
+              <p className="text-sm text-gray-600">
+                {metrics.standardsCompliance.pmbok >= 90 ? 'Excellent' :
+                 metrics.standardsCompliance.pmbok >= 75 ? 'Good' :
+                 metrics.standardsCompliance.pmbok >= 60 ? 'Fair' : 'Needs improvement'}
+              </p>
+              <div className="mt-2 text-xs text-gray-500">{metrics.standardsCompliance.pmbok}%</div>
+            </div>
+
+            {/* DMBOK Circle Diagram */}
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${
+                    metrics.standardsCompliance.custom >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                    metrics.standardsCompliance.custom >= 75 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
+                    metrics.standardsCompliance.custom >= 60 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                  }`}
+                >
+                  <Database className="w-8 h-8" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">DMBOK 2.0</h3>
+              <p className="text-sm text-gray-600">
+                {metrics.standardsCompliance.custom >= 90 ? 'Excellent' :
+                 metrics.standardsCompliance.custom >= 75 ? 'Good' :
+                 metrics.standardsCompliance.custom >= 60 ? 'Fair' : 'Needs improvement'}
+              </p>
+              <div className="mt-2 text-xs text-gray-500">{metrics.standardsCompliance.custom}%</div>
+            </div>
+
+            {/* ISO Circle Diagram */}
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-center mb-4">
+                <div 
+                  className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg ${
+                    metrics.standardsCompliance.iso >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                    metrics.standardsCompliance.iso >= 75 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600' :
+                    metrics.standardsCompliance.iso >= 60 ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                  }`}
+                >
+                  <Shield className="w-8 h-8" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">ISO Standards</h3>
+              <p className="text-sm text-gray-600">
+                {metrics.standardsCompliance.iso >= 90 ? 'Excellent' :
+                 metrics.standardsCompliance.iso >= 75 ? 'Good' :
+                 metrics.standardsCompliance.iso >= 60 ? 'Fair' : 'Needs improvement'}
+              </p>
+              <div className="mt-2 text-xs text-gray-500">{metrics.standardsCompliance.iso}%</div>
+            </div>
           </div>
         </div>
 
@@ -425,6 +601,131 @@ export default function StandardsComplianceDashboard() {
               </div>
             </div>
           </div>
+        )}
+          </>
+        )}
+
+        {/* Phase 2: Drill Down Tab */}
+        {activePhase2Tab === 'drilldown' && (
+          <ComplianceDrillDown
+            standardType={selectedStandard || 'OVERALL'}
+            projectId="current-project"
+            onIssueSelect={(issue) => {
+              setSelectedIssue(issue);
+              setShowIssueModal(true);
+            }}
+            onClose={() => setActivePhase2Tab('dashboard')}
+          />
+        )}
+
+        {/* Phase 2: Issues Tab */}
+        {activePhase2Tab === 'issues' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Issue Management</h2>
+              <button
+                onClick={() => setShowIssueModal(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Issue</span>
+              </button>
+            </div>
+            <ComplianceDrillDown
+              standardType="OVERALL"
+              projectId="current-project"
+              onIssueSelect={(issue) => {
+                setSelectedIssue(issue);
+                setShowIssueModal(true);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Phase 2: Analysis Tab */}
+        {activePhase2Tab === 'analysis' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Standard-Specific Analysis</h2>
+              <div className="flex space-x-2">
+                {['BABOK', 'PMBOK', 'DMBOK', 'ISO'].map((standard) => (
+                  <button
+                    key={standard}
+                    onClick={() => setSelectedStandard(standard as any)}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                      selectedStandard === standard
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {standard}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {selectedStandard && (
+              <StandardSpecificAnalysis
+                standardType={selectedStandard}
+                projectId="current-project"
+                onClose={() => setSelectedStandard(null)}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Phase 2: Workflows Tab */}
+        {activePhase2Tab === 'workflows' && (
+          <ComplianceWorkflowEngine
+            projectId="current-project"
+            onClose={() => setActivePhase2Tab('dashboard')}
+          />
+        )}
+
+        {/* Phase 2: Notifications Tab */}
+        {activePhase2Tab === 'notifications' && (
+          <RealTimeNotificationSystem
+            projectId="current-project"
+            onClose={() => setActivePhase2Tab('dashboard')}
+          />
+        )}
+
+        {/* Phase 2: Filtering Tab */}
+        {activePhase2Tab === 'filtering' && (
+          <AdvancedComplianceFiltering
+            onFiltersChange={(filters) => {
+              console.log('📊 Filters changed:', filters);
+              // Apply filters to dashboard data
+            }}
+            onClose={() => setActivePhase2Tab('dashboard')}
+          />
+        )}
+
+        {/* Phase 2: Issue Management Modal */}
+        {showIssueModal && (
+          <IssueManagementModal
+            issue={selectedIssue}
+            standardType={selectedStandard || 'BABOK'}
+            projectId="current-project"
+            isOpen={showIssueModal}
+            onClose={() => {
+              setShowIssueModal(false);
+              setSelectedIssue(null);
+            }}
+            onSave={(issue) => {
+              console.log('💾 Issue saved:', issue);
+              setShowIssueModal(false);
+              setSelectedIssue(null);
+              // Refresh data
+              loadComplianceData();
+            }}
+            onDelete={(issueId) => {
+              console.log('🗑️ Issue deleted:', issueId);
+              setShowIssueModal(false);
+              setSelectedIssue(null);
+              // Refresh data
+              loadComplianceData();
+            }}
+          />
         )}
       </div>
     </div>

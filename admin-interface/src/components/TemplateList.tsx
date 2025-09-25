@@ -2,7 +2,7 @@
 
 import { Template } from '@/types/template';
 import { formatRelativeTime, truncateText } from '@/lib/utils';
-import { Edit, Trash2, Eye, Tag, Calendar, FileText } from 'lucide-react';
+import { Edit, Trash2, Eye, Tag, Calendar, FileText, Key, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TemplateListProps {
@@ -14,6 +14,7 @@ interface TemplateListProps {
   onPageChange: (page: number) => void;
   currentPage: number;
   totalPages: number;
+  selectedTemplate?: Template | null;
 }
 
 export default function TemplateList({
@@ -25,6 +26,7 @@ export default function TemplateList({
   onPageChange,
   currentPage,
   totalPages,
+  selectedTemplate,
 }: TemplateListProps) {
   if (loading) {
     return (
@@ -114,7 +116,11 @@ export default function TemplateList({
             {templates.filter(template => template && template.name).map((template, index) => (
               <motion.div
                 key={template.id}
-                className="border border-gray-200/50 rounded-2xl p-6 card-hover bg-gradient-to-r from-white to-gray-50/50 shadow-lg"
+                className={`border rounded-2xl p-6 card-hover shadow-lg transition-all duration-300 ${
+                  selectedTemplate && selectedTemplate.id === template.id
+                    ? 'border-blue-500 border-2 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-blue-200 shadow-xl'
+                    : 'border-gray-200/50 bg-gradient-to-r from-white to-gray-50/50'
+                }`}
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -142,6 +148,17 @@ export default function TemplateList({
                       >
                         {template.category}
                       </motion.span>
+                      {selectedTemplate && selectedTemplate.id === template.id && (
+                        <motion.span 
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg"
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.3, delay: 0.3, type: "spring", stiffness: 200 }}
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          Selected
+                        </motion.span>
+                      )}
                     </div>
                     <motion.p 
                       className="text-gray-600 mb-4 text-base leading-relaxed"
@@ -154,7 +171,7 @@ export default function TemplateList({
                     
                     {/* Template Summary Information */}
                     <motion.div 
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: 0.4 }}
@@ -193,6 +210,22 @@ export default function TemplateList({
                         <div className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                         <span className="text-sm text-gray-600">
                           {template.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+
+                      {/* Document Key */}
+                      <div className="flex items-center space-x-2">
+                        <Key className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm text-gray-600 font-mono">
+                          {template.documentKey || 'Not set'}
+                        </span>
+                      </div>
+
+                      {/* Generation Function */}
+                      <div className="flex items-center space-x-2">
+                        <Code className="w-4 h-4 text-indigo-500" />
+                        <span className="text-sm text-gray-600 font-mono">
+                          {template.generationFunction || 'Not set'}
                         </span>
                       </div>
                     </motion.div>

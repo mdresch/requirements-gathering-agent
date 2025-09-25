@@ -26,6 +26,7 @@ import * as fsSync from 'fs';
 import * as fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ContextWindowValidationService } from '../services/ContextWindowValidationService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -105,6 +106,7 @@ export class ContextManager {
     private documentRelationships: Map<string, string[]> = new Map();
     private modelTokenLimits: Map<string, number> = new Map();
     private autoConfigDone: boolean = false;
+    private contextWindowValidator: ContextWindowValidationService;
 
         /**
          * Stores parsed compliance findings for use in auto-improvement
@@ -122,6 +124,7 @@ export class ContextManager {
 
     constructor(maxTokens: number = 4000) {
         this.maxContextTokens = maxTokens;
+        this.contextWindowValidator = ContextWindowValidationService.getInstance();
         this.initializeDocumentRelationships();
         this.initializeModelTokenLimits();
         // Auto-adjust based on current AI provider and model
@@ -310,6 +313,73 @@ export class ContextManager {
         }
         this.contextCache.set(cacheKey, this.coreContext);
         return this.coreContext;
+    }
+
+    /**
+     * Validate context window availability before building context
+     */
+    async validateContextWindowBeforeBuild(documentType: string, additionalContext?: string[]): Promise<boolean> {
+        try {
+            // Estimate token requirements for this document type
+            const estimatedTokens = this.estimateTokens(this.coreContext);
+            const additionalTokens = additionalContext ? 
+                additionalContext.reduce((sum, ctx) => sum + this.estimateTokens(ctx), 0) : 0;
+            const totalEstimatedTokens = estimatedTokens + additionalTokens;
+
+            // Determine document complexity
+            const complexity = this.determineDocumentComplexity(documentType);
+
+            // Validate context window
+            const validation = await this.contextWindowValidator.validateBeforeGeneration(
+                documentType,
+                totalEstimatedTokens,
+                undefined
+            );
+
+            if (!validation.isValid) {
+                console.error(`❌ Context window validation failed for ${documentType}:`);
+                console.error(`  - ${validation.reason}`);
+                if (validation.recommendations) {
+                    console.log(`💡 Recommendations:`);
+                    validation.recommendations.forEach(rec => console.log(`  - ${rec}`));
+                }
+                return false;
+            }
+
+            if (validation.recommendations && validation.recommendations.length > 0) {
+                console.warn(`⚠️ Context window recommendations for ${documentType}:`);
+                validation.recommendations.forEach(rec => console.warn(`  - ${rec}`));
+            }
+
+            console.log(`✅ Context window validation passed for ${documentType}: ${validation.availableTokens} tokens available`);
+            return true;
+
+        } catch (error) {
+            console.error(`❌ Error validating context window for ${documentType}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Determine document complexity based on document type
+     */
+    private determineDocumentComplexity(documentType: string): 'low' | 'medium' | 'high' | 'very-high' {
+        const complexityMap: Record<string, 'low' | 'medium' | 'high' | 'very-high'> = {
+            'user-stories': 'low',
+            'acceptance-criteria': 'low',
+            'project-charter': 'medium',
+            'risk-register': 'medium',
+            'stakeholder-register': 'medium',
+            'requirements-specification': 'high',
+            'technical-specification': 'high',
+            'architecture-document': 'high',
+            'benefits-realization-plan': 'high',
+            'strategic-business-case': 'high',
+            'comprehensive-project-plan': 'very-high',
+            'detailed-analysis-report': 'very-high'
+        };
+        
+        return complexityMap[documentType] || 'medium';
     }
 
     buildContextForDocument(documentType: string, additionalContext?: string[]): string {

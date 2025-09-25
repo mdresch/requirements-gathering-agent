@@ -7,19 +7,37 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 import { DocumentController } from './controllers/DocumentController.js';
-import { TemplateController } from './controllers/TemplateController.js';
-// ...existing code...
 import { HealthController } from './controllers/HealthController.js';
 // ...existing code...
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { apiKeyAuth } from './middleware/auth.js';
+import { trackApiMetrics, trackUserActivity } from '../middleware/metricsTracking.js';
 // ...existing code...
 import projectRoutes from './routes/projects.js';
 import feedbackRoutes from './routes/feedback.js';
 import contextTrackingRoutes from './routes/contextTracking.js';
 import templateRouter from '../routes/templates.js';
 import auditTrailRoutes from './routes/auditTrail.js';
+import enhancedAuditTrailRoutes from './routes/enhancedAuditTrail.js';
+import simpleEnhancedAuditTrailRoutes from './routes/simpleEnhancedAuditTrail.js';
+import standardsComplianceRoutes from './routes/standardsCompliance.js';
+import complianceAuditRoutes from './routes/complianceAudit.js';
+import complianceAuditMockRoutes from './routes/complianceAuditMock.js';
+import dataQualityAuditRoutes from './routes/dataQualityAudit.js';
+import realTimeActivityRoutes, { setupWebSocketServer } from './routes/realTimeActivity.js';
+import categoryRoutes from './routes/categories.js';
+import databaseHealthRoutes from './routes/databaseHealth.js';
+import realTimeMetricsRoutes from './routes/realTimeMetrics.js';
+import aiBillingRoutes from './routes/aiBilling.js';
+import dataAggregationRoutes from './routes/dataAggregation.js';
+import predictiveAnalyticsRoutes from './routes/predictiveAnalyticsSimple.js';
+import alertRoutes from './routes/alerts.js';
+import documentGenerationRoutes from './routes/documentGeneration.js';
+import dbConnection from '../config/database.js';
+import { TemplateController } from './controllers/TemplateController.js';
+import { TemplateRepository } from '../repositories/TemplateRepository.js';
+import { RealTimeActivityTrackingService } from '../services/RealTimeActivityTrackingService.js';
 
 
 
@@ -68,6 +86,10 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Request logging
 app.use(requestLogger);
 
+// Metrics tracking middleware
+app.use(trackApiMetrics);
+app.use(trackUserActivity);
+
 // API key authentication for protected endpoints
 app.use('/admin-api/v1/documents', apiKeyAuth);
 app.use('/admin-api/v1/templates', apiKeyAuth);
@@ -109,14 +131,78 @@ app.get('/admin-api/v1/documents/stats', DocumentController.getStats);
 // Public frontend API endpoint for templates
 app.use('/api/v1/templates', templateRouter);
 
+// Public frontend API endpoint for projects
+app.use('/api/v1/projects', projectRoutes);
+
 // Feedback routes
 app.use('/api/v1/feedback', feedbackRoutes);
 
 // Context tracking routes
 app.use('/api/v1/context-tracking', contextTrackingRoutes);
 
-// Audit trail routes
+// Audit trail routes (basic)
 app.use('/api/v1/audit-trail', auditTrailRoutes);
+
+// Enhanced audit trail routes (extended functionality)
+app.use('/api/v1/audit-trail/enhanced', enhancedAuditTrailRoutes);
+
+// Simple enhanced audit trail routes (for testing)
+app.use('/api/v1/audit-trail/simple', simpleEnhancedAuditTrailRoutes);
+
+// Standards compliance routes
+app.use('/api/v1/standards', standardsComplianceRoutes);
+
+// Compliance audit routes
+app.use('/api/v1/compliance-audit', complianceAuditRoutes);
+
+// Compliance audit mock routes (for testing)
+app.use('/api/v1/compliance-audit', complianceAuditMockRoutes);
+
+// Data quality audit routes
+app.use('/api/v1/data-quality-audit', dataQualityAuditRoutes);
+
+// Real-time activity tracking routes
+app.use('/api/v1/real-time-activity', realTimeActivityRoutes);
+
+// Database health routes
+app.use('/api/v1', databaseHealthRoutes);
+
+// Real-time metrics routes
+app.use('/api/v1', realTimeMetricsRoutes);
+
+// AI billing routes
+app.use('/api/v1', aiBillingRoutes);
+
+// Data aggregation routes
+app.use('/api/v1', dataAggregationRoutes);
+
+// Predictive analytics routes
+console.log('🔄 Registering predictive analytics routes...');
+console.log('Predictive analytics routes object:', predictiveAnalyticsRoutes);
+try {
+    app.use('/api/v1', predictiveAnalyticsRoutes);
+    console.log('✅ Predictive analytics routes registered successfully');
+} catch (error) {
+    console.error('❌ Error registering predictive analytics routes:', error);
+    console.error('Error details:', error instanceof Error ? error.stack : error);
+}
+
+// Alert system routes
+app.use('/api/v1', alertRoutes);
+
+// Document generation routes
+app.use('/api/v1/document-generation', documentGenerationRoutes);
+
+// Category routes
+console.log('🔄 Registering category routes...');
+console.log('Category routes object:', categoryRoutes);
+try {
+    app.use('/api/v1/categories', categoryRoutes);
+    console.log('✅ Category routes registered successfully');
+} catch (error) {
+    console.error('❌ Error registering category routes:', error);
+    console.error('Error details:', error instanceof Error ? error.stack : error);
+}
 // API documentation route
 app.get('/api/docs', (req: Request, res: Response) => {
     res.type('text/markdown').send(`
@@ -134,38 +220,76 @@ app.use(errorHandler);
 // Start server
 if (process.env.NODE_ENV !== 'test') {
     const actualPort = PORT;
-    // Synchronous import and registration for reliability
-    try {
-        // Use require for CommonJS or static import for ESM
-        // For ESM:
-        // import { templateRouter } from '../routes/templates.js';
-        // For dynamic import:
-        // const module = await import('../routes/templates.js');
-        // const { templateRouter } = module;
-        // But here, use static import for reliability:
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        // const { templateRouter } = require('../routes/templates.js');
-        // For ESM static import:
-        // Place at top: import { templateRouter } from '../routes/templates.js';
-        // Here, do static import at top and register:
-        // ...existing code...
-        // So, add at top: import { templateRouter } from '../routes/templates.js';
-        // And here:
-    app.use('/admin-api/v1/templates', templateRouter);
-    } catch (err) {
-        console.error('Failed to register templates router:', err);
-    }
-    app.listen(PORT, () => {
-    if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
-        console.warn('⚠️  NODE_ENV is not set to development or test. Some features may not work as expected.');
-    }
-    console.log('ADPA API Server running on port ' + PORT);
-    console.log('API Documentation: http://localhost:' + PORT + '/docs/api/');
-    console.log('Health Check: http://localhost:' + PORT + '/admin-api/v1/health');
-    console.log('Admin Interface: http://localhost:' + PORT + '/admin');
-    console.log('CORS: Open (Development)');
-    console.log('Ready to process documents via API!');
-    });
+    
+    // Initialize database connection
+    const initializeServer = async () => {
+        try {
+            console.log('🔄 Initializing database connection...');
+            await dbConnection.connect();
+            console.log('✅ Database connection established');
+            
+            // Initialize template repository
+            console.log('🔄 Initializing template repository...');
+            const templateRepository = new TemplateRepository();
+            TemplateController.setTemplateRepository(templateRepository);
+            console.log('✅ Template repository initialized');
+            
+            // Synchronous import and registration for reliability
+            try {
+                // Use require for CommonJS or static import for ESM
+                // For ESM:
+                // import { templateRouter } from '../routes/templates.js';
+                // For dynamic import:
+                // const module = await import('../routes/templates.js');
+                // const { templateRouter } = module;
+                // But here, use static import for reliability:
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                // const { templateRouter } = require('../routes/templates.js');
+                // For ESM static import:
+                // Place at top: import { templateRouter } from '../routes/templates.js';
+                // Here, do static import at top and register:
+                // ...existing code...
+                // So, add at top: import { templateRouter } from '../routes/templates.js';
+                // And here:
+                app.use('/admin-api/v1/templates', templateRouter);
+            } catch (err) {
+                console.error('Failed to register templates router:', err);
+            }
+            
+            const server = app.listen(PORT, () => {
+                if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
+                    console.warn('⚠️  NODE_ENV is not set to development or test. Some features may not work as expected.');
+                }
+                console.log('ADPA API Server running on port ' + PORT);
+                console.log('API Documentation: http://localhost:' + PORT + '/docs/api/');
+                console.log('Health Check: http://localhost:' + PORT + '/admin-api/v1/health');
+                console.log('Admin Interface: http://localhost:' + PORT + '/admin');
+                console.log('CORS: Open (Development)');
+                console.log('Ready to process documents via API!');
+                
+                // Setup WebSocket server for real-time activity tracking
+                try {
+                    setupWebSocketServer(server);
+                    console.log('🔌 WebSocket server for real-time activity tracking initialized');
+                } catch (error) {
+                    console.error('❌ Failed to setup WebSocket server:', error);
+                }
+                
+                // Initialize real-time activity tracking service
+                try {
+                    RealTimeActivityTrackingService.initialize();
+                    console.log('🔄 Real-time activity tracking service initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize real-time activity tracking service:', error);
+                }
+            });
+        } catch (error) {
+            console.error('❌ Failed to initialize server:', error);
+            process.exit(1);
+        }
+    };
+    
+    initializeServer();
 }
 
 

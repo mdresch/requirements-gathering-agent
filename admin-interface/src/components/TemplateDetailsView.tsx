@@ -2,7 +2,7 @@
 
 import { Template } from '@/types/template';
 import { formatRelativeTime } from '@/lib/utils';
-import { FileText, Tag, Calendar, Code, Settings, Eye, Copy, Download } from 'lucide-react';
+import { FileText, Tag, Calendar, Code, Settings, Eye, Copy, Download, Key } from 'lucide-react';
 import { useState } from 'react';
 
 interface TemplateDetailsViewProps {
@@ -37,24 +37,42 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{template.name}</h2>
-            <p className="text-gray-600 text-lg mb-4">{template.description}</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{template.name}</h2>
+            <p className="text-gray-600 text-sm mb-3">{template.description}</p>
             
             {/* Template Status and Info */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 {template.category}
               </span>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                v{template.version || '1.0'}
+                v{template.metadata?.version || template.version || '1.0.0'}
               </span>
               <div className="flex items-center space-x-2">
                 <div className={`w-2 h-2 rounded-full ${template.isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span className="text-sm text-gray-600">
                   {template.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+
+            {/* Document Key and Generation Function */}
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <div className="flex items-center space-x-2">
+                <Key className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Document Key:</span>
+                <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border">
+                  {template.documentKey || 'Not set'}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Code className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Generation Function:</span>
+                <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded border">
+                  {template.generationFunction || 'Not set'}
                 </span>
               </div>
             </div>
@@ -83,19 +101,19 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-4">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Template Fields */}
             {template.contextRequirements && Array.isArray(template.contextRequirements) && template.contextRequirements.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Template Fields</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Template Fields</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {template.contextRequirements.map((field: string, index: number) => (
                     <div
                       key={index}
-                      className="bg-blue-50 border border-blue-200 rounded-lg p-3"
+                      className="bg-blue-50 border border-blue-200 rounded-lg p-2"
                     >
                       <div className="flex items-center">
                         <FileText className="w-4 h-4 text-blue-600 mr-2" />
@@ -158,6 +176,24 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
                   </div>
                   <p className="text-sm text-gray-600">{formatRelativeTime(template.updatedAt)}</p>
                 </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Key className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Document Key</span>
+                  </div>
+                  <p className="text-sm text-gray-600 font-mono bg-white px-2 py-1 rounded border">
+                    {template.documentKey || 'Not set'}
+                  </p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Code className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Generation Function</span>
+                  </div>
+                  <p className="text-sm text-gray-600 font-mono bg-white px-2 py-1 rounded border">
+                    {template.generationFunction || 'Not set'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -165,7 +201,7 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
 
         {/* Content Tab */}
         {activeTab === 'content' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">Template Content</h3>
               <div className="flex space-x-2">
@@ -186,7 +222,7 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-3">
               <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono overflow-x-auto">
                 {template.content}
               </pre>
@@ -196,7 +232,7 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
             {template.aiInstructions && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">AI Instructions</h3>
-                <div className="bg-blue-50 rounded-lg p-4">
+                <div className="bg-blue-50 rounded-lg p-3">
                   <p className="text-sm text-blue-800">{template.aiInstructions}</p>
                 </div>
               </div>
@@ -206,11 +242,11 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
 
         {/* Metadata Tab */}
         {activeTab === 'metadata' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Template Metadata</h3>
-                <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Template Metadata</h3>
+                <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Framework</label>
                     <p className="text-sm text-gray-900">{template.metadata?.framework || 'Not specified'}</p>
@@ -222,6 +258,10 @@ export default function TemplateDetailsView({ template }: TemplateDetailsViewPro
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Estimated Time</label>
                     <p className="text-sm text-gray-900">{template.metadata?.estimatedTime || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Version</label>
+                    <p className="text-sm text-gray-900">{template.metadata?.version || template.version || 'Not specified'}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Author</label>

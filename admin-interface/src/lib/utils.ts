@@ -48,6 +48,15 @@ export function validateTemplate(template: any): { isValid: boolean; errors: str
     errors.push('Template category is required');
   }
   
+  // Validate document key format
+  if (!template.documentKey || template.documentKey.trim().length === 0) {
+    errors.push('Document key is required');
+  } else if (template.documentKey === 'Document ID') {
+    errors.push('Document key cannot be "Document ID". Please use a proper processor identification key (e.g., "business-case")');
+  } else if (!/^[a-z0-9-]+$/.test(template.documentKey)) {
+    errors.push('Document key must be lowercase with hyphens only (e.g., "business-case")');
+  }
+  
   // Check for framework in metadata - make it optional with default
   if (template.metadata?.framework && template.metadata.framework.trim().length === 0) {
     errors.push('Framework cannot be empty if provided');

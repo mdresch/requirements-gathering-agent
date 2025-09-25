@@ -144,6 +144,8 @@ export async function getTemplates(params?: {
              tags: template.tags || [template.category || 'general'], // Use category as tag if no tags
              content: template.templateData?.content || template.content || '',
              aiInstructions: template.templateData?.aiInstructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             documentKey: template.documentKey || '', // Include documentKey
+             generationFunction: template.generationFunction || 'getAiGenericDocument', // Include generationFunction
              templateType: template.templateType || 'ai_instruction',
              isActive: template.isActive !== undefined ? template.isActive : true,
              version: template.version || '1.0.0',
@@ -863,8 +865,19 @@ export async function getDocumentFeedback(projectId: string, documentType: strin
   return request(`/feedback/project/${projectId}/document/${documentType}`);
 }
 
-export async function getFeedbackSummary(): Promise<any> {
-  return request('/feedback/summary');
+export async function getFeedbackSummary(timeframe?: string): Promise<any> {
+  const url = timeframe ? `/feedback/summary?timeframe=${timeframe}` : '/feedback/summary';
+  return request(url);
+}
+
+export async function getFeedbackTrends(timeframe?: string): Promise<any> {
+  const url = timeframe ? `/feedback/trends?timeframe=${timeframe}` : '/feedback/trends';
+  return request(url);
+}
+
+export async function getDocumentPerformance(timeframe?: string): Promise<any> {
+  const url = timeframe ? `/feedback/performance?timeframe=${timeframe}` : '/feedback/performance';
+  return request(url);
 }
 
 // Template Statistics API endpoints
@@ -888,11 +901,24 @@ export async function getProjectDocuments(projectId: string): Promise<any> {
     if (response.success && response.data) {
       return response.data;
     } else {
-      throw new Error('Failed to retrieve project documents');
+      throw new Error(response.message || 'Failed to retrieve project documents');
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ getProjectDocuments error:', error);
-    return [];
+    
+    // Provide more specific error information
+    if (error.response?.status === 503) {
+      console.error('Database connection error - service unavailable');
+      throw new Error('Database connection error. Please try again later.');
+    } else if (error.response?.status === 400) {
+      console.error('Bad request error:', error.response.data);
+      throw new Error(error.response.data?.message || 'Invalid request parameters');
+    } else if (error.response?.status === 500) {
+      console.error('Internal server error:', error.response.data);
+      throw new Error(error.response.data?.message || 'Internal server error occurred');
+    }
+    
+    throw new Error(error.message || 'Failed to retrieve project documents');
   }
 }
 
@@ -1230,6 +1256,8 @@ export const apiClient = {
   getProjectFeedback,
   getDocumentFeedback,
   getFeedbackSummary,
+  getFeedbackTrends,
+  getDocumentPerformance,
   
   // Document Generation
   generateDocuments,

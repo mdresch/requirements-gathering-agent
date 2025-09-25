@@ -229,11 +229,28 @@ export class FeedbackController {
    */
   public static async getFeedbackSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      // Get timeframe filter from query parameters
+      const { timeframe } = req.query;
+      let dateFilter = {};
+      
+      if (timeframe) {
+        const now = new Date();
+        let timeframeDays = 30; // default to 30 days
+        
+        if (timeframe === '7d') timeframeDays = 7;
+        else if (timeframe === '30d') timeframeDays = 30;
+        else if (timeframe === '90d') timeframeDays = 90;
+        
+        const timeframeDate = new Date(now.getTime() - (timeframeDays * 24 * 60 * 60 * 1000));
+        dateFilter = { submittedAt: { $gte: timeframeDate } };
+      }
+      
       // Get overall feedback statistics
-      const totalFeedback = await DocumentFeedback.countDocuments();
+      const totalFeedback = await DocumentFeedback.countDocuments(dateFilter);
       
       // Get average rating
       const avgRatingResult = await DocumentFeedback.aggregate([
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
         {
           $group: {
             _id: null,
@@ -247,6 +264,7 @@ export class FeedbackController {
       
       // Get rating distribution
       const ratingDistribution = await DocumentFeedback.aggregate([
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
         {
           $group: {
             _id: '$rating',
@@ -257,7 +275,7 @@ export class FeedbackController {
       ]);
       
       // Get recent feedback (last 10)
-      const recentFeedback = await DocumentFeedback.find()
+      const recentFeedback = await DocumentFeedback.find(dateFilter)
         .sort({ submittedAt: -1 })
         .limit(10)
         .select('title rating feedbackType status submittedAt projectId documentId')
@@ -265,6 +283,7 @@ export class FeedbackController {
       
       // Get feedback by type
       const feedbackByType = await DocumentFeedback.aggregate([
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
         {
           $group: {
             _id: '$feedbackType',
@@ -277,6 +296,7 @@ export class FeedbackController {
       
       // Get feedback by status
       const feedbackByStatus = await DocumentFeedback.aggregate([
+        ...(Object.keys(dateFilter).length > 0 ? [{ $match: dateFilter }] : []),
         {
           $group: {
             _id: '$status',
@@ -311,6 +331,156 @@ export class FeedbackController {
       res.status(500).json({
         success: false,
         error: 'Failed to get feedback summary',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Get feedback trends with timeframe filtering
+   */
+  public static async getFeedbackTrends(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { timeframe } = req.query;
+      let dateFilter = {};
+      let groupByField: any = '';
+      let periodFormat = '';
+      
+      if (timeframe) {
+        const now = new Date();
+        let timeframeDays = 30; // default to 30 days
+        
+        if (timeframe === '7d') {
+          timeframeDays = 7;
+          groupByField = { $dateToString: { format: "%Y-%m-%d", date: "$submittedAt" } };
+          periodFormat = 'day';
+        } else if (timeframe === '30d') {
+          timeframeDays = 30;
+          groupByField = { $dateToString: { format: "%Y-W%U", date: "$submittedAt" } };
+          periodFormat = 'week';
+        } else if (timeframe === '90d') {
+          timeframeDays = 90;
+          groupByField = { $dateToString: { format: "%Y-%m", date: "$submittedAt" } };
+          periodFormat = 'month';
+        }
+        
+        const timeframeDate = new Date(now.getTime() - (timeframeDays * 24 * 60 * 60 * 1000));
+        dateFilter = { submittedAt: { $gte: timeframeDate } };
+      }
+
+      // Get trends data grouped by timeframe
+      const trendsData = await DocumentFeedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: groupByField,
+            rating: { $avg: '$rating' },
+            volume: { $sum: 1 },
+            date: { $first: '$submittedAt' }
+          }
+        },
+        { $sort: { date: 1 } }
+      ]);
+
+      // Format the trends data
+      const trends = trendsData.map((item, index) => {
+        let period = '';
+        if (periodFormat === 'day') {
+          period = `Day ${index + 1}`;
+        } else if (periodFormat === 'week') {
+          period = `Week ${index + 1}`;
+        } else if (periodFormat === 'month') {
+          period = `Month ${index + 1}`;
+        }
+
+        return {
+          period,
+          rating: Math.round(item.rating * 10) / 10,
+          volume: item.volume
+        };
+      });
+
+      res.json({
+        success: true,
+        data: {
+          trends,
+          timeframe: timeframe || '30d',
+          totalRecords: trendsData.length
+        }
+      });
+
+    } catch (error) {
+      console.error('Error getting feedback trends:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get feedback trends',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Get feedback document performance data
+   */
+  public static async getDocumentPerformance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { timeframe } = req.query;
+      let dateFilter = {};
+      
+      if (timeframe) {
+        const now = new Date();
+        let timeframeDays = 30; // default to 30 days
+        
+        if (timeframe === '7d') timeframeDays = 7;
+        else if (timeframe === '30d') timeframeDays = 30;
+        else if (timeframe === '90d') timeframeDays = 90;
+        
+        const timeframeDate = new Date(now.getTime() - (timeframeDays * 24 * 60 * 60 * 1000));
+        dateFilter = { submittedAt: { $gte: timeframeDate } };
+      }
+
+      // Get document performance data
+      const documentPerformance = await DocumentFeedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: '$documentType',
+            averageRating: { $avg: '$rating' },
+            feedbackCount: { $sum: 1 },
+            qualityScore: { $avg: '$rating' }
+          }
+        },
+        {
+          $addFields: {
+            qualityScore: { $multiply: [{ $divide: ['$averageRating', 5] }, 100] },
+            trend: { $cond: [{ $gte: ['$averageRating', 4] }, 'up', { $cond: [{ $lte: ['$averageRating', 2] }, 'down', 'stable'] }] }
+          }
+        },
+        { $sort: { feedbackCount: -1 } }
+      ]);
+
+      // Format the data
+      const performanceData = documentPerformance.map(doc => ({
+        documentType: doc._id || 'unknown',
+        averageRating: Math.round(doc.averageRating * 10) / 10,
+        feedbackCount: doc.feedbackCount,
+        qualityScore: Math.round(doc.qualityScore),
+        trend: doc.trend
+      }));
+
+      res.json({
+        success: true,
+        data: {
+          documentPerformance: performanceData,
+          timeframe: timeframe || '30d'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error getting document performance:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get document performance',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }

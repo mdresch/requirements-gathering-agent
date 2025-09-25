@@ -42,6 +42,8 @@ import QualityAssessmentService from '../../services/QualityAssessmentService.js
 import { AIProcessor } from '../ai/AIProcessor.js';
 import { ConfigurationManager } from '../ai/ConfigurationManager.js';
 import { AIContextTrackingService } from '../../services/AIContextTrackingService.js';
+import { realTimeMetricsService } from '../../services/RealTimeMetricsService.js';
+import { ContextWindowValidationService } from '../../services/ContextWindowValidationService.js';
 // Import all processor functions
 import * as processors from '../ai/processors/index.js';
 // Utility to load processor-config.json asynchronously
@@ -75,6 +77,7 @@ export class DocumentGenerator {
     private configManager: ConfigurationManager;
     protected complianceService: ComplianceValidationService;
     private jobService: GenerationJobService;
+    private contextWindowValidator: ContextWindowValidationService;
     // ...existing code...
     constructor(
         context: string | any,
@@ -86,6 +89,7 @@ export class DocumentGenerator {
         this.aiProcessor = aiProcessor || AIProcessor.getInstance();
         this.configManager = configManager || ConfigurationManager.getInstance();
         this.jobService = GenerationJobService.getInstance();
+        this.contextWindowValidator = ContextWindowValidationService.getInstance();
         this.options = {
             includeCategories: options.includeCategories || [],
             excludeCategories: options.excludeCategories || [],
@@ -614,6 +618,9 @@ export class DocumentGenerator {
      * @returns Whether generation was successful
      */
     private async generateSingleDocument(task: GenerationTask, jobId?: string): Promise<boolean> {
+        // Track context usage for this generation - moved outside try block
+        const startTime = Date.now();
+        
         try {
             console.log(`${task.emoji} Generating ${task.name}...`);
             
@@ -626,6 +633,37 @@ export class DocumentGenerator {
                 await this.jobService.addLog(jobId, 'info', `Started generating ${task.name}`);
             }
 
+            // Validate task has required fields for generation
+            if (!task.key || !task.func) {
+                throw new Error(`Task ${task.name} is missing required fields (key: ${task.key}, func: ${task.func})`);
+            }
+
+            // Validate context window availability before generation
+            console.log(`🔍 Validating context window for ${task.name}...`);
+            const projectId = this.extractProjectId();
+            const contextValidation = await this.contextWindowValidator.validateBeforeGeneration(
+                task.key,
+                this.context.length,
+                projectId
+            );
+
+            if (!contextValidation.isValid) {
+                const errorMsg = `Context window validation failed: ${contextValidation.reason || 'Insufficient context window'}`;
+                console.error(`❌ ${errorMsg}`);
+                
+                if (contextValidation.recommendations) {
+                    console.log(`💡 Recommendations: ${contextValidation.recommendations.join(', ')}`);
+                }
+                
+                throw new Error(errorMsg);
+            }
+
+            if (contextValidation.recommendations && contextValidation.recommendations.length > 0) {
+                console.warn(`⚠️ Context window recommendations: ${contextValidation.recommendations.join(', ')}`);
+            }
+
+            console.log(`✅ Context window validation passed: ${contextValidation.availableTokens} tokens available`);
+
             // Use generic ProcessorFactory to create and run the processor
             const processor = await createProcessor(task.key);
             
@@ -634,14 +672,11 @@ export class DocumentGenerator {
                 await this.jobService.updateJob(jobId, { progress: 30 });
             }
             
-            // Track context usage for this generation
-            const startTime = Date.now();
-            
             // Pass project ID so processor can use ContextManager to get enriched context
-            const projectId = this.extractProjectId();
+            const processorProjectId = this.extractProjectId();
             const output = await processor.process({ 
                 projectName: this.context,
-                projectId: projectId
+                projectId: processorProjectId
             });
             
             const processingTime = Date.now() - startTime;
@@ -679,6 +714,18 @@ export class DocumentGenerator {
 
                 // Save to database first
                 const documentId = await this.saveDocumentToDatabase(documentKey, content, task);
+                
+                // Track real-time metrics for document generation
+                realTimeMetricsService.trackDocumentGeneration({
+                    documentId: documentId || 'unknown',
+                    templateId: documentKey,
+                    projectId: this.extractProjectId(),
+                    userId: 'system',
+                    generationTime: Date.now() - startTime,
+                    success: true,
+                    tokensUsed: output.contextData?.tokenUsage?.total || 0,
+                    cost: output.contextData?.costEstimate || 0
+                });
                 
                 // Track context usage if document was saved successfully
                 if (documentId) {
@@ -787,6 +834,18 @@ export class DocumentGenerator {
             const errorMsg = error.message || 'Unknown error';
             console.error(`❌ Error generating ${task.name}: ${errorMsg}`);
             this.results.errors.push({ task: task.name, error: errorMsg });
+            
+            // Track failed document generation in real-time metrics
+            realTimeMetricsService.trackDocumentGeneration({
+                documentId: 'failed',
+                templateId: task.name,
+                projectId: this.extractProjectId(),
+                userId: 'system',
+                generationTime: Date.now() - startTime,
+                success: false,
+                tokensUsed: 0,
+                cost: 0
+            });
             
             // Update job status for error
             if (jobId) {

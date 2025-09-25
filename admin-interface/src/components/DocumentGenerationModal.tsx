@@ -91,8 +91,12 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
           if (response.success && response.data?.templates) {
             console.log('✅ Templates loaded for document generation:', response.data.templates);
             
+            // Filter to only include ACTIVE templates for document generation
+            const activeTemplates = response.data.templates.filter((template: any) => template.isActive === true);
+            console.log('✅ Active templates for generation:', activeTemplates);
+            
             // Transform API templates to DocumentTemplate format
-            const transformedTemplates: DocumentTemplate[] = response.data.templates.map((template: any) => ({
+            const transformedTemplates: DocumentTemplate[] = activeTemplates.map((template: any) => ({
               id: template.id,
               name: template.name,
               description: template.description,
@@ -105,7 +109,7 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
             }));
             
             setAvailableTemplates(transformedTemplates);
-            console.log('✅ Transformed templates:', transformedTemplates);
+            console.log('✅ Transformed active templates:', transformedTemplates);
           } else {
             console.error('❌ Failed to load templates for document generation');
             // Fallback to empty array
@@ -795,51 +799,19 @@ This document contains the generated content for ${template.name} based on the $
     const template = availableTemplates.find(t => t.id === templateId);
     
     if (template && template.documentKey) {
-      // Check if we need to map the documentKey to a backend-compatible key
-      const documentKeyMapping: Record<string, string> = {
-        'company-mission-vision-and-core-values': 'mission-vision-core-values',
-        'project-charter-template': 'project-charter',
-        'api-documentation-template': 'api-documentation',
-        'data-governance-policy': 'data-governance-plan',
-        'test-plan-document': 'test-plan',
-        'risk-assessment-report': 'risk-assessment',
-        'system-architecture-doc': 'system-architecture',
-        'functional-requirements-spec': 'functional-requirements',
-        'technical-requirements-template': 'technical-requirements',
-        'business-case-template': 'business-case',
-        'user-stories-template': 'user-stories'
-      };
+      // Validate document key format - reject 'Document ID' and ensure proper format
+      if (template.documentKey === 'Document ID' || !/^[a-z0-9-]+$/.test(template.documentKey)) {
+        console.error(`❌ Invalid document key "${template.documentKey}" for template ${templateId}. Document keys must be lowercase with hyphens (e.g., "business-case"). Using name mapping as fallback.`);
+        return getDocumentKeyFromTemplateName(templateName);
+      }
       
-      // Use mapped key if available, otherwise use the original documentKey
-      return documentKeyMapping[template.documentKey] || template.documentKey;
+      console.log(`✅ Using valid document key "${template.documentKey}" for template ${templateId}`);
+      return template.documentKey;
     }
 
     // Fallback: Map template names to document keys that the DocumentGenerator expects
-    const nameToKeyMap: Record<string, string> = {
-      'Stakeholder Analysis Template': 'stakeholder-analysis',
-      'Stakeholder Analysis': 'stakeholder-analysis',
-      'Scope Management': 'scope-management-plan',
-      'User Personas': 'user-personas',
-      'User Stories': 'user-stories',
-      'API Test Template': 'api-test-template',
-      'Business Case Template': 'business-case',
-      'Business Case': 'business-case',
-      'Company Mission Vision and Core Values': 'mission-vision-core-values',
-      'Project Charter Template': 'project-charter',
-      'API Documentation Template': 'api-documentation',
-      'Data Governance Policy': 'data-governance-plan',
-      'Test Plan Document': 'test-plan',
-      'Risk Assessment Report': 'risk-assessment',
-      'System Architecture Document': 'system-architecture',
-      'Functional Requirements Specification': 'functional-requirements',
-      'Technical Requirements Template': 'technical-requirements'
-    };
-
-
-    const templateNameToUse = template?.name || templateName;
-
-    // Return mapped key or create a kebab-case version of the name
-    return nameToKeyMap[templateNameToUse] || templateNameToUse.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    console.log(`⚠️ No documentKey found for template ${templateId}, using name mapping for "${templateName}"`);
+    return getDocumentKeyFromTemplateName(templateName);
   };
 
   // Function to map template names to document keys

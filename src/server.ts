@@ -1,6 +1,6 @@
 import app from './app.js';
 import { logger } from './config/logger.js';
-import { dbConnection } from './config/database.js';
+import dbConnection from './config/database.js';
 import dotenv from 'dotenv';
 
 // Load environment variables

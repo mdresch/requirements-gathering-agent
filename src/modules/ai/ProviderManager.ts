@@ -169,19 +169,46 @@ export class ProviderManager {
         const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434';
         const requiredModel = process.env.OLLAMA_MODEL || 'llama3.1';
         try {
-          const response = await fetch(`${apiUrl}/api/tags`, { method: 'GET' });
-          if (!response.ok) return false;
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          
+          const response = await fetch(`${apiUrl}/api/tags`, { 
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            console.warn(`Ollama health check failed: HTTP ${response.status} ${response.statusText}`);
+            return false;
+          }
+          
           const data = await response.json() as { models?: Array<{ name: string }> };
-          if (!data.models || !Array.isArray(data.models)) return false;
+          if (!data.models || !Array.isArray(data.models)) {
+            console.warn('Ollama health check: Invalid response format - no models array found');
+            return false;
+          }
+          
           // Check for exact match or prefix match (for quantized variants)
           const found = data.models.some((m: { name: string }) => m.name === requiredModel || m.name.startsWith(requiredModel));
           if (!found) {
-            console.warn(`Ollama health check: required model '${requiredModel}' not found in loaded models.`);
+            console.warn(`Ollama health check: required model '${requiredModel}' not found in loaded models. Available models: ${data.models.map(m => m.name).join(', ')}`);
             return false;
           }
+          
+          console.log(`✅ Ollama health check passed: Model '${requiredModel}' is available`);
           return true;
         } catch (error) {
-          console.warn('Ollama check failed:', error instanceof Error ? error.message : String(error));
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.warn('Ollama health check timed out after 5 seconds');
+          } else {
+            console.warn('Ollama health check failed:', error instanceof Error ? error.message : String(error));
+          }
           return false;
         }
       },

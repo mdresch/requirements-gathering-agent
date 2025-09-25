@@ -33,16 +33,15 @@ export interface IGenerationJob extends Document {
 }
 
 const GenerationJobSchema: Schema = new Schema({
-  id: { type: String, required: true, unique: true, index: true },
-  projectId: { type: String, required: true, index: true, ref: 'Project' },
-  templateId: { type: String, required: true, index: true },
+  id: { type: String, required: true, unique: true },
+  projectId: { type: String, required: true, ref: 'Project' },
+  templateId: { type: String, required: true },
   templateName: { type: String, required: true },
   status: { 
     type: String, 
     enum: ['pending', 'processing', 'completed', 'failed', 'cancelled'],
     default: 'pending',
-    required: true,
-    index: true
+    required: true
   },
   progress: { type: Number, default: 0, min: 0, max: 100 },
   outputFormat: { type: String, required: true },
@@ -59,7 +58,7 @@ const GenerationJobSchema: Schema = new Schema({
     fileSize: { type: Number },
     qualityScore: { type: Number }
   },
-  createdAt: { type: Date, default: Date.now, index: true },
+  createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   startedAt: { type: Date },
   completedAt: { type: Date },

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AIContextTrackingService } from '../../services/AIContextTrackingService.js';
+import { EnhancedAnalyticsService } from '../../services/EnhancedAnalyticsService.js';
 import { logger } from '../../utils/logger.js';
 
 export class ContextTrackingController {
@@ -25,7 +26,8 @@ export class ContextTrackingController {
 
             logger.info(`Getting context analytics for project: ${projectId}`, { requestId });
 
-            const analytics = await AIContextTrackingService.getProjectAnalytics(projectId);
+            // Use enhanced analytics service with improved connection handling
+            const analytics = await EnhancedAnalyticsService.getProjectAnalytics(projectId);
 
             res.json({
                 success: true,
@@ -215,18 +217,12 @@ export class ContextTrackingController {
 
             logger.info('Getting system-wide context analytics', { requestId });
 
-            // This would aggregate data across all projects
-            // For now, return a placeholder response
+            // Use enhanced analytics service for system-wide analytics
+            const systemAnalytics = await EnhancedAnalyticsService.getSystemAnalytics();
+            
             res.json({
-                success: true,
-                data: {
-                    totalGenerations: 0,
-                    averageUtilization: 0,
-                    totalTokensUsed: 0,
-                    totalCost: 0,
-                    topProviders: [],
-                    utilizationTrends: []
-                },
+                success: systemAnalytics.status !== 'unhealthy',
+                data: systemAnalytics.analytics,
                 requestId,
                 timestamp: new Date().toISOString()
             });
@@ -242,6 +238,58 @@ export class ContextTrackingController {
                 error: {
                     code: 'SYSTEM_ANALYTICS_FETCH_FAILED',
                     message: 'Failed to fetch system analytics'
+                },
+                requestId: req.headers['x-request-id'] as string || 'unknown',
+                timestamp: new Date().toISOString()
+            });
+        }
+    }
+
+    /**
+     * Create sample context tracking data for testing
+     * POST /api/v1/context-tracking/sample-data
+     */
+    static async createSampleData(req: Request, res: Response): Promise<void> {
+        try {
+            const { projectId, documentId } = req.body;
+            const requestId = req.headers['x-request-id'] as string || 'unknown';
+
+            if (!projectId || !documentId) {
+                res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'MISSING_PARAMETERS',
+                        message: 'Project ID and Document ID are required'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            logger.info(`Creating sample context data for project: ${projectId}, document: ${documentId}`, { requestId });
+
+            const generationJobId = await AIContextTrackingService.createSampleContextData(projectId, documentId);
+
+            res.status(201).json({
+                success: true,
+                data: {
+                    generationJobId,
+                    projectId,
+                    documentId,
+                    message: 'Sample context tracking data created successfully'
+                },
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error: any) {
+            logger.error(`❌ Error creating sample context data: ${error.message}`);
+            res.status(500).json({
+                success: false,
+                error: {
+                    code: 'SAMPLE_DATA_CREATION_FAILED',
+                    message: 'Failed to create sample context data'
                 },
                 requestId: req.headers['x-request-id'] as string || 'unknown',
                 timestamp: new Date().toISOString()

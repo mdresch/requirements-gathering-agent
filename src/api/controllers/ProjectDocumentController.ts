@@ -6,13 +6,65 @@ import { ProjectDocument, IProjectDocument } from '../../models/ProjectDocument.
 import { Project } from '../../models/Project.js';
 import { logger } from '../../utils/logger.js';
 import { validationResult } from 'express-validator';
+import mongoose from 'mongoose';
 
 export class ProjectDocumentController {
+  // Health check for database connection
+  public static async healthCheck(req: Request, res: Response): Promise<void> {
+    try {
+      const connectionState = mongoose.connection.readyState;
+      const connectionStates = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+      };
+      
+      const isHealthy = connectionState === 1;
+      
+      res.status(isHealthy ? 200 : 503).json({
+        success: isHealthy,
+        status: connectionStates[connectionState as keyof typeof connectionStates],
+        readyState: connectionState,
+        timestamp: new Date().toISOString(),
+        message: isHealthy ? 'Database connection is healthy' : 'Database connection is not ready'
+      });
+    } catch (error: any) {
+      res.status(503).json({
+        success: false,
+        error: 'Health check failed',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
   // Get all documents for a project
   public static async getProjectDocuments(req: Request, res: Response): Promise<void> {
     try {
       const { projectId } = req.params;
       const { page = 1, limit = 10, status, type, framework } = req.query;
+
+      // Validate project ID format
+      if (!projectId || typeof projectId !== 'string') {
+        logger.error('❌ Invalid project ID provided:', projectId);
+        res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Project ID is required and must be a valid string'
+        });
+        return;
+      }
+
+      // Check database connection
+      if (mongoose.connection.readyState !== 1) {
+        logger.error('❌ Database connection not ready, state:', mongoose.connection.readyState);
+        res.status(503).json({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Database connection is not available. Please try again later.'
+        });
+        return;
+      }
 
       const filter: any = { 
         projectId,
@@ -26,6 +78,8 @@ export class ProjectDocumentController {
       const pageNum = parseInt(page as string);
       const limitNum = parseInt(limit as string);
       const skip = (pageNum - 1) * limitNum;
+
+      logger.info(`🔍 Querying documents for project ${projectId} with filter:`, filter);
 
       const [documents, total] = await Promise.all([
         ProjectDocument.find(filter)
@@ -49,13 +103,44 @@ export class ProjectDocumentController {
         }
       });
 
-      logger.info(`📄 Retrieved ${documents.length} documents for project ${projectId}`);
-    } catch (error) {
+      logger.info(`📄 Retrieved ${documents.length} documents for project ${projectId} (total: ${total})`);
+    } catch (error: any) {
       logger.error('❌ Error fetching project documents:', error);
+      
+      // Handle specific error types
+      if (error.name === 'CastError') {
+        res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Invalid project ID format'
+        });
+        return;
+      }
+      
+      if (error.name === 'MongoNetworkError' || error.name === 'MongoTimeoutError') {
+        res.status(503).json({
+          success: false,
+          error: 'Service Unavailable',
+          message: 'Database connection error. Please try again later.'
+        });
+        return;
+      }
+      
+      if (error.name === 'ValidationError') {
+        res.status(400).json({
+          success: false,
+          error: 'Validation Error',
+          message: 'Invalid query parameters',
+          details: error.errors
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         error: 'Internal server error',
-        message: 'Failed to retrieve project documents'
+        message: 'Failed to retrieve project documents',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   }

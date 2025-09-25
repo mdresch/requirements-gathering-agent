@@ -684,6 +684,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       // Reload documents from database to get the latest state
       try {
         if (!project) return;
+        console.log('🔄 Reloading documents for project:', project.id);
         const projectDocuments = await apiClient.getProjectDocuments(project.id);
         const documentItems: DocumentItem[] = projectDocuments.map((doc: any) => ({
           id: doc.id || doc._id || 'unknown-id',
@@ -699,8 +700,21 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         }));
         
         setDocuments(documentItems);
-      } catch (error) {
-        console.error('Failed to reload documents after generation:', error);
+        console.log('✅ Documents reloaded successfully after generation');
+        toast.success('Document added to project successfully!');
+      } catch (error: any) {
+        console.error('❌ Error reloading documents from database:', error);
+        
+        // Show specific error message based on error type
+        if (error.message?.includes('Database connection error')) {
+          toast.error('Database connection error. Please refresh the page to see the new document.');
+        } else if (error.message?.includes('Invalid request parameters')) {
+          toast.error('Invalid project ID. Please refresh the page.');
+        } else if (error.message?.includes('Internal server error')) {
+          toast.error('Server error occurred. Please refresh the page to see the new document.');
+        } else {
+          toast.error('Document generated but failed to refresh document list. Please refresh the page.');
+        }
       }
       
       // Switch to documents tab
@@ -710,9 +724,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       setSelectedDocumentForViewing(generatedDocument);
       setShowDocumentViewer(true);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error handling single document generation:', error);
-      toast.error('Failed to handle generated document');
+      toast.error('Failed to handle generated document: ' + (error.message || 'Unknown error'));
     }
   };
 

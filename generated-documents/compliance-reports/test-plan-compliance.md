@@ -2,8 +2,8 @@
 
 **Document:** test-plan  
 **Document Type:** quality-assurance  
-**Validation Date:** 2025-09-02T07:11:45.664Z  
-**Compliance Score:** 98%  
+**Validation Date:** 2025-09-24T16:36:28.619Z  
+**Compliance Score:** 96%  
 **Compliance Status:** FULLY_COMPLIANT  
 
 ## Executive Summary
@@ -14,7 +14,7 @@ This document has been validated against enterprise governance policies, regulat
 
 **Overall Compliance:** ❌ NON-COMPLIANT  
 **Policy Checks:** 5  
-**Policy Violations:** 1  
+**Policy Violations:** 2  
 
 
 ### Policy Violations
@@ -23,6 +23,11 @@ This document has been validated against enterprise governance policies, regulat
   - Severity: HIGH
   - Impact: MAJOR
   - Remediation: Ensure document includes required element: Executive summary
+
+- **Mandatory requirement 'Clear objectives' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Clear objectives
 
 
 
@@ -46,13 +51,19 @@ This document has been validated against enterprise governance policies, regulat
 
 ## Issues and Recommendations
 
-### Critical Issues (1)
+### Critical Issues (2)
 
 - **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
   - Category: GOVERNANCE
   - Severity: HIGH
   - Impact: MAJOR
   - Recommendation: Ensure document includes required element: Executive summary
+
+- **Mandatory requirement 'Clear objectives' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Clear objectives
 
 
 ### Recommendations (0)

@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { TemplateRepository } from '../../repositories/TemplateRepository.js';
-import { dbConnection } from '../../config/database.js';
+import dbConnection from '../../config/database.js';
 import { SoftDeleteService } from '../../services/SoftDeleteService.js';
 import { DependencyRegistryService } from '../../services/DependencyRegistryService.js';
+import { realTimeMetricsService } from '../../services/RealTimeMetricsService.js';
 import { 
     UnifiedTemplate, 
     CreateTemplateRequest, 
@@ -36,7 +37,7 @@ export class TemplateController {
      */
     static async createTemplate(req: Request, res: Response, next: NextFunction) {
         try {
-            const { name, description, category, tags, templateData, metadata, isActive } = req.body;
+            const { name, description, category, tags, templateData, metadata, isActive, aiInstructions, promptTemplate, generationFunction } = req.body;
             
             // Debug: Log the incoming metadata
             console.log('🔍 TemplateController: Received metadata:', JSON.stringify(metadata, null, 2));
@@ -62,6 +63,19 @@ export class TemplateController {
                     error: {
                         code: 'VALIDATION_ERROR',
                         message: 'Template name and category are required'
+                    },
+                    requestId,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Validate document generation required fields
+            if (!aiInstructions || !promptTemplate || !generationFunction) {
+                return res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'VALIDATION_ERROR',
+                        message: 'AI instructions, prompt template, and generation function are required for document generation'
                     },
                     requestId,
                     timestamp: new Date().toISOString()
@@ -145,6 +159,17 @@ export class TemplateController {
                 timestamp: new Date().toISOString()
             });
 
+            // Track template creation in real-time metrics
+            realTimeMetricsService.trackTemplateUsage({
+                templateId: unifiedTemplate.id,
+                timestamp: new Date(),
+                usage: {
+                    type: 'generated',
+                    userId: userId,
+                    success: true
+                }
+            });
+
             res.status(201).json({
                 success: true,
                 data: apiTemplate,
@@ -189,12 +214,25 @@ export class TemplateController {
             }
             const template = await TemplateController.templateRepository.getTemplateById(templateId);
             if (template) {
+                // Track template usage in real-time metrics
+                realTimeMetricsService.trackTemplateUsage({
+                    templateId: templateId,
+                    timestamp: new Date(),
+                    usage: {
+                        type: 'viewed',
+                        userId: userId || 'anonymous',
+                        projectId: req.query?.projectId as string,
+                        success: true
+                    }
+                });
                 // Convert database template to API format
                 const apiTemplate = {
                     id: template.id,
                     name: template.name,
                     description: template.description,
                     category: template.category,
+                    documentKey: template.documentKey || '', // Include documentKey
+                    generationFunction: template.generation_function || 'getAiGenericDocument', // Include generationFunction
                     tags: template.metadata?.tags || [],
                     templateData: {
                         content: template.prompt_template,
@@ -294,6 +332,8 @@ export class TemplateController {
                 name: updates.name,
                 description: updates.description,
                 category: updates.category,
+                documentKey: updates.documentKey, // Include documentKey in updates
+                generationFunction: updates.generationFunction, // Include generationFunction in updates
                 templateType: updates.templateType,
                 content: updates.templateData ? {
                     aiInstructions: updates.templateData.aiInstructions,
@@ -316,6 +356,11 @@ export class TemplateController {
                 } : undefined,
                 isActive: updates.isActive
             };
+
+            // Debug: Log the update request before conversion
+            console.log('🔍 TemplateController: updateRequest before conversion:', JSON.stringify(updateRequest, null, 2));
+            console.log('🔍 TemplateController: updates.generationFunction:', updates.generationFunction);
+            console.log('🔍 TemplateController: updates.documentKey:', updates.documentKey);
 
             // Remove undefined fields
             const cleanUpdateRequest = Object.fromEntries(
@@ -534,6 +579,7 @@ export class TemplateController {
                 category: category as string,
                 search_text: search as string,
                 is_system: undefined, // Include both system and user templates
+                is_active: isActive !== undefined ? isActive === 'true' : undefined, // Filter by active status
                 limit: parseInt(limit as string),
                 offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
@@ -543,7 +589,8 @@ export class TemplateController {
             const totalCountQuery = {
                 category: category as string,
                 search_text: search as string,
-                is_system: undefined
+                is_system: undefined,
+                is_active: isActive !== undefined ? isActive === 'true' : undefined // Filter by active status
             };
             const totalTemplates = await TemplateController.templateRepository.searchTemplates(totalCountQuery);
             const totalCount = totalTemplates.length;

@@ -1,7 +1,7 @@
 // Project Data Seeding Script
 // filepath: src/scripts/seedProjects.ts
 
-import { dbConnection } from '../config/database.js';
+import dbConnection from '../config/database.js';
 import { Project } from '../models/Project.js';
 import { logger } from '../utils/logger.js';
 

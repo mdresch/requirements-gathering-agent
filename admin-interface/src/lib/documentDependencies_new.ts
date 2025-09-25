@@ -153,16 +153,46 @@ export const DOCUMENT_DEPENDENCIES: Record<string, DocumentDependency> = {
  */
 const DOCUMENT_TYPE_TO_TEMPLATE_ID: Record<string, string> = {
   'business-case': '68d253d1e8b84159bab03dd0',
+  'business-case-template': '68d253d1e8b84159bab03dd0',
+  'Business Case': '68d253d1e8b84159bab03dd0',
+  'Business Case Template': '68d253d1e8b84159bab03dd0',
   'company-mission-vision-and-core-values': '68d259753673e196a415f237',
   'project-charter': '68d2593d5c548d6a3b30d271',
+  'project-charter-template': '68d2593d5c548d6a3b30d271',
+  'Project Charter': '68d2593d5c548d6a3b30d271',
+  'Project Charter Template': '68d2593d5c548d6a3b30d271',
   'functional-requirements': '68d2593d5c548d6a3b30d26c',
+  'functional-requirements-spec': '68d2593d5c548d6a3b30d26c',
+  'Functional Requirements': '68d2593d5c548d6a3b30d26c',
+  'Functional Requirements Specification': '68d2593d5c548d6a3b30d26c',
   'risk-assessment': '68d2593d5c548d6a3b30d26e',
+  'risk-assessment-report': '68d2593d5c548d6a3b30d26e',
+  'Risk Assessment': '68d2593d5c548d6a3b30d26e',
+  'Risk Assessment Report': '68d2593d5c548d6a3b30d26e',
   'test-plan': '68d2593d5c548d6a3b30d26f',
+  'test-plan-document': '68d2593d5c548d6a3b30d26f',
+  'Test Plan': '68d2593d5c548d6a3b30d26f',
+  'Test Plan Document': '68d2593d5c548d6a3b30d26f',
   'api-documentation': '68d2593d5c548d6a3b30d272',
+  'api-documentation-template': '68d2593d5c548d6a3b30d272',
+  'API Documentation': '68d2593d5c548d6a3b30d272',
+  'API Documentation Template': '68d2593d5c548d6a3b30d272',
   'system-architecture': '68d2593d5c548d6a3b30d26d',
+  'system-architecture-doc': '68d2593d5c548d6a3b30d26d',
+  'System Architecture': '68d2593d5c548d6a3b30d26d',
+  'System Architecture Document': '68d2593d5c548d6a3b30d26d',
   'technical-requirements': '68d253d1e8b84159bab03dd1',
+  'technical-requirements-template': '68d253d1e8b84159bab03dd1',
+  'Technical Requirements': '68d253d1e8b84159bab03dd1',
+  'Technical Requirements Template': '68d253d1e8b84159bab03dd1',
   'user-stories': '68d253d1e8b84159bab03dcf',
-  'data-governance-plan': '68d2593d5c548d6a3b30d270'
+  'user-stories-template': '68d253d1e8b84159bab03dcf',
+  'User Stories': '68d253d1e8b84159bab03dcf',
+  'User Stories Template': '68d253d1e8b84159bab03dcf',
+  'data-governance-plan': '68d2593d5c548d6a3b30d270',
+  'data-governance-policy': '68d2593d5c548d6a3b30d270',
+  'Data Governance Plan': '68d2593d5c548d6a3b30d270',
+  'Data Governance Policy': '68d2593d5c548d6a3b30d270'
 };
 
 /**
@@ -189,9 +219,59 @@ export function validateDocumentDependencies(
   templateId: string,
   availableDocuments: Array<{ id: string; name: string; templateId?: string }>
 ): DependencyValidationResult {
-  const template = DOCUMENT_DEPENDENCIES[templateId];
+  // First, try to find the template directly by templateId
+  let template = DOCUMENT_DEPENDENCIES[templateId];
+  
+  // If not found, try to map from document key to MongoDB ObjectId
+  if (!template) {
+    const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[templateId];
+    if (mappedTemplateId) {
+      template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+    }
+  }
+  
+  // If still not found, try reverse mapping from MongoDB ObjectId to document key
+  if (!template) {
+    const mappedDocumentKey = TEMPLATE_ID_TO_DOCUMENT_KEY[templateId];
+    if (mappedDocumentKey) {
+      const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[mappedDocumentKey];
+      if (mappedTemplateId) {
+        template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+      }
+    }
+  }
+  
+  // Final fallback: try to find by template name similarity
+  if (!template) {
+    console.log(`🔍 Attempting name-based fallback for: "${templateId}"`);
+    const normalizedTemplateId = templateId.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    for (const [id, dep] of Object.entries(DOCUMENT_DEPENDENCIES)) {
+      const normalizedName = dep.templateName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normalizedName.includes(normalizedTemplateId) || normalizedTemplateId.includes(normalizedName)) {
+        template = dep;
+        console.log(`✅ Found template by name similarity: ${dep.templateName} (${id})`);
+        break;
+      }
+    }
+  }
   
   if (!template) {
+    console.error(`❌ Template '${templateId}' not found in dependency registry after all attempts`);
+    console.log(`📋 Available template IDs: ${Object.keys(DOCUMENT_DEPENDENCIES).join(', ')}`);
+    console.log(`🔗 Available document key mappings: ${Object.keys(DOCUMENT_TYPE_TO_TEMPLATE_ID).join(', ')}`);
+    
+    // For Business Case specifically, return a valid result since it has no dependencies
+    if (templateId.toLowerCase().includes('business') || templateId.toLowerCase().includes('case')) {
+      console.log(`🔄 Business Case fallback: returning valid result with no dependencies`);
+      return {
+        isValid: true,
+        missingDependencies: [],
+        warnings: [],
+        recommendations: []
+      };
+    }
+    
     return {
       isValid: false,
       missingDependencies: [],

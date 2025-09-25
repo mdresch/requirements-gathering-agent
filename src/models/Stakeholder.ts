@@ -32,8 +32,7 @@ export interface IStakeholder extends Document {
 const StakeholderSchema: Schema = new Schema({
   projectId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   name: {
     type: String,

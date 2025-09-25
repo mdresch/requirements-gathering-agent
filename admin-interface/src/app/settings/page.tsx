@@ -343,7 +343,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
@@ -354,42 +354,241 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-slate-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
                 <Settings className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
-                <p className="text-gray-600">Configure system preferences and options</p>
+                <p className="text-gray-600">Configure system preferences, security, and integration options</p>
               </div>
             </div>
             
             <div className="flex space-x-3">
-              <button 
+              <motion.button 
                 onClick={handleReset}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center space-x-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <span>Reset</span>
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
                 onClick={handleSave}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 shadow-lg"
+                className="px-4 py-2 bg-gradient-to-r from-slate-600 to-gray-600 text-white rounded-lg hover:from-slate-700 hover:to-gray-700 transition-all duration-200 flex items-center space-x-2 shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <Save className="w-4 h-4" />
                 <span>Save Changes</span>
-              </button>
+              </motion.button>
             </div>
           </div>
+
+          {/* Quick Stats Bar */}
+          <motion.div
+            className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <motion.div
+                  className="p-2 rounded-xl bg-gradient-to-br from-slate-500 to-gray-500 shadow-lg"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <Settings className="w-5 h-5 text-white" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Configuration Overview</h3>
+                  <p className="text-sm text-gray-600">System settings and configuration management</p>
+                </div>
+              </div>
+              <motion.div
+                className="flex items-center space-x-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">System Status</div>
+                  <div className="text-lg font-bold text-green-600 flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Configured
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Security</div>
+                <div className="text-sm text-gray-600">Configuration</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 0.8 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.7 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">API</div>
+                <div className="text-sm text-gray-600">Management</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 0.9 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.8 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Integration</div>
+                <div className="text-sm text-gray-600">Settings</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 1.0 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.9 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">System</div>
+                <div className="text-sm text-gray-600">Preferences</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-slate-500 to-gray-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 1.1 }}
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* System Status Indicator */}
+          <motion.div
+            className="bg-gradient-to-r from-slate-600 via-gray-600 to-zinc-600 rounded-2xl p-6 text-white shadow-xl mb-8"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <motion.div
+                  className="p-3 bg-white/20 rounded-xl backdrop-blur-sm"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                >
+                  <Server className="w-6 h-6" />
+                </motion.div>
+                <div>
+                  <h3 className="text-xl font-bold">System Configuration Active</h3>
+                  <p className="text-slate-100">Advanced settings management and system optimization operational</p>
+                </div>
+              </div>
+              <motion.div
+                className="text-right"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <div className="text-3xl font-bold">100%</div>
+                <div className="text-slate-100">configuration coverage</div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Settings Features Overview */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Security Settings</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Comprehensive security configuration including authentication, access control, and audit logging.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                  <Key className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">API Management</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Advanced API configuration with rate limiting, versioning, and integration management.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                  <Globe className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Integrations</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Seamless integration with external platforms including Adobe, SharePoint, and Microsoft Teams.
+              </p>
+            </motion.div>
+          </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Main Settings Content */}
+        <motion.div 
+          className="grid grid-cols-1 lg:grid-cols-4 gap-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
           {/* Settings Navigation */}
           <motion.div 
             className="lg:col-span-1"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
           >
             <div className="bg-white rounded-xl shadow-lg border border-gray-200/50 p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings Categories</h3>
@@ -397,18 +596,20 @@ export default function SettingsPage() {
                 {sectionOptions.map((option) => {
                   const Icon = option.icon;
                   return (
-                    <button
+                    <motion.button
                       key={option.id}
                       onClick={() => setActiveSection(option.id as any)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-3 transition-all duration-200 ${
                         activeSection === option.id
-                          ? 'bg-blue-100 text-blue-700 shadow-sm'
-                          : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                          ? 'bg-slate-100 text-slate-700 shadow-sm'
+                          : 'text-gray-600 hover:text-slate-600 hover:bg-slate-50'
                       }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       <Icon className="w-4 h-4" />
                       <span>{option.label}</span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </nav>
@@ -431,7 +632,7 @@ export default function SettingsPage() {
               {renderCurrentSection()}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

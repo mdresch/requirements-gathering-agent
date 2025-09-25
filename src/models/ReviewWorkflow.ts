@@ -104,7 +104,7 @@ const ReviewWorkflowConfigSchema = new Schema({
   autoNotification: { type: Boolean, default: true },
   
   // Status
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: String, required: true }
 }, {
   timestamps: true,

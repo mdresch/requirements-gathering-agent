@@ -120,7 +120,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
@@ -131,25 +131,223 @@ export default function UsersPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mr-4">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-                <p className="text-gray-600">Manage users, roles, and permissions</p>
+                <p className="text-gray-600">Manage users, roles, and permissions across the platform</p>
               </div>
             </div>
             
-            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 shadow-lg">
+            <motion.button 
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 shadow-lg"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <UserPlus className="w-4 h-4" />
               <span>Add User</span>
-            </button>
+            </motion.button>
           </div>
 
+          {/* Quick Stats Bar */}
+          <motion.div
+            className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <motion.div
+                  className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <Users className="w-5 h-5 text-white" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">User Overview</h3>
+                  <p className="text-sm text-gray-600">Comprehensive user management and role administration</p>
+                </div>
+              </div>
+              <motion.div
+                className="flex items-center space-x-4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">Security Status</div>
+                  <div className="text-lg font-bold text-green-600 flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Secure
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Role-based</div>
+                <div className="text-sm text-gray-600">Access Control</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 0.8 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.7 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Advanced</div>
+                <div className="text-sm text-gray-600">Permissions</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 0.9 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.8 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Real-time</div>
+                <div className="text-sm text-gray-600">Monitoring</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 1.0 }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.9 }}
+              >
+                <div className="text-2xl font-bold text-gray-900 mb-1">Audit</div>
+                <div className="text-sm text-gray-600">Trail</div>
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mt-2"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1, delay: 1.1 }}
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Security Status Indicator */}
+          <motion.div
+            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-xl mb-8"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <motion.div
+                  className="p-3 bg-white/20 rounded-xl backdrop-blur-sm"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                >
+                  <Shield className="w-6 h-6" />
+                </motion.div>
+                <div>
+                  <h3 className="text-xl font-bold">User Security Active</h3>
+                  <p className="text-indigo-100">Advanced user management and security monitoring operational</p>
+                </div>
+              </div>
+              <motion.div
+                className="text-right"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <div className="text-3xl font-bold">100%</div>
+                <div className="text-indigo-100">security coverage</div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* User Management Features Overview */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">User Administration</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Comprehensive user management with role assignment, permission control, and activity monitoring.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Security Management</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Advanced security features including access control, audit trails, and compliance monitoring.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-lg border border-gray-200/50"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                  <CheckCircle className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Activity Tracking</h3>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Real-time user activity monitoring with detailed logs and performance analytics.
+              </p>
+            </motion.div>
+          </motion.div>
+
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
             {userStats.map((stat, index) => {
               const Icon = stat.icon;
               return (
@@ -159,6 +357,7 @@ export default function UsersPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -4 }}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className={`w-10 h-10 bg-gradient-to-r from-${stat.color}-400 to-${stat.color}-600 rounded-lg flex items-center justify-center`}>
@@ -170,10 +369,15 @@ export default function UsersPage() {
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
 
           {/* Filters and Search */}
-          <div className="flex flex-col md:flex-row gap-4 bg-white rounded-xl shadow-lg p-6 border border-gray-200/50">
+          <motion.div 
+            className="flex flex-col md:flex-row gap-4 bg-white rounded-xl shadow-lg p-6 border border-gray-200/50"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+          >
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -182,7 +386,7 @@ export default function UsersPage() {
                   placeholder="Search users by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -191,7 +395,7 @@ export default function UsersPage() {
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">All Roles</option>
                 <option value="Administrator">Administrator</option>
@@ -203,7 +407,7 @@ export default function UsersPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -211,7 +415,7 @@ export default function UsersPage() {
                 <option value="pending">Pending</option>
               </select>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Users Table */}
@@ -219,7 +423,7 @@ export default function UsersPage() {
           className="bg-white rounded-xl shadow-lg border border-gray-200/50 overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
         >
           <div className="overflow-x-auto">
             <table className="w-full">

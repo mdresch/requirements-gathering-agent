@@ -1,4 +1,4 @@
-import { dbConnection } from '../config/database.js';
+import dbConnection from '../config/database.js';
 import { logger } from '../utils/logger.js';
 
 /**

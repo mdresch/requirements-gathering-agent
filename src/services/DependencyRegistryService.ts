@@ -195,7 +195,27 @@ export function validateDocumentDependencies(
   templateId: string,
   availableDocuments: Array<{ id: string; name: string; templateId?: string }>
 ): DependencyValidationResult {
-  const template = DOCUMENT_DEPENDENCIES[templateId];
+  // First, try to find the template directly by templateId
+  let template = DOCUMENT_DEPENDENCIES[templateId];
+  
+  // If not found, try to map from document key to MongoDB ObjectId
+  if (!template) {
+    const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[templateId];
+    if (mappedTemplateId) {
+      template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+    }
+  }
+  
+  // If still not found, try reverse mapping from MongoDB ObjectId to document key
+  if (!template) {
+    const mappedDocumentKey = TEMPLATE_ID_TO_DOCUMENT_KEY[templateId];
+    if (mappedDocumentKey) {
+      const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[mappedDocumentKey];
+      if (mappedTemplateId) {
+        template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+      }
+    }
+  }
   
   if (!template) {
     return {

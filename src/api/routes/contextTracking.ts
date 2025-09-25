@@ -66,6 +66,12 @@ router.get('/test', (req, res) => {
   });
 });
 
+/**
+ * Create sample context tracking data for testing
+ * POST /api/v1/context-tracking/sample-data
+ */
+router.post('/sample-data', ContextTrackingController.createSampleData);
+
 // Simple test without middleware
 router.get('/simple-test', (req, res) => {
   res.json({ 

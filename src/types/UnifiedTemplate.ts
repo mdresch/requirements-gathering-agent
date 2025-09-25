@@ -11,6 +11,7 @@ export interface UnifiedTemplate {
   description: string;
   category: string;
   documentKey: string;
+  generationFunction: string;
   templateType: 'basic' | 'ai_instruction' | 'api_created' | 'system' | 'pmbok';
   content: {
     aiInstructions: string;
@@ -58,6 +59,7 @@ export interface CreateTemplateRequest {
   description?: string;
   category: string;
   documentKey?: string;
+  generationFunction?: string;
   templateType: UnifiedTemplate['templateType'];
   content: {
     aiInstructions: string;
@@ -88,6 +90,7 @@ export interface UpdateTemplateRequest {
   description?: string;
   category?: string;
   documentKey?: string;
+  generationFunction?: string;
   templateType?: UnifiedTemplate['templateType'];
   content?: {
     aiInstructions?: string;
@@ -153,6 +156,7 @@ export class TemplateConverter {
       description: dbTemplate.description || '',
       category: dbTemplate.category,
       documentKey: dbTemplate.documentKey || '',
+      generationFunction: dbTemplate.generation_function || 'getAiGenericDocument',
       templateType: this.mapTemplateType(dbTemplate.template_type),
       content: {
         aiInstructions: dbTemplate.ai_instructions || '',
@@ -188,6 +192,11 @@ export class TemplateConverter {
   static toDatabase(unifiedTemplate: CreateTemplateRequest | UpdateTemplateRequest): any {
     const isUpdate = 'id' in unifiedTemplate;
     
+    // Debug logging
+    console.log('🔍 TemplateConverter: Converting to database format');
+    console.log('🔍 TemplateConverter: unifiedTemplate.generationFunction:', unifiedTemplate.generationFunction);
+    console.log('🔍 TemplateConverter: unifiedTemplate.documentKey:', unifiedTemplate.documentKey);
+    
     const base = {
       name: unifiedTemplate.name,
       description: unifiedTemplate.description,
@@ -196,7 +205,7 @@ export class TemplateConverter {
       template_type: this.mapTemplateTypeToDb(unifiedTemplate.templateType || 'basic'),
       ai_instructions: unifiedTemplate.content?.aiInstructions || '',
       prompt_template: unifiedTemplate.content?.promptTemplate || '',
-      generation_function: 'getAiGenericDocument',
+      generation_function: unifiedTemplate.generationFunction || 'getAiGenericDocument',
       contextPriority: unifiedTemplate.metadata?.contextPriority || 'medium',
       metadata: {
         tags: unifiedTemplate.metadata?.tags || [],
@@ -242,6 +251,7 @@ export class TemplateConverter {
       description: unifiedTemplate.description,
       category: unifiedTemplate.category,
       documentKey: unifiedTemplate.documentKey,
+      generationFunction: unifiedTemplate.generationFunction,
       tags: unifiedTemplate.metadata.tags,
       templateData: {
         content: unifiedTemplate.content.promptTemplate,

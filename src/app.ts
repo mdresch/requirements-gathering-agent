@@ -22,6 +22,11 @@ import reviewerRoutes from './routes/reviewers.js';
 import documentGenerationRoutes from './routes/documentGeneration.js';
 import scopeControlRoutes from './routes/scopeControl.js';
 import templatesRoutes from './routes/templates.js';
+import categoryRoutes from './api/routes/categories.js';
+import predictiveAnalyticsRoutes from './api/routes/predictiveAnalyticsMinimal.js';
+import advancedReportingRoutes from './api/routes/advancedReporting.js';
+import contextTrackingRoutes from './api/routes/contextTracking.js';
+import qualityRoutes from './api/routes/quality.js';
 import authMiddleware from './middleware/auth.js';
 
 const app = express();
@@ -110,6 +115,11 @@ app.use('/api/v1/reviewers', authMiddleware, reviewerRoutes);
 app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes);
 app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
 app.use('/api/v1/templates', authMiddleware, templatesRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1', predictiveAnalyticsRoutes);
+app.use('/api/v1/reports', advancedReportingRoutes);
+app.use('/api/v1/context-tracking', authMiddleware, contextTrackingRoutes);
+app.use('/api/v1/quality', authMiddleware, qualityRoutes);
 // 404 handler
 
 // Global error handling middleware (must be last)
@@ -128,9 +138,10 @@ app.use('*', (req: Request, res: Response) => {
         scopeControl: '/api/v1/scope-control',
         stakeholders: '/api/v1/stakeholders',
         feedback: '/api/v1/feedback',
+        contextTracking: '/api/v1/context-tracking',
+        quality: '/api/v1/quality',
         // auditTrail: '/api/v1/audit-trail',
         generationJobs: '/api/v1/generation-jobs',
-        quality: '/api/v1/quality',
         documentation: '/api-docs'
       }
   });

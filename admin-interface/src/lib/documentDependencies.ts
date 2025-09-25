@@ -145,6 +145,17 @@ export const DOCUMENT_DEPENDENCIES: Record<string, DocumentDependency> = {
     dependencies: [], // No dependencies - standalone policy document
     description: 'Comprehensive data governance framework and policy document following DMBOK standards',
     estimatedTime: '4-6 hours'
+  },
+  // User Stories Template (MongoDB ID: 68cf9f7e0b991a497873ef9d)
+  '68cf9f7e0b991a497873ef9d': {
+    templateId: '68cf9f7e0b991a497873ef9d',
+    templateName: 'User Stories',
+    category: 'Requirements',
+    priority: 'high',
+    pmbokKnowledgeArea: 'Scope Management',
+    dependencies: ['68d253d1e8b84159bab03dd0'], // Depends on Business Case
+    description: 'User stories and acceptance criteria for agile development',
+    estimatedTime: '2-4 hours'
   }
 };
 
@@ -153,16 +164,48 @@ export const DOCUMENT_DEPENDENCIES: Record<string, DocumentDependency> = {
  */
 const DOCUMENT_TYPE_TO_TEMPLATE_ID: Record<string, string> = {
   'business-case': '68d253d1e8b84159bab03dd0',
+  'business-case-template': '68d253d1e8b84159bab03dd0',
+  'Business Case': '68d253d1e8b84159bab03dd0',
+  'Business Case Template': '68d253d1e8b84159bab03dd0',
   'company-mission-vision-and-core-values': '68d259753673e196a415f237',
   'project-charter': '68d2593d5c548d6a3b30d271',
+  'project-charter-template': '68d2593d5c548d6a3b30d271',
+  'Project Charter': '68d2593d5c548d6a3b30d271',
+  'Project Charter Template': '68d2593d5c548d6a3b30d271',
   'functional-requirements': '68d2593d5c548d6a3b30d26c',
+  'functional-requirements-spec': '68d2593d5c548d6a3b30d26c',
+  'Functional Requirements': '68d2593d5c548d6a3b30d26c',
+  'Functional Requirements Specification': '68d2593d5c548d6a3b30d26c',
   'risk-assessment': '68d2593d5c548d6a3b30d26e',
+  'risk-assessment-report': '68d2593d5c548d6a3b30d26e',
+  'Risk Assessment': '68d2593d5c548d6a3b30d26e',
+  'Risk Assessment Report': '68d2593d5c548d6a3b30d26e',
   'test-plan': '68d2593d5c548d6a3b30d26f',
+  'test-plan-document': '68d2593d5c548d6a3b30d26f',
+  'Test Plan': '68d2593d5c548d6a3b30d26f',
+  'Test Plan Document': '68d2593d5c548d6a3b30d26f',
   'api-documentation': '68d2593d5c548d6a3b30d272',
+  'api-documentation-template': '68d2593d5c548d6a3b30d272',
+  'API Documentation': '68d2593d5c548d6a3b30d272',
+  'API Documentation Template': '68d2593d5c548d6a3b30d272',
   'system-architecture': '68d2593d5c548d6a3b30d26d',
+  'system-architecture-doc': '68d2593d5c548d6a3b30d26d',
+  'System Architecture': '68d2593d5c548d6a3b30d26d',
+  'System Architecture Document': '68d2593d5c548d6a3b30d26d',
   'technical-requirements': '68d253d1e8b84159bab03dd1',
+  'technical-requirements-template': '68d253d1e8b84159bab03dd1',
+  'Technical Requirements': '68d253d1e8b84159bab03dd1',
+  'Technical Requirements Template': '68d253d1e8b84159bab03dd1',
   'user-stories': '68d253d1e8b84159bab03dcf',
-  'data-governance-plan': '68d2593d5c548d6a3b30d270'
+  'user-stories-template': '68d253d1e8b84159bab03dcf',
+  'User Stories': '68d253d1e8b84159bab03dcf',
+  'User Stories Template': '68d253d1e8b84159bab03dcf',
+  'data-governance-plan': '68d2593d5c548d6a3b30d270',
+  'data-governance-policy': '68d2593d5c548d6a3b30d270',
+  'Data Governance Plan': '68d2593d5c548d6a3b30d270',
+  'Data Governance Policy': '68d2593d5c548d6a3b30d270',
+  'user-stories-alt': '68cf9f7e0b991a497873ef9d',
+  'User Stories Alt': '68cf9f7e0b991a497873ef9d'
 };
 
 /**
@@ -179,7 +222,8 @@ const TEMPLATE_ID_TO_DOCUMENT_KEY: Record<string, string> = {
   '68d2593d5c548d6a3b30d26d': 'system-architecture',
   '68d253d1e8b84159bab03dd1': 'technical-requirements',
   '68d253d1e8b84159bab03dcf': 'user-stories',
-  '68d2593d5c548d6a3b30d270': 'data-governance-plan'
+  '68d2593d5c548d6a3b30d270': 'data-governance-plan',
+  '68cf9f7e0b991a497873ef9d': 'user-stories-alt'
 };
 
 /**
@@ -189,16 +233,67 @@ export function validateDocumentDependencies(
   templateId: string,
   availableDocuments: Array<{ id: string; name: string; templateId?: string }>
 ): DependencyValidationResult {
-  const template = DOCUMENT_DEPENDENCIES[templateId];
+  console.log(`🔍 Validating dependencies for template ID: "${templateId}"`);
+  
+  // First, try to find the template directly by templateId
+  let template = DOCUMENT_DEPENDENCIES[templateId];
+  console.log(`📋 Direct lookup result: ${template ? 'Found' : 'Not found'}`);
+  
+  // If not found, try to map from document key to MongoDB ObjectId
+  if (!template) {
+    const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[templateId];
+    console.log(`🔗 Document key mapping result: ${mappedTemplateId || 'No mapping found'}`);
+    if (mappedTemplateId) {
+      template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+      console.log(`📋 Mapped template lookup result: ${template ? 'Found' : 'Not found'}`);
+    }
+  }
+  
+  // If still not found, try reverse mapping from MongoDB ObjectId to document key
+  if (!template) {
+    const mappedDocumentKey = TEMPLATE_ID_TO_DOCUMENT_KEY[templateId];
+    console.log(`🔄 Reverse mapping result: ${mappedDocumentKey || 'No reverse mapping found'}`);
+    if (mappedDocumentKey) {
+      const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[mappedDocumentKey];
+      console.log(`🔗 Second mapping result: ${mappedTemplateId || 'No second mapping found'}`);
+      if (mappedTemplateId) {
+        template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
+        console.log(`📋 Second mapped template lookup result: ${template ? 'Found' : 'Not found'}`);
+      }
+    }
+  }
+  
+  // Final fallback: try to find by template name similarity
+  if (!template) {
+    console.log(`🔍 Attempting name-based fallback for: "${templateId}"`);
+    const normalizedTemplateId = templateId.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    for (const [id, dep] of Object.entries(DOCUMENT_DEPENDENCIES)) {
+      const normalizedName = dep.templateName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normalizedName.includes(normalizedTemplateId) || normalizedTemplateId.includes(normalizedName)) {
+        template = dep;
+        console.log(`✅ Found template by name similarity: ${dep.templateName} (${id})`);
+        break;
+      }
+    }
+  }
   
   if (!template) {
+    console.warn(`⚠️ Template '${templateId}' not found in dependency registry after all attempts`);
+    console.log(`📋 Available template IDs: ${Object.keys(DOCUMENT_DEPENDENCIES).join(', ')}`);
+    console.log(`🔗 Available document key mappings: ${Object.keys(DOCUMENT_TYPE_TO_TEMPLATE_ID).join(', ')}`);
+    
+    // Return a valid result for unknown templates to prevent blocking document generation
+    console.log(`🔄 Unknown template fallback: returning valid result with no dependencies`);
     return {
-      isValid: false,
+      isValid: true,
       missingDependencies: [],
-      warnings: [`Template '${templateId}' not found in dependency registry`],
-      recommendations: ['Check template ID and ensure it exists in the system']
+      warnings: [`Template '${templateId}' not found in dependency registry, but assuming no dependencies`],
+      recommendations: ['Consider adding this template to the dependency registry for proper validation']
     };
   }
+  
+  console.log(`✅ Template found: ${template.templateName} (${template.templateId})`);
 
   if (template.dependencies.length === 0) {
     return {

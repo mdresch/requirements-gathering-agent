@@ -51,9 +51,9 @@ const TemplateSchema: Schema = new Schema({
   category: { type: String, required: true },
   documentKey: { type: String, required: true, unique: true },
   template_type: { type: String, required: true, default: 'basic' },
-  ai_instructions: { type: String, default: '' },
-  prompt_template: { type: String, default: '' },
-  generation_function: { type: String, default: 'getAiGenericDocument' },
+  ai_instructions: { type: String, required: true, minlength: 10 },
+  prompt_template: { type: String, required: true, minlength: 10 },
+  generation_function: { type: String, required: true },
   contextPriority: { 
     type: String, 
     enum: ['low', 'medium', 'high', 'critical'], 
@@ -74,7 +74,7 @@ const TemplateSchema: Schema = new Schema({
     version: { type: String }
   },
   version: { type: Number, default: 1 },
-  is_active: { type: Boolean, default: true },
+  is_active: { type: Boolean, default: false }, // Default new templates to inactive for review
   is_system: { type: Boolean, default: false },
   created_by: { type: String, required: true },
   created_at: { type: Date, default: Date.now },
@@ -101,14 +101,15 @@ const TemplateSchema: Schema = new Schema({
 // Indexes for performance
 TemplateSchema.index({ is_deleted: 1, is_active: 1 });
 TemplateSchema.index({ deleted_at: 1 });
-TemplateSchema.index({ documentKey: 1 });
+// documentKey already has unique index from unique: true constraint
 TemplateSchema.index({ category: 1, is_deleted: 1 });
 TemplateSchema.index({ created_by: 1, is_deleted: 1 });
 
 // Pre-save middleware to generate documentKey and update timestamps
 TemplateSchema.pre('save', function (this: any, next) {
-  // Generate documentKey if not provided
-  if (!this.documentKey) {
+  // Generate documentKey only if not provided (undefined/null) or if this is a new document
+  // Don't auto-generate if documentKey is explicitly set to empty string (user choice)
+  if ((!this.documentKey || this.documentKey.trim() === '') && this.isNew) {
     this.documentKey = this.name
       .toLowerCase()
       .replace(/\s+/g, '-')

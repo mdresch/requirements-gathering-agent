@@ -1,234 +1,384 @@
 #!/usr/bin/env node
 
 /**
- * MongoDB to Atlas Migration Script
+ * MongoDB Docker to Atlas Migration Script
  * 
- * This script helps migrate data from local Docker MongoDB to MongoDB Atlas
+ * This script helps migrate data from a local Docker MongoDB instance to MongoDB Atlas.
+ * It handles data export, import, and provides guidance for configuration updates.
+ * 
+ * Prerequisites:
+ * 1. MongoDB Atlas cluster set up and accessible
+ * 2. Docker MongoDB container running locally
+ * 3. mongodump and mongorestore tools installed
+ * 4. MongoDB Atlas connection string
  * 
  * Usage:
- * 1. Export data from local MongoDB: node scripts/migrate-to-atlas.js export
- * 2. Import data to Atlas: node scripts/migrate-to-atlas.js import
- * 3. Verify migration: node scripts/migrate-to-atlas.js verify
+ * node scripts/migrate-to-atlas.js
  */
 
-const { MongoClient } = require('mongodb');
-const fs = require('fs');
-const path = require('path');
+import { execSync, spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
 
 // Configuration
-const LOCAL_MONGODB_URI = process.env.LOCAL_MONGODB_URI || 'mongodb://localhost:27017/requirements-gathering-agent';
-const ATLAS_MONGODB_URI = process.env.ATLAS_MONGODB_URI || process.env.MONGODB_URI;
-const DATABASE_NAME = 'requirements-gathering-agent';
-const EXPORT_DIR = './migration-data';
+const CONFIG = {
+  // Docker MongoDB connection
+  dockerHost: 'localhost',
+  dockerPort: '27017',
+  dockerDatabase: 'requirements-gathering-agent',
+  
+  // Atlas connection (will be prompted)
+  atlasConnectionString: '',
+  
+  // Backup directory
+  backupDir: './mongodb-backup',
+  
+  // Collections to migrate
+  collections: [
+    'templates',
+    'projects', 
+    'projectdocuments',
+    'users',
+    'audittrails',
+    'feedback',
+    'contexttracking',
+    'generationjobs',
+    'qualityassessments',
+    'compliancereports'
+  ]
+};
 
-// Collections to migrate
-const COLLECTIONS = [
-  'projects',
-  'projectdocuments', 
-  'stakeholders',
-  'templates',
-  'reviews',
-  'documentaudittrails',
-  'generationjobs',
-  'aicontexttrackings'
-];
-
-async function createExportDirectory() {
-  if (!fs.existsSync(EXPORT_DIR)) {
-    fs.mkdirSync(EXPORT_DIR, { recursive: true });
-    console.log(`📁 Created export directory: ${EXPORT_DIR}`);
+class AtlasMigration {
+  constructor() {
+    this.rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
   }
-}
 
-async function exportCollection(client, collectionName) {
-  try {
-    const db = client.db(DATABASE_NAME);
-    const collection = db.collection(collectionName);
+  async prompt(question) {
+    return new Promise((resolve) => {
+      this.rl.question(question, resolve);
+    });
+  }
+
+  async confirm(question) {
+    const answer = await this.prompt(`${question} (y/N): `);
+    return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+  }
+
+  log(message, type = 'info') {
+    const timestamp = new Date().toISOString();
+    const prefix = {
+      info: 'ℹ️',
+      success: '✅',
+      warning: '⚠️',
+      error: '❌'
+    }[type];
     
-    const documents = await collection.find({}).toArray();
+    console.log(`${prefix} [${timestamp}] ${message}`);
+  }
+
+  async checkPrerequisites() {
+    this.log('Checking prerequisites...');
     
-    if (documents.length === 0) {
-      console.log(`⚠️ Collection '${collectionName}' is empty, skipping...`);
-      return;
+    try {
+      // Check if mongodump is available
+      execSync('mongodump --version', { stdio: 'pipe' });
+      this.log('mongodump is available', 'success');
+    } catch (error) {
+      this.log('mongodump not found. Please install MongoDB Database Tools', 'error');
+      process.exit(1);
+    }
+
+    try {
+      // Check if mongorestore is available
+      execSync('mongorestore --version', { stdio: 'pipe' });
+      this.log('mongorestore is available', 'success');
+    } catch (error) {
+      this.log('mongorestore not found. Please install MongoDB Database Tools', 'error');
+      process.exit(1);
+    }
+
+    // Check if Docker MongoDB is accessible
+    try {
+      execSync(`mongosh --host ${CONFIG.dockerHost}:${CONFIG.dockerPort} --eval "db.adminCommand('ping')"`, { stdio: 'pipe' });
+      this.log('Docker MongoDB is accessible', 'success');
+    } catch (error) {
+      this.log('Cannot connect to Docker MongoDB. Please ensure it\'s running', 'error');
+      process.exit(1);
+    }
+  }
+
+  async getAtlasConnectionString() {
+    this.log('MongoDB Atlas Connection Setup');
+    this.log('Please provide your MongoDB Atlas connection string.');
+    this.log('Format: mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority');
+    
+    const connectionString = await this.prompt('Atlas connection string: ');
+    
+    if (!connectionString.includes('mongodb+srv://')) {
+      this.log('Invalid connection string format', 'error');
+      return await this.getAtlasConnectionString();
     }
     
-    const exportPath = path.join(EXPORT_DIR, `${collectionName}.json`);
-    fs.writeFileSync(exportPath, JSON.stringify(documents, null, 2));
-    
-    console.log(`✅ Exported ${documents.length} documents from '${collectionName}'`);
-    return documents.length;
-  } catch (error) {
-    console.error(`❌ Error exporting collection '${collectionName}':`, error.message);
-    return 0;
+    CONFIG.atlasConnectionString = connectionString;
+    return connectionString;
   }
-}
 
-async function exportData() {
-  console.log('🚀 Starting data export from local MongoDB...');
-  
-  await createExportDirectory();
-  
-  const client = new MongoClient(LOCAL_MONGODB_URI);
-  
-  try {
-    await client.connect();
-    console.log('📊 Connected to local MongoDB');
+  async testAtlasConnection() {
+    this.log('Testing Atlas connection...');
     
-    let totalExported = 0;
-    
-    for (const collectionName of COLLECTIONS) {
-      const count = await exportCollection(client, collectionName);
-      totalExported += count;
+    try {
+      execSync(`mongosh "${CONFIG.atlasConnectionString}" --eval "db.adminCommand('ping')"`, { stdio: 'pipe' });
+      this.log('Atlas connection successful', 'success');
+      return true;
+    } catch (error) {
+      this.log('Atlas connection failed. Please check your connection string and network access', 'error');
+      return false;
     }
-    
-    console.log(`\n🎉 Export completed! Total documents exported: ${totalExported}`);
-    console.log(`📁 Export files saved to: ${EXPORT_DIR}`);
-    
-  } catch (error) {
-    console.error('❌ Export failed:', error.message);
-  } finally {
-    await client.close();
   }
-}
 
-async function importCollection(client, collectionName) {
-  try {
-    const importPath = path.join(EXPORT_DIR, `${collectionName}.json`);
-    
-    if (!fs.existsSync(importPath)) {
-      console.log(`⚠️ Import file for '${collectionName}' not found, skipping...`);
-      return;
+  async createBackupDirectory() {
+    if (!fs.existsSync(CONFIG.backupDir)) {
+      fs.mkdirSync(CONFIG.backupDir, { recursive: true });
+      this.log(`Created backup directory: ${CONFIG.backupDir}`, 'success');
     }
-    
-    const documents = JSON.parse(fs.readFileSync(importPath, 'utf8'));
-    
-    if (documents.length === 0) {
-      console.log(`⚠️ No documents to import for '${collectionName}', skipping...`);
-      return;
-    }
-    
-    const db = client.db(DATABASE_NAME);
-    const collection = db.collection(collectionName);
-    
-    // Clear existing data (optional - remove if you want to keep existing data)
-    await collection.deleteMany({});
-    
-    // Insert documents
-    const result = await collection.insertMany(documents);
-    
-    console.log(`✅ Imported ${result.insertedCount} documents to '${collectionName}'`);
-    return result.insertedCount;
-    
-  } catch (error) {
-    console.error(`❌ Error importing collection '${collectionName}':`, error.message);
-    return 0;
   }
-}
 
-async function importData() {
-  console.log('🚀 Starting data import to MongoDB Atlas...');
-  
-  if (!ATLAS_MONGODB_URI) {
-    console.error('❌ ATLAS_MONGODB_URI environment variable is required');
-    console.error('   Set it to your MongoDB Atlas connection string');
-    process.exit(1);
-  }
-  
-  const client = new MongoClient(ATLAS_MONGODB_URI);
-  
-  try {
-    await client.connect();
-    console.log('📊 Connected to MongoDB Atlas');
+  async exportData() {
+    this.log('Starting data export from Docker MongoDB...');
     
-    let totalImported = 0;
-    
-    for (const collectionName of COLLECTIONS) {
-      const count = await importCollection(client, collectionName);
-      totalImported += count;
-    }
-    
-    console.log(`\n🎉 Import completed! Total documents imported: ${totalImported}`);
-    
-  } catch (error) {
-    console.error('❌ Import failed:', error.message);
-  } finally {
-    await client.close();
-  }
-}
+    const exportCommand = [
+      'mongodump',
+      `--host=${CONFIG.dockerHost}:${CONFIG.dockerPort}`,
+      `--db=${CONFIG.dockerDatabase}`,
+      `--out=${CONFIG.backupDir}`,
+      '--gzip'
+    ].join(' ');
 
-async function verifyMigration() {
-  console.log('🔍 Verifying migration...');
-  
-  const localClient = new MongoClient(LOCAL_MONGODB_URI);
-  const atlasClient = new MongoClient(ATLAS_MONGODB_URI);
-  
-  try {
-    await localClient.connect();
-    await atlasClient.connect();
+    try {
+      this.log(`Executing: ${exportCommand}`);
+      execSync(exportCommand, { stdio: 'inherit' });
+      this.log('Data export completed successfully', 'success');
+    } catch (error) {
+      this.log('Data export failed', 'error');
+      throw error;
+    }
+  }
+
+  async importData() {
+    this.log('Starting data import to MongoDB Atlas...');
     
-    console.log('📊 Connected to both local and Atlas databases');
+    const importCommand = [
+      'mongorestore',
+      `--uri="${CONFIG.atlasConnectionString}"`,
+      `--dir=${CONFIG.backupDir}/${CONFIG.dockerDatabase}`,
+      '--gzip',
+      '--drop'
+    ].join(' ');
+
+    try {
+      this.log(`Executing: ${importCommand}`);
+      execSync(importCommand, { stdio: 'inherit' });
+      this.log('Data import completed successfully', 'success');
+    } catch (error) {
+      this.log('Data import failed', 'error');
+      throw error;
+    }
+  }
+
+  async verifyMigration() {
+    this.log('Verifying migration...');
     
-    for (const collectionName of COLLECTIONS) {
+    for (const collection of CONFIG.collections) {
       try {
-        const localCount = await localClient.db(DATABASE_NAME).collection(collectionName).countDocuments();
-        const atlasCount = await atlasClient.db(DATABASE_NAME).collection(collectionName).countDocuments();
-        
-        const status = localCount === atlasCount ? '✅' : '⚠️';
-        console.log(`${status} ${collectionName}: Local=${localCount}, Atlas=${atlasCount}`);
-        
+        const countCommand = `mongosh "${CONFIG.atlasConnectionString}" --eval "db.${collection}.countDocuments()" --quiet`;
+        const result = execSync(countCommand, { encoding: 'utf8' });
+        const count = parseInt(result.trim());
+        this.log(`Collection ${collection}: ${count} documents`, 'info');
       } catch (error) {
-        console.log(`❌ ${collectionName}: Error - ${error.message}`);
+        this.log(`Could not verify collection ${collection}`, 'warning');
       }
     }
+  }
+
+  async updateConfiguration() {
+    this.log('Configuration Update Instructions');
+    this.log('Please update the following configuration files:');
     
+    const configUpdates = [
+      {
+        file: '.env',
+        updates: [
+          'MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database',
+          'MONGODB_DATABASE=requirements-gathering-agent'
+        ]
+      },
+      {
+        file: 'src/config/database.js',
+        updates: [
+          'Update connection string to use Atlas URI',
+          'Update connection options for Atlas compatibility'
+        ]
+      },
+      {
+        file: 'docker-compose.yml',
+        updates: [
+          'Remove or comment out MongoDB service',
+          'Update environment variables to use Atlas'
+        ]
+      }
+    ];
+
+    configUpdates.forEach(config => {
+      this.log(`\n📁 ${config.file}:`);
+      config.updates.forEach(update => {
+        this.log(`  - ${update}`);
+      });
+    });
+  }
+
+  async generateConfigFiles() {
+    this.log('Generating updated configuration files...');
+    
+    // Generate .env template
+    const envTemplate = `# MongoDB Atlas Configuration
+MONGODB_URI=${CONFIG.atlasConnectionString}
+MONGODB_DATABASE=requirements-gathering-agent
+
+# Application Configuration
+NODE_ENV=production
+PORT=3002
+
+# API Configuration
+API_KEY=your-secure-api-key-here
+
+# JWT Configuration
+JWT_SECRET=your-jwt-secret-here
+JWT_EXPIRES_IN=7d
+
+# Email Configuration (if needed)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+
+# File Upload Configuration
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=./uploads
+`;
+
+    fs.writeFileSync('.env.atlas', envTemplate);
+    this.log('Generated .env.atlas template', 'success');
+
+    // Generate database config
+    const dbConfigTemplate = `const mongoose = require('mongoose');
+
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+
+    console.log(\`MongoDB Atlas Connected: \${conn.connection.host}\`);
   } catch (error) {
-    console.error('❌ Verification failed:', error.message);
-  } finally {
-    await localClient.close();
-    await atlasClient.close();
+    console.error('Database connection error:', error);
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
+`;
+
+    fs.writeFileSync('src/config/database.atlas.js', dbConfigTemplate);
+    this.log('Generated database.atlas.js template', 'success');
+  }
+
+  async cleanup() {
+    const shouldCleanup = await this.confirm('Do you want to remove the backup files?');
+    
+    if (shouldCleanup) {
+      try {
+        fs.rmSync(CONFIG.backupDir, { recursive: true, force: true });
+        this.log('Backup files cleaned up', 'success');
+      } catch (error) {
+        this.log('Failed to cleanup backup files', 'warning');
+      }
+    }
+  }
+
+  async run() {
+    try {
+      this.log('Starting MongoDB Docker to Atlas Migration', 'info');
+      
+      // Step 1: Check prerequisites
+      await this.checkPrerequisites();
+      
+      // Step 2: Get Atlas connection string
+      await this.getAtlasConnectionString();
+      
+      // Step 3: Test Atlas connection
+      const atlasConnected = await this.testAtlasConnection();
+      if (!atlasConnected) {
+        const retry = await this.confirm('Would you like to retry with a different connection string?');
+        if (retry) {
+          await this.getAtlasConnectionString();
+          await this.testAtlasConnection();
+        } else {
+          process.exit(1);
+        }
+      }
+      
+      // Step 4: Confirm migration
+      const proceed = await this.confirm('Proceed with migration? This will replace all data in Atlas.');
+      if (!proceed) {
+        this.log('Migration cancelled by user', 'warning');
+        process.exit(0);
+      }
+      
+      // Step 5: Create backup directory
+      await this.createBackupDirectory();
+      
+      // Step 6: Export data from Docker
+      await this.exportData();
+      
+      // Step 7: Import data to Atlas
+      await this.importData();
+      
+      // Step 8: Verify migration
+      await this.verifyMigration();
+      
+      // Step 9: Generate configuration files
+      await this.generateConfigFiles();
+      
+      // Step 10: Show configuration update instructions
+      await this.updateConfiguration();
+      
+      // Step 11: Cleanup
+      await this.cleanup();
+      
+      this.log('Migration completed successfully!', 'success');
+      this.log('Please update your application configuration and restart your services.', 'info');
+      
+    } catch (error) {
+      this.log(`Migration failed: ${error.message}`, 'error');
+      process.exit(1);
+    } finally {
+      this.rl.close();
+    }
   }
 }
 
-async function main() {
-  const command = process.argv[2];
-  
-  switch (command) {
-    case 'export':
-      await exportData();
-      break;
-    case 'import':
-      await importData();
-      break;
-    case 'verify':
-      await verifyMigration();
-      break;
-    default:
-      console.log(`
-🔧 MongoDB to Atlas Migration Script
-
-Usage:
-  node scripts/migrate-to-atlas.js <command>
-
-Commands:
-  export  - Export data from local MongoDB to JSON files
-  import  - Import data from JSON files to MongoDB Atlas
-  verify  - Verify that migration was successful
-
-Environment Variables:
-  LOCAL_MONGODB_URI  - Local MongoDB connection string (default: mongodb://localhost:27017/requirements-gathering-agent)
-  ATLAS_MONGODB_URI  - MongoDB Atlas connection string (required for import/verify)
-
-Example:
-  # Export from local MongoDB
-  node scripts/migrate-to-atlas.js export
-  
-  # Import to Atlas (set ATLAS_MONGODB_URI first)
-  ATLAS_MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/db" node scripts/migrate-to-atlas.js import
-  
-  # Verify migration
-  ATLAS_MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/db" node scripts/migrate-to-atlas.js verify
-      `);
-  }
+// Run migration if this script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const migration = new AtlasMigration();
+  migration.run();
 }
 
-main().catch(console.error);
+export default AtlasMigration;
