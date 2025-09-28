@@ -1,0 +1,13 @@
+# Backend files to ignore
+src/
+dist/
+node_modules/
+*.log
+.env
+.env.local
+.env.production
+.env.development
+
+# Keep only admin-interface
+!admin-interface/
+
