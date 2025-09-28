@@ -1,7 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm install --legacy-peer-deps && cd admin-interface && npm run build",
-  "outputDirectory": "admin-interface/.next",
-  "installCommand": "npm install --legacy-peer-deps",
-  "framework": "nextjs"
+  "builds": [
+    {
+      "src": "admin-interface/package.json",
+      "use": "@vercel/next"
+    }
+  ]
 }
