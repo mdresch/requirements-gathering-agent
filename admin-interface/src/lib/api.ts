@@ -140,32 +140,32 @@ export async function getTemplates(params?: {
     
     // Transform the API response to match expected Template interface
     const transformedTemplates = (templatesData || []).map((template: any) => ({
-             id: template.id.toString(),
+             id: template._id?.toString() || template.id?.toString() || Math.random().toString(),
              name: template.name,
              description: template.description,
              category: template.category || 'General', // Default category if not provided
-             tags: template.tags || [template.category || 'general'], // Use category as tag if no tags
-             content: template.templateData?.content || template.content || '',
-             aiInstructions: template.templateData?.aiInstructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             tags: template.metadata?.tags || template.tags || [template.category || 'general'], // Use category as tag if no tags
+             content: template.prompt_template || template.content || '',
+             aiInstructions: template.ai_instructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
              documentKey: template.documentKey || '', // Include documentKey
-             generationFunction: template.generationFunction || 'getAiGenericDocument', // Include generationFunction
-             templateType: template.templateType || 'ai_instruction',
-             isActive: template.isActive !== undefined ? template.isActive : true,
-             version: template.version || '1.0.0',
+             generationFunction: template.generation_function || template.generationFunction || 'getAiGenericDocument', // Include generationFunction
+             templateType: template.template_type || template.templateType || 'ai_instruction',
+             isActive: template.is_active !== undefined ? template.is_active : (template.isActive !== undefined ? template.isActive : true),
+             version: template.version?.toString() || '1.0.0',
              contextPriority: template.contextPriority || 'medium', // Default priority for context building
              contextRequirements: template.contextRequirements || [],
-             variables: template.templateData?.variables || template.variables || {},
+             variables: template.metadata?.variables || template.variables || {},
              metadata: {
                framework: template.metadata?.framework || 'general',
                complexity: template.metadata?.complexity || 'medium',
                estimatedTime: template.metadata?.estimatedTime || '2-4 hours',
                dependencies: template.metadata?.dependencies || [],
-               version: template.metadata?.version || '1.0.0',
-               author: template.metadata?.author || 'System',
+               version: template.metadata?.version || template.version?.toString() || '1.0.0',
+               author: template.created_by || template.metadata?.author || 'System',
                ...template.metadata // Include any other metadata fields
              },
-             createdAt: template.createdAt || new Date().toISOString(),
-             updatedAt: template.updatedAt || new Date().toISOString()
+             createdAt: template.created_at || template.createdAt || new Date().toISOString(),
+             updatedAt: template.updated_at || template.updatedAt || new Date().toISOString()
            }));
 
     return {
