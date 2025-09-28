@@ -111,7 +111,7 @@ router.get('/dashboard',
         realTimeUpdates: {
           enabled: true,
           lastUpdate: new Date(),
-          connectionCount: realTimeDataService?.getConnectionCount() || 0
+          connectionCount: realTimeDataService ? (realTimeDataService as any).getConnectionCount() : 0
         }
       };
 
@@ -296,7 +296,7 @@ router.post('/enhanced/issues',
 
       // Broadcast real-time update
       if (realTimeDataService) {
-        await realTimeDataService.broadcastIssueUpdate(issueData.projectId, {
+        await (realTimeDataService as any).broadcastIssueUpdate(issueData.projectId, {
           operation: 'CREATE',
           issue: newIssue
         });
@@ -351,7 +351,7 @@ router.put('/enhanced/issues/:issueId',
 
       // Broadcast real-time update
       if (realTimeDataService) {
-        await realTimeDataService.broadcastIssueUpdate(updatedIssue.projectId, {
+        await (realTimeDataService as any).broadcastIssueUpdate(updatedIssue.projectId, {
           operation: 'UPDATE',
           issue: updatedIssue
         });
@@ -445,8 +445,8 @@ router.get('/real-time/:projectId',
       // Initialize services
       initializeServices();
 
-      const connections = realTimeDataService?.getConnectionsByProject(projectId) || [];
-      const connectionCount = realTimeDataService?.getConnectionCount() || 0;
+      const connections = realTimeDataService ? (realTimeDataService as any).getConnectionsByProject(projectId) : [];
+      const connectionCount = realTimeDataService ? (realTimeDataService as any).getConnectionCount() : 0;
 
       res.status(200).json({
         success: true,
@@ -480,7 +480,7 @@ router.get('/health', async (req: Request, res: Response) => {
 
     const complianceHealth = await complianceDataService!.healthCheck();
     const qualityHealth = await dataQualityService!.healthCheck();
-    const realTimeHealth = realTimeDataService ? await realTimeDataService.healthCheck() : true;
+    const realTimeHealth = realTimeDataService ? await (realTimeDataService as any).healthCheck() : true;
 
     const overallHealth = complianceHealth && qualityHealth && realTimeHealth;
 

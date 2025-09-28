@@ -55,8 +55,6 @@ async function connectToDatabase() {
         console.log('🔄 Connecting to MongoDB Atlas...');
         
         const conn = await mongoose.connect(MONGODB_URI!, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             maxPoolSize: 10,
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
@@ -68,7 +66,7 @@ async function connectToDatabase() {
         console.log('Database:', conn.connection.name);
         
         // List collections to verify data
-        const collections = await conn.connection.db.listCollections().toArray();
+        const collections = await conn.connection.db?.listCollections().toArray() || [];
         console.log('📊 Collections found:', collections.length);
         collections.forEach(col => console.log('  -', col.name));
         
@@ -92,7 +90,7 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
 app.get('/api/v1/database/health', async (req: Request, res: Response) => {
     try {
         const isConnected = mongoose.connection.readyState === 1;
-        const collections = await mongoose.connection.db.listCollections().toArray();
+        const collections = await mongoose.connection.db?.listCollections().toArray() || [];
         
         res.json({
             success: isConnected,
@@ -120,8 +118,8 @@ app.get('/api/v1/database/health', async (req: Request, res: Response) => {
 app.get('/api/v1/analytics/projects', async (req: Request, res: Response) => {
     try {
         // Get real project data from MongoDB
-        const projects = await mongoose.connection.db.collection('projects').find({}).toArray();
-        const templates = await mongoose.connection.db.collection('templates').find({}).toArray();
+        const projects = await mongoose.connection.db?.collection('projects').find({}).toArray() || [];
+        const templates = await mongoose.connection.db?.collection('templates').find({}).toArray() || [];
         
         const analyticsData = {
             projectMetrics: {
@@ -181,7 +179,7 @@ app.get('/api/v1/context-tracking/projects/:projectId/analytics', async (req: Re
         const { projectId } = req.params;
         
         // Get real context tracking data
-        const contextData = await mongoose.connection.db.collection('ai_context_tracking').find({
+        const contextData = await mongoose.connection.db?.collection('ai_context_tracking').find({
             'metadata.projectId': projectId
         }).toArray();
         
@@ -234,7 +232,7 @@ app.get('/api/v1/standards/dashboard', async (req: Request, res: Response) => {
         const { projectId = 'current-project' } = req.query;
         
         // Get real compliance data
-        const complianceData = await mongoose.connection.db.collection('complianceissues').find({
+        const complianceData = await mongoose.connection.db?.collection('complianceissues').find({
             projectId: projectId
         }).toArray();
         

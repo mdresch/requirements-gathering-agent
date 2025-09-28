@@ -39,8 +39,33 @@ async function connectToDatabase() {
   }
 }
 
+// Input validation helper
+function validateInput(data, requiredFields = []) {
+  const errors = [];
+  
+  for (const field of requiredFields) {
+    if (!data[field]) {
+      errors.push(`${field} is required`);
+    }
+  }
+  
+  return errors;
+}
+
+// Error response helper
+function sendError(res, statusCode, message, details = null) {
+  console.error(`❌ API Error [${statusCode}]:`, message, details ? details : '');
+  res.status(statusCode).json({
+    success: false,
+    error: message,
+    ...(details && { details })
+  });
+}
+
 // Simple Vercel serverless function
 export default async (req, res) => {
+  const startTime = Date.now();
+  
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -51,6 +76,14 @@ export default async (req, res) => {
     if (req.method === 'OPTIONS') {
       res.status(200).end();
       return;
+    }
+
+    // Log request
+    console.log(`🚀 ${req.method} ${req.url} - ${new Date().toISOString()}`);
+    
+    // Basic request validation
+    if (!req.url) {
+      return sendError(res, 400, 'Invalid request URL');
     }
 
     const { url, method } = req;
@@ -481,20 +514,65 @@ export default async (req, res) => {
       try {
         console.log('Attempting to update template...');
         console.log('URL:', url);
-        console.log('Request body:', req.body);
+        console.log('Request body:', JSON.stringify(req.body, null, 2));
+        console.log('Request body templateData:', req.body.templateData);
         
         // Extract template ID from URL
         const templateId = url.split('/').pop();
         console.log('Template ID:', templateId);
         
+        // Validate template ID
+        if (!templateId || templateId.length !== 24) {
+          return sendError(res, 400, 'Invalid template ID format');
+        }
+        
+        // Validate ObjectId format
+        try {
+          new ObjectId(templateId);
+        } catch (objectIdError) {
+          return sendError(res, 400, 'Invalid template ID format', objectIdError.message);
+        }
+        
+        // Validate request body
+        if (!req.body || typeof req.body !== 'object') {
+          return sendError(res, 400, 'Request body is required and must be an object');
+        }
+        
         const { db } = await connectToDatabase();
         
-        // Update template
+        // Check if template exists first
+        const existingTemplate = await db.collection('templates').findOne({ _id: new ObjectId(templateId) });
+        if (!existingTemplate) {
+          return sendError(res, 404, 'Template not found', `Template with ID ${templateId} does not exist`);
+        }
+        
+        // Update template with validation
         const updateData = {
           ...req.body,
           updated_at: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
+        
+        // Handle nested templateData structure from frontend
+        if (req.body.templateData) {
+          console.log('Processing nested templateData structure');
+          const { templateData, ...restData } = req.body;
+          
+          // Flatten templateData into root level
+          updateData.content = templateData.content || updateData.content;
+          updateData.aiInstructions = templateData.aiInstructions || updateData.aiInstructions;
+          updateData.variables = templateData.variables || updateData.variables;
+          updateData.layout = templateData.layout || updateData.layout;
+          
+          // Keep other fields from restData
+          Object.assign(updateData, restData);
+        }
+        
+        // Remove any potentially dangerous fields
+        delete updateData._id;
+        delete updateData.created_at;
+        delete updateData.createdAt;
+        delete updateData.templateData; // Remove the nested structure
         
         const result = await db.collection('templates').updateOne(
           { _id: new ObjectId(templateId) },
@@ -502,32 +580,26 @@ export default async (req, res) => {
         );
         
         if (result.matchedCount === 0) {
-          console.log(`Template not found: ${templateId}`);
-          res.status(404).json({
-            success: false,
-            error: 'Template not found',
-            message: `Template with ID ${templateId} does not exist`
-          });
-          return;
+          return sendError(res, 404, 'Template not found', `Template with ID ${templateId} does not exist`);
         }
         
-        console.log(`Updated template: ${templateId}`);
+        console.log(`✅ Updated template: ${templateId}`);
         
         // Return updated template
         const updatedTemplate = await db.collection('templates').findOne({ _id: new ObjectId(templateId) });
         
+        const responseTime = Date.now() - startTime;
+        console.log(`⏱️ Template update completed in ${responseTime}ms`);
+        
         res.status(200).json({
           success: true,
           data: updatedTemplate,
-          message: 'Template updated successfully'
+          message: 'Template updated successfully',
+          responseTime: `${responseTime}ms`
         });
       } catch (dbError) {
         console.error('Database error:', dbError.message);
-        res.status(500).json({
-          success: false,
-          error: 'Failed to update template',
-          message: dbError.message
-        });
+        return sendError(res, 500, 'Failed to update template', dbError.message);
       }
       return;
     }

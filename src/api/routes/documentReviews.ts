@@ -1,7 +1,7 @@
 // Phase 1: Document Reviews Routes - Real Database Implementation
 // Replaces mock data with actual MongoDB operations
 
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import DocumentReviewsController from '../controllers/DocumentReviewsController.js';
 import { logger } from '../../utils/logger.js';
@@ -9,7 +9,7 @@ import { logger } from '../../utils/logger.js';
 const router = Router();
 
 // Temporary middleware to replace authentication
-const tempAuth = (req: any, res: any, next: any) => next();
+const tempAuth = (req: Request, res: Response, next: NextFunction) => next();
 
 /**
  * @route GET /api/v1/document-reviews/analytics
@@ -22,7 +22,7 @@ router.get('/analytics',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid ISO 8601 date')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -57,7 +57,7 @@ router.get('/',
     query('documentType').optional().isString().withMessage('Document type must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -92,7 +92,7 @@ router.get('/projects/:projectId',
     query('documentType').optional().isString().withMessage('Document type must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -133,7 +133,7 @@ router.post('/',
     body('assignedReviewers.*.role').isString().withMessage('Reviewer role is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -165,7 +165,7 @@ router.put('/:reviewId/status',
     body('status').isString().withMessage('Status is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -201,7 +201,7 @@ router.post('/:reviewId/feedback',
     body('decision').isIn(['approve', 'reject', 'request_revision']).withMessage('Invalid decision')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -236,7 +236,7 @@ router.post('/:reviewId/assign-reviewer',
     body('role').isString().withMessage('Reviewer role is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
