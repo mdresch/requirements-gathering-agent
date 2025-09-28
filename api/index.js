@@ -1,5 +1,5 @@
 // MongoDB connection
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 let cachedClient = null;
 let cachedDb = null;
@@ -497,7 +497,7 @@ export default async (req, res) => {
         };
         
         const result = await db.collection('templates').updateOne(
-          { _id: templateId },
+          { _id: new ObjectId(templateId) },
           { $set: updateData }
         );
         
@@ -514,7 +514,7 @@ export default async (req, res) => {
         console.log(`Updated template: ${templateId}`);
         
         // Return updated template
-        const updatedTemplate = await db.collection('templates').findOne({ _id: templateId });
+        const updatedTemplate = await db.collection('templates').findOne({ _id: new ObjectId(templateId) });
         
         res.status(200).json({
           success: true,
@@ -552,7 +552,7 @@ export default async (req, res) => {
         
         // Soft delete - set is_active to false instead of actually deleting
         const result = await db.collection('templates').updateOne(
-          { _id: templateId },
+          { _id: new ObjectId(templateId) },
           { 
             $set: { 
               is_active: false,
@@ -1173,7 +1173,7 @@ export default async (req, res) => {
         const { db } = await connectToDatabase();
         
         // Find single project by ID
-        const project = await db.collection('projects').findOne({ _id: projectId });
+        const project = await db.collection('projects').findOne({ _id: new ObjectId(projectId) });
         
         if (project) {
           console.log(`Found project: ${project.name} (${projectId})`);
