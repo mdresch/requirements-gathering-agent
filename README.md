@@ -1,5 +1,7 @@
 # ADPA - Advanced Document Processing & Automation Framework
 
+<!-- Deployment trigger: 2025-01-28 -->
+
 [![CI](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mdresch/requirements-gathering-agent/actions/workflows/ci.yml)
 [![Vercel](https://vercelbadge.vercel.app/api/project/prj_TVNBBugHdRQTvaVpBFt37qdO8hn6)](https://vercel.com/team_iwZkbWCdspuARj0t8dUyo90z/requirements-gathering-agent)
 
