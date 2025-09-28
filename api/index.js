@@ -1,5 +1,5 @@
 // MongoDB connection
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 
 let cachedClient = null;
 let cachedDb = null;
@@ -24,7 +24,7 @@ async function connectToDatabase() {
 }
 
 // Simple Vercel serverless function
-module.exports = async (req, res) => {
+export default async (req, res) => {
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
