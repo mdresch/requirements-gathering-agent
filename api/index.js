@@ -110,7 +110,8 @@ export default async (req, res) => {
           enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
           enhancedDataQuality: '/api/v1/standards/enhanced/data-quality',
           feedbackSummary: '/api/v1/feedback/summary',
-          categoriesActive: '/api/v1/categories/active'
+          categoriesActive: '/api/v1/categories/active',
+          auditTrail: '/api/v1/audit-trail'
         }
       });
       return;
@@ -639,6 +640,131 @@ export default async (req, res) => {
       return;
     }
 
+    // Audit trail endpoints
+    if (method === 'POST' && url.startsWith('/api/v1/audit-trail')) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Audit Trail POST API Key received:', apiKey);
+      console.log('Audit Trail POST Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to create audit trail entry...');
+        console.log('URL:', url);
+        console.log('Request body:', req.body);
+        
+        const { db } = await connectToDatabase();
+        
+        // Create audit trail entry
+        const auditEntry = {
+          ...req.body,
+          timestamp: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+        
+        const result = await db.collection('audit_trail').insertOne(auditEntry);
+        
+        console.log(`Created audit trail entry with ID: ${result.insertedId}`);
+        
+        res.status(201).json({
+          success: true,
+          data: {
+            id: result.insertedId,
+            ...auditEntry
+          },
+          message: 'Audit trail entry created successfully'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to create audit trail entry',
+          message: dbError.message
+        });
+      }
+      return;
+    }
+
+    if (method === 'GET' && url.startsWith('/api/v1/audit-trail')) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Audit Trail GET API Key received:', apiKey);
+      console.log('Audit Trail GET Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to load audit trail from database...');
+        console.log('URL:', url);
+        console.log('Query params:', req.query);
+        
+        const { db } = await connectToDatabase();
+        
+        // Parse query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+        
+        // Build query filters
+        const query = {};
+        if (req.query.projectId) query.projectId = req.query.projectId;
+        if (req.query.action) query.action = req.query.action;
+        if (req.query.userId) query.userId = req.query.userId;
+        
+        console.log(`Audit trail query:`, query);
+        console.log(`Pagination: page=${page}, limit=${limit}, skip=${skip}`);
+        
+        const auditEntries = await db.collection('audit_trail').find(query).sort({ timestamp: -1 }).skip(skip).limit(limit).toArray();
+        const total = await db.collection('audit_trail').countDocuments(query);
+        
+        console.log(`Found ${auditEntries.length} audit entries (page ${page} of ${Math.ceil(total / limit)})`);
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            entries: auditEntries,
+            total: total,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(total / limit)
+          },
+          message: 'Audit trail loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
+        
+        // Fallback to mock data
+        const mockAuditEntries = [
+          {
+            id: 'mock-audit-1',
+            action: 'project_viewed',
+            projectId: 'mock-project-id',
+            projectName: 'Sample Project',
+            userId: 'user-123',
+            timestamp: new Date().toISOString(),
+            details: 'User viewed project details',
+            metadata: {
+              ipAddress: '127.0.0.1',
+              userAgent: 'Mozilla/5.0...'
+            }
+          }
+        ];
+
+        res.status(200).json({
+          success: true,
+          data: {
+            entries: mockAuditEntries,
+            total: mockAuditEntries.length,
+            page: 1,
+            limit: 50,
+            totalPages: 1
+          },
+          message: 'Audit trail loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
     // Single project endpoint (must come before projects list endpoint)
     if (method === 'GET' && url.match(/^\/api\/v1\/projects\/[^\/]+$/)) {
       const apiKey = req.headers['x-api-key'];
@@ -797,7 +923,8 @@ export default async (req, res) => {
         enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
         enhancedDataQuality: '/api/v1/standards/enhanced/data-quality',
         feedbackSummary: '/api/v1/feedback/summary',
-        categoriesActive: '/api/v1/categories/active'
+        categoriesActive: '/api/v1/categories/active',
+        auditTrail: '/api/v1/audit-trail'
       }
     });
 
