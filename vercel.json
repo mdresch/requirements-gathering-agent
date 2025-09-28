@@ -2,21 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/server.js",
+      "src": "dist/minimal-server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/server.js"
+      "dest": "dist/minimal-server.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "dist/server.js": {
+    "dist/minimal-server.js": {
       "maxDuration": 30
     }
   }
