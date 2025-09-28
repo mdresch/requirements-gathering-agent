@@ -1,14 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "dist/minimal-server.js": {
-      "maxDuration": 30
-    }
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/minimal-server.js"
-    }
-  ]
+  "installCommand": "npm install",
+  "framework": null
 }
