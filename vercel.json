@@ -1,18 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dist/minimal-server.js",
-      "use": "@vercel/node"
+  "functions": {
+    "dist/minimal-server.js": {
+      "maxDuration": 30
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "dist/minimal-server.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
