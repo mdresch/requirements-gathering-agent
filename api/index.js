@@ -6,21 +6,37 @@ let cachedDb = null;
 
 async function connectToDatabase() {
   if (cachedClient && cachedDb) {
+    console.log('Using cached database connection');
     return { client: cachedClient, db: cachedDb };
   }
 
-  const client = new MongoClient(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  console.log('Creating new database connection...');
+  console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+  console.log('MONGODB_DATABASE:', process.env.MONGODB_DATABASE || 'requirements-gathering-agent');
 
-  await client.connect();
-  const db = client.db(process.env.MONGODB_DATABASE || 'requirements-gathering-agent');
+  try {
+    const client = new MongoClient(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      connectTimeoutMS: 10000, // 10 second timeout
+    });
 
-  cachedClient = client;
-  cachedDb = db;
+    console.log('Attempting to connect to MongoDB...');
+    await client.connect();
+    console.log('Successfully connected to MongoDB');
+    
+    const db = client.db(process.env.MONGODB_DATABASE || 'requirements-gathering-agent');
+    console.log('Connected to database:', db.databaseName);
 
-  return { client, db };
+    cachedClient = client;
+    cachedDb = db;
+
+    return { client, db };
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    throw error;
+  }
 }
 
 // Simple Vercel serverless function
@@ -46,8 +62,36 @@ export default async (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         version: '1.0.0',
-        message: 'API is running successfully'
+        message: 'API is running successfully',
+        mongodb_uri: process.env.MONGODB_URI ? 'Set' : 'Not set',
+        mongodb_database: process.env.MONGODB_DATABASE || 'requirements-gathering-agent'
       });
+      return;
+    }
+
+    // Database test endpoint
+    if (method === 'GET' && url === '/api/v1/db-test') {
+      try {
+        console.log('Testing database connection...');
+        const { db } = await connectToDatabase();
+        const collections = await db.listCollections().toArray();
+        
+        res.status(200).json({
+          success: true,
+          message: 'Database connection successful',
+          database: db.databaseName,
+          collections: collections.map(c => c.name),
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Database test failed:', error.message);
+        res.status(500).json({
+          success: false,
+          message: 'Database connection failed',
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      }
       return;
     }
 
@@ -78,8 +122,12 @@ export default async (req, res) => {
       }
 
       try {
+        console.log('Attempting to load templates from database...');
         const { db } = await connectToDatabase();
+        console.log('Database connected, querying templates collection...');
+        
         const templates = await db.collection('templates').find({}).toArray();
+        console.log(`Found ${templates.length} templates in database`);
         
         res.status(200).json({
           success: true,
@@ -93,7 +141,8 @@ export default async (req, res) => {
           message: 'Templates loaded from database'
         });
       } catch (dbError) {
-        console.error('Database error:', dbError);
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
         // Fallback to mock data if database fails
         const mockTemplates = [
           {
