@@ -105,7 +105,9 @@ export default async (req, res) => {
         endpoints: {
           health: '/api/v1/health',
           templates: '/api/v1/templates',
-          projects: '/api/v1/projects'
+          projects: '/api/v1/projects',
+          standardsDashboard: '/api/v1/standards/dashboard',
+          feedbackSummary: '/api/v1/feedback/summary'
         }
       });
       return;
@@ -195,6 +197,167 @@ export default async (req, res) => {
       return;
     }
 
+    // Standards dashboard endpoint
+    if (method === 'GET' && url.startsWith('/api/v1/standards/dashboard')) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Standards Dashboard API Key received:', apiKey);
+      console.log('Standards Dashboard Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to load standards dashboard data from database...');
+        console.log('URL:', url);
+        
+        const { db } = await connectToDatabase();
+        
+        // Get compliance data from projects collection
+        const projects = await db.collection('projects').find({}).toArray();
+        const totalProjects = projects.length;
+        
+        // Calculate compliance metrics
+        const complianceData = {
+          totalProjects: totalProjects,
+          compliantProjects: projects.filter(p => p.complianceScore >= 80).length,
+          averageCompliance: totalProjects > 0 ? Math.round(projects.reduce((sum, p) => sum + (p.complianceScore || 0), 0) / totalProjects) : 0,
+          frameworkBreakdown: {
+            babok: projects.filter(p => p.framework === 'babok').length,
+            pmbok: projects.filter(p => p.framework === 'pmbok').length,
+            agile: projects.filter(p => p.framework === 'agile').length,
+            other: projects.filter(p => !['babok', 'pmbok', 'agile'].includes(p.framework)).length
+          },
+          recentActivity: projects.slice(-5).map(p => ({
+            projectName: p.name,
+            complianceScore: p.complianceScore || 0,
+            lastUpdated: p.updatedAt || p.createdAt
+          }))
+        };
+        
+        console.log(`Found ${totalProjects} projects for standards dashboard`);
+        
+        res.status(200).json({
+          success: true,
+          data: complianceData,
+          message: 'Standards dashboard data loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
+        
+        // Fallback to mock data
+        const mockComplianceData = {
+          totalProjects: 4,
+          compliantProjects: 3,
+          averageCompliance: 85,
+          frameworkBreakdown: {
+            babok: 2,
+            pmbok: 1,
+            agile: 1,
+            other: 0
+          },
+          recentActivity: [
+            {
+              projectName: 'Sample Project 1',
+              complianceScore: 85,
+              lastUpdated: new Date().toISOString()
+            }
+          ]
+        };
+
+        res.status(200).json({
+          success: true,
+          data: mockComplianceData,
+          message: 'Standards dashboard data loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
+    // Feedback summary endpoint
+    if (method === 'GET' && url.startsWith('/api/v1/feedback/summary')) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Feedback Summary API Key received:', apiKey);
+      console.log('Feedback Summary Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to load feedback summary from database...');
+        console.log('URL:', url);
+        
+        const { db } = await connectToDatabase();
+        
+        // Get feedback data from feedback collection (if it exists)
+        const feedbackCollection = db.collection('feedback');
+        const feedbackExists = await feedbackCollection.countDocuments() > 0;
+        
+        let feedbackData;
+        if (feedbackExists) {
+          const feedback = await feedbackCollection.find({}).toArray();
+          feedbackData = {
+            totalFeedback: feedback.length,
+            averageRating: feedback.length > 0 ? Math.round(feedback.reduce((sum, f) => sum + (f.rating || 0), 0) / feedback.length * 10) / 10 : 0,
+            positiveFeedback: feedback.filter(f => (f.rating || 0) >= 4).length,
+            recentFeedback: feedback.slice(-3).map(f => ({
+              rating: f.rating || 0,
+              comment: f.comment || '',
+              timestamp: f.createdAt || new Date().toISOString()
+            }))
+          };
+        } else {
+          // No feedback collection exists, return empty data
+          feedbackData = {
+            totalFeedback: 0,
+            averageRating: 0,
+            positiveFeedback: 0,
+            recentFeedback: []
+          };
+        }
+        
+        console.log(`Found ${feedbackData.totalFeedback} feedback entries`);
+        
+        res.status(200).json({
+          success: true,
+          data: feedbackData,
+          message: 'Feedback summary loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
+        
+        // Fallback to mock data
+        const mockFeedbackData = {
+          totalFeedback: 12,
+          averageRating: 4.2,
+          positiveFeedback: 9,
+          recentFeedback: [
+            {
+              rating: 5,
+              comment: 'Great template, very helpful!',
+              timestamp: new Date().toISOString()
+            },
+            {
+              rating: 4,
+              comment: 'Good structure, could use more examples',
+              timestamp: new Date(Date.now() - 86400000).toISOString()
+            },
+            {
+              rating: 5,
+              comment: 'Excellent quality, highly recommended',
+              timestamp: new Date(Date.now() - 172800000).toISOString()
+            }
+          ]
+        };
+
+        res.status(200).json({
+          success: true,
+          data: mockFeedbackData,
+          message: 'Feedback summary loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
     // Projects endpoint
     if (method === 'GET' && url.startsWith('/api/v1/projects')) {
       const apiKey = req.headers['x-api-key'];
@@ -221,7 +384,7 @@ export default async (req, res) => {
         
         // Parse query parameters
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = parseInt(req.query.limit) || 9;
         const skip = (page - 1) * limit;
         
         console.log(`Projects pagination: page=${page}, limit=${limit}, skip=${skip}`);
@@ -283,7 +446,9 @@ export default async (req, res) => {
       availableEndpoints: {
         health: '/api/v1/health',
         templates: '/api/v1/templates',
-        projects: '/api/v1/projects'
+        projects: '/api/v1/projects',
+        standardsDashboard: '/api/v1/standards/dashboard',
+        feedbackSummary: '/api/v1/feedback/summary'
       }
     });
 
