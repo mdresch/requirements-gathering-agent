@@ -18,7 +18,7 @@
     "multi-standard-api": "dist/server.js"
   },
   "scripts": {
-    "build": "tsc && npm run copy-configs",
+    "build": "cd admin-interface && npm install && npm run build",
     "vercel-build": "tsc --project tsconfig.vercel.json",
     "setup-review-system": "node dist/cli.js setup-review-system",
     "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
