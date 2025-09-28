@@ -77,7 +77,7 @@ export default function EnhancedComplianceDataIntegration({
       return;
       
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//localhost:3002/ws/compliance`;
+      const wsUrl = `${protocol}//requirements-gathering-agent.vercel.app/ws/compliance`;
       
       wsRef.current = new WebSocket(wsUrl);
       

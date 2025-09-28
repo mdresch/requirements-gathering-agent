@@ -133,7 +133,7 @@ const DataQualityAuditDashboard: React.FC = () => {
       if (filters.endDate) eventsParams.append('endDate', filters.endDate);
       eventsParams.append('limit', filters.limit.toString());
 
-      const eventsResponse = await fetch(`http://localhost:3002/api/v1/data-quality-audit/events?${eventsParams}`);
+      const eventsResponse = await fetch(`/api/v1/data-quality-audit/events?${eventsParams}`);
       const eventsData = await eventsResponse.json();
 
       if (eventsData.success) {
@@ -146,7 +146,7 @@ const DataQualityAuditDashboard: React.FC = () => {
       if (filters.startDate) analyticsParams.append('startDate', filters.startDate);
       if (filters.endDate) analyticsParams.append('endDate', filters.endDate);
 
-      const analyticsResponse = await fetch(`http://localhost:3002/api/v1/data-quality-audit/analytics?${analyticsParams}`);
+      const analyticsResponse = await fetch(`/api/v1/data-quality-audit/analytics?${analyticsParams}`);
       const analyticsData = await analyticsResponse.json();
 
       if (analyticsData.success) {

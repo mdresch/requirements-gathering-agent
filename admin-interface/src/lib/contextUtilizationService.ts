@@ -56,7 +56,7 @@ interface DocumentTraceability {
 }
 
 export class ContextUtilizationService {
-  private static readonly API_BASE_URL = 'http://localhost:3002/api/v1';
+  private static readonly API_BASE_URL = '/api/v1';
 
   /**
    * Get project analytics from audit trail data

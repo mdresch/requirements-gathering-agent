@@ -67,7 +67,7 @@ export default function ContextUtilizationModal({ isOpen, onClose, document }: C
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/context-tracking/documents/${document.id}/metrics`, {
+      const response = await fetch(`/api/v1/context-tracking/documents/${document.id}/metrics`, {
         headers: { 'X-API-Key': 'dev-api-key-123' }
       });
       

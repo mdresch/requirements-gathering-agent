@@ -374,7 +374,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         console.log('📄 Generated document:', generatedDoc);
         
         // Now fetch the actual document content from the database
-        const documentResponse = await fetch(`http://localhost:3002/api/v1/projects/documents/${generatedDoc.id}`, {
+        const documentResponse = await fetch(`/api/v1/projects/documents/${generatedDoc.id}`, {
           headers: {
             'X-API-Key': 'dev-api-key-123'
           }

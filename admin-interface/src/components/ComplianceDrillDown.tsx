@@ -84,7 +84,7 @@ export default function ComplianceDrillDown({
     
     try {
       // Try to load real issues from API (backend server)
-      const response = await fetch(`http://localhost:3002/api/v1/standards/issues?projectId=${projectId}&standardType=${standardType}`);
+      const response = await fetch(`/api/v1/standards/issues?projectId=${projectId}&standardType=${standardType}`);
       
       if (!response.ok) {
         throw new Error(`API endpoint not available: ${response.status}`);
