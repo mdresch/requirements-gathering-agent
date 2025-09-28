@@ -1,0 +1,6 @@
+# Ignore everything except admin-interface
+*
+!admin-interface/
+!admin-interface/**
+!vercel.json
+
