@@ -358,13 +358,16 @@ export default async (req, res) => {
         endpoints: {
             health: '/api/v1/health',
             templates: '/api/v1/templates',
+            templatesUpdate: '/api/v1/templates/{id} (PUT)',
+            templatesDelete: '/api/v1/templates/{id} (DELETE)',
           projects: '/api/v1/projects',
           standardsDashboard: '/api/v1/standards/dashboard',
           enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
           enhancedDataQuality: '/api/v1/standards/enhanced/data-quality',
           feedbackSummary: '/api/v1/feedback/summary',
           categoriesActive: '/api/v1/categories/active',
-          auditTrail: '/api/v1/audit-trail'
+          auditTrail: '/api/v1/audit-trail',
+          analytics: '/api/v1/analytics/homepage'
         }
       });
       return;
@@ -462,6 +465,126 @@ export default async (req, res) => {
             totalPages: 1
         },
           message: 'Templates loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
+    // Update template endpoint (PUT)
+    if (method === 'PUT' && url.match(/^\/api\/v1\/templates\/[^\/]+$/)) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Template Update API Key received:', apiKey);
+      console.log('Template Update Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to update template...');
+        console.log('URL:', url);
+        console.log('Request body:', req.body);
+        
+        // Extract template ID from URL
+        const templateId = url.split('/').pop();
+        console.log('Template ID:', templateId);
+        
+        const { db } = await connectToDatabase();
+        
+        // Update template
+        const updateData = {
+          ...req.body,
+          updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        const result = await db.collection('templates').updateOne(
+          { _id: templateId },
+          { $set: updateData }
+        );
+        
+        if (result.matchedCount === 0) {
+          console.log(`Template not found: ${templateId}`);
+          res.status(404).json({
+            success: false,
+            error: 'Template not found',
+            message: `Template with ID ${templateId} does not exist`
+          });
+          return;
+        }
+        
+        console.log(`Updated template: ${templateId}`);
+        
+        // Return updated template
+        const updatedTemplate = await db.collection('templates').findOne({ _id: templateId });
+        
+        res.status(200).json({
+          success: true,
+          data: updatedTemplate,
+          message: 'Template updated successfully'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to update template',
+          message: dbError.message
+        });
+      }
+      return;
+    }
+
+    // Delete template endpoint (DELETE)
+    if (method === 'DELETE' && url.match(/^\/api\/v1\/templates\/[^\/]+$/)) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Template Delete API Key received:', apiKey);
+      console.log('Template Delete Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to delete template...');
+        console.log('URL:', url);
+        
+        // Extract template ID from URL
+        const templateId = url.split('/').pop();
+        console.log('Template ID:', templateId);
+        
+        const { db } = await connectToDatabase();
+        
+        // Soft delete - set is_active to false instead of actually deleting
+        const result = await db.collection('templates').updateOne(
+          { _id: templateId },
+          { 
+            $set: { 
+              is_active: false,
+              deleted_at: new Date().toISOString(),
+              deletedAt: new Date().toISOString()
+            }
+          }
+        );
+        
+        if (result.matchedCount === 0) {
+          console.log(`Template not found: ${templateId}`);
+          res.status(404).json({
+            success: false,
+            error: 'Template not found',
+            message: `Template with ID ${templateId} does not exist`
+          });
+          return;
+        }
+        
+        console.log(`Soft deleted template: ${templateId}`);
+        
+        res.status(200).json({
+          success: true,
+          data: { id: templateId },
+          message: 'Template deleted successfully'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to delete template',
+          message: dbError.message
         });
       }
       return;
