@@ -125,9 +125,17 @@ export async function getTemplates(params?: {
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
+    console.log('📊 Templates API Response:', response);
     
-           // Transform the API response to match expected Template interface
-           const transformedTemplates = (response.data || []).map((template: any) => ({
+    // Handle both array response and paginated response structures
+    const templatesData = Array.isArray(response.data) 
+      ? response.data 
+      : response.data?.templates || response.data?.data || [];
+    
+    console.log('📊 Templates data extracted:', templatesData);
+    
+    // Transform the API response to match expected Template interface
+    const transformedTemplates = (templatesData || []).map((template: any) => ({
              id: template.id.toString(),
              name: template.name,
              description: template.description,
@@ -160,10 +168,10 @@ export async function getTemplates(params?: {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.pagination?.total || 0,
-        page: response.pagination?.page || 1,
-        limit: response.pagination?.limit || 20,
-        totalPages: response.pagination?.pages || Math.ceil((response.pagination?.total || 0) / (response.pagination?.limit || 20))
+        total: response.data?.total || response.pagination?.total || transformedTemplates.length,
+        page: response.data?.page || response.pagination?.page || 1,
+        limit: response.data?.limit || response.pagination?.limit || 20,
+        totalPages: response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.limit || response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
