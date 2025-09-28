@@ -301,9 +301,12 @@ export default async (req, res) => {
         // Get projects for calculations
         const projects = await db.collection('projects').find({}).toArray();
         
-        // Calculate time saved (estimate: 2 hours per project + 1 hour per document)
-        const projectDocuments = await db.collection('projectdocuments').countDocuments({});
-        const timeSaved = (projects.length * 2) + (projectDocuments * 1);
+        // Calculate time saved from actual document values
+        const projectDocuments = await db.collection('projectdocuments').find({}).toArray();
+        const timeSaved = projectDocuments.reduce((total, doc) => {
+          // Sum up the actual time saved values from each document
+          return total + (doc.timeSaved || 0);
+        }, 0);
         
         // Calculate success rate based on completed projects
         const completedProjects = projects.filter(p => p.status === 'completed').length;
@@ -317,7 +320,7 @@ export default async (req, res) => {
           timestamp: { $gte: thirtyDaysAgo.toISOString() }
         });
         
-        console.log(`📊 Analytics: ${activeTemplatesCount} templates, ${activeUsersCount} users, ${timeSaved}h saved, ${successRate}% success`);
+        console.log(`📊 Analytics: ${activeTemplatesCount} templates, ${activeUsersCount} users, ${timeSaved}h saved (from ${projectDocuments.length} documents), ${successRate}% success`);
         
         res.status(200).json({
           success: true,
