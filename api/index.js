@@ -112,7 +112,7 @@ export default async (req, res) => {
     }
 
     // Templates endpoint
-    if (method === 'GET' && url === '/api/v1/templates') {
+    if (method === 'GET' && url.startsWith('/api/v1/templates')) {
       const apiKey = req.headers['x-api-key'];
       const expectedKey = process.env.API_KEY || 'dev-api-key-123';
       
@@ -130,20 +130,32 @@ export default async (req, res) => {
 
       try {
         console.log('Attempting to load templates from database...');
+        console.log('URL:', url);
+        console.log('Query params:', req.query);
+        
         const { db } = await connectToDatabase();
         console.log('Database connected, querying templates collection...');
         
-        const templates = await db.collection('templates').find({}).toArray();
-        console.log(`Found ${templates.length} templates in database`);
+        // Parse query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        
+        console.log(`Pagination: page=${page}, limit=${limit}, skip=${skip}`);
+        
+        const templates = await db.collection('templates').find({}).skip(skip).limit(limit).toArray();
+        const total = await db.collection('templates').countDocuments({});
+        
+        console.log(`Found ${templates.length} templates in database (page ${page} of ${Math.ceil(total / limit)})`);
         
         res.status(200).json({
           success: true,
           data: {
             templates: templates,
-            total: templates.length,
-            page: 1,
-            limit: 20,
-            totalPages: 1
+            total: total,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(total / limit)
           },
           message: 'Templates loaded from database'
         });
@@ -184,7 +196,7 @@ export default async (req, res) => {
     }
 
     // Projects endpoint
-    if (method === 'GET' && url === '/api/v1/projects') {
+    if (method === 'GET' && url.startsWith('/api/v1/projects')) {
       const apiKey = req.headers['x-api-key'];
       const expectedKey = process.env.API_KEY || 'dev-api-key-123';
       
@@ -201,17 +213,32 @@ export default async (req, res) => {
       // }
 
       try {
+        console.log('Attempting to load projects from database...');
+        console.log('URL:', url);
+        console.log('Query params:', req.query);
+        
         const { db } = await connectToDatabase();
-        const projects = await db.collection('projects').find({}).toArray();
+        
+        // Parse query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        
+        console.log(`Projects pagination: page=${page}, limit=${limit}, skip=${skip}`);
+        
+        const projects = await db.collection('projects').find({}).skip(skip).limit(limit).toArray();
+        const total = await db.collection('projects').countDocuments({});
+        
+        console.log(`Found ${projects.length} projects in database (page ${page} of ${Math.ceil(total / limit)})`);
         
         res.status(200).json({
           success: true,
           data: {
             projects: projects,
-            total: projects.length,
-            page: 1,
-            limit: 20,
-            totalPages: 1
+            total: total,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(total / limit)
           },
           message: 'Projects loaded from database'
         });
