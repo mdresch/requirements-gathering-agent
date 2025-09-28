@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "buildCommand": "cd admin-interface && npm run build",
+  "outputDirectory": "admin-interface/.next",
+  "installCommand": "cd admin-interface && npm install",
+  "framework": "nextjs"
+}
