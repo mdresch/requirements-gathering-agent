@@ -19,5 +19,10 @@
       "src": "/(.*)",
       "dest": "admin-interface/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  }
 }
