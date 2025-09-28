@@ -1,7 +1,7 @@
-# Ignore backend files and directories
-src/
-dist/
-node_modules/
+# Ignore backend files and directories (but not admin-interface)
+/src/
+/dist/
+/node_modules/
 *.log
 .env*
 *.md
