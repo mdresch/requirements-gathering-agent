@@ -148,8 +148,8 @@ export async function getTemplates(params?: {
              description: template.description,
              category: template.category || 'General', // Default category if not provided
              tags: template.metadata?.tags || template.tags || [template.category || 'general'], // Use category as tag if no tags
-             content: template.prompt_template || template.content || '',
-             aiInstructions: template.ai_instructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             content: template.prompt_template || template.content || template.templateData?.content || '',
+             aiInstructions: template.ai_instructions || template.aiInstructions || template.templateData?.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
              documentKey: template.documentKey || '', // Include documentKey
              generationFunction: template.generation_function || template.generationFunction || 'getAiGenericDocument', // Include generationFunction
              templateType: template.template_type || template.templateType || 'ai_instruction',
