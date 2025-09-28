@@ -103,8 +103,8 @@ export default async (req, res) => {
         description: 'API server for admin interface',
         health: '/api/v1/health',
         endpoints: {
-          health: '/api/v1/health',
-          templates: '/api/v1/templates',
+            health: '/api/v1/health',
+            templates: '/api/v1/templates',
           projects: '/api/v1/projects',
           standardsDashboard: '/api/v1/standards/dashboard',
           enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
@@ -153,6 +153,12 @@ export default async (req, res) => {
         const total = await db.collection('templates').countDocuments({});
         
         console.log(`Found ${templates.length} templates in database (page ${page} of ${Math.ceil(total / limit)})`);
+        console.log('Sample template:', templates[0]);
+        console.log('Total templates in database:', total);
+        
+        if (templates.length === 0) {
+          console.log('⚠️ No templates found in database, this might be why mock data is showing');
+        }
         
         res.status(200).json({
           success: true,
@@ -915,9 +921,9 @@ export default async (req, res) => {
     res.status(404).json({
         error: 'Not Found',
       message: `Route ${url} not found`,
-      availableEndpoints: {
-        health: '/api/v1/health',
-        templates: '/api/v1/templates',
+        availableEndpoints: {
+            health: '/api/v1/health',
+            templates: '/api/v1/templates',
         projects: '/api/v1/projects',
         standardsDashboard: '/api/v1/standards/dashboard',
         enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',

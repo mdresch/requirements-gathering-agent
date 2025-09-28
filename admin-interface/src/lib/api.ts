@@ -126,6 +126,8 @@ export async function getTemplates(params?: {
     const response = await request(url);
     
     console.log('📊 Templates API Response:', response);
+    console.log('📊 Response success:', response.success);
+    console.log('📊 Response data structure:', response.data);
     
     // Handle both array response and paginated response structures
     const templatesData = Array.isArray(response.data) 
@@ -133,6 +135,8 @@ export async function getTemplates(params?: {
       : response.data?.templates || response.data?.data || [];
     
     console.log('📊 Templates data extracted:', templatesData);
+    console.log('📊 Number of templates:', templatesData.length);
+    console.log('📊 First template:', templatesData[0]);
     
     // Transform the API response to match expected Template interface
     const transformedTemplates = (templatesData || []).map((template: any) => ({
