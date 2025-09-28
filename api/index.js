@@ -286,6 +286,65 @@ export default async (req, res) => {
       return;
     }
 
+    // Analytics endpoint for homepage stats
+    if (method === 'GET' && url === '/api/v1/analytics/homepage') {
+      try {
+        console.log('📊 Loading homepage analytics...');
+        const { db } = await connectToDatabase();
+        
+        // Get templates count (active only)
+        const activeTemplatesCount = await db.collection('templates').countDocuments({ is_active: { $ne: false } });
+        
+        // Get users count (active users)
+        const activeUsersCount = await db.collection('users').countDocuments({ isActive: true });
+        
+        // Get projects for calculations
+        const projects = await db.collection('projects').find({}).toArray();
+        
+        // Calculate time saved (estimate: 2 hours per project + 1 hour per document)
+        const projectDocuments = await db.collection('projectdocuments').countDocuments({});
+        const timeSaved = (projects.length * 2) + (projectDocuments * 1);
+        
+        // Calculate success rate based on completed projects
+        const completedProjects = projects.filter(p => p.status === 'completed').length;
+        const successRate = projects.length > 0 ? Math.round((completedProjects / projects.length) * 100) : 0;
+        
+        // Get recent activity (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentActivities = await db.collection('realtime_metrics').countDocuments({
+          timestamp: { $gte: thirtyDaysAgo.toISOString() }
+        });
+        
+        console.log(`📊 Analytics: ${activeTemplatesCount} templates, ${activeUsersCount} users, ${timeSaved}h saved, ${successRate}% success`);
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            templatesCreated: activeTemplatesCount,
+            activeUsers: activeUsersCount,
+            timeSaved: timeSaved,
+            successRate: successRate,
+            totalProjects: projects.length,
+            completedProjects: completedProjects,
+            totalDocuments: projectDocuments,
+            recentActivities: recentActivities,
+            lastUpdated: new Date().toISOString()
+          },
+          message: 'Homepage analytics loaded successfully'
+        });
+      } catch (error) {
+        console.error('❌ Analytics error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message,
+          message: 'Failed to load analytics'
+        });
+      }
+      return;
+    }
+
     // Root endpoint
     if (method === 'GET' && url === '/') {
       res.status(200).json({
