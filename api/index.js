@@ -107,7 +107,8 @@ export default async (req, res) => {
           templates: '/api/v1/templates',
           projects: '/api/v1/projects',
           standardsDashboard: '/api/v1/standards/dashboard',
-          feedbackSummary: '/api/v1/feedback/summary'
+          feedbackSummary: '/api/v1/feedback/summary',
+          categoriesActive: '/api/v1/categories/active'
         }
       });
       return;
@@ -165,8 +166,8 @@ export default async (req, res) => {
         console.error('Database error:', dbError.message);
         console.log('Falling back to mock data...');
         // Fallback to mock data if database fails
-        const mockTemplates = [
-          {
+    const mockTemplates = [
+        {
             id: "1",
             name: "Business Case Template",
             description: "Strategic justification and financial analysis for project initiation",
@@ -183,14 +184,14 @@ export default async (req, res) => {
         ];
 
         res.status(200).json({
-          success: true,
-          data: {
+        success: true,
+        data: {
             templates: mockTemplates,
             total: mockTemplates.length,
             page: 1,
             limit: 20,
             totalPages: 1
-          },
+        },
           message: 'Templates loaded from mock data (database unavailable)'
         });
       }
@@ -268,6 +269,79 @@ export default async (req, res) => {
           success: true,
           data: mockComplianceData,
           message: 'Standards dashboard data loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
+    // Categories active endpoint
+    if (method === 'GET' && url.startsWith('/api/v1/categories/active')) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Categories Active API Key received:', apiKey);
+      console.log('Categories Active Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to load active categories from database...');
+        console.log('URL:', url);
+        
+        const { db } = await connectToDatabase();
+        
+        // Get unique categories from templates collection
+        const templates = await db.collection('templates').find({}).toArray();
+        const categories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+        
+        const activeCategories = categories.map(category => ({
+          id: category.toLowerCase().replace(/\s+/g, '-'),
+          name: category,
+          count: templates.filter(t => t.category === category).length,
+          isActive: true
+        }));
+        
+        console.log(`Found ${activeCategories.length} active categories`);
+        
+        res.status(200).json({
+          success: true,
+          data: activeCategories,
+          message: 'Active categories loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
+        
+        // Fallback to mock data
+        const mockCategories = [
+          {
+            id: 'strategic-planning',
+            name: 'Strategic Planning',
+            count: 3,
+            isActive: true
+          },
+          {
+            id: 'requirements-analysis',
+            name: 'Requirements Analysis',
+            count: 5,
+            isActive: true
+          },
+          {
+            id: 'project-management',
+            name: 'Project Management',
+            count: 2,
+            isActive: true
+          },
+          {
+            id: 'quality-assurance',
+            name: 'Quality Assurance',
+            count: 4,
+            isActive: true
+          }
+        ];
+
+        res.status(200).json({
+          success: true,
+          data: mockCategories,
+          message: 'Active categories loaded from mock data (database unavailable)'
         });
       }
       return;
@@ -408,8 +482,8 @@ export default async (req, res) => {
       } catch (dbError) {
         console.error('Database error:', dbError);
         // Fallback to mock data if database fails
-        const mockProjects = [
-          {
+    const mockProjects = [
+        {
             id: '1',
             name: 'Sample Project 1',
             description: 'A sample project for demonstration',
@@ -425,8 +499,8 @@ export default async (req, res) => {
         ];
 
         res.status(200).json({
-          success: true,
-          data: {
+        success: true,
+        data: {
             projects: mockProjects,
             total: mockProjects.length,
             page: 1,
@@ -437,18 +511,19 @@ export default async (req, res) => {
         });
       }
       return;
-    }
+        }
 
     // 404 handler
     res.status(404).json({
-      error: 'Not Found',
+        error: 'Not Found',
       message: `Route ${url} not found`,
       availableEndpoints: {
         health: '/api/v1/health',
         templates: '/api/v1/templates',
         projects: '/api/v1/projects',
         standardsDashboard: '/api/v1/standards/dashboard',
-        feedbackSummary: '/api/v1/feedback/summary'
+        feedbackSummary: '/api/v1/feedback/summary',
+        categoriesActive: '/api/v1/categories/active'
       }
     });
 
