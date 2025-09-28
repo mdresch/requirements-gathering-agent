@@ -340,12 +340,19 @@ export default async (req, res) => {
         
         console.log(`Pagination: page=${page}, limit=${limit}, skip=${skip}`);
         
-        const templates = await db.collection('templates').find({}).skip(skip).limit(limit).toArray();
-        const total = await db.collection('templates').countDocuments({});
+        // Filter out soft-deleted templates (only show active templates)
+        const query = { is_active: { $ne: false } }; // Show templates where is_active is not false
+        const templates = await db.collection('templates').find(query).skip(skip).limit(limit).toArray();
+        const total = await db.collection('templates').countDocuments(query);
         
-        console.log(`Found ${templates.length} templates in database (page ${page} of ${Math.ceil(total / limit)})`);
+        // Debug: Check total templates vs active templates
+        const totalTemplates = await db.collection('templates').countDocuments({});
+        const activeTemplates = await db.collection('templates').countDocuments(query);
+        
+        console.log(`📊 Template filtering: ${activeTemplates} active out of ${totalTemplates} total templates`);
+        console.log(`Found ${templates.length} active templates in database (page ${page} of ${Math.ceil(total / limit)})`);
         console.log('Sample template:', templates[0]);
-        console.log('Total templates in database:', total);
+        console.log('Total active templates in database:', total);
         
         if (templates.length === 0) {
           console.log('⚠️ No templates found in database, this might be why mock data is showing');
