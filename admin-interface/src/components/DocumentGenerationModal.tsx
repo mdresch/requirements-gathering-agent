@@ -85,15 +85,12 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
       const fetchTemplates = async () => {
         setTemplatesLoading(true);
         try {
-          console.log('🔍 Fetching templates for document generation...');
           const response = await apiClient.getTemplates();
           
           if (response.success && response.data?.templates) {
-            console.log('✅ Templates loaded for document generation:', response.data.templates);
             
             // Filter to only include ACTIVE templates for document generation
             const activeTemplates = response.data.templates.filter((template: any) => template.isActive === true);
-            console.log('✅ Active templates for generation:', activeTemplates);
             
             // Transform API templates to DocumentTemplate format
             const transformedTemplates: DocumentTemplate[] = activeTemplates.map((template: any) => ({
@@ -109,7 +106,6 @@ const DocumentGenerationModal: React.FC<DocumentGenerationModalProps> = ({
             }));
             
             setAvailableTemplates(transformedTemplates);
-            console.log('✅ Transformed active templates:', transformedTemplates);
           } else {
             console.error('❌ Failed to load templates for document generation');
             // Fallback to empty array
@@ -805,7 +801,6 @@ This document contains the generated content for ${template.name} based on the $
         return getDocumentKeyFromTemplateName(templateName);
       }
       
-      console.log(`✅ Using valid document key "${template.documentKey}" for template ${templateId}`);
       return template.documentKey;
     }
 
@@ -859,7 +854,6 @@ This document contains the generated content for ${template.name} based on the $
 
     // Convert template name to document key
     const documentKey = getDocumentKeyFromTemplateName(firstTemplate.name);
-    console.log('🔍 Template name:', firstTemplate.name, '-> Document key:', documentKey);
 
     // Open context tracking modal instead of immediately generating
     setSelectedDocumentForTracking(documentKey); // Use document key as document type
@@ -937,7 +931,6 @@ This document contains the generated content for ${template.name} based on the $
           if (template) {
             try {
               // The backend DocumentGenerator already saves documents to MongoDB
-              console.log('✅ Document generation successful for template:', templateId);
               
               // Use the actual generated document from the backend response
               const generatedDoc = generationResponse.generatedDocuments?.find((doc: any) => doc.type === documentKey);

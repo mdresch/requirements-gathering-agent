@@ -72,7 +72,6 @@ export default function ProjectManager() {
       
       const response = await apiClient.getProjects(params);
       
-      console.log('📊 API Response:', response);
       
       if (response.success && response.data) {
         // Handle both array response and paginated response structures
@@ -95,7 +94,6 @@ export default function ProjectManager() {
             setCurrentPage(page);
           }
           
-          console.log('✅ Projects loaded successfully:', projectsData.length);
           toast.success(`Loaded ${projectsData.length} projects`);
         } else {
           console.error('❌ Projects data is not an array:', projectsData);
@@ -187,12 +185,10 @@ export default function ProjectManager() {
 
   const handleProjectCreate = async (data: { name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
     try {
-      console.log('🔍 Creating project with data:', data);
       
       const response = await apiClient.createProject(data);
       
       if (response.success) {
-        console.log('✅ Project created successfully:', response.data);
         
         // Add the new project to the local state
         setProjects([response.data, ...(projects || [])]);
@@ -220,12 +216,10 @@ export default function ProjectManager() {
 
   const handleUpdateProject = async (projectData: any) => {
     try {
-      console.log('🔍 Updating project with data:', projectData);
       
       const response = await apiClient.updateProject(projectData.id, projectData);
       
       if (response.success) {
-        console.log('✅ Project updated successfully:', response.data);
         
         // Update the project in the local state
         setProjects((projects || []).map(p => 
@@ -249,12 +243,10 @@ export default function ProjectManager() {
   const handleDeleteProject = async (project: Project) => {
     if (confirm(`Are you sure you want to delete "${project.name || 'this project'}"?`)) {
       try {
-        console.log('🔍 Deleting project:', project.id);
         
         const response = await apiClient.deleteProject(project.id);
         
         if (response.success) {
-          console.log('✅ Project deleted successfully');
           setProjects((projects || []).filter(p => p.id !== project.id));
           toast.success('Project deleted successfully');
         } else {
@@ -269,7 +261,6 @@ export default function ProjectManager() {
   };
 
   const handleGenerateReport = (project: Project) => {
-    console.log('🔍 Opening report modal for project:', project.id);
     setSelectedProject(project);
     setShowReportModal(true);
   };

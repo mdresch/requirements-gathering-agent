@@ -10,6 +10,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useAuditTrail } from '../hooks/useAuditTrail';
 import {
   Dialog,
   DialogContent,
@@ -136,6 +137,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
   model,
   onDocumentGenerated
 }) => {
+  const auditTrail = useAuditTrail();
   const [generationSteps, setGenerationSteps] = useState<ContextGenerationStep[]>([]);
   const [contextComponents, setContextComponents] = useState<ContextComponent[]>([]);
   const [llmDetails, setLlmDetails] = useState<LLMDetails | null>(null);
@@ -313,10 +315,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
       let actualGeneratedDocument;
       
       try {
-        console.log('🚀 Starting real document generation for:', documentType);
-        console.log('🔍 Project context type:', typeof projectContext);
-        console.log('🔍 Project context value:', projectContext);
-        console.log('🔍 Project ID:', projectId);
         
         // Prepare the context string
         let contextString: string;
@@ -335,8 +333,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
           contextString = projectId;
         }
         
-        console.log('🔍 Final context string:', contextString);
-        console.log('🔍 Context string type:', typeof contextString);
         
         const requestBody = {
           context: contextString,
@@ -345,7 +341,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
           projectId: projectId
         };
         
-        console.log('🔍 Request body:', requestBody);
         
         // Call the real document generation API
         const response = await fetch('/api/v1/document-generation/generate-only', {
@@ -357,7 +352,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
           body: JSON.stringify(requestBody)
         });
 
-        console.log('📡 API Response status:', response.status);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -366,10 +360,13 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         }
 
         const result = await response.json();
-        console.log('📊 API Result:', result);
         
         if (!result.success || !result.generatedDocuments || result.generatedDocuments.length === 0) {
-          throw new Error('No documents were generated');
+          // Provide more detailed error information
+          const errorMessage = result.errors && result.errors.length > 0 
+            ? `Document generation failed: ${result.errors.map((e: any) => `${e.task}: ${e.error}`).join(', ')}`
+            : result.message || 'No documents were generated';
+          throw new Error(errorMessage);
         }
 
         // Get the generated document from the API response
@@ -418,7 +415,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
           tokensUsed: 0
         };
         
-        console.log('✅ Successfully created document with real content');
       } catch (apiError) {
         console.error('❌ API generation failed:', apiError);
         
@@ -436,34 +432,32 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
       
       // Log audit trail entry for document generation
       try {
-        await fetch('http://localhost:3002/api/v1/audit-trail', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            documentId: actualGeneratedDocument.id,
-            documentName: actualGeneratedDocument.name,
-            documentType: actualGeneratedDocument.type,
-            projectId: projectId,
-            projectName: 'ADPA Digital Transformation', // This should come from props
-            action: 'created',
-            actionDescription: `Document "${actualGeneratedDocument.name}" was generated using AI (${provider}/${model})`,
-            contextData: {
-              aiProvider: provider,
-              aiModel: model,
-              tokensUsed: actualGeneratedDocument.tokensUsed || 0,
-              qualityScore: actualGeneratedDocument.qualityScore,
-              generationTime: 3200, // Mock generation time
-              templateUsed: documentType,
-              framework: 'BABOK',
-              optimizationStrategy: 'quality-first'
-            },
-            severity: 'high',
-            category: 'ai',
-            tags: ['ai-generation', 'document-creation', 'context-optimization'],
-            notes: `Generated with quality-first strategy using ${actualGeneratedDocument.tokensUsed || 0} tokens`
-          })
+        // Log AI document generation
+        await auditTrail.logAIDocumentGenerated({
+          documentId: actualGeneratedDocument.id,
+          documentName: actualGeneratedDocument.name,
+          documentType: actualGeneratedDocument.type,
+          projectId: projectId,
+          projectName: 'ADPA Digital Transformation', // This should come from props
+          aiProvider: provider,
+          aiModel: model,
+          tokensUsed: actualGeneratedDocument.tokensUsed || 0,
+          qualityScore: actualGeneratedDocument.qualityScore,
+          generationTime: 3200 // Mock generation time
+        });
+
+        // Log template usage
+        await auditTrail.logTemplateUsed({
+          templateId: `template-${documentType}`,
+          templateName: getDocumentNameFromType(documentType),
+          templateType: documentType,
+          projectId: projectId,
+          projectName: 'ADPA Digital Transformation',
+          contextData: {
+            aiProvider: provider,
+            aiModel: model,
+            framework: 'BABOK'
+          }
         });
       } catch (error) {
         console.error('Failed to log audit trail entry:', error);

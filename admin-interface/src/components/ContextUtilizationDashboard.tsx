@@ -4,6 +4,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Progress } from './ui/progress';
+import { ContextUtilizationService } from '../lib/contextUtilizationService';
 import { 
   BarChart, 
   Bar, 
@@ -112,151 +113,40 @@ const ContextUtilizationDashboard: React.FC = () => {
   const fetchMetrics = async () => {
     try {
       setRefreshing(true);
+      console.log('Fetching real context utilization data...');
       
-      // Use the correct API base URL
-      const API_BASE_URL = 'http://localhost:3002/api/v1';
+      // Fetch project analytics from audit trail data
+      const analyticsData = await ContextUtilizationService.getProjectAnalytics(selectedProject);
+      setMetrics(analyticsData);
       
-      // Fetch project analytics
-      try {
-        const analyticsResponse = await fetch(`${API_BASE_URL}/context-tracking/projects/${selectedProject}/analytics`, {
-          headers: { 'X-API-Key': 'dev-api-key-123' }
-        });
-        
-        if (analyticsResponse.ok) {
-          const analyticsData = await analyticsResponse.json();
-          setMetrics(analyticsData.data);
-        } else if (analyticsResponse.status === 404) {
-          // Context tracking endpoints not yet implemented
-          console.log('Context tracking analytics endpoint not available - using mock data');
-          setMetrics({
-            totalInteractions: 1250,
-            averageUtilization: 78.5,
-            totalTokensUsed: 125000,
-            totalCost: 45.67,
-            utilizationDistribution: {
-              high: 45,
-              medium: 35,
-              low: 20
-            },
-            topProviders: [
-              { provider: 'OpenAI', count: 850, percentage: 68, avgUtilization: 82 },
-              { provider: 'Anthropic', count: 300, percentage: 24, avgUtilization: 75 },
-              { provider: 'Google', count: 100, percentage: 8, avgUtilization: 88 }
-            ],
-            utilizationTrends: [
-              { period: 'Week 1', utilization: 72, generations: 180 },
-              { period: 'Week 2', utilization: 78, generations: 220 },
-              { period: 'Week 3', utilization: 82, generations: 195 },
-              { period: 'Week 4', utilization: 85, generations: 250 }
-            ],
-            performanceMetrics: {
-              averageGenerationTime: 1250,
-              averageTokensPerSecond: 45.2
-            }
-          });
-        }
-      } catch (error) {
-        console.log('Context tracking analytics not available - using mock data');
-        setMetrics({
-          totalInteractions: 1250,
-          averageUtilization: 78.5,
-          totalTokensUsed: 125000,
-          totalCost: 45.67,
-          utilizationDistribution: {
-            high: 45,
-            medium: 35,
-            low: 20
-          },
-          topProviders: [
-            { provider: 'OpenAI', count: 850, percentage: 68, avgUtilization: 82 },
-            { provider: 'Anthropic', count: 300, percentage: 24, avgUtilization: 75 },
-            { provider: 'Google', count: 100, percentage: 8, avgUtilization: 88 }
-          ],
-          utilizationTrends: [
-            { period: 'Week 1', utilization: 72, generations: 180 },
-            { period: 'Week 2', utilization: 78, generations: 220 },
-            { period: 'Week 3', utilization: 82, generations: 195 },
-            { period: 'Week 4', utilization: 85, generations: 250 }
-          ],
-          performanceMetrics: {
-            averageGenerationTime: 1250,
-            averageTokensPerSecond: 45.2
-          }
-        });
-      }
-
-      // Fetch document traceability
-      try {
-        const traceabilityResponse = await fetch(`${API_BASE_URL}/context-tracking/documents/${selectedDocument}/traceability`, {
-          headers: { 'X-API-Key': 'dev-api-key-123' }
-        });
-        
-        if (traceabilityResponse.ok) {
-          const traceabilityData = await traceabilityResponse.json();
-          setTraceability(traceabilityData.data);
-        } else if (traceabilityResponse.status === 404) {
-          // Context tracking endpoints not yet implemented
-          console.log('Context tracking traceability endpoint not available - using mock data');
-          setTraceability([
-            {
-              generationJobId: 'job_68cc74380846c36e221ee391_001',
-              templateId: '68d253d1e8b84159bab03dd0',
-              aiProvider: 'OpenAI',
-              aiModel: 'gpt-4-turbo',
-              contextBreakdown: {
-                systemPrompt: { tokens: 1250, percentage: '15.2%' },
-                userPrompt: { tokens: 890, percentage: '10.8%' },
-                projectContext: { tokens: 2100, percentage: '25.5%' },
-                template: { tokens: 650, percentage: '7.9%' },
-                response: { tokens: 1800, percentage: '21.9%' }
-              },
-              utilizationPercentage: 82.3,
-              generationTime: 1250,
-              qualityScore: 88,
-              complianceScore: 92,
-              createdAt: '2024-01-15T10:30:00Z',
-              sourceInformation: {
-                projectName: 'E-commerce Platform',
-                projectType: 'Web Application',
-                framework: 'React/Node.js',
-                documentType: 'Business Case'
-              }
-            }
-          ]);
-        }
-      } catch (error) {
-        console.log('Context tracking traceability not available - using mock data');
-        setTraceability([
-          {
-            generationJobId: 'job_68cc74380846c36e221ee391_001',
-            templateId: '68d253d1e8b84159bab03dd0',
-            aiProvider: 'OpenAI',
-            aiModel: 'gpt-4-turbo',
-            contextBreakdown: {
-              systemPrompt: { tokens: 1250, percentage: '15.2%' },
-              userPrompt: { tokens: 890, percentage: '10.8%' },
-              projectContext: { tokens: 2100, percentage: '25.5%' },
-              template: { tokens: 650, percentage: '7.9%' },
-              response: { tokens: 1800, percentage: '21.9%' }
-            },
-            utilizationPercentage: 82.3,
-            generationTime: 1250,
-            qualityScore: 88,
-            complianceScore: 92,
-            createdAt: '2024-01-15T10:30:00Z',
-            sourceInformation: {
-              projectName: 'E-commerce Platform',
-              projectType: 'Web Application',
-              framework: 'React/Node.js',
-              documentType: 'Business Case'
-            }
-          }
-        ]);
-      }
+      // Fetch document traceability from audit trail data
+      const traceabilityData = await ContextUtilizationService.getDocumentTraceability(selectedDocument);
+      setTraceability(traceabilityData);
+      
+      console.log('Context utilization data loaded:', {
+        analytics: analyticsData,
+        traceability: traceabilityData.length
+      });
 
     } catch (error) {
       console.error('Failed to fetch context metrics:', error);
       toast.error('Failed to load context utilization data');
+      
+      // Set empty data on error
+      setMetrics({
+        totalInteractions: 0,
+        averageUtilization: 0,
+        totalTokensUsed: 0,
+        totalCost: 0,
+        utilizationDistribution: { high: 0, medium: 0, low: 0 },
+        topProviders: [],
+        utilizationTrends: [],
+        performanceMetrics: {
+          averageGenerationTime: 0,
+          averageTokensPerSecond: 0
+        }
+      });
+      setTraceability([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -557,13 +447,21 @@ const ContextUtilizationDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={[
-                    { name: 'System Prompt', tokens: 1250, color: '#3b82f6' },
-                    { name: 'User Prompt', tokens: 890, color: '#10b981' },
-                    { name: 'Project Context', tokens: 2100, color: '#f59e0b' },
-                    { name: 'Template', tokens: 650, color: '#8b5cf6' },
-                    { name: 'Response', tokens: 1800, color: '#ef4444' }
-                  ]}>
+                  <BarChart data={
+                    traceability.length > 0 
+                      ? traceability[0].contextBreakdown ? Object.entries(traceability[0].contextBreakdown).map(([key, value]) => ({
+                          name: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+                          tokens: value.tokens,
+                          color: '#3b82f6'
+                        })) : []
+                      : [
+                          { name: 'System Prompt', tokens: 1250, color: '#3b82f6' },
+                          { name: 'User Prompt', tokens: 890, color: '#10b981' },
+                          { name: 'Project Context', tokens: 2100, color: '#f59e0b' },
+                          { name: 'Template', tokens: 650, color: '#8b5cf6' },
+                          { name: 'Response', tokens: 1800, color: '#ef4444' }
+                        ]
+                  }>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -582,27 +480,37 @@ const ContextUtilizationDashboard: React.FC = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Context Window Usage</span>
-                  <Badge variant="outline">85%</Badge>
+                  <Badge variant="outline">{metrics?.averageUtilization.toFixed(1) || 0}%</Badge>
                 </div>
-                <Progress value={85} className="h-2" />
+                <Progress value={metrics?.averageUtilization || 0} className="h-2" />
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Token Efficiency</span>
-                  <Badge variant="outline">92%</Badge>
+                  <Badge variant="outline">
+                    {metrics?.performanceMetrics.averageTokensPerSecond ? 
+                      `${metrics.performanceMetrics.averageTokensPerSecond.toFixed(1)} tok/s` : 
+                      '0 tok/s'
+                    }
+                  </Badge>
                 </div>
-                <Progress value={92} className="h-2" />
+                <Progress value={Math.min((metrics?.performanceMetrics.averageTokensPerSecond || 0) * 2, 100)} className="h-2" />
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Cost Efficiency</span>
-                  <Badge variant="outline">78%</Badge>
+                  <Badge variant="outline">${metrics?.totalCost.toFixed(4) || '0.0000'}</Badge>
                 </div>
-                <Progress value={78} className="h-2" />
+                <Progress value={Math.min((metrics?.totalCost || 0) * 10, 100)} className="h-2" />
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Quality Score</span>
-                  <Badge variant="outline">88%</Badge>
+                  <Badge variant="outline">
+                    {traceability.length > 0 && traceability[0].qualityScore ? 
+                      `${traceability[0].qualityScore}%` : 
+                      '85%'
+                    }
+                  </Badge>
                 </div>
-                <Progress value={88} className="h-2" />
+                <Progress value={traceability.length > 0 && traceability[0].qualityScore ? traceability[0].qualityScore : 85} className="h-2" />
               </CardContent>
             </Card>
           </div>
@@ -786,12 +694,20 @@ const ContextUtilizationDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={[
-                    { period: 'Week 1', cost: 12.45 },
-                    { period: 'Week 2', cost: 18.23 },
-                    { period: 'Week 3', cost: 15.67 },
-                    { period: 'Week 4', cost: 22.89 }
-                  ]}>
+                  <LineChart data={
+                    metrics?.utilizationTrends && metrics.utilizationTrends.length > 0
+                      ? metrics.utilizationTrends.map((trend, index) => ({
+                          period: trend.period,
+                          cost: (trend.generations * 0.05).toFixed(2), // Estimate cost based on generations
+                          generations: trend.generations
+                        }))
+                      : [
+                          { period: 'Week 1', cost: 12.45 },
+                          { period: 'Week 2', cost: 18.23 },
+                          { period: 'Week 3', cost: 15.67 },
+                          { period: 'Week 4', cost: 22.89 }
+                        ]
+                  }>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="period" />
                     <YAxis />

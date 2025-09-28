@@ -4,6 +4,7 @@ import { Template } from '@/types/template';
 import { formatRelativeTime, truncateText } from '@/lib/utils';
 import { Edit, Trash2, Eye, Tag, Calendar, FileText, Key, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuditTrail } from '../hooks/useAuditTrail';
 
 interface TemplateListProps {
   templates: Template[];
@@ -28,6 +29,39 @@ export default function TemplateList({
   totalPages,
   selectedTemplate,
 }: TemplateListProps) {
+  const auditTrail = useAuditTrail();
+
+  const handleViewDetails = async (template: Template) => {
+    // Log template view to audit trail
+    try {
+      await auditTrail.logTemplateViewed({
+        templateId: template.id,
+        templateName: template.name,
+        templateType: template.templateType
+      });
+    } catch (error) {
+      console.error('Failed to log template view:', error);
+    }
+    
+    // Call the original onViewDetails function
+    onViewDetails(template);
+  };
+
+  const handleDelete = async (templateId: string, templateName: string, templateType?: string) => {
+    // Log template deletion to audit trail
+    try {
+      await auditTrail.logTemplateDeleted({
+        templateId,
+        templateName,
+        templateType
+      });
+    } catch (error) {
+      console.error('Failed to log template deletion:', error);
+    }
+    
+    // Call the original onDelete function
+    onDelete(templateId);
+  };
   if (loading) {
     return (
       <motion.div 
@@ -285,7 +319,7 @@ export default function TemplateList({
                     transition={{ duration: 0.3, delay: 0.5 }}
                   >
                     <motion.button
-                      onClick={() => onViewDetails(template)}
+                      onClick={() => handleViewDetails(template)}
                       className="p-3 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-300 btn-modern"
                       title="View details"
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -303,7 +337,7 @@ export default function TemplateList({
                       <Edit className="w-5 h-5" />
                     </motion.button>
                     <motion.button
-                      onClick={() => onDelete(template.id)}
+                      onClick={() => handleDelete(template.id, template.name, template.templateType)}
                       className="p-3 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 btn-modern"
                       title="Delete template"
                       whileHover={{ scale: 1.1, rotate: -5 }}

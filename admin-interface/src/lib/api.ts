@@ -5,11 +5,6 @@
 const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
-console.log('🔧 API Configuration:', {
-  API_BASE_URL,
-  API_KEY: API_KEY ? 'Present' : 'Missing',
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-});
 
 // Request queue and rate limiting
 const requestQueue: Array<() => Promise<any>> = [];
@@ -36,7 +31,6 @@ async function request(endpoint: string, options: RequestInit = {}): Promise<any
       };
 
       try {
-        console.log(`🌐 Making API request to: ${url}`, config.method || 'GET');
         
         const response = await fetch(url, config);
 
@@ -66,7 +60,6 @@ async function request(endpoint: string, options: RequestInit = {}): Promise<any
         }
 
         const data = await response.json();
-        console.log('✅ API Response received:', data);
         resolve(data);
       } catch (error) {
         console.error('❌ API request failed:', error);
@@ -120,7 +113,6 @@ export async function getTemplates(params?: {
   category?: string;
   search?: string;
 }): Promise<any> {
-  console.log('🔍 getTemplates called - connecting to MongoDB database');
   
   try {
     // Make real API call to backend server which connects to MongoDB
@@ -133,7 +125,6 @@ export async function getTemplates(params?: {
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('✅ Templates loaded from MongoDB database:', response);
     
            // Transform the API response to match expected Template interface
            const transformedTemplates = (response.data || []).map((template: any) => ({
@@ -520,7 +511,6 @@ export async function getTemplates(params?: {
              }
            ];
     
-    console.log('✅ Returning mock templates (database unavailable)');
     return {
       success: true,
       data: {
@@ -537,15 +527,12 @@ export async function getTemplates(params?: {
 
 export async function createTemplate(template: any): Promise<any> {
   try {
-    console.log('🔍 createTemplate called with:', template);
-    
     // Make real API call to backend server which saves to MongoDB
     const response = await request('/templates', {
     method: 'POST',
     body: JSON.stringify(template),
   });
     
-    console.log('✅ Template created in MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ createTemplate error:', error);
@@ -558,7 +545,6 @@ export async function createTemplate(template: any): Promise<any> {
 
 export async function updateTemplate(id: string, template: any): Promise<any> {
   try {
-    console.log(`🔍 updateTemplate called for id: ${id} with:`, template);
     
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/templates/${id}`, {
@@ -566,7 +552,6 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
     body: JSON.stringify(template),
   });
     
-    console.log('✅ Template updated in MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
@@ -579,7 +564,6 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
 
 export async function deleteTemplate(id: string, reason?: string): Promise<any> {
   try {
-    console.log(`🔍 deleteTemplate called for id: ${id}, reason: ${reason}`);
     
     // Make real API call to backend server which deletes from MongoDB
     const response = await request(`/templates/${id}`, {
@@ -588,7 +572,6 @@ export async function deleteTemplate(id: string, reason?: string): Promise<any> 
       headers: reason ? { 'Content-Type': 'application/json' } : undefined
     });
     
-    console.log('✅ Template deleted from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ deleteTemplate error:', error);
@@ -601,12 +584,8 @@ export async function deleteTemplate(id: string, reason?: string): Promise<any> 
 
 export async function getTemplate(id: string): Promise<any> {
   try {
-    console.log(`🔍 getTemplate called for id: ${id}`);
-    
     // Make real API call to backend server which retrieves from MongoDB
     const response = await request(`/templates/${id}`);
-    
-    console.log('✅ Template retrieved from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ getTemplate error:', error);
@@ -620,7 +599,6 @@ export async function getTemplate(id: string): Promise<any> {
 // Projects API endpoints - now connected to MongoDB database
 export async function getProjects(params?: any): Promise<any> {
   try {
-    console.log('🔍 getProjects called - connecting to MongoDB database');
     
     // Make real API call to backend server which retrieves from MongoDB
     const queryParams = new URLSearchParams();
@@ -632,7 +610,6 @@ export async function getProjects(params?: any): Promise<any> {
     const url = `/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('✅ Projects loaded from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ Failed to load projects from database, using mock data:', error);
@@ -693,7 +670,6 @@ export async function getProjects(params?: any): Promise<any> {
       }
     ];
     
-    console.log(`✅ Returning ${mockProjects.length} mock projects (database unavailable)`);
     return {
       success: true,
       data: {
@@ -710,12 +686,8 @@ export async function getProjects(params?: any): Promise<any> {
 // Fetch a single project by ID
 export async function getProjectById(id: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectById called with id: ${id}`);
-    
     // Make real API call to backend server which retrieves from MongoDB
     const response = await request(`/projects/${id}`);
-    
-    console.log('✅ Project retrieved from MongoDB database:', response);
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
@@ -733,15 +705,11 @@ export async function getProjectById(id: string): Promise<any> {
 // Create a new project
 export async function createProject(projectData: any): Promise<any> {
   try {
-    console.log('🔍 createProject called with:', projectData);
-    
     // Make real API call to backend server which saves to MongoDB
     const response = await request('/projects', {
       method: 'POST',
       body: JSON.stringify(projectData),
     });
-    
-    console.log('✅ Project created in MongoDB database:', response);
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
@@ -763,15 +731,11 @@ export async function createProject(projectData: any): Promise<any> {
 
 export async function updateProject(id: string, projectData: any): Promise<any> {
   try {
-    console.log(`🔍 updateProject called for id: ${id} with:`, projectData);
-    
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/projects/${id}`, {
       method: 'PUT',
       body: JSON.stringify(projectData),
     });
-    
-    console.log('✅ Project updated in MongoDB database:', response);
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
@@ -793,14 +757,10 @@ export async function updateProject(id: string, projectData: any): Promise<any> 
 
 export async function deleteProject(id: string): Promise<any> {
   try {
-    console.log(`🔍 deleteProject called for id: ${id}`);
-    
     // Make real API call to backend server which deletes from MongoDB
     const response = await request(`/projects/${id}`, {
       method: 'DELETE',
     });
-    
-    console.log('✅ Project deleted from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ deleteProject error:', error);
@@ -834,11 +794,7 @@ export async function submitFeedback(feedbackData: any): Promise<any> {
 
 export async function getProjectFeedback(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectFeedback called for project: ${projectId}`);
-    
     const response = await request(`/feedback/project/${projectId}`);
-    
-    console.log('✅ Project feedback retrieved from database:', response);
     
     if (response.success && response.data) {
       // The backend returns feedback in response.data.feedback
@@ -892,11 +848,7 @@ export async function getTemplateCategories(): Promise<any> {
 // Project Documents API functions
 export async function getProjectDocuments(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectDocuments called for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents`);
-    
-    console.log('✅ Project documents retrieved from database:', response);
     
     if (response.success && response.data) {
       return response.data;
@@ -924,14 +876,10 @@ export async function getProjectDocuments(projectId: string): Promise<any> {
 
 export async function createProjectDocument(projectId: string, documentData: any): Promise<any> {
   try {
-    console.log(`🔍 createProjectDocument called for project: ${projectId}`, documentData);
-    
     const response = await request(`/projects/${projectId}/documents`, {
     method: 'POST',
       body: JSON.stringify(documentData),
     });
-    
-    console.log('✅ Project document created in database:', response);
     
     if (response.success && response.data) {
       return {
@@ -952,14 +900,10 @@ export async function createProjectDocument(projectId: string, documentData: any
 
 export async function updateProjectDocument(documentId: string, documentData: any): Promise<any> {
   try {
-    console.log(`🔍 updateProjectDocument called for document: ${documentId}`, documentData);
-    
     const response = await request(`/projects/documents/${documentId}`, {
       method: 'PUT',
       body: JSON.stringify(documentData),
     });
-    
-    console.log('✅ Project document updated in database:', response);
     
     if (response.success && response.data) {
     return { 
@@ -980,13 +924,9 @@ export async function updateProjectDocument(documentId: string, documentData: an
 
 export async function deleteProjectDocument(documentId: string): Promise<any> {
   try {
-    console.log(`🔍 Soft delete project document: ${documentId}`);
-    
     const response = await request(`/projects/documents/${documentId}`, {
       method: 'DELETE'
     });
-    
-    console.log('✅ Project document soft deleted:', response);
     
     if (response.success) {
       return {
@@ -1007,13 +947,9 @@ export async function deleteProjectDocument(documentId: string): Promise<any> {
 
 export async function restoreProjectDocument(documentId: string): Promise<any> {
   try {
-    console.log(`🔍 Restore project document: ${documentId}`);
-    
     const response = await request(`/projects/documents/${documentId}/restore`, {
       method: 'PUT'
     });
-    
-    console.log('✅ Project document restored:', response);
     
     if (response.success) {
       return {
@@ -1034,11 +970,7 @@ export async function restoreProjectDocument(documentId: string): Promise<any> {
 
 export async function getDeletedProjectDocuments(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 Get deleted documents for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents/deleted`);
-    
-    console.log('✅ Deleted documents retrieved:', response);
     
     return {
       success: true,
@@ -1055,11 +987,7 @@ export async function getDeletedProjectDocuments(projectId: string): Promise<any
 
 export async function getProjectDocumentStats(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectDocumentStats called for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents/stats`);
-    
-    console.log('✅ Project document stats retrieved from database:', response);
     
     if (response.success && response.data) {
       return response.data;

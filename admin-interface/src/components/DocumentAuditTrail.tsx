@@ -129,100 +129,23 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
         ...(filters.endDate && { endDate: filters.endDate })
       });
 
-      try {
-        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple?${queryParams}`);
-        const data = await response.json();
+      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
 
-        if (data.success) {
-          setAuditEntries(data.data.entries);
-          setPagination(data.data.pagination);
-        } else {
-          throw new Error('API returned error');
-        }
-      } catch (apiError) {
-        // Fallback to mock data if API is not available
-        console.log('API not available, using mock data');
-        
-        const mockData = {
-          data: [
-            {
-              _id: '1',
-              documentId: 'doc-1',
-              documentName: 'Stakeholder Analysis Document',
-              documentType: 'Stakeholder Analysis',
-              projectId: 'project-1',
-              projectName: 'ADPA Digital Transformation',
-              action: 'created',
-              actionDescription: 'Document "Stakeholder Analysis Document" was generated using AI (google-gemini/gemini-pro)',
-              userName: 'System User',
-              userRole: 'AI System',
-              contextData: {
-                aiProvider: 'google-gemini',
-                aiModel: 'gemini-pro',
-                tokensUsed: 5200,
-                qualityScore: 96,
-                generationTime: 3200,
-                templateUsed: 'Stakeholder Analysis Template',
-                framework: 'BABOK',
-                optimizationStrategy: 'quality-first'
-              },
-              timestamp: new Date().toISOString(),
-              severity: 'high' as const,
-              category: 'ai' as const,
-              tags: ['ai-generation', 'document-creation', 'context-optimization'],
-              notes: 'Generated with quality-first strategy using 5,200 tokens'
-            },
-            {
-              _id: '2',
-              documentId: 'doc-2',
-              documentName: 'Business Case Document',
-              documentType: 'Business Case',
-              projectId: 'project-1',
-              projectName: 'ADPA Digital Transformation',
-              action: 'viewed',
-              actionDescription: 'Document "Business Case Document" was viewed',
-              userName: 'John Doe',
-              userRole: 'Project Manager',
-              timestamp: new Date(Date.now() - 3600000).toISOString(),
-              severity: 'low' as const,
-              category: 'user' as const,
-              tags: ['document-view']
-            },
-            {
-              _id: '3',
-              documentId: 'doc-3',
-              documentName: 'Requirements Document',
-              documentType: 'Requirements',
-              projectId: 'project-1',
-              projectName: 'ADPA Digital Transformation',
-              action: 'quality_assessed',
-              actionDescription: 'Quality assessment completed for "Requirements Document". Score: 94%',
-              userName: 'Quality Analyst',
-              userRole: 'Quality Manager',
-              contextData: {
-                qualityScore: 94,
-                tokensUsed: 3800
-              },
-              timestamp: new Date(Date.now() - 7200000).toISOString(),
-              severity: 'medium' as const,
-              category: 'quality' as const,
-              tags: ['quality-assessment']
-            }
-          ],
-          pagination: {
-            page: 1,
-            limit: 20,
-            total: 3,
-            pages: 1
-          }
-        };
-        
-        setAuditEntries(mockData.data);
-        setPagination(mockData.pagination);
+      if (data.success) {
+        setAuditEntries(data.data.entries);
+        setPagination(data.data.pagination);
+      } else {
+        throw new Error(`API returned error: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error fetching audit trail:', error);
-      toast.error('Failed to fetch audit trail');
+      toast.error('Failed to fetch audit trail data');
     } finally {
       setLoading(false);
     }
@@ -237,56 +160,22 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
         ...(userId && { userId })
       });
 
-      try {
-        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple/analytics?${queryParams}`);
-        const data = await response.json();
+      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple/analytics?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
 
-        if (data.success) {
-          setStats(data.data);
-        } else {
-          throw new Error('API returned error');
-        }
-      } catch (apiError) {
-        // Fallback to mock stats if API is not available
-        console.log('API not available, using mock stats');
-        
-        const mockStats = {
-          totalEntries: 3,
-          entriesByAction: { 
-            created: 1, 
-            viewed: 1, 
-            quality_assessed: 1 
-          },
-          entriesByCategory: { 
-            ai: 1, 
-            user: 1, 
-            quality: 1 
-          },
-          entriesBySeverity: { 
-            high: 1, 
-            low: 1, 
-            medium: 1 
-          },
-          entriesByUser: { 
-            'System User': 1, 
-            'John Doe': 1, 
-            'Quality Analyst': 1 
-          },
-          entriesByDay: {},
-          averageQualityScore: 95,
-          totalTokensUsed: 9000,
-          mostActiveUsers: [
-            { userName: 'System User', count: 1 },
-            { userName: 'John Doe', count: 1 },
-            { userName: 'Quality Analyst', count: 1 }
-          ],
-          recentActivity: []
-        };
-        
-        setStats(mockStats);
+      if (data.success) {
+        setStats(data.data);
+      } else {
+        throw new Error(`API returned error: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error fetching audit trail stats:', error);
+      toast.error('Failed to fetch audit trail statistics');
     }
   };
 

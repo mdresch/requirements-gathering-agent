@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuditTrail } from '../hooks/useAuditTrail';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -14,11 +15,31 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose, 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [framework, setFramework] = useState<'babok' | 'pmbok' | 'multi'>('babok');
+  const auditTrail = useAuditTrail();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onCreate({ name, description, framework });
+    
+    const projectData = { name, description, framework };
+    onCreate(projectData);
+    
+    // Log project creation to audit trail
+    try {
+      await auditTrail.logProjectCreated({
+        projectId: `project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        projectName: name,
+        description,
+        framework,
+        contextData: {
+          creationMethod: 'manual',
+          source: 'frontend'
+        }
+      });
+    } catch (error) {
+      console.error('Failed to log project creation:', error);
+    }
+    
     setName('');
     setDescription('');
     setFramework('babok');
