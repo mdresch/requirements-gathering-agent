@@ -1,8 +1,15 @@
 {
   "version": 2,
-  "functions": {
-    "admin-interface/package.json": {
-      "runtime": "@vercel/next"
+  "builds": [
+    {
+      "src": "admin-interface/package.json",
+      "use": "@vercel/next"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "admin-interface/$1"
+    }
+  ]
 }
