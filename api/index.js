@@ -639,6 +639,71 @@ export default async (req, res) => {
       return;
     }
 
+    // Single project endpoint (must come before projects list endpoint)
+    if (method === 'GET' && url.match(/^\/api\/v1\/projects\/[^\/]+$/)) {
+      const apiKey = req.headers['x-api-key'];
+      const expectedKey = process.env.API_KEY || 'dev-api-key-123';
+      
+      console.log('Single Project API Key received:', apiKey);
+      console.log('Single Project Expected API Key:', expectedKey);
+
+      try {
+        console.log('Attempting to load single project from database...');
+        console.log('URL:', url);
+        
+        // Extract project ID from URL
+        const projectId = url.split('/').pop();
+        console.log('Project ID:', projectId);
+        
+        const { db } = await connectToDatabase();
+        
+        // Find single project by ID
+        const project = await db.collection('projects').findOne({ _id: projectId });
+        
+        if (project) {
+          console.log(`Found project: ${project.name} (${projectId})`);
+          
+          res.status(200).json({
+            success: true,
+            data: project,
+            message: 'Project loaded from database'
+          });
+        } else {
+          console.log(`Project not found: ${projectId}`);
+          res.status(404).json({
+            success: false,
+            error: 'Project not found',
+            message: `Project with ID ${projectId} does not exist`
+          });
+        }
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
+        console.log('Falling back to mock data...');
+        
+        // Fallback to mock data
+        const mockProject = {
+          _id: 'mock-project-id',
+          name: 'Sample Project',
+          description: 'A sample project for demonstration',
+          status: 'active',
+          framework: 'babok',
+          complianceScore: 85,
+          documents: 5,
+          stakeholders: 3,
+          templatesCount: 2,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        res.status(200).json({
+          success: true,
+          data: mockProject,
+          message: 'Project loaded from mock data (database unavailable)'
+        });
+      }
+      return;
+    }
+
     // Projects endpoint
     if (method === 'GET' && url.startsWith('/api/v1/projects')) {
       const apiKey = req.headers['x-api-key'];

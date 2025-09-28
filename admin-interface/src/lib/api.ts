@@ -610,6 +610,16 @@ export async function getProjects(params?: any): Promise<any> {
     const url = `/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
+    // Convert MongoDB _id to id for frontend compatibility
+    if (response.success && response.data && response.data.projects) {
+      response.data.projects = response.data.projects.map((project: any) => {
+        if (project._id && !project.id) {
+          project.id = project._id;
+        }
+        return project;
+      });
+    }
+    
     return response;
   } catch (error) {
     console.error('❌ Failed to load projects from database, using mock data:', error);
@@ -691,7 +701,12 @@ export async function getProjectById(id: string): Promise<any> {
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
-      return response.data;
+      // Convert MongoDB _id to id for frontend compatibility
+      const project = response.data;
+      if (project._id && !project.id) {
+        project.id = project._id;
+      }
+      return project;
     } else {
       console.warn('⚠️ Project not found or API call failed:', response);
       return null;
