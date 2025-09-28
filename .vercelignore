@@ -1,6 +1,9 @@
-# Ignore everything except admin-interface
-*
-!admin-interface/
-!admin-interface/**
-!vercel.json
+# Ignore backend files and directories
+src/
+dist/
+node_modules/
+*.log
+.env*
+*.md
+!README.md
 
