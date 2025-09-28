@@ -48,20 +48,47 @@ export default function ModernStatsOverview() {
     try {
       setLoading(true);
       
+      // Fetch analytics from the new dedicated endpoint
+      const response = await fetch('/api/v1/analytics/homepage');
+      const analyticsData = await response.json();
+      
+      if (analyticsData.success && analyticsData.data) {
+        const data = analyticsData.data;
+        console.log('📊 Homepage analytics loaded:', data);
+        
+        setRealStats({
+          templatesCreated: data.templatesCreated,
+          activeUsers: data.activeUsers,
+          timeSaved: data.timeSaved,
+          successRate: data.successRate
+        });
+      } else {
+        console.error('Analytics API failed:', analyticsData);
+        // Fallback to individual API calls
+        await loadFallbackStats();
+      }
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      // Fallback to individual API calls
+      await loadFallbackStats();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFallbackStats = async () => {
+    try {
       // Fetch templates count using the correct API method
       const templatesResponse = await apiClient.getTemplates({ page: 1, limit: 100 });
       const templatesCount = templatesResponse.data?.templates?.length || templatesResponse.data?.length || 0;
-
-      // Since there's no users endpoint, we'll use a fallback value or calculate from other data
-      // For now, we'll use a reasonable estimate based on the system
-      const usersCount = 3; // Default to 3 users (admin, pm, ba from seeded data)
 
       // Fetch projects to calculate time saved and success rate using the correct API method
       const projectsResponse = await apiClient.getProjects({ page: 1, limit: 100 });
       const projects = projectsResponse.data?.projects || projectsResponse.data || [];
       
-      // Calculate time saved (estimate: 2 hours per project)
-      const timeSaved = projects.length * 2;
+      // Calculate time saved from actual document values (if available)
+      // For fallback, we'll estimate based on projects since we don't have document details
+      const timeSaved = projects.length * 2; // Fallback estimation
 
       // Calculate success rate based on completed projects
       const completedProjects = projects.filter((p: any) => p.status === 'completed').length;
@@ -69,21 +96,19 @@ export default function ModernStatsOverview() {
 
       setRealStats({
         templatesCreated: templatesCount,
-        activeUsers: usersCount,
+        activeUsers: 3, // Default fallback
         timeSaved: timeSaved,
         successRate: Math.round(successRate)
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
-      // Fallback to default values
+      console.error('Fallback stats failed:', error);
+      // Final fallback to default values
       setRealStats({
-        templatesCreated: 23,
+        templatesCreated: 24,
         activeUsers: 3,
         timeSaved: 22,
         successRate: 95
       });
-    } finally {
-      setLoading(false);
     }
   };
 

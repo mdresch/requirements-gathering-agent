@@ -235,7 +235,7 @@ export default function RealTimeNotificationSystem({
 
   const initializeWebSocket = () => {
     try {
-      const wsUrl = `ws://localhost:3002/ws/notifications?projectId=${projectId}`;
+      const wsUrl = `ws://requirements-gathering-agent.vercel.app/ws/notifications?projectId=${projectId}`;
       wsRef.current = new WebSocket(wsUrl);
       
       wsRef.current.onopen = () => {

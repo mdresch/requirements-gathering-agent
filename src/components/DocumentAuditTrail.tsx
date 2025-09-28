@@ -129,7 +129,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
         ...(filters.endDate && { endDate: filters.endDate })
       });
 
-      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple?${queryParams}`);
+      const response = await fetch(`/api/v1/audit-trail/simple?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -160,7 +160,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
         ...(userId && { userId })
       });
 
-      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple/analytics?${queryParams}`);
+      const response = await fetch(`/api/v1/audit-trail/simple/analytics?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -260,7 +260,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
       });
 
       try {
-        const response = await fetch(`http://localhost:3002/api/v1/audit-trail/export?${queryParams}`);
+        const response = await fetch(`/api/v1/audit-trail/export?${queryParams}`);
         
         if (response.ok) {
           const blob = await response.blob();

@@ -205,7 +205,7 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
       params.append('endDate', endDate.toISOString());
 
       // Try to load from enhanced audit trail API
-      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/simple/analytics?${params}`);
+      const response = await fetch(`/api/v1/audit-trail/simple/analytics?${params}`);
       
       if (!response.ok) {
         throw new Error(`API endpoint not available: ${response.status}`);

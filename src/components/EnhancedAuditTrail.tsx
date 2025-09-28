@@ -211,7 +211,7 @@ const EnhancedAuditTrail: React.FC<EnhancedAuditTrailProps> = ({
         includeAlerts: filters.includeAlerts.toString()
       });
 
-      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/enhanced?${queryParams}`);
+      const response = await fetch(`/api/v1/audit-trail/enhanced?${queryParams}`);
       const result = await response.json();
       
       if (result.success) {
@@ -286,7 +286,7 @@ const EnhancedAuditTrail: React.FC<EnhancedAuditTrailProps> = ({
         ...(filters.endDate && { endDate: filters.endDate })
       });
 
-      const response = await fetch(`http://localhost:3002/api/v1/audit-trail/enhanced/export?${queryParams}`);
+      const response = await fetch(`/api/v1/audit-trail/enhanced/export?${queryParams}`);
       
       if (response.ok) {
         const blob = await response.blob();

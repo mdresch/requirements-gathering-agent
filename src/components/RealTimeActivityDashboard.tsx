@@ -118,7 +118,7 @@ const RealTimeActivityDashboard: React.FC = () => {
 
   const connectWebSocket = () => {
     try {
-      const ws = new WebSocket('ws://localhost:3002/ws/activity');
+      const ws = new WebSocket('ws://requirements-gathering-agent.vercel.app/ws/activity');
       
       ws.onopen = () => {
         setWsConnected(true);
@@ -165,7 +165,7 @@ const RealTimeActivityDashboard: React.FC = () => {
 
     try {
       // Load active sessions
-      const sessionsResponse = await fetch('http://localhost:3002/api/v1/real-time-activity/sessions');
+      const sessionsResponse = await fetch('/api/v1/real-time-activity/sessions');
       const sessionsData = await sessionsResponse.json();
 
       if (sessionsData.success) {
@@ -178,7 +178,7 @@ const RealTimeActivityDashboard: React.FC = () => {
       if (filters.startDate) analyticsParams.append('startDate', filters.startDate);
       if (filters.endDate) analyticsParams.append('endDate', filters.endDate);
 
-      const analyticsResponse = await fetch(`http://localhost:3002/api/v1/real-time-activity/analytics?${analyticsParams}`);
+      const analyticsResponse = await fetch(`/api/v1/real-time-activity/analytics?${analyticsParams}`);
       const analyticsData = await analyticsResponse.json();
 
       if (analyticsData.success) {

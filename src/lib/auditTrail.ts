@@ -26,7 +26,7 @@ export interface AuditTrailEntry {
 }
 
 class AuditTrailService {
-  private baseUrl = 'http://localhost:3002/api/v1/audit-trail';
+  private baseUrl = '/api/v1/audit-trail';
 
   /**
    * Create an audit trail entry

@@ -2,7 +2,10 @@
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
 
-const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
+// Use local API during development, Vercel API in production
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1' : '/api/v1')
+  : 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
 
@@ -125,45 +128,57 @@ export async function getTemplates(params?: {
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
+    console.log('📊 Templates API Response:', response);
+    console.log('📊 Response success:', response.success);
+    console.log('📊 Response data structure:', response.data);
     
-           // Transform the API response to match expected Template interface
-           const transformedTemplates = (response.data || []).map((template: any) => ({
-             id: template.id.toString(),
+    // Handle both array response and paginated response structures
+    const templatesData = Array.isArray(response.data) 
+      ? response.data 
+      : response.data?.templates || response.data?.data || [];
+    
+    console.log('📊 Templates data extracted:', templatesData);
+    console.log('📊 Number of templates:', templatesData.length);
+    console.log('📊 First template:', templatesData[0]);
+    
+    // Transform the API response to match expected Template interface
+    const transformedTemplates = (templatesData || []).map((template: any) => ({
+             id: template._id?.toString() || template.id?.toString() || Math.random().toString(),
              name: template.name,
              description: template.description,
              category: template.category || 'General', // Default category if not provided
-             tags: template.tags || [template.category || 'general'], // Use category as tag if no tags
-             content: template.templateData?.content || template.content || '',
-             aiInstructions: template.templateData?.aiInstructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             tags: template.metadata?.tags || template.tags || [template.category || 'general'], // Use category as tag if no tags
+             content: template.prompt_template || template.content || template.templateData?.content || '',
+             aiInstructions: template.ai_instructions || template.aiInstructions || template.templateData?.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
              documentKey: template.documentKey || '', // Include documentKey
-             generationFunction: template.generationFunction || 'getAiGenericDocument', // Include generationFunction
-             templateType: template.templateType || 'ai_instruction',
-             isActive: template.isActive !== undefined ? template.isActive : true,
-             version: template.version || '1.0.0',
+             generationFunction: template.generation_function || template.generationFunction || 'getAiGenericDocument', // Include generationFunction
+             templateType: template.template_type || template.templateType || 'ai_instruction',
+             isActive: template.is_active !== undefined ? template.is_active : (template.isActive !== undefined ? template.isActive : true),
+             version: template.version?.toString() || '1.0.0',
              contextPriority: template.contextPriority || 'medium', // Default priority for context building
              contextRequirements: template.contextRequirements || [],
-             variables: template.templateData?.variables || template.variables || {},
+             variables: template.metadata?.variables || template.variables || {},
              metadata: {
                framework: template.metadata?.framework || 'general',
                complexity: template.metadata?.complexity || 'medium',
                estimatedTime: template.metadata?.estimatedTime || '2-4 hours',
                dependencies: template.metadata?.dependencies || [],
-               version: template.metadata?.version || '1.0.0',
-               author: template.metadata?.author || 'System',
+               version: template.metadata?.version || template.version?.toString() || '1.0.0',
+               author: template.created_by || template.metadata?.author || 'System',
                ...template.metadata // Include any other metadata fields
              },
-             createdAt: template.createdAt || new Date().toISOString(),
-             updatedAt: template.updatedAt || new Date().toISOString()
+             createdAt: template.created_at || template.createdAt || new Date().toISOString(),
+             updatedAt: template.updated_at || template.updatedAt || new Date().toISOString()
            }));
 
     return {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.pagination?.total || 0,
-        page: response.pagination?.page || 1,
-        limit: response.pagination?.limit || 20,
-        totalPages: response.pagination?.pages || Math.ceil((response.pagination?.total || 0) / (response.pagination?.limit || 20))
+        total: response.data?.total || response.pagination?.total || transformedTemplates.length,
+        page: response.data?.page || response.pagination?.page || 1,
+        limit: response.data?.limit || response.pagination?.limit || 20,
+        totalPages: response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.limit || response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
@@ -545,6 +560,9 @@ export async function createTemplate(template: any): Promise<any> {
 
 export async function updateTemplate(id: string, template: any): Promise<any> {
   try {
+    console.log('🚀 updateTemplate called with:', { id, template });
+    console.log('🚀 API_BASE_URL:', API_BASE_URL);
+    console.log('🚀 Full URL will be:', `${API_BASE_URL}/templates/${id}`);
     
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/templates/${id}`, {
@@ -552,6 +570,7 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
     body: JSON.stringify(template),
   });
     
+    console.log('✅ updateTemplate response:', response);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
@@ -609,6 +628,16 @@ export async function getProjects(params?: any): Promise<any> {
     
     const url = `/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
+    
+    // Convert MongoDB _id to id for frontend compatibility
+    if (response.success && response.data && response.data.projects) {
+      response.data.projects = response.data.projects.map((project: any) => {
+        if (project._id && !project.id) {
+          project.id = project._id;
+        }
+        return project;
+      });
+    }
     
     return response;
   } catch (error) {
@@ -691,7 +720,12 @@ export async function getProjectById(id: string): Promise<any> {
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
-      return response.data;
+      // Convert MongoDB _id to id for frontend compatibility
+      const project = response.data;
+      if (project._id && !project.id) {
+        project.id = project._id;
+      }
+      return project;
     } else {
       console.warn('⚠️ Project not found or API call failed:', response);
       return null;

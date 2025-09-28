@@ -142,7 +142,7 @@ export default function ComplianceAnalyticsDashboard({ projectId }: ComplianceAn
       params.append('startDate', startDate.toISOString());
       params.append('endDate', endDate.toISOString());
 
-      const response = await fetch(`http://localhost:3002/api/v1/compliance-audit/analytics?${params}`);
+      const response = await fetch(`/api/v1/compliance-audit/analytics?${params}`);
       
       if (!response.ok) {
         throw new Error(`API endpoint not available: ${response.status}`);

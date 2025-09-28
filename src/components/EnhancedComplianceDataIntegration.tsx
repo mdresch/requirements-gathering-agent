@@ -77,7 +77,7 @@ export default function EnhancedComplianceDataIntegration({
       return;
       
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//localhost:3002/ws/compliance`;
+      const wsUrl = `${protocol}//requirements-gathering-agent.vercel.app/ws/compliance`;
       
       wsRef.current = new WebSocket(wsUrl);
       
@@ -216,7 +216,7 @@ export default function EnhancedComplianceDataIntegration({
     setError(null);
     
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/standards/enhanced/data-quality/${projectId || 'current-project'}`);
+      const response = await fetch(`/api/v1/standards/enhanced/data-quality/${projectId || 'current-project'}`);
       const result = await response.json();
       
       if (result.success && result.data?.currentQuality) {
