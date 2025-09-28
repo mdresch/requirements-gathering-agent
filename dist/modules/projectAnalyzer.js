@@ -1,31 +1,6 @@
-/**
- * Project Analyzer Module for Requirements Gathering Agent
- *
- * Provides comprehensive project analysis capabilities including markdown file discovery,
- * content categorization, relevance scoring, and project context building.
- *
- * @version 2.1.3
- * @author Requirements Gathering Agent Team
- * @created 2024
- * @updated June 2025
- *
- * Key Features:
- * - Enhanced markdown file discovery with recursive directory scanning
- * - Intelligent relevance scoring based on content and file structure
- * - Automatic categorization of project documentation
- * - Comprehensive project context building from multiple sources
- * - Support for package.json metadata integration
- *
- * @filepath c:\Users\menno\Source\Repos\requirements-gathering-agent\src\modules\projectAnalyzer.ts
- */
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { PACKAGE_JSON_FILENAME } from '../constants.js';
-/**
- * Reads the README.md file from the given project path.
- * @param projectPath - The root directory of the project.
- * @returns The content of README.md if found, otherwise null.
- */
 export async function getReadmeContent(projectPath) {
     const readmePath = path.join(projectPath, 'README.md');
     try {
@@ -39,11 +14,6 @@ export async function getReadmeContent(projectPath) {
         throw err;
     }
 }
-/**
- * Reads and parses the package.json file from the given project path.
- * @param projectPath - The root directory of the project.
- * @returns The parsed package.json object if found and valid, otherwise null.
- */
 export async function getProjectPackageJson(projectPath) {
     const pkgPath = path.join(projectPath, PACKAGE_JSON_FILENAME);
     try {
@@ -54,21 +24,14 @@ export async function getProjectPackageJson(projectPath) {
         if (err.code === 'ENOENT') {
             return null;
         }
-        // Optionally log error or rethrow
         return null;
     }
 }
-/**
- * Analyzes the entire project directory for relevant markdown files and project information.
- * @param projectPath - The root directory of the project.
- * @returns Complete project analysis including all relevant markdown files.
- */
 export async function analyzeProjectComprehensively(projectPath) {
     console.log('🔍 Analyzing project for all relevant markdown files...');
     const readme = await getReadmeContent(projectPath);
     const packageJson = await getProjectPackageJson(projectPath);
     const additionalMarkdownFiles = await findRelevantMarkdownFiles(projectPath);
-    // Build comprehensive project context
     const projectContext = buildProjectContext(readme, additionalMarkdownFiles, packageJson);
     const suggestedSources = getSuggestedSourceFiles(additionalMarkdownFiles);
     console.log(`✅ Found ${additionalMarkdownFiles.length} additional markdown files`);
@@ -80,23 +43,15 @@ export async function analyzeProjectComprehensively(projectPath) {
         suggestedSources
     };
 }
-// Project Analyzer: Add support for recognizing and categorizing the new checklist document
 const CHECKLIST_FILENAMES = [
     'Project-KickOff-Preprations-CheckList.md',
     'project-kickoff-preparations-checklist.md'
 ];
-/**
- * Finds all relevant markdown files in the project directory.
- * @param projectPath - The root directory of the project.
- * @returns Array of relevant markdown files with content and metadata.
- */
 export async function findRelevantMarkdownFiles(projectPath) {
     const markdownFiles = [];
     try {
-        // Search in root directory
         const rootFiles = await findMarkdownInDirectory(projectPath, projectPath, 0);
         markdownFiles.push(...rootFiles);
-        // Search in common documentation directories
         const commonDirs = [
             'docs', 'documentation', 'doc',
             'requirements', 'specs', 'specifications',
@@ -111,12 +66,10 @@ export async function findRelevantMarkdownFiles(projectPath) {
                 markdownFiles.push(...dirFiles);
             }
             catch {
-                // Directory doesn't exist, skip
             }
         }
-        // Sort by relevance score (highest first)
         return markdownFiles
-            .filter(file => file.content.length > 50) // Filter out very small files
+            .filter(file => file.content.length > 50)
             .sort((a, b) => b.relevanceScore - a.relevanceScore);
     }
     catch (error) {
@@ -124,16 +77,9 @@ export async function findRelevantMarkdownFiles(projectPath) {
         return [];
     }
 }
-/**
- * Recursively finds markdown files in a directory.
- * @param dirPath - Directory to search in.
- * @param projectRoot - Root project directory for relative paths.
- * @param depth - Current search depth.
- * @returns Array of markdown files found.
- */
 async function findMarkdownInDirectory(dirPath, projectRoot, depth) {
     const files = [];
-    const maxDepth = 3; // Limit recursion depth
+    const maxDepth = 3;
     if (depth > maxDepth)
         return files;
     try {
@@ -141,7 +87,6 @@ async function findMarkdownInDirectory(dirPath, projectRoot, depth) {
         for (const entry of entries) {
             const fullPath = path.join(dirPath, entry.name);
             if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
-                // Skip README.md as it's handled separately
                 if (entry.name.toLowerCase() === 'readme.md')
                     continue;
                 try {
@@ -161,44 +106,32 @@ async function findMarkdownInDirectory(dirPath, projectRoot, depth) {
                 }
             }
             else if (entry.isDirectory() && !shouldSkipDirectory(entry.name)) {
-                // Recursively search subdirectories
                 const subFiles = await findMarkdownInDirectory(fullPath, projectRoot, depth + 1);
                 files.push(...subFiles);
             }
         }
     }
     catch (error) {
-        // Directory not accessible, skip
     }
     return files;
 }
-/**
- * Calculates relevance score for a markdown file based on name, content, and location.
- * @param fileName - Name of the file.
- * @param content - File content.
- * @param relativePath - Relative path from project root.
- * @returns Relevance score (0-100).
- */
 function calculateRelevanceScore(fileName, content, relativePath) {
     let score = 0;
     const fileNameLower = fileName.toLowerCase();
     const contentLower = content.toLowerCase();
     const pathLower = relativePath.toLowerCase();
-    // High-value file names
     const highValueNames = [
         'architecture', 'design', 'requirements', 'specification', 'specs',
         'planning', 'roadmap', 'overview', 'introduction', 'getting-started',
         'install', 'setup', 'configuration', 'api', 'guide', 'tutorial',
         'contributing', 'changelog', 'features', 'scope', 'objectives'
     ];
-    // Check file name relevance
     for (const keyword of highValueNames) {
         if (fileNameLower.includes(keyword)) {
             score += 20;
             break;
         }
     }
-    // Check content relevance
     const relevantTerms = [
         'project', 'application', 'system', 'requirements', 'features',
         'functionality', 'architecture', 'design', 'implementation',
@@ -211,8 +144,7 @@ function calculateRelevanceScore(fileName, content, relativePath) {
             termCount++;
         }
     }
-    score += Math.min(termCount * 3, 30); // Max 30 points for content relevance
-    // Location-based scoring
+    score += Math.min(termCount * 3, 30);
     if (pathLower.includes('docs') || pathLower.includes('documentation')) {
         score += 15;
     }
@@ -222,80 +154,53 @@ function calculateRelevanceScore(fileName, content, relativePath) {
     if (pathLower.includes('planning') || pathLower.includes('design')) {
         score += 15;
     }
-    // Content length bonus (more substantial content)
     if (content.length > 1000)
         score += 10;
     if (content.length > 3000)
         score += 10;
-    // Structure bonus (has headers)
     const headerCount = (content.match(/^#+\s/gm) || []).length;
     if (headerCount >= 3)
         score += 10;
     return Math.min(score, 100);
 }
-/**
- * Categorizes a markdown file based on its name, content, and location.
- * @param fileName - Name of the file.
- * @param content - File content.
- * @param relativePath - Relative path from project root.
- * @returns File category.
- */
 function categorizeMarkdownFile(fileName, content, relativePath) {
     const fileNameLower = fileName.toLowerCase();
     const pathLower = relativePath.toLowerCase();
-    // Primary project files
     if (fileNameLower.includes('overview') || fileNameLower.includes('introduction') ||
         fileNameLower.includes('getting-started') || fileNameLower.includes('setup')) {
         return 'primary';
     }
-    // Planning and requirements
     if (fileNameLower.includes('requirements') || fileNameLower.includes('planning') ||
         fileNameLower.includes('roadmap') || fileNameLower.includes('scope') ||
         pathLower.includes('requirements') || pathLower.includes('planning')) {
         return 'planning';
     }
-    // Development documentation
     if (fileNameLower.includes('api') || fileNameLower.includes('architecture') ||
         fileNameLower.includes('design') || fileNameLower.includes('technical') ||
         fileNameLower.includes('contributing') || fileNameLower.includes('development')) {
         return 'development';
     }
-    // General documentation
     if (pathLower.includes('docs') || pathLower.includes('documentation') ||
         fileNameLower.includes('guide') || fileNameLower.includes('tutorial')) {
         return 'documentation';
     }
     return 'other';
 }
-/**
- * Determines if a directory should be skipped during search.
- * @param dirName - Directory name.
- * @returns True if directory should be skipped.
- */
 function shouldSkipDirectory(dirName) {
     const skipDirs = [
         'node_modules', '.git', '.vscode', '.idea', 'dist', 'build',
         'coverage', '.nyc_output', 'logs', 'tmp', 'temp', '.cache',
-        'generated-documents' // Skip our own generated documents
+        'generated-documents'
     ];
     return skipDirs.includes(dirName) || dirName.startsWith('.');
 }
-/**
- * Builds comprehensive project context from all available sources.
- * @param readme - README content.
- * @param markdownFiles - Additional markdown files.
- * @param packageJson - Package.json content.
- * @returns Comprehensive project context string.
- */
 function buildProjectContext(readme, markdownFiles, packageJson) {
     let context = '';
-    // Add README content first
     if (readme) {
         context += '=== PROJECT README ===\n';
         context += readme;
         context += '\n\n';
     }
-    // Add package.json information
     if (packageJson) {
         context += '=== PROJECT METADATA ===\n';
         context += `Name: ${packageJson.name || 'Unknown'}\n`;
@@ -312,15 +217,13 @@ function buildProjectContext(readme, markdownFiles, packageJson) {
         }
         context += '\n';
     }
-    // Add high-relevance markdown files (score > 30)
     const highRelevanceFiles = markdownFiles
         .filter(file => file.relevanceScore > 30)
-        .slice(0, 10); // Limit to top 10 files to avoid context overflow
+        .slice(0, 10);
     for (const file of highRelevanceFiles) {
         context += `=== ${file.fileName.toUpperCase()} (${file.category}) ===\n`;
         context += `Path: ${file.filePath}\n`;
         context += `Relevance Score: ${file.relevanceScore}\n\n`;
-        // Include content but limit length to avoid token overflow
         const maxLength = 2000;
         const content = file.content.length > maxLength
             ? file.content.substring(0, maxLength) + '\n... [truncated]'
@@ -330,11 +233,6 @@ function buildProjectContext(readme, markdownFiles, packageJson) {
     }
     return context;
 }
-/**
- * Gets suggested source files for documentation generation.
- * @param markdownFiles - Available markdown files.
- * @returns Array of suggested file paths.
- */
 function getSuggestedSourceFiles(markdownFiles) {
     return markdownFiles
         .filter(file => file.relevanceScore > 40)
@@ -342,4 +240,3 @@ function getSuggestedSourceFiles(markdownFiles) {
         .slice(0, 5)
         .map(file => file.filePath);
 }
-//# sourceMappingURL=projectAnalyzer.js.map
