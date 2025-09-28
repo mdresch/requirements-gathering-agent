@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd admin-interface && npm install && npm run build",
+  "buildCommand": "cd admin-interface && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "admin-interface/.next",
-  "installCommand": "cd admin-interface && npm install",
+  "installCommand": "cd admin-interface && npm install --legacy-peer-deps",
   "framework": "nextjs"
 }
