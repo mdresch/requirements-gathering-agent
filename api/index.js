@@ -95,6 +95,197 @@ export default async (req, res) => {
       return;
     }
 
+    // Database inspection endpoint - detailed analysis
+    if (method === 'GET' && url === '/api/v1/db-inspect') {
+      try {
+        console.log('🔍 Performing detailed database inspection...');
+        const { db } = await connectToDatabase();
+        
+        // Get all collections
+        const collections = await db.listCollections().toArray();
+        console.log('📊 Available collections:', collections.map(c => c.name));
+        
+        // Get counts for each collection
+        const collectionCounts = {};
+        const sampleData = {};
+        
+        for (const collection of collections) {
+          const count = await db.collection(collection.name).countDocuments();
+          collectionCounts[collection.name] = count;
+          
+          // Get sample data from each collection
+          const sample = await db.collection(collection.name).findOne();
+          sampleData[collection.name] = sample;
+          
+          console.log(`📊 Collection ${collection.name}: ${count} documents`);
+          if (sample) {
+            console.log(`📊 Sample from ${collection.name}:`, Object.keys(sample));
+          }
+        }
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            collections: collections.map(c => c.name),
+            counts: collectionCounts,
+            sampleData: sampleData,
+            inspection: {
+              totalCollections: collections.length,
+              hasTemplates: collectionCounts.templates > 0,
+              hasProjects: collectionCounts.projects > 0,
+              timestamp: new Date().toISOString()
+            }
+          },
+          message: 'Database inspection completed'
+        });
+      } catch (error) {
+        console.error('❌ Database inspection error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message,
+          message: 'Database inspection failed'
+        });
+      }
+      return;
+    }
+
+    // Seed database with sample templates
+    if (method === 'POST' && url === '/api/v1/seed-templates') {
+      try {
+        console.log('🌱 Seeding database with sample templates...');
+        const { db } = await connectToDatabase();
+        
+        // Check if templates already exist
+        const existingCount = await db.collection('templates').countDocuments();
+        if (existingCount > 0) {
+          res.status(200).json({
+            success: true,
+            message: `Database already has ${existingCount} templates, skipping seed`,
+            data: { existingCount }
+          });
+          return;
+        }
+        
+        // Sample templates to seed
+        const sampleTemplates = [
+          {
+            id: "101",
+            name: "Business Case Template",
+            description: "Strategic justification and financial analysis for project initiation",
+            category: "Strategic Planning",
+            tags: ["business", "case", "analysis", "strategy"],
+            content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
+            aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
+            templateType: "ai_instruction",
+            isActive: true,
+            version: "1.0.0",
+            contextPriority: "critical",
+            contextRequirements: ["business objectives", "financial data", "stakeholder input"],
+            variables: {
+              projectName: "string",
+              budget: "number",
+              timeline: "string"
+            },
+            metadata: {
+              framework: "babok",
+              complexity: "high",
+              estimatedTime: "4-6 hours",
+              dependencies: ["stakeholder analysis"],
+              pmbokKnowledgeArea: "Project Integration Management",
+              version: "1.0.0",
+              author: "System"
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: "102",
+            name: "Requirements Document Template",
+            description: "Comprehensive requirements specification and analysis",
+            category: "Requirements Analysis",
+            tags: ["requirements", "specification", "analysis"],
+            content: "# Requirements Document\n\n## Introduction\n\n## Functional Requirements\n\n## Non-Functional Requirements\n\n## Acceptance Criteria",
+            aiInstructions: "Generate detailed requirements documentation following BABOK standards.",
+            templateType: "ai_instruction",
+            isActive: true,
+            version: "1.0.0",
+            contextPriority: "high",
+            contextRequirements: ["stakeholder input", "business objectives"],
+            variables: {
+              projectScope: "string",
+              stakeholders: "array",
+              constraints: "object"
+            },
+            metadata: {
+              framework: "babok",
+              complexity: "medium",
+              estimatedTime: "3-4 hours",
+              dependencies: ["business case"],
+              pmbokKnowledgeArea: "Project Scope Management",
+              version: "1.0.0",
+              author: "System"
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: "103",
+            name: "Project Charter Template",
+            description: "Official project authorization and scope definition",
+            category: "Project Management",
+            tags: ["charter", "project", "authorization", "scope"],
+            content: "# Project Charter\n\n## Project Overview\n\n## Objectives\n\n## Scope\n\n## Stakeholders\n\n## Success Criteria",
+            aiInstructions: "Generate a comprehensive project charter following PMBOK guidelines.",
+            templateType: "ai_instruction",
+            isActive: true,
+            version: "1.0.0",
+            contextPriority: "critical",
+            contextRequirements: ["business case", "stakeholder analysis"],
+            variables: {
+              projectName: "string",
+              sponsor: "string",
+              budget: "number",
+              timeline: "string"
+            },
+            metadata: {
+              framework: "pmbok",
+              complexity: "medium",
+              estimatedTime: "2-3 hours",
+              dependencies: ["business case", "requirements"],
+              pmbokKnowledgeArea: "Project Integration Management",
+              version: "1.0.0",
+              author: "System"
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
+        
+        // Insert sample templates
+        const result = await db.collection('templates').insertMany(sampleTemplates);
+        
+        console.log(`✅ Seeded ${result.insertedCount} templates into database`);
+        
+        res.status(201).json({
+          success: true,
+          message: `Successfully seeded ${result.insertedCount} templates`,
+          data: {
+            insertedCount: result.insertedCount,
+            insertedIds: result.insertedIds,
+            templates: sampleTemplates
+          }
+        });
+      } catch (error) {
+        console.error('❌ Seed templates error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message,
+          message: 'Failed to seed templates'
+        });
+      }
+      return;
+    }
+
     // Root endpoint
     if (method === 'GET' && url === '/') {
       res.status(200).json({
