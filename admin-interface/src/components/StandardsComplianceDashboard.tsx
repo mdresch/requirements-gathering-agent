@@ -130,7 +130,7 @@ export default function StandardsComplianceDashboard() {
       // Try enhanced API first, fallback to original API
       let metricsResponse;
       try {
-        metricsResponse = await fetch('http://localhost:3002/api/v1/standards/enhanced/dashboard?projectId=current-project');
+        metricsResponse = await fetch('/api/v1/standards/enhanced/dashboard?projectId=current-project');
         metricsResponse = await metricsResponse.json();
         console.log('📊 Enhanced compliance metrics response:', metricsResponse);
       } catch (error) {
