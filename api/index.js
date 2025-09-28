@@ -11,8 +11,7 @@ module.exports = async (req, res) => {
   }
 
   // Handle different routes
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = url.pathname;
+  const pathname = req.url || '/';
 
   if (pathname === '/api/v1/health' || pathname === '/health') {
     res.json({
