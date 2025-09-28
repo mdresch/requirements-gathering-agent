@@ -72,6 +72,8 @@ export default function ProjectManager() {
       
       const response = await apiClient.getProjects(params);
       
+      console.log('📊 API Response:', response);
+      console.log('📊 Pagination data:', response.data);
       
       if (response.success && response.data) {
         // Handle both array response and paginated response structures
@@ -83,12 +85,25 @@ export default function ProjectManager() {
           setProjects(projectsData);
           
           // Update pagination info if available
-          if (response.pagination) {
+          if (response.data && typeof response.data === 'object' && response.data.totalPages) {
+            // Pagination data is in response.data
+            console.log('📊 Setting pagination from response.data:', {
+              totalPages: response.data.totalPages,
+              total: response.data.total,
+              page: response.data.page
+            });
+            setTotalPages(response.data.totalPages || 1);
+            setTotalItems(response.data.total || projectsData.length);
+            setCurrentPage(response.data.page || page);
+          } else if (response.pagination && typeof response.pagination === 'object') {
+            // Fallback to response.pagination
+            console.log('📊 Setting pagination from response.pagination:', response.pagination);
             setTotalPages(response.pagination.totalPages || 1);
             setTotalItems(response.pagination.totalItems || projectsData.length);
             setCurrentPage(response.pagination.currentPage || page);
           } else {
             // Fallback pagination calculation
+            console.log('📊 Using fallback pagination calculation');
             setTotalPages(1);
             setTotalItems(projectsData.length);
             setCurrentPage(page);
@@ -136,6 +151,11 @@ export default function ProjectManager() {
       loadProjects(currentPage);
     }
   }, [currentPage]);
+
+  // Debug pagination state
+  useEffect(() => {
+    console.log('📊 Pagination state updated:', { totalPages, currentPage, totalItems, loading });
+  }, [totalPages, currentPage, totalItems, loading]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
