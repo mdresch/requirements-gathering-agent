@@ -1,5 +1,30 @@
+// MongoDB connection
+const { MongoClient } = require('mongodb');
+
+let cachedClient = null;
+let cachedDb = null;
+
+async function connectToDatabase() {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
+  const client = new MongoClient(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  await client.connect();
+  const db = client.db(process.env.MONGODB_DATABASE || 'requirements-gathering-agent');
+
+  cachedClient = client;
+  cachedDb = db;
+
+  return { client, db };
+}
+
 // Simple Vercel serverless function
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   try {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,48 +77,53 @@ module.exports = (req, res) => {
         return;
       }
 
-      const mockTemplates = [
-        {
-          id: "1",
-          name: "Business Case Template",
-          description: "Strategic justification and financial analysis for project initiation",
-          category: "Strategic Planning",
-          tags: ["business", "case", "analysis", "strategy"],
-          content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
-          aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
-          templateType: "ai_instruction",
-          isActive: true,
-          version: "1.0.0",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: "2",
-          name: "Stakeholder Analysis Template",
-          description: "Comprehensive stakeholder identification, analysis, and engagement strategy",
-          category: "Stakeholder Management",
-          tags: ["stakeholder", "analysis", "engagement", "communication"],
-          content: "# Stakeholder Analysis\n\n## Stakeholder Identification\n\n## Stakeholder Analysis Matrix\n\n## Engagement Strategy\n\n## Communication Plan",
-          aiInstructions: "Create detailed stakeholder analysis following PMBOK stakeholder management guidelines.",
-          templateType: "ai_instruction",
-          isActive: true,
-          version: "1.0.0",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
+      try {
+        const { db } = await connectToDatabase();
+        const templates = await db.collection('templates').find({}).toArray();
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            templates: templates,
+            total: templates.length,
+            page: 1,
+            limit: 20,
+            totalPages: 1
+          },
+          message: 'Templates loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        // Fallback to mock data if database fails
+        const mockTemplates = [
+          {
+            id: "1",
+            name: "Business Case Template",
+            description: "Strategic justification and financial analysis for project initiation",
+            category: "Strategic Planning",
+            tags: ["business", "case", "analysis", "strategy"],
+            content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
+            aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
+            templateType: "ai_instruction",
+            isActive: true,
+            version: "1.0.0",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
 
-      res.status(200).json({
-        success: true,
-        data: {
-          templates: mockTemplates,
-          total: mockTemplates.length,
-          page: 1,
-          limit: 20,
-          totalPages: 1
-        },
-        message: 'Templates loaded successfully'
-      });
+        res.status(200).json({
+          success: true,
+          data: {
+            templates: mockTemplates,
+            total: mockTemplates.length,
+            page: 1,
+            limit: 20,
+            totalPages: 1
+          },
+          message: 'Templates loaded from mock data (database unavailable)'
+        });
+      }
       return;
     }
 
@@ -107,45 +137,52 @@ module.exports = (req, res) => {
         return;
       }
 
-      const mockProjects = [
-        {
-          id: '1',
-          name: 'Sample Project 1',
-          description: 'A sample project for demonstration',
-          status: 'active',
-          framework: 'babok',
-          complianceScore: 85,
-          documents: 5,
-          stakeholders: 3,
-          templatesCount: 2,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Sample Project 2',
-          description: 'Another sample project',
-          status: 'planning',
-          framework: 'pmbok',
-          complianceScore: 72,
-          documents: 3,
-          stakeholders: 2,
-          templatesCount: 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
+      try {
+        const { db } = await connectToDatabase();
+        const projects = await db.collection('projects').find({}).toArray();
+        
+        res.status(200).json({
+          success: true,
+          data: {
+            projects: projects,
+            total: projects.length,
+            page: 1,
+            limit: 20,
+            totalPages: 1
+          },
+          message: 'Projects loaded from database'
+        });
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        // Fallback to mock data if database fails
+        const mockProjects = [
+          {
+            id: '1',
+            name: 'Sample Project 1',
+            description: 'A sample project for demonstration',
+            status: 'active',
+            framework: 'babok',
+            complianceScore: 85,
+            documents: 5,
+            stakeholders: 3,
+            templatesCount: 2,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ];
 
-      res.status(200).json({
-        success: true,
-        data: {
-          projects: mockProjects,
-          total: mockProjects.length,
-          page: 1,
-          limit: 20,
-          totalPages: 1
-        }
-      });
+        res.status(200).json({
+          success: true,
+          data: {
+            projects: mockProjects,
+            total: mockProjects.length,
+            page: 1,
+            limit: 20,
+            totalPages: 1
+          },
+          message: 'Projects loaded from mock data (database unavailable)'
+        });
+      }
       return;
     }
 
