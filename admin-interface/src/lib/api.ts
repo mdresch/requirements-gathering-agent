@@ -2,7 +2,10 @@
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
 
-const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
+// Use local API during development, Vercel API in production
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1' : '/api/v1')
+  : 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
 
@@ -557,6 +560,9 @@ export async function createTemplate(template: any): Promise<any> {
 
 export async function updateTemplate(id: string, template: any): Promise<any> {
   try {
+    console.log('🚀 updateTemplate called with:', { id, template });
+    console.log('🚀 API_BASE_URL:', API_BASE_URL);
+    console.log('🚀 Full URL will be:', `${API_BASE_URL}/templates/${id}`);
     
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/templates/${id}`, {
@@ -564,6 +570,7 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
     body: JSON.stringify(template),
   });
     
+    console.log('✅ updateTemplate response:', response);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
