@@ -344,7 +344,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         </div>
       </div>
 
-      <div className="p-6 max-h-96 overflow-y-auto">
+      <div className="p-6 max-h-[70vh] overflow-y-auto">
         {/* Error Display */}
         {errors.length > 0 && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -676,7 +676,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               <textarea
                 value={formData.content}
                 onChange={(e) => handleInputChange('content', e.target.value)}
-                rows={12}
+                rows={20}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Enter your template content here..."
               />
@@ -692,7 +692,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               <textarea
                 value={formData.aiInstructions}
                 onChange={(e) => handleInputChange('aiInstructions', e.target.value)}
-                rows={4}
+                rows={8}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="You are a Project Management Professional with extensive knowledge..."
                 minLength={10}
