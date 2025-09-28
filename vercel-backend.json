@@ -16,6 +16,11 @@
       "dest": "/api/index.js"
     }
   ],
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  },
   "env": {
     "API_KEY": "@api_key",
     "JWT_SECRET": "@jwt_secret",
