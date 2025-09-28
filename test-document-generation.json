@@ -1,0 +1,6 @@
+{
+  "context": "test-project",
+  "generateAll": false,
+  "documentKeys": ["mission-vision-core-values"],
+  "projectId": "test-project"
+}

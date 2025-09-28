@@ -1,0 +1,70 @@
+/* Chart Tooltip Z-Index Fix */
+.recharts-tooltip-wrapper {
+  z-index: 9999 !important;
+}
+
+.recharts-tooltip-content {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+.recharts-tooltip-wrapper .recharts-tooltip-content {
+  z-index: 9999 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  background-color: white !important;
+}
+
+/* Ensure tooltips appear above all other elements */
+.recharts-tooltip-wrapper,
+.recharts-tooltip-content,
+.recharts-default-tooltip {
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* Fix for Recharts ResponsiveContainer */
+.recharts-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure chart containers don't interfere with tooltips */
+.recharts-surface {
+  z-index: 1;
+}
+
+/* Performance Gauge tooltips */
+.performance-gauge-tooltip {
+  z-index: 9999 !important;
+  position: absolute !important;
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25) !important;
+  font-size: 12px !important;
+  pointer-events: none !important;
+}
+
+/* Dashboard chart container z-index */
+.dashboard-chart-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Quality trends chart specific fixes */
+.quality-trends-chart {
+  position: relative;
+  z-index: 10;
+}
+
+.quality-trends-chart .recharts-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.quality-trends-chart .recharts-tooltip-wrapper {
+  z-index: 9999 !important;
+}

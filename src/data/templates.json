@@ -1,0 +1,112 @@
+[
+  {
+    "id": "template-101",
+    "name": "Business Case Template",
+    "description": "Professional template for creating comprehensive business case documents with structured sections for executive summary, objectives, benefits analysis, and risk assessment.",
+    "category": "Business Analysis",
+    "tags": ["business-case", "analysis", "strategy", "proposal"],
+    "content": "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Proposed Solution\n\n## Benefits Analysis\n\n## Cost Analysis\n\n## Risk Assessment\n\n## Implementation Plan\n\n## Conclusion",
+    "aiInstructions": "Generate a comprehensive business case following the template structure. Focus on clear problem definition, quantifiable benefits, and realistic implementation timeline.",
+    "isActive": true,
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-20T14:30:00Z",
+    "version": "1.2.0",
+    "templateType": "document",
+    "contextRequirements": ["project scope", "business objectives", "stakeholder information"],
+    "metadata": {
+      "framework": "ADPA",
+      "complexity": "moderate",
+      "estimatedTime": "2-3 hours",
+      "dependencies": ["stakeholder analysis"],
+      "author": "ADPA Team"
+    }
+  },
+  {
+    "id": "template-102",
+    "name": "Requirements Specification Template",
+    "description": "Comprehensive template for documenting functional and non-functional requirements with priority classification and acceptance criteria.",
+    "category": "Requirements Engineering",
+    "tags": ["requirements", "specification", "functional", "non-functional"],
+    "content": "# Requirements Specification\n\n## Introduction\n\n## Scope\n\n## Functional Requirements\n\n## Non-Functional Requirements\n\n## User Stories\n\n## Acceptance Criteria\n\n## Assumptions and Constraints\n\n## Glossary",
+    "aiInstructions": "Create detailed requirements specification focusing on measurable, testable requirements. Include user perspectives and acceptance criteria for each requirement.",
+    "isActive": true,
+    "createdAt": "2024-01-16T09:15:00Z",
+    "updatedAt": "2024-01-22T11:45:00Z",
+    "version": "1.1.0",
+    "templateType": "specification",
+    "contextRequirements": ["system scope", "user roles", "business rules"],
+    "metadata": {
+      "framework": "ADPA",
+      "complexity": "advanced",
+      "estimatedTime": "4-6 hours",
+      "dependencies": ["user analysis", "system architecture"],
+      "author": "Requirements Team"
+    }
+  },
+  {
+    "id": "template-103",
+    "name": "Test Plan Template",
+    "description": "Structured template for comprehensive test planning including test strategy, test cases, and quality assurance processes.",
+    "category": "Quality Assurance",
+    "tags": ["testing", "qa", "test-plan", "quality"],
+    "content": "# Test Plan\n\n## Test Strategy\n\n## Test Scope\n\n## Test Cases\n\n## Test Environment\n\n## Test Schedule\n\n## Resource Requirements\n\n## Risk Analysis\n\n## Exit Criteria",
+    "aiInstructions": "Develop comprehensive test plan covering all aspects of quality assurance. Include both manual and automated testing approaches with clear success criteria.",
+    "isActive": true,
+    "createdAt": "2024-01-17T13:20:00Z",
+    "updatedAt": "2024-01-23T16:10:00Z",
+    "version": "1.0.1",
+    "templateType": "plan",
+    "contextRequirements": ["system requirements", "test environment", "resource availability"],
+    "metadata": {
+      "framework": "ADPA",
+      "complexity": "moderate",
+      "estimatedTime": "3-4 hours",
+      "dependencies": ["requirements specification", "system design"],
+      "author": "QA Team"
+    }
+  },
+  {
+    "id": "template-104",
+    "name": "System Design Document Template",
+    "description": "Technical template for documenting system architecture, component design, interfaces, and implementation details.",
+    "category": "Technical Design",
+    "tags": ["architecture", "design", "technical", "system"],
+    "content": "# System Design Document\n\n## Architecture Overview\n\n## System Components\n\n## Data Design\n\n## Interface Design\n\n## Security Considerations\n\n## Performance Requirements\n\n## Deployment Architecture\n\n## Appendices",
+    "aiInstructions": "Create detailed technical design document with focus on scalability, maintainability, and security. Include architectural diagrams and component specifications.",
+    "isActive": true,
+    "createdAt": "2024-01-18T08:30:00Z",
+    "updatedAt": "2024-01-24T12:20:00Z",
+    "version": "2.0.0",
+    "templateType": "technical-document",
+    "contextRequirements": ["technical requirements", "system constraints", "technology stack"],
+    "metadata": {
+      "framework": "ADPA",
+      "complexity": "advanced",
+      "estimatedTime": "6-8 hours",
+      "dependencies": ["requirements specification", "technology assessment"],
+      "author": "Architecture Team"
+    }
+  },
+  {
+    "id": "template-105",
+    "name": "Release Notes Template",
+    "description": "Template for documenting software releases including new features, bug fixes, breaking changes, and upgrade instructions.",
+    "category": "Release Management",
+    "tags": ["release", "deployment", "changelog", "documentation"],
+    "content": "# Release Notes v{VERSION}\n\n## What's New\n\n## Features\n\n## Bug Fixes\n\n## Breaking Changes\n\n## Upgrade Instructions\n\n## Known Issues\n\n## Support Information",
+    "aiInstructions": "Generate clear and comprehensive release notes that help users understand changes and upgrade safely. Include impact assessment for breaking changes.",
+    "isActive": true,
+    "createdAt": "2024-01-19T15:45:00Z",
+    "updatedAt": "2024-01-25T09:30:00Z",
+    "version": "1.3.0",
+    "templateType": "documentation",
+    "contextRequirements": ["release scope", "change log", "user impact"],
+    "metadata": {
+      "framework": "ADPA",
+      "complexity": "simple",
+      "estimatedTime": "1-2 hours",
+      "dependencies": ["development changelog", "testing results"],
+      "author": "Release Team"
+    }
+  }
+]
