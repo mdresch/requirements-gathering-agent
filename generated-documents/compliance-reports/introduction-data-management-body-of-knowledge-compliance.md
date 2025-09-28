@@ -2,7 +2,7 @@
 
 **Document:** introduction-data-management-body-of-knowledge  
 **Document Type:** dmbok  
-**Validation Date:** 2025-09-24T15:50:36.663Z  
+**Validation Date:** 2025-09-28T13:55:57.591Z  
 **Compliance Score:** 90%  
 **Compliance Status:** MOSTLY_COMPLIANT  
 

@@ -202,4 +202,7 @@ ComplianceIssueSchema.index({
   tags: 'text'
 });
 
-export default mongoose.model<IComplianceIssue>('ComplianceIssue', ComplianceIssueSchema);
+const ComplianceIssueModel = mongoose.model<IComplianceIssue>('ComplianceIssue', ComplianceIssueSchema);
+
+export default ComplianceIssueModel;
+export { ComplianceIssueModel };

@@ -20,8 +20,8 @@ async function connectToDatabase() {
         db = client.db('rga-database');
         console.log('✅ Connected to MongoDB Atlas');
     } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        process.exit(1);
+        console.error('⚠️ MongoDB connection error, using mock data:', error.message);
+        db = null; // Use mock data instead
     }
 }
 

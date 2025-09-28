@@ -3,7 +3,7 @@ import projectRouter from './api/routes/projects.js';
 import projectDocumentRouter from './api/routes/projectDocuments.js';
 import stakeholderRouter from './api/routes/stakeholders.js';
 import feedbackRouter from './api/routes/feedback.js';
-// import auditTrailRouter from './api/routes/auditTrail.js';
+import auditTrailRouter from './api/routes/auditTrail.js';
 import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
@@ -46,8 +46,8 @@ app.use('/api/v1/projects', projectRouter);
 app.use('/api/v1/stakeholders', authMiddleware, stakeholderRouter);
 // Register feedback API endpoint
 app.use('/api/v1/feedback', authMiddleware, feedbackRouter);
-// Register audit trail API endpoint (temporarily disabled due to import issues)
-// app.use('/api/v1/audit-trail', authMiddleware, auditTrailRouter);
+// Register audit trail API endpoint
+app.use('/api/v1/audit-trail', authMiddleware, auditTrailRouter);
 
 // Explicit OPTIONS handler for all routes (for CORS preflight)
 app.options('*', cors({
@@ -140,7 +140,7 @@ app.use('*', (req: Request, res: Response) => {
         feedback: '/api/v1/feedback',
         contextTracking: '/api/v1/context-tracking',
         quality: '/api/v1/quality',
-        // auditTrail: '/api/v1/audit-trail',
+        auditTrail: '/api/v1/audit-trail',
         generationJobs: '/api/v1/generation-jobs',
         documentation: '/api-docs'
       }

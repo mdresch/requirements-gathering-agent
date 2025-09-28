@@ -213,4 +213,7 @@ DocumentReviewSchema.pre('save', function(this: IDocumentReview, next: any) {
   next();
 });
 
-export const DocumentReviewModel = mongoose.model<IDocumentReview>('DocumentReview', DocumentReviewSchema);
+const DocumentReviewModel = mongoose.model<IDocumentReview>('DocumentReview', DocumentReviewSchema);
+
+export default DocumentReviewModel;
+export { DocumentReviewModel };

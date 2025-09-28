@@ -2,8 +2,8 @@
 
 **Document:** elicitation-and-collaboration  
 **Document Type:** babok  
-**Validation Date:** 2025-09-24T16:26:50.870Z  
-**Compliance Score:** 92%  
+**Validation Date:** 2025-09-28T14:13:13.052Z  
+**Compliance Score:** 90%  
 **Compliance Status:** MOSTLY_COMPLIANT  
 
 ## Executive Summary
@@ -14,7 +14,7 @@ This document has been validated against enterprise governance policies, regulat
 
 **Overall Compliance:** ❌ NON-COMPLIANT  
 **Policy Checks:** 5  
-**Policy Violations:** 4  
+**Policy Violations:** 5  
 
 
 ### Policy Violations
@@ -33,6 +33,11 @@ This document has been validated against enterprise governance policies, regulat
   - Severity: HIGH
   - Impact: MAJOR
   - Remediation: Ensure document includes required element: Risk assessment
+
+- **Mandatory requirement 'Stakeholder analysis' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Stakeholder analysis
 
 - **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
   - Severity: HIGH
@@ -61,7 +66,7 @@ This document has been validated against enterprise governance policies, regulat
 
 ## Issues and Recommendations
 
-### Critical Issues (4)
+### Critical Issues (5)
 
 - **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
   - Category: GOVERNANCE
@@ -80,6 +85,12 @@ This document has been validated against enterprise governance policies, regulat
   - Severity: HIGH
   - Impact: MAJOR
   - Recommendation: Ensure document includes required element: Risk assessment
+
+- **Mandatory requirement 'Stakeholder analysis' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Stakeholder analysis
 
 - **Mandatory requirement 'Approval process' of policy 'Document Quality Standards' not satisfied**
   - Category: GOVERNANCE

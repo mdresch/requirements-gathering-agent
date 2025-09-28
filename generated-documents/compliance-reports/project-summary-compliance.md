@@ -2,8 +2,8 @@
 
 **Document:** project-summary  
 **Document Type:** core-analysis  
-**Validation Date:** 2025-09-24T16:18:26.796Z  
-**Compliance Score:** 94%  
+**Validation Date:** 2025-09-28T14:29:16.599Z  
+**Compliance Score:** 92%  
 **Compliance Status:** MOSTLY_COMPLIANT  
 
 ## Executive Summary
@@ -14,10 +14,15 @@ This document has been validated against enterprise governance policies, regulat
 
 **Overall Compliance:** ❌ NON-COMPLIANT  
 **Policy Checks:** 5  
-**Policy Violations:** 3  
+**Policy Violations:** 4  
 
 
 ### Policy Violations
+
+- **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Remediation: Ensure document includes required element: Executive summary
 
 - **Mandatory requirement 'Risk assessment' of policy 'Document Quality Standards' not satisfied**
   - Severity: HIGH
@@ -56,7 +61,13 @@ This document has been validated against enterprise governance policies, regulat
 
 ## Issues and Recommendations
 
-### Critical Issues (3)
+### Critical Issues (4)
+
+- **Mandatory requirement 'Executive summary' of policy 'Document Quality Standards' not satisfied**
+  - Category: GOVERNANCE
+  - Severity: HIGH
+  - Impact: MAJOR
+  - Recommendation: Ensure document includes required element: Executive summary
 
 - **Mandatory requirement 'Risk assessment' of policy 'Document Quality Standards' not satisfied**
   - Category: GOVERNANCE

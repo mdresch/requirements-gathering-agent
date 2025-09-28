@@ -176,7 +176,24 @@ export class AuditTrailController {
         return;
       }
 
-      const auditEntry = await this.auditTrailService.createAuditEntry(auditEntryData);
+      // Provide default values for required fields that might be missing
+      const enrichedData = {
+        ...auditEntryData,
+        actionDescription: auditEntryData.actionDescription || `Document "${auditEntryData.documentName}" was ${auditEntryData.action}`,
+        projectName: auditEntryData.projectName || 'Default Project',
+        documentType: auditEntryData.documentType || 'document',
+        userId: auditEntryData.userId || 'system',
+        userName: auditEntryData.userName || 'System User',
+        userRole: auditEntryData.userRole || 'System',
+        userEmail: auditEntryData.userEmail || 'system@company.com',
+        severity: auditEntryData.severity || 'medium',
+        category: auditEntryData.category || 'document',
+        notes: auditEntryData.notes || `Action: ${auditEntryData.action}`,
+        tags: auditEntryData.tags || [auditEntryData.action, 'audit'],
+        contextData: auditEntryData.contextData || {}
+      };
+
+      const auditEntry = await this.auditTrailService.createAuditEntry(enrichedData);
 
       res.status(201).json({
         success: true,

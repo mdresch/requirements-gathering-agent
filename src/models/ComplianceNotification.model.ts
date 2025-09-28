@@ -145,4 +145,7 @@ ComplianceNotificationSchema.index({
   message: 'text'
 });
 
-export default mongoose.model<IComplianceNotification>('ComplianceNotification', ComplianceNotificationSchema);
+const ComplianceNotificationModel = mongoose.model<IComplianceNotification>('ComplianceNotification', ComplianceNotificationSchema);
+
+export default ComplianceNotificationModel;
+export { ComplianceNotificationModel };
