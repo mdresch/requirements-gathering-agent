@@ -147,7 +147,7 @@
     "@types/ws": "^8.18.1",
     "@wix/data": "^1.0.285",
     "@wix/sdk": "^1.15.27",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "commander": "^14.0.0",
     "compression": "^1.8.1",
