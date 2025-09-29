@@ -1,6 +1,19 @@
 {
   "version": 2,
-  "buildCommand": "bash -c 'cd admin-interface && npm install --legacy-peer-deps && npx next build'",
-  "outputDirectory": "admin-interface/.next",
-  "installCommand": "bash -c 'cd admin-interface && npm install --legacy-peer-deps'"
+  "builds": [
+    {
+      "src": "admin-interface/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "installCommand": "npm install --legacy-peer-deps",
+        "buildCommand": "npm run build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/admin-interface/$1"
+    }
+  ]
 }
