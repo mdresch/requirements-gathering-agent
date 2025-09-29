@@ -224,7 +224,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                   placeholder="Describe the project objectives, scope, and key deliverables"
                 />
                 <p className="mt-1 text-xs text-gray-500">

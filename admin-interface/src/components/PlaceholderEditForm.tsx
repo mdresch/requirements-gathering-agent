@@ -455,7 +455,7 @@ const PlaceholderEditForm: React.FC<PlaceholderEditFormProps> = ({
               onChange={(e) => handleInputChange('roleExperience', e.target.value)}
               placeholder="Describe the required experience level and background..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
             />
           </div>
 
@@ -469,7 +469,7 @@ const PlaceholderEditForm: React.FC<PlaceholderEditFormProps> = ({
               onChange={(e) => handleInputChange('recruitmentNotes', e.target.value)}
               placeholder="Add any notes about the recruitment process..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
             />
           </div>
 

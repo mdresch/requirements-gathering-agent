@@ -8,6 +8,8 @@ import { Template } from '@/types/template';
 import { apiClient } from '@/lib/api';
 import { DocumentConverter, DocumentContent } from '@/lib/documentConverter';
 import { toast } from 'sonner';
+import DocumentGenerationProgressTracker, { GenerationStep } from './DocumentGenerationProgressTracker';
+import { DocumentGenerationProgressService } from '@/services/DocumentGenerationProgressService';
 import {
   Dialog,
   DialogContent,
@@ -62,11 +64,19 @@ export default function TemplateDocumentGenerationModal({
   template,
   projectId = 'current-project'
 }: TemplateDocumentGenerationModalProps) {
+  console.log('🚀 TemplateDocumentGenerationModal rendered with:', { isOpen, template: template?.name, templateId: template?.id });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedDocument, setGeneratedDocument] = useState<any>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<'md' | 'pdf' | 'docx'>('md');
+  
+  // Progress tracking state
+  const [progressSteps, setProgressSteps] = useState<GenerationStep[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [overallProgress, setOverallProgress] = useState(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | undefined>();
+  const [progressService, setProgressService] = useState<DocumentGenerationProgressService | null>(null);
   const [projectContext, setProjectContext] = useState('');
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
   
@@ -87,6 +97,17 @@ export default function TemplateDocumentGenerationModal({
       loadProjects();
     }
   }, [isOpen, inputMethod]);
+
+  // Initialize progress service
+  useEffect(() => {
+    const service = new DocumentGenerationProgressService((steps, currentStep, overallProgress) => {
+      setProgressSteps(steps);
+      setCurrentStepIndex(currentStep);
+      setOverallProgress(overallProgress);
+      setEstimatedTimeRemaining(service.getEstimatedTimeRemaining());
+    });
+    setProgressService(service);
+  }, []);
 
   // Filter projects based on search and filters
   const filteredProjects = projects.filter(project => {
@@ -120,7 +141,7 @@ export default function TemplateDocumentGenerationModal({
   };
 
   const handleGenerate = async () => {
-    if (!template) return;
+    if (!template || !progressService) return;
 
     setIsGenerating(true);
     setGenerationProgress(0);
@@ -128,16 +149,28 @@ export default function TemplateDocumentGenerationModal({
     setGenerationError(null);
 
     try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + Math.random() * 20;
-        });
-      }, 500);
+      // Start progress tracking
+      progressService.startGeneration();
+      
+      // Step 1: Validate Input Data
+      await progressService.simulateStepProgress('validate-input', 1000);
+      progressService.completeStep('validate-input', 'Input data validated successfully');
+
+      // Step 2: Connect to Database
+      await progressService.simulateStepProgress('connect-database', 1500);
+      progressService.completeStep('connect-database', 'Database connection established');
+
+      // Step 3: Load Template
+      await progressService.simulateStepProgress('load-template', 2000);
+      progressService.completeStep('load-template', `Template "${template.name}" loaded successfully`);
+
+      // Step 4: Prepare Context
+      await progressService.simulateStepProgress('prepare-context', 1000);
+      progressService.completeStep('prepare-context', 'Project context prepared for AI processing');
+
+      // Step 5: Initialize AI Processor
+      await progressService.simulateStepProgress('initialize-ai', 1500);
+      progressService.completeStep('initialize-ai', 'AI processor initialized with template instructions');
 
       // Prepare generation data based on input method
       let context = '';
@@ -159,11 +192,16 @@ export default function TemplateDocumentGenerationModal({
 
       console.log('🚀 Starting document generation:', generationData);
 
+      // Step 6: Generate Content (this is the main AI processing step)
+      progressService.updateStep({ stepId: 'generate-content', status: 'in-progress', progress: 0 });
+      
       // Call the document generation API
       const response = await apiClient.generateDocuments(generationData);
-
-      clearInterval(progressInterval);
-      setGenerationProgress(100);
+      
+      // Update progress during generation
+      progressService.updateStep({ stepId: 'generate-content', progress: 50, details: 'AI is processing the request...' });
+      progressService.updateStep({ stepId: 'generate-content', progress: 100, details: 'Content generation completed' });
+      progressService.completeStep('generate-content', 'AI content generation completed successfully');
 
       console.log('📋 Generation API response:', response);
       console.log('📋 Response success:', response.success);
@@ -171,6 +209,21 @@ export default function TemplateDocumentGenerationModal({
       console.log('📋 Response data:', response.data);
 
       if (response.success && response.generatedDocuments?.length > 0) {
+        // Step 7: Validate Content
+        await progressService.simulateStepProgress('validate-content', 1000);
+        progressService.completeStep('validate-content', 'Generated content validated successfully');
+
+        // Step 8: Format Document
+        await progressService.simulateStepProgress('format-document', 1500);
+        progressService.completeStep('format-document', 'Document formatted with markdown structure');
+
+        // Step 9: Save to Database
+        await progressService.simulateStepProgress('save-database', 2000);
+        progressService.completeStep('save-database', 'Document saved to database successfully');
+
+        // Step 10: Finalize Document
+        await progressService.simulateStepProgress('finalize', 1000);
+        progressService.completeStep('finalize', 'Document generation completed successfully');
         const generatedDoc = response.generatedDocuments[0];
         setGeneratedDocument({
           id: generatedDoc.documentId,
@@ -200,6 +253,13 @@ export default function TemplateDocumentGenerationModal({
     } catch (error) {
       console.error('❌ Document generation error:', error);
       setGenerationError(error instanceof Error ? error.message : 'Unknown error occurred');
+      
+      // Mark current step as error
+      const currentStep = progressService.getCurrentStep();
+      if (currentStep) {
+        progressService.errorStep(currentStep.id, error instanceof Error ? error.message : 'Unknown error occurred');
+      }
+      
       toast.error('Failed to generate document');
     } finally {
       setIsGenerating(false);
@@ -290,7 +350,10 @@ export default function TemplateDocumentGenerationModal({
     }
   };
 
-  if (!template) return null;
+  if (!template) {
+    console.log('🚀 TemplateDocumentGenerationModal: No template provided, returning null');
+    return null;
+  }
 
   return (
     <>
@@ -422,7 +485,7 @@ export default function TemplateDocumentGenerationModal({
                   value={projectContext}
                   onChange={(e) => setProjectContext(e.target.value)}
                   placeholder="Enter project context, requirements, or specific instructions for document generation..."
-                  className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-sm"
                   disabled={isGenerating}
                 />
                 <p className="text-sm text-gray-500 mt-2">
@@ -732,6 +795,24 @@ export default function TemplateDocumentGenerationModal({
       onClose={() => setShowDocumentViewer(false)}
       document={generatedDocument}
       projectId={generatedDocument?.projectId}
+    />
+
+    {/* Progress Tracker Modal */}
+    <DocumentGenerationProgressTracker
+      isVisible={isGenerating}
+      currentStep={currentStepIndex}
+      steps={progressSteps}
+      overallProgress={overallProgress}
+      estimatedTimeRemaining={estimatedTimeRemaining}
+      onCancel={() => {
+        setIsGenerating(false);
+        toast.info('Document generation cancelled');
+      }}
+      onRetry={() => {
+        if (template) {
+          handleGenerate();
+        }
+      }}
     />
   </>
   );

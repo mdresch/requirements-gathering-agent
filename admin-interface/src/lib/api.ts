@@ -126,6 +126,9 @@ export async function getTemplates(params?: {
     if (params?.category && params.category !== 'all') queryParams.append('category', params.category);
     if (params?.search) queryParams.append('search', params.search);
     
+    // Add cache-busting parameter to ensure fresh data
+    queryParams.append('_t', Date.now().toString());
+    
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
@@ -191,6 +194,7 @@ export async function getTemplates(params?: {
                tags: ["business", "case", "analysis", "strategy"],
                content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
                aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
+               documentKey: "business-case",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -219,8 +223,9 @@ export async function getTemplates(params?: {
                description: "Comprehensive stakeholder identification, analysis, and engagement strategy", 
                category: "Stakeholder Management",
                tags: ["stakeholder", "analysis", "engagement", "communication"],
-               content: "# Stakeholder Analysis\n\n## Stakeholder Identification\n\n## Stakeholder Analysis Matrix\n\n## Engagement Strategy\n\n## Communication Plan",
-               aiInstructions: "Create detailed stakeholder analysis following PMBOK stakeholder management guidelines.",
+               content: "# Stakeholder Analysis\n\n## Executive Summary\n- Purpose and scope of stakeholder analysis\n- Key stakeholder insights and recommendations\n- Critical engagement priorities\n\n## Stakeholder Identification\n\n### Internal Stakeholders\n| Stakeholder | Role/Title | Department | Interest Level | Influence Level |\n|-------------|------------|------------|----------------|-----------------|\n| [Name/Role] | [Title] | [Dept] | [High/Med/Low] | [High/Med/Low] |\n\n### External Stakeholders\n| Stakeholder | Organization | Relationship | Interest Level | Influence Level |\n|-------------|--------------|--------------|----------------|-----------------|\n| [Name/Role] | [Org] | [Type] | [High/Med/Low] | [High/Med/Low] |\n\n## Stakeholder Assessment\n\n### Power/Interest Grid\n**High Power, High Interest (Manage Closely)**\n- [Stakeholder 1]: [Brief description and key concerns]\n- [Stakeholder 2]: [Brief description and key concerns]\n\n**High Power, Low Interest (Keep Satisfied)**\n- [Stakeholder 1]: [Brief description and engagement approach]\n- [Stakeholder 2]: [Brief description and engagement approach]\n\n**Low Power, High Interest (Keep Informed)**\n- [Stakeholder 1]: [Brief description and information needs]\n- [Stakeholder 2]: [Brief description and information needs]\n\n**Low Power, Low Interest (Monitor)**\n- [Stakeholder 1]: [Brief description and monitoring approach]\n- [Stakeholder 2]: [Brief description and monitoring approach]\n\n## Engagement Strategies\n\n### Communication Plan\n| Stakeholder | Frequency | Method | Content Type | Responsible |\n|-------------|-----------|--------|--------------|-------------|\n| [Name] | [Frequency] | [Method] | [Type] | [Person] |\n\n### Risk Mitigation\n**Stakeholder Risks:**\n| Risk | Stakeholder | Impact | Probability | Mitigation Strategy |\n|------|-------------|--------|-------------|-------------------|\n| [Risk] | [Who] | [H/M/L] | [H/M/L] | [Strategy] |\n\n## Recommendations\n\n### Immediate Actions\n1. [Action 1]: [Description and timeline]\n2. [Action 2]: [Description and timeline]\n3. [Action 3]: [Description and timeline]\n\n### Long-term Strategies\n1. [Strategy 1]: [Description and implementation approach]\n2. [Strategy 2]: [Description and implementation approach]\n3. [Strategy 3]: [Description and implementation approach]",
+               aiInstructions: "You are a project management expert specializing in stakeholder analysis and engagement strategies. Create comprehensive stakeholder assessments that identify, analyze, and provide actionable engagement strategies. Focus on creating detailed stakeholder profiles, power/interest grids, communication plans, and risk mitigation strategies. Generate content that includes stakeholder identification, assessment matrices, engagement strategies, and monitoring plans.",
+               documentKey: "stakeholder-analysis",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -251,6 +256,7 @@ export async function getTemplates(params?: {
                tags: ["scope", "deliverables", "boundaries", "requirements"],
                content: "# Scope Statement\n\n## Project Scope\n\n## Deliverables\n\n## Acceptance Criteria\n\n## Scope Boundaries",
                aiInstructions: "Generate comprehensive scope statement following PMBOK scope management practices.",
+               documentKey: "scope-statement",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -281,6 +287,7 @@ export async function getTemplates(params?: {
                tags: ["risk", "assessment", "mitigation", "monitoring"],
                content: "# Risk Register\n\n## Risk Identification\n\n## Risk Assessment\n\n## Risk Response Planning\n\n## Risk Monitoring",
                aiInstructions: "Create comprehensive risk register following PMBOK risk management guidelines.",
+               documentKey: "risk-register",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -566,6 +573,8 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
   });
     
     console.log('✅ updateTemplate response:', response);
+    console.log('📝 Response data message:', response.data?.message);
+    console.log('📝 Response success:', response.success);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
@@ -798,6 +807,16 @@ export async function deleteProject(id: string): Promise<any> {
       error: 'Failed to delete project'
     };
   }
+}
+
+// Enhanced Standards Compliance API endpoints
+export async function getEnhancedStandardsCompliance(projectId?: string): Promise<any> {
+  const endpoint = projectId ? `/standards/enhanced/dashboard?projectId=${projectId}` : '/standards/enhanced/dashboard';
+  return request(endpoint);
+}
+
+export async function getEnhancedDataQuality(projectId: string): Promise<any> {
+  return request(`/standards/enhanced/data-quality/${projectId}`);
 }
 
 // Standards Compliance API endpoints
@@ -1065,7 +1084,7 @@ export async function getDeletedProjectDocuments(projectId: string): Promise<any
     
     return {
       success: true,
-      data: response.documents || []
+      data: response.data || []
     };
   } catch (error) {
     console.error('❌ getDeletedProjectDocuments error:', error);
@@ -1333,6 +1352,8 @@ export const apiClient = {
   
   // Standards Compliance
   getStandardsCompliance,
+  getEnhancedStandardsCompliance,
+  getEnhancedDataQuality,
   generateComplianceReport,
   
   // Feedback

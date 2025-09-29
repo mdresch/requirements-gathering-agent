@@ -67,7 +67,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onClose, 
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
             <textarea
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-gray-300 rounded px-3 py-2 font-sans text-sm"
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}

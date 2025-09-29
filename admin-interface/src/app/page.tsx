@@ -16,7 +16,7 @@ import ModernStatsOverview from '@/components/ModernStatsOverview';
 import SystemStatus from '@/components/SystemStatus';
 import DeletedTemplatesModal from '@/components/DeletedTemplatesModal';
 import TemplateDeleteModal from '@/components/TemplateDeleteModal';
-import { Plus, Search, Filter, BarChart3, Sparkles, Trash2, FolderOpen } from 'lucide-react';
+import { Plus, Search, Filter, BarChart3, Sparkles, Trash2, FolderOpen, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -169,7 +169,12 @@ export default function HomePage() {
         : await apiClient.createTemplate(templateData);
 
       if (response.success) {
-        toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
+        // Check if this was a "no changes" response
+        if (response.data?.message === 'No changes detected, template preserved') {
+          toast('No changes detected - template preserved', { type: 'info' });
+        } else {
+          toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
+        }
         setIsEditing(false);
         setSelectedTemplate(null);
         // Reload templates
@@ -588,6 +593,13 @@ export default function HomePage() {
                         <p className="text-gray-600 text-sm">Read-only preview</p>
                       </div>
                       <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleGenerateDocument(selectedTemplate)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center space-x-1"
+                        >
+                          <Play className="w-4 h-4" />
+                          <span>Generate</span>
+                        </button>
                         <button
                           onClick={() => handleEditTemplate(selectedTemplate)}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"

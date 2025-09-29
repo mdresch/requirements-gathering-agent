@@ -6,6 +6,54 @@ import { templateSchemas, commonSchemas } from '../validation/schemas.js';
 import Joi from 'joi';
 import { toObjectId, transformDocument, createSuccessResponse, createPaginatedResponse } from '../utils/idUtils.js';
 
+/**
+ * Check if template data has actually changed
+ * @param existingTemplate The existing template from database
+ * @param updateData The new data to be updated
+ * @returns true if data has changed, false if no changes
+ */
+function hasTemplateDataChanged(existingTemplate: any, updateData: any): boolean {
+    // Fields to compare for changes
+    const fieldsToCompare = [
+        'name',
+        'description', 
+        'category',
+        'template_type',
+        'ai_instructions',
+        'prompt_template',
+        'generation_function',
+        'content',
+        'variables',
+        'metadata'
+    ];
+
+    for (const field of fieldsToCompare) {
+        const existingValue = existingTemplate[field];
+        const newValue = updateData[field];
+
+        // Handle different data types
+        if (typeof existingValue === 'object' && typeof newValue === 'object') {
+            // Compare objects/arrays
+            if (JSON.stringify(existingValue) !== JSON.stringify(newValue)) {
+                console.log(`📝 Change detected in field '${field}':`, {
+                    existing: existingValue,
+                    new: newValue
+                });
+                return true;
+            }
+        } else if (existingValue !== newValue) {
+            console.log(`📝 Change detected in field '${field}':`, {
+                existing: existingValue,
+                new: newValue
+            });
+            return true;
+        }
+    }
+
+    console.log(`📝 No changes detected in template data`);
+    return false;
+}
+
 const router = Router();
 
 /**
@@ -181,6 +229,33 @@ router.put('/:id',
         ...req.body,
         updated_at: new Date()
       };
+      
+      // TEMPLATE PRESERVATION: Check if data has actually changed
+      const existingTemplate = await TemplateModel.findById(objectId).lean();
+      if (!existingTemplate) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'TEMPLATE_NOT_FOUND',
+            message: 'Template not found'
+          }
+        });
+      }
+      
+      const hasDataChanged = hasTemplateDataChanged(existingTemplate, updateData);
+      
+      if (!hasDataChanged) {
+        console.log(`🛡️ TEMPLATE PRESERVATION: No changes detected for template ${id}, skipping update`);
+        return res.status(200).json({
+          success: true,
+          data: {
+            ...existingTemplate,
+            message: 'No changes detected, template preserved'
+          }
+        });
+      }
+      
+      console.log(`🔄 TEMPLATE UPDATE: Changes detected for template ${id}, proceeding with update`);
       
       const template = await TemplateModel.findByIdAndUpdate(
         objectId,

@@ -81,15 +81,17 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
 
   useEffect(() => {
     if (template) {
-      console.log('TemplateEditor: Loading template data:', template);
-      console.log('TemplateEditor: Template content length:', template.content?.length || 0);
-      console.log('TemplateEditor: Template content:', template.content);
-      console.log('TemplateEditor: Template aiInstructions:', template.aiInstructions);
-      console.log('TemplateEditor: Template metadata:', template.metadata);
-      console.log('TemplateEditor: Template metadata author:', template.metadata?.author);
-      console.log('TemplateEditor: Template metadata framework:', template.metadata?.framework);
+      console.log('🔄 TemplateEditor: Loading template data:', {
+        id: template._id || template.id,
+        name: template.name,
+        contentLength: template.content?.length || 0,
+        contentPreview: template.content?.substring(0, 100) + '...',
+        aiInstructionsLength: template.aiInstructions?.length || 0,
+        aiInstructionsPreview: template.aiInstructions?.substring(0, 50) + '...',
+        fullTemplate: template // Log the entire template object
+      });
       
-      setFormData({
+      const newFormData = {
         name: template.name || '',
         description: template.description || '',
         category: template.category || '',
@@ -112,9 +114,16 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
           version: template.metadata?.version || '1.0.0',
           author: template.metadata?.author || '',
         },
+      };
+      
+      console.log('🔄 TemplateEditor: Setting form data:', {
+        contentLength: newFormData.content?.length || 0,
+        contentPreview: newFormData.content?.substring(0, 100) + '...',
+        aiInstructionsLength: newFormData.aiInstructions?.length || 0,
+        aiInstructionsPreview: newFormData.aiInstructions?.substring(0, 50) + '...'
       });
       
-      console.log('TemplateEditor: Form data set with content length:', template.content?.length || 0);
+      setFormData(newFormData);
     }
   }, [template]);
 
@@ -677,7 +686,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 value={formData.content}
                 onChange={(e) => handleInputChange('content', e.target.value)}
                 rows={20}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="Enter your template content here..."
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -693,7 +702,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 value={formData.aiInstructions}
                 onChange={(e) => handleInputChange('aiInstructions', e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="You are a Project Management Professional with extensive knowledge..."
                 minLength={10}
               />
@@ -710,7 +719,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 value={formData.promptTemplate}
                 onChange={(e) => handleInputChange('promptTemplate', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="Generate a comprehensive [Document Type] following [Framework] standards..."
                 minLength={10}
               />

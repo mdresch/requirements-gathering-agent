@@ -236,7 +236,13 @@ export default function ProjectManager() {
 
   const router = useRouter();
   const handleViewProject = (project: Project) => {
-    router.push(`/projects/${project.id}`);
+    // Use _id if id is not available or invalid
+    const projectId = project.id || project._id;
+    if (!projectId) {
+      toast.error('Project ID not found');
+      return;
+    }
+    router.push(`/projects/${projectId}`);
   };
 
   const handleEditProject = (project: Project) => {
@@ -410,8 +416,8 @@ export default function ProjectManager() {
       {/* Projects Grid */}
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {projects.map((project) => (
-          <div key={project.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+          {projects.map((project, index) => (
+          <div key={project.id || project._id || `project-${index}`} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
             <div className="p-6">
               {/* Project Header */}
               <div className="flex justify-between items-start mb-4">

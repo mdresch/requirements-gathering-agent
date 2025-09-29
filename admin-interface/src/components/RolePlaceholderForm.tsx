@@ -231,7 +231,7 @@ export default function RolePlaceholderForm({ projectId, onSubmit, onCancel }: R
               value={formData.roleExperience}
               onChange={(e) => setFormData(prev => ({ ...prev, roleExperience: e.target.value }))}
               rows={3}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm ${
                 errors.roleExperience ? 'border-red-300' : 'border-gray-300'
               }`}
               placeholder="Describe the experience level and background required for this role..."
@@ -366,7 +366,7 @@ export default function RolePlaceholderForm({ projectId, onSubmit, onCancel }: R
               value={formData.recruitmentNotes}
               onChange={(e) => setFormData(prev => ({ ...prev, recruitmentNotes: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
               placeholder="Add any additional notes about recruitment for this role..."
             />
           </div>

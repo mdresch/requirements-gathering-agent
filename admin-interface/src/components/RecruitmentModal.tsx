@@ -381,7 +381,7 @@ export default function RecruitmentModal({ stakeholder, onSubmit, onCancel }: Re
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
               placeholder="Add any additional notes about this stakeholder..."
             />
           </div>

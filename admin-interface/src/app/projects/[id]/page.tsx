@@ -10,6 +10,12 @@ interface ProjectPageProps {
 
 const ProjectPage = async ({ params }: ProjectPageProps) => {
   const { id } = await params;
+  
+  // Validate ID format before making API call
+  if (!id || typeof id !== 'string' || id.length !== 24) {
+    return notFound();
+  }
+  
   const project = await getProjectById(id);
   if (!project) return notFound();
   

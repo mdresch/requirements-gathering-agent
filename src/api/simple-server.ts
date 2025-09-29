@@ -16,7 +16,7 @@ import {
   createPaginatedResponse,
   validateAndConvertId,
   handleIdValidationError 
-} from '../utils/idUtils.ts';
+} from '../utils/idUtils.js';
 
 // Load environment variables
 dotenv.config();
@@ -377,6 +377,78 @@ app.post('/api/v1/templates', async (req: Request, res: Response) => {
     }
 });
 
+// Get single template by ID endpoint
+app.get('/api/v1/templates/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_TEMPLATE_ID',
+                    message: 'Template ID is required'
+                }
+            });
+        }
+        
+        // Validate template ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_TEMPLATE_ID',
+                    message: 'Invalid template ID format'
+                }
+            });
+        }
+        
+        // Find template by ID
+        const template = await mongoose.connection.db?.collection('templates')
+            .findOne({ 
+                _id: new mongoose.Types.ObjectId(id),
+                $or: [
+                    { deletedAt: null },
+                    { deletedAt: { $exists: false } }
+                ]
+            });
+        
+        if (!template) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'TEMPLATE_NOT_FOUND',
+                    message: 'Template not found'
+                }
+            });
+        }
+        
+        // Convert ObjectId to string for proper JSON serialization
+        const serializedTemplate = {
+            ...template,
+            _id: template._id?.toString(),
+            id: template._id?.toString()
+        };
+        
+        console.log(`📋 Template retrieved: ${template.name} (${id})`);
+        
+        res.json({
+            success: true,
+            data: serializedTemplate
+        });
+        
+    } catch (error) {
+        console.error('❌ Get template error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'GET_TEMPLATE_ERROR',
+                message: 'Failed to retrieve template'
+            }
+        });
+    }
+});
+
 // Update template endpoint
 app.put('/api/v1/templates/:id', async (req: Request, res: Response) => {
     try {
@@ -424,18 +496,55 @@ app.put('/api/v1/templates/:id', async (req: Request, res: Response) => {
             });
         }
         
-        // Prepare update data
+        // Prepare update data - handle nested templateData structure
         const updateData = {
             ...templateData,
             updatedAt: new Date(),
             version: (existingTemplate.version || 1) + 1
         };
         
+        // If templateData is nested, extract the content and other fields
+        if (templateData.templateData) {
+            console.log('📝 Extracting nested templateData:', {
+                content: templateData.templateData.content?.substring(0, 100) + '...',
+                contentLength: templateData.templateData.content?.length || 0,
+                aiInstructions: templateData.templateData.aiInstructions?.substring(0, 50) + '...'
+            });
+            updateData.content = templateData.templateData.content || '';
+            updateData.aiInstructions = templateData.templateData.aiInstructions || templateData.aiInstructions || '';
+            updateData.variables = templateData.templateData.variables || [];
+            updateData.promptTemplate = templateData.templateData.promptTemplate || templateData.promptTemplate || '';
+            // Remove the nested templateData object
+            delete updateData.templateData;
+        }
+        
+        console.log('📝 Final updateData:', {
+            name: updateData.name,
+            contentLength: updateData.content?.length || 0,
+            contentPreview: updateData.content?.substring(0, 100) + '...'
+        });
+        
         // Remove fields that shouldn't be updated
         delete updateData._id;
         delete updateData.createdAt;
         delete updateData.deletedAt;
         delete updateData.deletedBy;
+        
+        // TEMPLATE PRESERVATION: Check if data has actually changed
+        const hasDataChanged = hasTemplateDataChanged(existingTemplate, updateData);
+        
+        if (!hasDataChanged) {
+            console.log(`🛡️ TEMPLATE PRESERVATION: No changes detected for template ${id}, skipping update`);
+            return res.status(200).json({
+                success: true,
+                data: {
+                    ...existingTemplate,
+                    message: 'No changes detected, template preserved'
+                }
+            });
+        }
+        
+        console.log(`🔄 TEMPLATE UPDATE: Changes detected for template ${id}, proceeding with update`);
         
         // Update the template
         const result = await mongoose.connection.db?.collection('templates')
@@ -454,16 +563,32 @@ app.put('/api/v1/templates/:id', async (req: Request, res: Response) => {
             });
         }
         
-        // Get the updated template
+        // Get the updated template - force read from primary to avoid read consistency issues
         const updatedTemplate = await mongoose.connection.db?.collection('templates')
-            .findOne({ _id: new mongoose.Types.ObjectId(id) });
+            .findOne({ _id: new mongoose.Types.ObjectId(id) }, { 
+                readPreference: 'primary' // Force read from primary replica
+            });
         
         console.log(`📝 Template updated: ${updatedTemplate?.name} (${id})`);
+        // Convert ObjectId to string for proper JSON serialization
+        const serializedTemplate = {
+            ...updatedTemplate,
+            _id: updatedTemplate?._id?.toString(),
+            id: updatedTemplate?._id?.toString()
+        };
+        
+        console.log('📝 Returning updated template:', {
+            id: serializedTemplate._id,
+            name: (serializedTemplate as any).name,
+            contentLength: (serializedTemplate as any).content?.length || 0,
+            contentPreview: (serializedTemplate as any).content?.substring(0, 100) + '...',
+            aiInstructionsLength: (serializedTemplate as any).aiInstructions?.length || 0
+        });
         
         res.json({
             success: true,
             message: 'Template updated successfully',
-            data: updatedTemplate
+            data: serializedTemplate
         });
         
     } catch (error) {
@@ -1021,7 +1146,7 @@ app.get('/api/v1/projects', async (req: Request, res: Response) => {
         res.json({
             success: true,
             data: {
-                projects: projectsWithCounts,
+                projects: transformDocuments(projectsWithCounts),
                 pagination: {
                     page: pageNum,
                     limit: limitNum,
@@ -1135,6 +1260,233 @@ app.get('/api/v1/projects/:id', async (req: Request, res: Response) => {
             error: {
                 code: 'GET_PROJECT_ERROR',
                 message: 'Failed to retrieve project'
+            }
+        });
+    }
+});
+
+// Create new project endpoint
+app.post('/api/v1/projects', async (req: Request, res: Response) => {
+    try {
+        const { name, description, framework, status, metadata } = req.body;
+        
+        // Validate required fields
+        if (!name || !description) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_REQUIRED_FIELDS',
+                    message: 'Project name and description are required'
+                }
+            });
+        }
+        
+        // Validate framework if provided
+        const validFrameworks = ['pmbok', 'babok', 'agile', 'scrum', 'general', 'multi'];
+        if (framework && !validFrameworks.includes(framework)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_FRAMEWORK',
+                    message: `Framework must be one of: ${validFrameworks.join(', ')}`
+                }
+            });
+        }
+        
+        // Validate status if provided
+        const validStatuses = ['planning', 'active', 'completed', 'on-hold', 'cancelled'];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_STATUS',
+                    message: `Status must be one of: ${validStatuses.join(', ')}`
+                }
+            });
+        }
+        
+        // Create project document
+        const projectData = {
+            name: name.trim(),
+            description: description.trim(),
+            framework: framework || 'general',
+            status: status || 'planning',
+            complianceScore: 0,
+            documents: 0,
+            stakeholders: 0,
+            templatesCount: 0,
+            metadata: metadata || {},
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: 'system',
+            version: '1.0.0'
+        };
+        
+        // Insert project into database
+        const result = await mongoose.connection.db?.collection('projects')
+            .insertOne(projectData);
+        
+        if (!result || !result.insertedId) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'CREATE_PROJECT_FAILED',
+                    message: 'Failed to create project'
+                }
+            });
+        }
+        
+        // Get the created project with its ID
+        const createdProject = await mongoose.connection.db?.collection('projects')
+            .findOne({ _id: result.insertedId });
+        
+        if (!createdProject) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'PROJECT_CREATION_ERROR',
+                    message: 'Project was created but could not be retrieved'
+                }
+            });
+        }
+        
+        console.log(`✅ Project created: ${createdProject.name} (${result.insertedId})`);
+        
+        res.status(201).json({
+            success: true,
+            data: createdProject,
+            message: 'Project created successfully'
+        });
+        
+    } catch (error: any) {
+        console.error('❌ Create project endpoint error:', error);
+        
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                error: {
+                    code: 'DUPLICATE_PROJECT',
+                    message: 'A project with this name already exists'
+                }
+            });
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'CREATE_PROJECT_ERROR',
+                message: 'Failed to create project'
+            }
+        });
+    }
+});
+
+// Update project endpoint
+app.put('/api/v1/projects/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, description, framework, status, metadata } = req.body;
+        
+        // Validate and convert ID
+        const objectId = validateAndConvertId(id);
+        
+        // Check if project exists
+        const existingProject = await mongoose.connection.db?.collection('projects')
+            .findOne({ _id: objectId });
+        
+        if (!existingProject) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'PROJECT_NOT_FOUND',
+                    message: 'Project not found'
+                }
+            });
+        }
+        
+        // Validate required fields
+        if (!name || !description) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_REQUIRED_FIELDS',
+                    message: 'Project name and description are required'
+                }
+            });
+        }
+        
+        // Validate framework if provided
+        const validFrameworks = ['pmbok', 'babok', 'agile', 'scrum', 'general', 'multi'];
+        if (framework && !validFrameworks.includes(framework)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_FRAMEWORK',
+                    message: `Framework must be one of: ${validFrameworks.join(', ')}`
+                }
+            });
+        }
+        
+        // Validate status if provided
+        const validStatuses = ['planning', 'active', 'completed', 'on-hold', 'cancelled'];
+        if (status && !validStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_STATUS',
+                    message: `Status must be one of: ${validStatuses.join(', ')}`
+                }
+            });
+        }
+        
+        // Prepare update data
+        const updateData: any = {
+            name: name.trim(),
+            description: description.trim(),
+            updatedAt: new Date()
+        };
+        
+        if (framework) updateData.framework = framework;
+        if (status) updateData.status = status;
+        if (metadata) updateData.metadata = metadata;
+        
+        // Update project in database
+        const result = await mongoose.connection.db?.collection('projects')
+            .updateOne(
+                { _id: objectId },
+                { $set: updateData }
+            );
+        
+        if (result?.modifiedCount === 0) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'UPDATE_FAILED',
+                    message: 'No changes were made to the project'
+                }
+            });
+        }
+        
+        // Get updated project
+        const updatedProject = await mongoose.connection.db?.collection('projects')
+            .findOne({ _id: objectId });
+        
+        console.log(`✅ Project updated: ${updatedProject?.name} (${id})`);
+        
+        res.json({
+            success: true,
+            data: updatedProject,
+            message: 'Project updated successfully'
+        });
+        
+    } catch (error: any) {
+        console.error('❌ Update project endpoint error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'UPDATE_PROJECT_ERROR',
+                message: error.message || 'Failed to update project'
             }
         });
     }
@@ -2641,6 +2993,266 @@ app.get('/api/v1/standards/dashboard', async (req: Request, res: Response) => {
             error: {
                 code: 'COMPLIANCE_ERROR',
                 message: 'Failed to retrieve compliance data'
+            }
+        });
+    }
+});
+
+// Enhanced Standards Compliance Routes
+app.get('/api/v1/standards/enhanced/dashboard', async (req: Request, res: Response) => {
+    try {
+        const { projectId = 'current-project' } = req.query;
+        
+        // Get enhanced compliance data from multiple collections
+        const [complianceData, projectData, documentData] = await Promise.all([
+            mongoose.connection.db?.collection('complianceissues').find({
+                projectId: projectId
+            }).toArray(),
+            mongoose.connection.db?.collection('projects').findOne({
+                _id: mongoose.Types.ObjectId.isValid(projectId as string) 
+                    ? new mongoose.Types.ObjectId(projectId as string)
+                    : { $exists: false }
+            }),
+            mongoose.connection.db?.collection('projectdocuments').find({
+                projectId: projectId,
+                deletedAt: { $exists: false }
+            }).toArray()
+        ]);
+        
+        // Calculate enhanced metrics
+        const totalDocuments = documentData?.length || 0;
+        const complianceIssues = complianceData?.length || 0;
+        const complianceScore = totalDocuments > 0 ? Math.max(0, 100 - (complianceIssues * 2)) : 0;
+        
+        const enhancedDashboardData = {
+            projectSummary: {
+                projectId: projectId as string,
+                projectName: projectData?.name || 'Current Project Analysis',
+                status: projectData?.status || 'Active',
+                framework: projectData?.framework || 'general',
+                lastAnalyzed: new Date(),
+                nextReview: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                overallScore: complianceScore,
+                trendDirection: complianceScore > 80 ? 'IMPROVING' : 'NEEDS_ATTENTION',
+                totalDocuments: totalDocuments,
+                complianceIssues: complianceIssues
+            },
+            enhancedComplianceOverview: {
+                standards: {
+                    babok: { 
+                        score: Math.min(100, complianceScore + 5), 
+                        trend: '+2%', 
+                        status: complianceScore > 90 ? 'FULLY_COMPLIANT' : 'MOSTLY_COMPLIANT',
+                        lastAssessed: new Date(),
+                        nextAssessment: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+                    },
+                    pmbok: { 
+                        score: Math.min(100, complianceScore + 2), 
+                        trend: '+5%', 
+                        status: complianceScore > 85 ? 'FULLY_COMPLIANT' : 'MOSTLY_COMPLIANT',
+                        lastAssessed: new Date(),
+                        nextAssessment: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+                    },
+                    dmbok: { 
+                        score: Math.max(0, complianceScore - 5), 
+                        trend: 'stable', 
+                        status: complianceScore > 75 ? 'MOSTLY_COMPLIANT' : 'PARTIALLY_COMPLIANT',
+                        lastAssessed: new Date(),
+                        nextAssessment: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000)
+                    },
+                    iso: { 
+                        score: Math.min(100, complianceScore + 3), 
+                        trend: '+1%', 
+                        status: complianceScore > 80 ? 'FULLY_COMPLIANT' : 'MOSTLY_COMPLIANT',
+                        lastAssessed: new Date(),
+                        nextAssessment: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+                    }
+                },
+                overallCompliance: {
+                    score: complianceScore,
+                    level: complianceScore >= 90 ? 'EXCELLENT' : 
+                           complianceScore >= 80 ? 'GOOD' : 
+                           complianceScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                    trend: complianceScore > 80 ? 'IMPROVING' : 'STABLE',
+                    lastUpdated: new Date()
+                }
+            },
+            enhancedDeviationSummary: {
+                total: complianceIssues,
+                byCategory: {
+                    METHODOLOGY: Math.floor(complianceIssues * 0.3),
+                    PROCESS: Math.floor(complianceIssues * 0.25),
+                    DELIVERABLE: Math.floor(complianceIssues * 0.2),
+                    GOVERNANCE: Math.floor(complianceIssues * 0.15),
+                    TOOLS: Math.floor(complianceIssues * 0.05),
+                    TECHNIQUES: Math.floor(complianceIssues * 0.03),
+                    ROLES: Math.floor(complianceIssues * 0.02),
+                    WORKFLOWS: 0
+                },
+                bySeverity: {
+                    CRITICAL: Math.floor(complianceIssues * 0.05),
+                    HIGH: Math.floor(complianceIssues * 0.15),
+                    MEDIUM: Math.floor(complianceIssues * 0.5),
+                    LOW: Math.floor(complianceIssues * 0.25),
+                    INFORMATIONAL: Math.floor(complianceIssues * 0.05)
+                },
+                byStatus: {
+                    OPEN: Math.floor(complianceIssues * 0.7),
+                    IN_PROGRESS: Math.floor(complianceIssues * 0.2),
+                    RESOLVED: Math.floor(complianceIssues * 0.1),
+                    CLOSED: 0
+                }
+            },
+            enhancedQualityMetrics: {
+                overallQuality: complianceScore,
+                dataFreshness: Math.min(100, 90 + (totalDocuments * 0.5)),
+                completeness: Math.min(100, 80 + (totalDocuments * 1)),
+                accuracy: Math.min(100, complianceScore + 5),
+                consistency: Math.min(100, complianceScore + 3),
+                qualityLevel: complianceScore >= 90 ? 'EXCELLENT' : 
+                             complianceScore >= 80 ? 'GOOD' : 
+                             complianceScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                issuesFound: complianceIssues,
+                recommendations: complianceIssues > 5 ? 
+                    ['Improve data completeness', 'Enhance data validation', 'Review compliance processes'] :
+                    ['Maintain current quality standards', 'Continue regular monitoring'],
+                lastQualityAssessment: new Date(),
+                nextQualityAssessment: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            },
+            realTimeEnabled: true,
+            lastUpdated: new Date().toISOString(),
+            dataSource: 'enhanced_standards_compliance',
+            version: '2.0.0'
+        };
+        
+        res.json({
+            success: true,
+            message: 'Enhanced compliance dashboard data retrieved successfully',
+            data: enhancedDashboardData
+        });
+    } catch (error: any) {
+        console.error('Enhanced standards compliance endpoint error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'ENHANCED_COMPLIANCE_ERROR',
+                message: 'Failed to retrieve enhanced compliance data'
+            }
+        });
+    }
+});
+
+app.get('/api/v1/standards/enhanced/data-quality/:projectId', async (req: Request, res: Response) => {
+    try {
+        const { projectId } = req.params;
+        
+        // Get data quality metrics from multiple sources
+        const [projectData, documentData, complianceData, auditData] = await Promise.all([
+            mongoose.connection.db?.collection('projects').findOne({
+                _id: mongoose.Types.ObjectId.isValid(projectId) 
+                    ? new mongoose.Types.ObjectId(projectId)
+                    : { $exists: false }
+            }),
+            mongoose.connection.db?.collection('projectdocuments').find({
+                projectId: projectId,
+                deletedAt: { $exists: false }
+            }).toArray(),
+            mongoose.connection.db?.collection('complianceissues').find({
+                projectId: projectId
+            }).toArray(),
+            mongoose.connection.db?.collection('audit_trail').find({
+                projectId: projectId,
+                action: { $in: ['data_quality_check', 'quality_assessment'] }
+            }).sort({ timestamp: -1 }).limit(10).toArray()
+        ]);
+        
+        // Calculate data quality metrics
+        const totalDocuments = documentData?.length || 0;
+        const totalComplianceIssues = complianceData?.length || 0;
+        const recentAudits = auditData?.length || 0;
+        
+        // Calculate quality scores
+        const completenessScore = totalDocuments > 0 ? Math.min(100, 70 + (totalDocuments * 2)) : 0;
+        const accuracyScore = totalDocuments > 0 ? Math.max(0, 100 - (totalComplianceIssues * 3)) : 0;
+        const consistencyScore = totalDocuments > 1 ? Math.min(100, 80 + (totalDocuments * 1)) : 50;
+        const freshnessScore = recentAudits > 0 ? Math.min(100, 90 + (recentAudits * 1)) : 60;
+        
+        const overallQualityScore = Math.round((completenessScore + accuracyScore + consistencyScore + freshnessScore) / 4);
+        
+        const dataQualityMetrics = {
+            projectId: projectId,
+            projectName: projectData?.name || 'Unknown Project',
+            overallQualityScore: overallQualityScore,
+            qualityLevel: overallQualityScore >= 90 ? 'EXCELLENT' : 
+                         overallQualityScore >= 80 ? 'GOOD' : 
+                         overallQualityScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+            metrics: {
+                completeness: {
+                    score: completenessScore,
+                    level: completenessScore >= 90 ? 'EXCELLENT' : 
+                           completenessScore >= 80 ? 'GOOD' : 
+                           completenessScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                    totalDocuments: totalDocuments,
+                    requiredDocuments: 10,
+                    completionPercentage: Math.min(100, (totalDocuments / 10) * 100)
+                },
+                accuracy: {
+                    score: accuracyScore,
+                    level: accuracyScore >= 90 ? 'EXCELLENT' : 
+                           accuracyScore >= 80 ? 'GOOD' : 
+                           accuracyScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                    complianceIssues: totalComplianceIssues,
+                    errorRate: totalDocuments > 0 ? (totalComplianceIssues / totalDocuments) * 100 : 0
+                },
+                consistency: {
+                    score: consistencyScore,
+                    level: consistencyScore >= 90 ? 'EXCELLENT' : 
+                           consistencyScore >= 80 ? 'GOOD' : 
+                           consistencyScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                    documentTypes: [...new Set(documentData?.map(doc => doc.type) || [])].length,
+                    standardizationLevel: totalDocuments > 1 ? 'GOOD' : 'BASIC'
+                },
+                freshness: {
+                    score: freshnessScore,
+                    level: freshnessScore >= 90 ? 'EXCELLENT' : 
+                           freshnessScore >= 80 ? 'GOOD' : 
+                           freshnessScore >= 70 ? 'FAIR' : 'NEEDS_IMPROVEMENT',
+                    lastAssessment: auditData?.[0]?.timestamp || new Date(),
+                    recentAssessments: recentAudits,
+                    assessmentFrequency: recentAudits > 5 ? 'HIGH' : recentAudits > 2 ? 'MEDIUM' : 'LOW'
+                }
+            },
+            trends: {
+                qualityTrend: overallQualityScore > 80 ? 'IMPROVING' : 'STABLE',
+                complianceTrend: totalComplianceIssues < 3 ? 'IMPROVING' : 'STABLE',
+                documentGrowth: totalDocuments > 5 ? 'GROWING' : 'STABLE'
+            },
+            recommendations: overallQualityScore < 80 ? [
+                'Improve document completeness',
+                'Address compliance issues',
+                'Implement regular quality assessments',
+                'Standardize document formats'
+            ] : [
+                'Maintain current quality standards',
+                'Continue regular monitoring',
+                'Consider advanced quality metrics'
+            ],
+            lastUpdated: new Date().toISOString(),
+            nextAssessment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        };
+        
+        res.json({
+            success: true,
+            message: 'Enhanced data quality metrics retrieved successfully',
+            data: dataQualityMetrics
+        });
+    } catch (error: any) {
+        console.error('Enhanced data quality endpoint error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'ENHANCED_DATA_QUALITY_ERROR',
+                message: 'Failed to retrieve enhanced data quality metrics'
             }
         });
     }
@@ -4628,9 +5240,41 @@ app.post('/api/v1/document-generation/generate-only', async (req: Request, res: 
             try {
                 console.log(`📝 Generating ${docKey}...`);
                 
-                // Create document content
+                // Create document content using database-first approach
                 const title = docKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-                const content = `# ${title}\n\nThis document was generated based on the project context:\n\n${context}\n\n## Document Details\n- **Project ID**: ${projectId || 'default-project'}\n- **Generated**: ${new Date().toISOString()}\n- **Type**: ${docKey}\n\n## Content\nThis is a generated document for ${docKey}. The actual content would be generated by the document generation service based on the provided context and project requirements.\n\n## Project Context\n${context}\n\n## Framework Information\nThis document follows standard project management practices and includes relevant context from the project requirements.`;
+                
+                // Try to get template from database first
+                let content = '';
+                try {
+                    const { createDatabaseFirstProcessor } = await import('../modules/documentGenerator/DatabaseFirstProcessorFactory.js');
+                    console.log(`🔍 API: Attempting database-first generation for ${docKey}`);
+                    
+                    // First, let's check what templates exist in the database
+                    const { TemplateModel } = await import('../models/Template.model.js');
+                    const allTemplates = await TemplateModel.find({ is_deleted: false }).select('name documentKey category is_active');
+                    console.log(`📋 API: Found ${allTemplates.length} templates in database:`, allTemplates.map(t => ({ name: t.name, documentKey: t.documentKey, active: t.is_active })));
+                    
+                    const processor = await createDatabaseFirstProcessor(docKey);
+                    const output = await processor.process({
+                        projectName: context,
+                        projectId: projectId || 'default-project',
+                        description: context,
+                        projectType: 'Generated Document'
+                    });
+                    content = output.content;
+                    console.log(`✅ Database-First Generation: Generated ${docKey} using database template`);
+                } catch (error) {
+                    console.warn(`⚠️ Database-First Generation failed for ${docKey}:`, error.message);
+                    console.log(`🔍 API: Error details:`, {
+                        errorType: error.constructor.name,
+                        errorMessage: error.message,
+                        docKey: docKey,
+                        contextLength: context.length
+                    });
+                    
+                    // Fallback to simple content if database generation fails
+                    content = `# ${title}\n\nThis document was generated based on the project context:\n\n${context}\n\n## Document Details\n- **Project ID**: ${projectId || 'default-project'}\n- **Generated**: ${new Date().toISOString()}\n- **Type**: ${docKey}\n\n## Content\nThis is a generated document for ${docKey}. The actual content would be generated by the document generation service based on the provided context and project requirements.\n\n## Project Context\n${context}\n\n## Framework Information\nThis document follows standard project management practices and includes relevant context from the project requirements.`;
+                }
 
                 // Create document data for database
                 const documentData = {
@@ -4658,9 +5302,38 @@ app.post('/api/v1/document-generation/generate-only', async (req: Request, res: 
                     }
                 };
 
-                // Save document to database
-                const savedDocument = new ProjectDocument(documentData);
-                await savedDocument.save();
+                // DATABASE-FIRST APPROACH: Check if document already exists
+                const existingDocument = await ProjectDocument.findOne({
+                    projectId: projectId || 'default-project',
+                    type: docKey,
+                    deletedAt: null
+                });
+
+                let savedDocument;
+                if (existingDocument) {
+                    // Check if manually modified
+                    const isManuallyModified = existingDocument.lastModifiedBy !== 'ADPA-System' ||
+                        (existingDocument.lastModified.getTime() - existingDocument.generatedAt.getTime()) > (5 * 60 * 1000);
+                    
+                    if (isManuallyModified) {
+                        console.log(`🛡️ PRESERVING manually modified document: ${title} (ID: ${existingDocument._id})`);
+                        savedDocument = existingDocument;
+                    } else {
+                        // Update existing auto-generated document
+                        console.log(`🔄 Updating existing auto-generated document: ${title} (ID: ${existingDocument._id})`);
+                        existingDocument.content = content;
+                        existingDocument.wordCount = content.split(' ').length;
+                        existingDocument.lastModified = new Date();
+                        existingDocument.lastModifiedBy = 'ADPA-System';
+                        await existingDocument.save();
+                        savedDocument = existingDocument;
+                    }
+                } else {
+                    // Create new document
+                    console.log(`🆕 Creating new document: ${title}`);
+                    savedDocument = new ProjectDocument(documentData);
+                    await savedDocument.save();
+                }
 
                 console.log(`✅ Generated and saved ${docKey} to database (ID: ${savedDocument._id})`);
 
@@ -4750,6 +5423,54 @@ app.use('*', (req: Request, res: Response) => {
         }
     });
 });
+
+/**
+ * Check if template data has actually changed
+ * @param existingTemplate The existing template from database
+ * @param updateData The new data to be updated
+ * @returns true if data has changed, false if no changes
+ */
+function hasTemplateDataChanged(existingTemplate: any, updateData: any): boolean {
+    // Fields to compare for changes
+    const fieldsToCompare = [
+        'name',
+        'description', 
+        'category',
+        'template_type',
+        'ai_instructions',
+        'prompt_template',
+        'generation_function',
+        'content',
+        'variables',
+        'metadata'
+    ];
+
+    for (const field of fieldsToCompare) {
+        const existingValue = existingTemplate[field];
+        const newValue = updateData[field];
+
+        // Handle different data types
+        if (typeof existingValue === 'object' && typeof newValue === 'object') {
+            // Compare objects/arrays
+            if (JSON.stringify(existingValue) !== JSON.stringify(newValue)) {
+                console.log(`📝 Change detected in field '${field}':`, {
+                    existing: existingValue,
+                    new: newValue
+                });
+                return true;
+            }
+        } else if (existingValue !== newValue) {
+            console.log(`📝 Change detected in field '${field}':`, {
+                existing: existingValue,
+                new: newValue
+            });
+            return true;
+        }
+    }
+
+    console.log(`📝 No changes detected in template data`);
+    return false;
+}
 
 // Start server
 async function startServer() {

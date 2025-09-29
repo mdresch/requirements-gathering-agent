@@ -15,7 +15,8 @@ import {
   FileText,
   ArrowRight,
   CheckCircle2,
-  Circle
+  Circle,
+  Workflow
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../lib/api';
@@ -76,138 +77,13 @@ const WorkflowProgressTracker: React.FC<WorkflowProgressTrackerProps> = ({ proje
         setWorkflows(response.data || []);
       } else {
         console.error('Failed to load workflows:', response.error);
-        toast.error('Failed to load workflow instances');
-      }
-      
-      // Fallback to mock data if no workflows found (for demonstration)
-      if (!response.success || !response.data || response.data.length === 0) {
-        const mockWorkflows: WorkflowInstance[] = [
-        {
-          id: 'wf-1',
-          workflowId: 'standard_project_manager',
-          stakeholderId: 'stakeholder-1',
-          stakeholderName: 'Lead Developer Role',
-          role: 'project_manager',
-          jobTitle: 'Lead Developer',
-          priority: 'high',
-          status: 'active',
-          currentStep: 2,
-          startedAt: '2024-01-15T09:00:00Z',
-          assignedRecruiter: 'Sarah Johnson',
-          notes: 'Urgent recruitment for new project launch',
-          budget: 15000,
-          deadline: '2024-02-15',
-          steps: [
-            {
-              stepId: 'job_post',
-              status: 'completed',
-              startedAt: '2024-01-15T09:00:00Z',
-              completedAt: '2024-01-16T17:00:00Z',
-              assignedTo: 'Sarah Johnson',
-              notes: 'Posted on LinkedIn, Indeed, and company website',
-              deliverables: ['Job posting live', 'Platform selection complete']
-            },
-            {
-              stepId: 'resume_screening',
-              status: 'completed',
-              startedAt: '2024-01-16T09:00:00Z',
-              completedAt: '2024-01-18T16:00:00Z',
-              assignedTo: 'Sarah Johnson',
-              notes: 'Received 45 applications, shortlisted 8 candidates',
-              deliverables: ['8 shortlisted candidates', 'Screening report']
-            },
-            {
-              stepId: 'phone_interview',
-              status: 'in_progress',
-              startedAt: '2024-01-19T09:00:00Z',
-              assignedTo: 'Sarah Johnson',
-              notes: 'Completed 3 interviews, 2 remaining',
-              deliverables: []
-            },
-            {
-              stepId: 'technical_interview',
-              status: 'pending',
-              assignedTo: 'Tech Team Lead'
-            },
-            {
-              stepId: 'panel_interview',
-              status: 'pending',
-              assignedTo: 'Sarah Johnson'
-            },
-            {
-              stepId: 'reference_check',
-              status: 'pending',
-              assignedTo: 'HR Team'
-            },
-            {
-              stepId: 'offer_negotiation',
-              status: 'pending',
-              assignedTo: 'Sarah Johnson'
-            }
-          ]
-        },
-        {
-          id: 'wf-2',
-          workflowId: 'standard_developer',
-          stakeholderId: 'stakeholder-2',
-          stakeholderName: 'Senior Developer Role',
-          role: 'team_member',
-          jobTitle: 'Senior Developer',
-          priority: 'medium',
-          status: 'active',
-          currentStep: 1,
-          startedAt: '2024-01-20T10:00:00Z',
-          assignedRecruiter: 'Mike Chen',
-          notes: 'Backend developer for API development',
-          budget: 12000,
-          deadline: '2024-02-20',
-          steps: [
-            {
-              stepId: 'job_post',
-              status: 'completed',
-              startedAt: '2024-01-20T10:00:00Z',
-              completedAt: '2024-01-21T18:00:00Z',
-              assignedTo: 'Mike Chen',
-              notes: 'Posted on Stack Overflow and GitHub Jobs',
-              deliverables: ['Job posting live', 'Platform selection complete']
-            },
-            {
-              stepId: 'resume_screening',
-              status: 'in_progress',
-              startedAt: '2024-01-22T09:00:00Z',
-              assignedTo: 'Mike Chen',
-              notes: 'Reviewing 32 applications',
-              deliverables: []
-            },
-            {
-              stepId: 'coding_test',
-              status: 'pending',
-              assignedTo: 'Tech Team'
-            },
-            {
-              stepId: 'technical_interview',
-              status: 'pending',
-              assignedTo: 'Tech Team Lead'
-            },
-            {
-              stepId: 'cultural_fit',
-              status: 'pending',
-              assignedTo: 'Mike Chen'
-            },
-            {
-              stepId: 'offer_negotiation',
-              status: 'pending',
-              assignedTo: 'Mike Chen'
-            }
-          ]
-        }
-      ];
-
-        setWorkflows(mockWorkflows);
+        // Don't show error toast for empty results, just set empty array
+        setWorkflows([]);
       }
     } catch (error) {
       console.error('Error loading workflows:', error);
       toast.error('Failed to load workflow instances');
+      setWorkflows([]);
     } finally {
       setLoading(false);
     }
@@ -356,9 +232,66 @@ const WorkflowProgressTracker: React.FC<WorkflowProgressTrackerProps> = ({ proje
         </div>
       </div>
 
+      {/* Empty State */}
+      {workflows.length === 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-12 text-center">
+            <div className="mx-auto w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+              <Workflow className="w-12 h-12 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              No Active Workflows Yet
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Once you start recruiting stakeholders for your project, their workflow progress will appear here. 
+              You'll be able to track each step of the recruitment process in real-time.
+            </p>
+            <div className="bg-gray-50 rounded-lg p-6 max-w-2xl mx-auto">
+              <h4 className="font-medium text-gray-900 mb-3">What you'll see here:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-900">Job Posting</p>
+                    <p>Track when positions are posted and where</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-900">Resume Screening</p>
+                    <p>Monitor application reviews and shortlisting</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-900">Interviews</p>
+                    <p>Track phone, technical, and panel interviews</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-900">Final Steps</p>
+                    <p>Reference checks, offers, and onboarding</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6">
+              <p className="text-sm text-gray-500">
+                To get started, create role placeholders in the "Role Placeholders" tab and begin the recruitment process.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Workflow Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {workflows.map((workflow) => (
+      {workflows.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {workflows.map((workflow) => (
           <div key={workflow.id} className="bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="p-6">
               {/* Workflow Header */}
@@ -435,7 +368,8 @@ const WorkflowProgressTracker: React.FC<WorkflowProgressTrackerProps> = ({ proje
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Workflow Detail Modal */}
       {selectedWorkflow && (
@@ -577,7 +511,7 @@ const WorkflowProgressTracker: React.FC<WorkflowProgressTrackerProps> = ({ proje
                   onChange={(e) => setStepNotes(e.target.value)}
                   placeholder="Add step notes..."
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 />
               </div>
 

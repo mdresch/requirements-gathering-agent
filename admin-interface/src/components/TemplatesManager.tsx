@@ -13,7 +13,7 @@ import TemplateEditor from '@/components/TemplateEditor';
 import TemplateDetailsView from '@/components/TemplateDetailsView';
 import TemplateStats from '@/components/TemplateStats';
 import SearchFilters from '@/components/SearchFilters';
-import { Plus, Trash2, FolderOpen } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Play } from 'lucide-react';
 import TemplateDeleteModal from './TemplateDeleteModal';
 import DeletedTemplatesModal from './DeletedTemplatesModal';
 import TemplateDocumentGenerationModal from './TemplateDocumentGenerationModal';
@@ -91,8 +91,15 @@ export default function TemplatesManager() {
   };
 
   const handleGenerateDocument = (template: Template) => {
+    console.log('🚀 Generate Document clicked for template:', template.name);
+    console.log('🚀 Template object:', template);
+    console.log('🚀 Template ID:', template.id);
+    
+    // Set the template and open modal
     setTemplateForGeneration(template);
     setShowGenerationModal(true);
+    
+    console.log('🚀 Modal should be opening now');
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -140,9 +147,50 @@ export default function TemplatesManager() {
         : await apiClient.createTemplate(templateData);
 
       if (response.success) {
-        toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
-        setIsEditing(false);
-        setSelectedTemplate(null);
+        console.log('📝 TemplatesManager: Response received:', response);
+        console.log('📝 TemplatesManager: Response data message:', response.data?.message);
+        
+        // Check if this was a "no changes" response
+        if (response.data?.message === 'No changes detected, template preserved') {
+          console.log('📝 TemplatesManager: No changes detected, showing info toast');
+          toast('No changes detected - template preserved', { type: 'info' });
+        } else {
+          console.log('📝 TemplatesManager: Changes detected, showing success toast');
+          toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
+        }
+        
+        // Update the selectedTemplate with fresh data from database
+        if (selectedTemplate && response.success) {
+          console.log('🔄 Fetching fresh template data from database...');
+          try {
+            // Fetch the template again to ensure we have the latest data
+            const freshTemplate = await apiClient.getTemplate(selectedTemplate.id);
+            console.log('🔄 Fresh template API response:', freshTemplate);
+            if (freshTemplate.success && freshTemplate.data) {
+              console.log('🔄 Fresh template data received:', {
+                id: freshTemplate.data._id || freshTemplate.data.id,
+                name: freshTemplate.data.name,
+                contentLength: freshTemplate.data.content?.length || 0,
+                contentPreview: freshTemplate.data.content?.substring(0, 100) + '...',
+                aiInstructionsLength: freshTemplate.data.aiInstructions?.length || 0,
+                fullFreshTemplate: freshTemplate.data
+              });
+              setSelectedTemplate(freshTemplate.data);
+            } else {
+              console.log('❌ Fresh template fetch failed, using response data');
+              // Fallback to response data if fresh fetch fails
+              setSelectedTemplate(response.data);
+            }
+          } catch (error) {
+            console.error('❌ Failed to fetch fresh template data:', error);
+            // Fallback to response data
+            setSelectedTemplate(response.data);
+          }
+        } else {
+          setIsEditing(false);
+          setSelectedTemplate(null);
+        }
+        
         loadTemplates();
       } else {
         toast.error(response.error || 'Failed to save template');
@@ -194,6 +242,7 @@ export default function TemplatesManager() {
         </div>
         
         <TemplateEditor
+          key={`${selectedTemplate?.id || selectedTemplate?._id || 'new-template'}-${selectedTemplate?.updatedAt || selectedTemplate?.version || 'v1'}`}
           template={selectedTemplate}
           onSave={handleSaveTemplate}
           onCancel={() => {
@@ -208,33 +257,54 @@ export default function TemplatesManager() {
   // If viewing details mode, show the template details
   if (isViewingDetails && selectedTemplate) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Template Details</h1>
-            <p className="text-gray-600 mt-1">Viewing: {selectedTemplate.name}</p>
+      <>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Template Details</h1>
+              <p className="text-gray-600 mt-1">Viewing: {selectedTemplate.name}</p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => handleGenerateDocument(selectedTemplate)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <Play className="w-4 h-4" />
+                <span>Generate Document</span>
+              </button>
+              <button
+                onClick={() => handleEditTemplate(selectedTemplate)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Edit Template
+              </button>
+              <button
+                onClick={() => {
+                  setIsViewingDetails(false);
+                  setSelectedTemplate(null);
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Back to List
+              </button>
+            </div>
           </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => handleEditTemplate(selectedTemplate)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Edit Template
-            </button>
-            <button
-              onClick={() => {
-                setIsViewingDetails(false);
-                setSelectedTemplate(null);
-              }}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Back to List
-            </button>
-          </div>
+          
+          <TemplateDetailsView template={selectedTemplate} />
         </div>
-        
-        <TemplateDetailsView template={selectedTemplate} />
-      </div>
+
+        {/* Template Document Generation Modal */}
+        <TemplateDocumentGenerationModal
+          isOpen={showGenerationModal}
+          onClose={() => {
+            console.log('🚀 Closing generation modal');
+            setShowGenerationModal(false);
+            setTemplateForGeneration(null);
+          }}
+          template={templateForGeneration}
+          projectId="current-project"
+        />
+      </>
     );
   }
 
@@ -315,6 +385,7 @@ export default function TemplatesManager() {
       <TemplateDocumentGenerationModal
         isOpen={showGenerationModal}
         onClose={() => {
+          console.log('🚀 Closing generation modal');
           setShowGenerationModal(false);
           setTemplateForGeneration(null);
         }}

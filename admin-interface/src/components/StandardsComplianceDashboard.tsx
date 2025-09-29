@@ -130,8 +130,7 @@ export default function StandardsComplianceDashboard() {
       // Try enhanced API first, fallback to original API
       let metricsResponse;
       try {
-        metricsResponse = await fetch('/api/v1/standards/enhanced/dashboard?projectId=current-project');
-        metricsResponse = await metricsResponse.json();
+        metricsResponse = await apiClient.getEnhancedStandardsCompliance('current-project');
         console.log('📊 Enhanced compliance metrics response:', metricsResponse);
       } catch (error) {
         console.warn('⚠️ Enhanced API failed, falling back to original API');

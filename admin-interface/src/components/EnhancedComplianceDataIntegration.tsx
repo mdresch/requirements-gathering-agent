@@ -207,8 +207,7 @@ export default function EnhancedComplianceDataIntegration({
     setError(null);
     
     try {
-      const response = await fetch(`/api/v1/standards/enhanced/data-quality/${projectId || 'current-project'}`);
-      const result = await response.json();
+      const result = await apiClient.getEnhancedDataQuality(projectId || 'current-project');
       
       if (result.success && result.data?.currentQuality) {
         const quality = result.data.currentQuality;

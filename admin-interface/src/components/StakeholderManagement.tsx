@@ -10,7 +10,6 @@ import RecruitmentAnalytics from './RecruitmentAnalytics';
 import RecruitmentTimeline from './RecruitmentTimeline';
 import RecruitmentMetrics from './RecruitmentMetrics';
 import AdvancedReporting from './AdvancedReporting';
-import WorkflowIntegration from './WorkflowIntegration';
 import NotificationSystem from './NotificationSystem';
 import WorkflowProgressTracker from './WorkflowProgressTracker';
 import type { Stakeholder, CreateStakeholderData } from '../types/stakeholder';
@@ -27,7 +26,7 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
   const [editingStakeholder, setEditingStakeholder] = useState<Stakeholder | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'stakeholders' | 'placeholders' | 'analytics' | 'reporting' | 'workflow' | 'notifications' | 'progress'>('stakeholders');
+  const [activeTab, setActiveTab] = useState<'stakeholders' | 'placeholders' | 'analytics' | 'reporting' | 'notifications' | 'progress'>('stakeholders');
 
   useEffect(() => {
     loadStakeholders();
@@ -209,17 +208,6 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
           >
             <FileText className="w-4 h-4 mr-2" />
             Reporting
-          </button>
-          <button
-            onClick={() => setActiveTab('workflow')}
-            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'workflow' 
-                ? 'bg-blue-600 text-white' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <Workflow className="w-4 h-4 mr-2" />
-            Workflow
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
@@ -409,10 +397,6 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
           </div>
         ) : activeTab === 'reporting' ? (
           <AdvancedReporting 
-            projectId={projectId} 
-          />
-        ) : activeTab === 'workflow' ? (
-          <WorkflowIntegration 
             projectId={projectId} 
           />
         ) : activeTab === 'notifications' ? (

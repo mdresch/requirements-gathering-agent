@@ -230,7 +230,7 @@ export default function TemplateStats() {
               <h4 className="text-md font-medium text-gray-700 mb-3">Most Popular Templates</h4>
               <div className="space-y-3">
                 {usageAnalytics.mostPopularTemplates.slice(0, 5).map((template: any, index: number) => (
-                  <div key={template.name} className="flex items-center justify-between">
+                  <div key={`popular-${template.name}-${index}`} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-600 mr-2">
                         #{index + 1}
@@ -268,8 +268,8 @@ export default function TemplateStats() {
                     <span className="text-sm font-medium text-green-700">Trending Up</span>
                   </div>
                   <div className="space-y-2">
-                    {usageAnalytics.trendingUp.slice(0, 3).map((template: any) => (
-                      <div key={template.name} className="flex items-center justify-between">
+                    {usageAnalytics.trendingUp.slice(0, 3).map((template: any, index: number) => (
+                      <div key={`trending-up-${template.name}-${index}`} className="flex items-center justify-between">
                         <span className="text-sm text-gray-900 truncate max-w-[250px]" title={template.name}>
                           {template.name}
                         </span>
@@ -289,8 +289,8 @@ export default function TemplateStats() {
                     <span className="text-sm font-medium text-red-700">Trending Down</span>
                   </div>
                   <div className="space-y-2">
-                    {usageAnalytics.trendingDown.slice(0, 3).map((template: any) => (
-                      <div key={template.name} className="flex items-center justify-between">
+                    {usageAnalytics.trendingDown.slice(0, 3).map((template: any, index: number) => (
+                      <div key={`trending-down-${template.name}-${index}`} className="flex items-center justify-between">
                         <span className="text-sm text-gray-900 truncate max-w-[250px]" title={template.name}>
                           {template.name}
                         </span>
