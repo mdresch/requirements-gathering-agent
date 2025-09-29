@@ -320,6 +320,7 @@ export default async (req, res) => {
     }
 
     // Analytics endpoint for homepage stats
+    console.log('🔍 Checking analytics route:', { method, url, urlMatch: url === '/api/v1/analytics/homepage' });
     if (method === 'GET' && url === '/api/v1/analytics/homepage') {
       try {
         console.log('📊 Loading homepage analytics...');
@@ -1377,16 +1378,17 @@ export default async (req, res) => {
         error: 'Not Found',
       message: `Route ${url} not found`,
         availableEndpoints: {
-            health: '/api/v1/health',
-            templates: '/api/v1/templates',
-        projects: '/api/v1/projects',
-        standardsDashboard: '/api/v1/standards/dashboard',
-        enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
-        enhancedDataQuality: '/api/v1/standards/enhanced/data-quality',
-        feedbackSummary: '/api/v1/feedback/summary',
-        categoriesActive: '/api/v1/categories/active',
-        auditTrail: '/api/v1/audit-trail'
-      }
+          health: '/api/v1/health',
+          templates: '/api/v1/templates',
+          projects: '/api/v1/projects',
+          standardsDashboard: '/api/v1/standards/dashboard',
+          enhancedStandardsDashboard: '/api/v1/standards/enhanced/dashboard',
+          enhancedDataQuality: '/api/v1/standards/enhanced/data-quality',
+          feedbackSummary: '/api/v1/feedback/summary',
+          categoriesActive: '/api/v1/categories/active',
+          auditTrail: '/api/v1/audit-trail',
+          analytics: '/api/v1/analytics/homepage'
+        }
     });
 
   } catch (error) {
