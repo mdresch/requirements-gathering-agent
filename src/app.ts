@@ -27,6 +27,7 @@ import predictiveAnalyticsRoutes from './api/routes/predictiveAnalyticsMinimal.j
 import advancedReportingRoutes from './api/routes/advancedReporting.js';
 import contextTrackingRoutes from './api/routes/contextTracking.js';
 import qualityRoutes from './api/routes/quality.js';
+import analyticsRoutes from './api/routes/analytics.js';
 import authMiddleware from './middleware/auth.js';
 
 const app = express();
@@ -116,6 +117,7 @@ app.use('/api/v1/document-generation', authMiddleware, documentGenerationRoutes)
 app.use('/api/v1/scope-control', authMiddleware, scopeControlRoutes);
 app.use('/api/v1/templates', authMiddleware, templatesRoutes);
 app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1', predictiveAnalyticsRoutes);
 app.use('/api/v1/reports', advancedReportingRoutes);
 app.use('/api/v1/context-tracking', authMiddleware, contextTrackingRoutes);
