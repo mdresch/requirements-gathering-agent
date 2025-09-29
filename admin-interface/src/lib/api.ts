@@ -1099,6 +1099,8 @@ export async function generateDocuments(data: {
   framework?: string;
 }): Promise<any> {
   try {
+    console.log('🔧 generateDocuments API client called with:', data);
+    
     const response = await request('/document-generation/generate-only', {
       method: 'POST',
       headers: {
@@ -1112,6 +1114,8 @@ export async function generateDocuments(data: {
         framework: data.framework
       }),
     });
+    
+    console.log('🔧 generateDocuments API client response:', response);
     return response;
   } catch (error) {
     console.error('❌ generateDocuments error:', error);

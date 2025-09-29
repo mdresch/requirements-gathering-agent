@@ -16,7 +16,7 @@ import {
   createPaginatedResponse,
   validateAndConvertId,
   handleIdValidationError 
-} from '../utils/idUtils.js';
+} from '../utils/idUtils.ts';
 
 // Load environment variables
 dotenv.config();
@@ -1354,6 +1354,111 @@ app.get('/api/v1/feedback/performance', async (req: Request, res: Response) => {
     }
 });
 
+// POST /api/v1/feedback - Create new feedback
+app.post('/api/v1/feedback', async (req: Request, res: Response) => {
+    try {
+        const {
+            projectId,
+            documentId,
+            userId,
+            userName,
+            userEmail,
+            rating,
+            feedbackType = 'general',
+            category = 'suggestion',
+            title,
+            content,
+            priority = 'medium',
+            severity = 'minor',
+            tags = [],
+            metadata = {}
+        } = req.body;
+
+        // Validate required fields
+        if (!projectId || !content) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'VALIDATION_ERROR',
+                    message: 'Project ID and content are required'
+                }
+            });
+        }
+
+        // Create feedback document
+        const feedbackData = {
+            projectId: projectId,
+            documentId: documentId || null,
+            userId: userId || null,
+            userName: userName || 'Anonymous',
+            userEmail: userEmail || null,
+            rating: rating || null,
+            feedbackType: feedbackType,
+            category: category,
+            title: title || `Feedback for Project ${projectId}`,
+            content: content,
+            priority: priority,
+            severity: severity,
+            status: 'open',
+            tags: Array.isArray(tags) ? tags : [],
+            metadata: metadata || {},
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        // Insert feedback into database
+        const result = await mongoose.connection.db?.collection('feedback').insertOne(feedbackData);
+
+        if (!result || !result.insertedId) {
+            throw new Error('Failed to insert feedback');
+        }
+
+        // Get the inserted feedback
+        const insertedFeedback = await mongoose.connection.db?.collection('feedback')
+            .findOne({ _id: result.insertedId });
+
+        // Transform the response
+        const transformedFeedback = {
+            id: insertedFeedback?._id.toString(),
+            projectId: insertedFeedback?.projectId,
+            documentId: insertedFeedback?.documentId,
+            userId: insertedFeedback?.userId,
+            userName: insertedFeedback?.userName,
+            userEmail: insertedFeedback?.userEmail,
+            rating: insertedFeedback?.rating,
+            feedbackType: insertedFeedback?.feedbackType,
+            category: insertedFeedback?.category,
+            title: insertedFeedback?.title,
+            content: insertedFeedback?.content,
+            priority: insertedFeedback?.priority,
+            severity: insertedFeedback?.severity,
+            status: insertedFeedback?.status,
+            tags: insertedFeedback?.tags,
+            metadata: insertedFeedback?.metadata,
+            createdAt: insertedFeedback?.createdAt,
+            updatedAt: insertedFeedback?.updatedAt
+        };
+
+        res.status(201).json({
+            success: true,
+            data: transformedFeedback,
+            message: 'Feedback submitted successfully',
+            requestId: `req_${Date.now()}`,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error: any) {
+        console.error('❌ Create feedback error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'CREATE_FEEDBACK_ERROR',
+                message: 'Failed to create feedback'
+            }
+        });
+    }
+});
+
 // Categories CRUD endpoints
 app.get('/api/v1/categories', async (req: Request, res: Response) => {
     try {
@@ -1637,7 +1742,7 @@ app.get('/api/v1/projects/:id/documents', async (req: Request, res: Response) =>
             // If not found by ObjectId, try by string ID
             if (!project) {
                 project = await mongoose.connection.db?.collection('projects')
-                    .findOne({ _id: id });
+                    .findOne({ _id: new mongoose.Types.ObjectId(id) });
             }
         } catch (error) {
             console.error('Error validating project:', error);
@@ -1745,6 +1850,134 @@ app.get('/api/v1/projects/:id/documents', async (req: Request, res: Response) =>
     }
 });
 
+// Get deleted documents for a project
+app.get('/api/v1/projects/:id/documents/deleted', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { page = 1, limit = 50, type, category } = req.query;
+        
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_PROJECT_ID',
+                    message: 'Project ID is required'
+                }
+            });
+        }
+        
+        // Validate project exists
+        let project;
+        try {
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                project = await mongoose.connection.db?.collection('projects')
+                    .findOne({ _id: new mongoose.Types.ObjectId(id) });
+            }
+            
+            if (!project) {
+                project = await mongoose.connection.db?.collection('projects')
+                    .findOne({ _id: new mongoose.Types.ObjectId(id) });
+            }
+        } catch (error) {
+            console.error('Error validating project:', error);
+            project = { _id: id };
+        }
+        
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'PROJECT_NOT_FOUND',
+                    message: 'Project not found'
+                }
+            });
+        }
+        
+        // Build query for deleted documents
+        const query: any = {
+            projectId: id,
+            deletedAt: { $exists: true, $ne: null }
+        };
+        
+        // Add optional filters
+        if (type) {
+            query.type = type;
+        }
+        if (category) {
+            query.category = category;
+        }
+        
+        // Calculate pagination
+        const skip = (Number(page) - 1) * Number(limit);
+        
+        // Get deleted documents with pagination
+        const documents = await mongoose.connection.db?.collection('projectdocuments')
+            .find(query)
+            .sort({ deletedAt: -1 })
+            .skip(skip)
+            .limit(Number(limit))
+            .toArray() || [];
+        
+        // Get total count for pagination
+        const totalCount = await mongoose.connection.db?.collection('projectdocuments')
+            .countDocuments(query) || 0;
+        
+        const totalPages = Math.ceil(totalCount / Number(limit));
+        
+        // Transform documents to match expected format
+        const transformedDocuments = documents.map(doc => ({
+            id: doc._id.toString(),
+            name: doc.name || doc.title || 'Unnamed Document',
+            title: doc.title || doc.name || 'Unnamed Document',
+            type: doc.type || doc.documentType || 'unknown',
+            category: doc.category || 'General',
+            status: 'deleted',
+            description: doc.description || '',
+            content: doc.content || '',
+            path: doc.path || `/generated-documents/${doc.category || 'general'}/${(doc.name || 'unnamed').toLowerCase().replace(/\s+/g, '-')}.md`,
+            lastModified: doc.lastModified || doc.updatedAt || doc.createdAt,
+            generatedAt: doc.generatedAt || doc.createdAt,
+            deletedAt: doc.deletedAt,
+            qualityScore: doc.qualityScore || 0,
+            feedbackCount: doc.feedbackCount || 0,
+            averageRating: doc.averageRating || 0,
+            projectId: doc.projectId,
+            templateId: doc.templateId,
+            templateName: doc.templateName,
+            version: doc.version || 1,
+            isActive: false,
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt,
+            metadata: doc.metadata || {},
+            tags: doc.tags || [],
+            ...doc
+        }));
+        
+        res.json({
+            success: true,
+            data: transformedDocuments,
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+                total: totalCount,
+                pages: totalPages
+            },
+            requestId: `req_${Date.now()}`,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error: any) {
+        console.error('❌ Get deleted project documents error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'GET_DELETED_PROJECT_DOCUMENTS_ERROR',
+                message: 'Failed to retrieve deleted project documents'
+            }
+        });
+    }
+});
+
 // Context utilization endpoint with real data
 app.get('/api/v1/context-tracking/projects/:projectId/analytics', async (req: Request, res: Response) => {
     try {
@@ -1798,6 +2031,93 @@ app.get('/api/v1/context-tracking/projects/:projectId/analytics', async (req: Re
     }
 });
 
+// Document download endpoint with format support
+app.get('/api/v1/documents/:id/download/:format', async (req: Request, res: Response) => {
+    try {
+        const { id, format } = req.params;
+        
+        if (!mongoose.connection.db) {
+            return res.status(500).json({
+                success: false,
+                error: { code: 'DATABASE_ERROR', message: 'Database not connected' }
+            });
+        }
+
+        const documentsCollection = mongoose.connection.db.collection('projectdocuments');
+        const document = await documentsCollection.findOne({ _id: new mongoose.Types.ObjectId(id) });
+
+        if (!document) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 'NOT_FOUND', message: 'Document not found' }
+            });
+        }
+
+        const documentContent = document.content || '';
+        const documentName = document.name || document.title || 'Unnamed Document';
+        
+        let contentType: string;
+        let filename: string;
+        let content: string | Buffer;
+
+        switch (format.toLowerCase()) {
+            case 'md':
+                contentType = 'text/markdown';
+                filename = `${documentName}.md`;
+                content = documentContent;
+                break;
+            case 'pdf':
+                // For PDF, we'll return HTML that can be converted to PDF client-side
+                contentType = 'text/html';
+                filename = `${documentName}.html`;
+                content = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>${documentName}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                            h1, h2, h3 { color: #333; }
+                            h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
+                            h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                            code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+                            pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+                            blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 20px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${documentName}</h1>
+                        <div>${documentContent.replace(/\n/g, '<br>')}</div>
+                    </body>
+                    </html>
+                `;
+                break;
+            case 'docx':
+                // For DOCX, we'll return plain text (simplified version)
+                contentType = 'text/plain';
+                filename = `${documentName}.txt`;
+                content = documentContent.replace(/#{1,6}\s/g, ''); // Remove markdown headers
+                break;
+            default:
+                return res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_FORMAT', message: 'Unsupported format. Supported: md, pdf, docx' }
+                });
+        }
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(content);
+
+    } catch (error: any) {
+        console.error('❌ Document download error:', error);
+        res.status(500).json({
+            success: false,
+            error: { code: 'DOWNLOAD_ERROR', message: 'Failed to download document' }
+        });
+    }
+});
+
 // Get document by ID endpoint
 app.get('/api/v1/projects/documents/:id', async (req: Request, res: Response) => {
     try {
@@ -1816,7 +2136,7 @@ app.get('/api/v1/projects/documents/:id', async (req: Request, res: Response) =>
         // Find document by ID
         const document = await mongoose.connection.db?.collection('projectdocuments')
             .findOne({ 
-                _id: mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id,
+                _id: mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : new mongoose.Types.ObjectId(id),
                 $or: [
                     { deletedAt: null },
                     { deletedAt: { $exists: false } }
@@ -1871,6 +2191,99 @@ app.get('/api/v1/projects/documents/:id', async (req: Request, res: Response) =>
             error: {
                 code: 'GET_DOCUMENT_BY_ID_ERROR',
                 message: 'Failed to retrieve document'
+            }
+        });
+    }
+});
+
+// Delete document by ID endpoint
+app.delete('/api/v1/projects/documents/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_DOCUMENT_ID',
+                    message: 'Document ID is required'
+                }
+            });
+        }
+        
+        // Validate document ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_DOCUMENT_ID',
+                    message: 'Invalid document ID format'
+                }
+            });
+        }
+        
+        // Find document by ID
+        const document = await mongoose.connection.db?.collection('projectdocuments')
+            .findOne({ 
+                _id: new mongoose.Types.ObjectId(id),
+                $or: [
+                    { deletedAt: null },
+                    { deletedAt: { $exists: false } }
+                ]
+            });
+        
+        if (!document) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'DOCUMENT_NOT_FOUND',
+                    message: 'Document not found'
+                }
+            });
+        }
+        
+        // Soft delete the document
+        const result = await mongoose.connection.db?.collection('projectdocuments')
+            .updateOne(
+                { _id: new mongoose.Types.ObjectId(id) },
+                { 
+                    $set: { 
+                        deletedAt: new Date(),
+                        deletedBy: 'system',
+                        deletedReason: 'User requested deletion'
+                    }
+                }
+            );
+        
+        if (result?.modifiedCount === 0) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'DELETE_FAILED',
+                    message: 'Failed to delete document'
+                }
+            });
+        }
+        
+        console.log(`📄 Document deleted: ${document.name} (${id})`);
+        
+        res.json({
+            success: true,
+            message: 'Document deleted successfully',
+            data: {
+                documentId: id,
+                deletedAt: new Date(),
+                documentName: document.name
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Delete document error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'DELETE_DOCUMENT_ERROR',
+                message: 'Failed to delete document'
             }
         });
     }
@@ -3936,7 +4349,7 @@ app.post('/api/v1/document-generation/generate-only', async (req: Request, res: 
                 console.log(`📝 Generating ${docKey}...`);
                 
                 // Create document content
-                const title = docKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const title = docKey.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
                 const content = `# ${title}\n\nThis document was generated based on the project context:\n\n${context}\n\n## Document Details\n- **Project ID**: ${projectId || 'default-project'}\n- **Generated**: ${new Date().toISOString()}\n- **Type**: ${docKey}\n\n## Content\nThis is a generated document for ${docKey}. The actual content would be generated by the document generation service based on the provided context and project requirements.\n\n## Project Context\n${context}\n\n## Framework Information\nThis document follows standard project management practices and includes relevant context from the project requirements.`;
 
                 // Create document data for database

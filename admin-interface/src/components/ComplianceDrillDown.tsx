@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -70,15 +70,7 @@ export default function ComplianceDrillDown({
   const [showFilters, setShowFilters] = useState(false);
   const [expandedIssues, setExpandedIssues] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    loadIssues();
-  }, [standardType, projectId]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [issues, searchTerm, statusFilter, severityFilter, sortBy, sortOrder]);
-
-  const loadIssues = async () => {
+  const loadIssues = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -106,7 +98,7 @@ export default function ComplianceDrillDown({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, standardType]);
 
   const generateMockIssues = (): ComplianceIssue[] => {
     const mockIssues: ComplianceIssue[] = [
@@ -162,7 +154,7 @@ export default function ComplianceDrillDown({
     return mockIssues;
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...issues];
 
     // Search filter
@@ -216,7 +208,15 @@ export default function ComplianceDrillDown({
     });
 
     setFilteredIssues(filtered);
-  };
+  }, [issues, searchTerm, statusFilter, severityFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    loadIssues();
+  }, [loadIssues]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const handleIssueClick = (issue: ComplianceIssue) => {
     setSelectedIssue(issue);

@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -60,7 +60,7 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
 
-  const loadFeedbackAnalytics = async () => {
+  const loadFeedbackAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -200,11 +200,11 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, timeframe]);
 
   useEffect(() => {
     loadFeedbackAnalytics();
-  }, [projectId, timeframe]);
+  }, [loadFeedbackAnalytics]);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {

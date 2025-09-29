@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Category } from '../../models/Category.model.js';
+import { ICategory } from '../../models/Category.model.js';
 import { logger } from '../../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,7 +12,7 @@ export class CategoryController {
       const requestId = uuidv4();
       const { page = 1, limit = 20, search, isActive, sort = 'name', order = 'asc' } = req.query;
 
-      logger.info(`Category list requested: ${JSON.stringify({
+      logger.info(`ICategory list requested: ${JSON.stringify({
         requestId,
         filters: { search, isActive },
         pagination: { page, limit, sort, order },
@@ -40,17 +40,17 @@ export class CategoryController {
 
       // Execute query
       const [categories, totalCount] = await Promise.all([
-        Category.find(filter)
+        ICategory.find(filter)
           .sort(sortObj)
           .skip(skip)
           .limit(Number(limit))
           .lean(),
-        Category.countDocuments(filter)
+        ICategory.countDocuments(filter)
       ]);
 
       const resultCount = categories.length;
 
-      logger.info(`Category list retrieved: ${JSON.stringify({
+      logger.info(`ICategory list retrieved: ${JSON.stringify({
         requestId,
         resultCount,
         totalCount,
@@ -87,7 +87,7 @@ export class CategoryController {
         timestamp: new Date().toISOString()
       })}`);
 
-      const categories = await Category.find({ isActive: true })
+      const categories = await ICategory.find({ isActive: true })
         .select('name description color icon')
         .sort({ name: 1 })
         .lean();
@@ -113,32 +113,32 @@ export class CategoryController {
   /**
    * Get category by ID
    */
-  static async getCategoryById(req: Request, res: Response, next: NextFunction) {
+  static async getICategoryById(req: Request, res: Response, next: NextFunction) {
     try {
       const requestId = uuidv4();
       const { id } = req.params;
 
-      logger.info(`Category requested by ID: ${JSON.stringify({
+      logger.info(`ICategory requested by ID: ${JSON.stringify({
         requestId,
         categoryId: id,
         timestamp: new Date().toISOString()
       })}`);
 
-      const category = await Category.findById(id).lean();
+      const category = await ICategory.findById(id).lean();
 
       if (!category) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'CATEGORY_NOT_FOUND',
-            message: 'Category not found'
+            message: 'ICategory not found'
           },
           requestId,
           timestamp: new Date().toISOString()
         });
       }
 
-      logger.info(`Category retrieved: ${JSON.stringify({
+      logger.info(`ICategory retrieved: ${JSON.stringify({
         requestId,
         categoryId: id,
         categoryName: category.name,
@@ -160,12 +160,12 @@ export class CategoryController {
   /**
    * Create new category
    */
-  static async createCategory(req: Request, res: Response, next: NextFunction) {
+  static async createICategory(req: Request, res: Response, next: NextFunction) {
     try {
       const requestId = uuidv4();
       const { name, description, color, icon, isActive = true } = req.body;
 
-      logger.info(`Category creation requested: ${JSON.stringify({
+      logger.info(`ICategory creation requested: ${JSON.stringify({
         requestId,
         name,
         description,
@@ -176,13 +176,13 @@ export class CategoryController {
       })}`);
 
       // Check if category already exists
-      const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
-      if (existingCategory) {
+      const existingICategory = await ICategory.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+      if (existingICategory) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'CATEGORY_EXISTS',
-            message: 'Category with this name already exists'
+            message: 'ICategory with this name already exists'
           },
           requestId,
           timestamp: new Date().toISOString()
@@ -190,7 +190,7 @@ export class CategoryController {
       }
 
       // Create new category
-      const category = new Category({
+      const category = new ICategory({
         name: name.trim(),
         description: description.trim(),
         color: color || '#3B82F6',
@@ -201,7 +201,7 @@ export class CategoryController {
 
       await category.save();
 
-      logger.info(`Category created successfully: ${JSON.stringify({
+      logger.info(`ICategory created successfully: ${JSON.stringify({
         requestId,
         categoryId: category._id,
         name: category.name,
@@ -223,26 +223,26 @@ export class CategoryController {
   /**
    * Update category
    */
-  static async updateCategory(req: Request, res: Response, next: NextFunction) {
+  static async updateICategory(req: Request, res: Response, next: NextFunction) {
     try {
       const requestId = uuidv4();
       const { id } = req.params;
       const { name, description, color, icon, isActive } = req.body;
 
-      logger.info(`Category update requested: ${JSON.stringify({
+      logger.info(`ICategory update requested: ${JSON.stringify({
         requestId,
         categoryId: id,
         updates: { name, description, color, icon, isActive },
         timestamp: new Date().toISOString()
       })}`);
 
-      const category = await Category.findById(id);
+      const category = await ICategory.findById(id);
       if (!category) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'CATEGORY_NOT_FOUND',
-            message: 'Category not found'
+            message: 'ICategory not found'
           },
           requestId,
           timestamp: new Date().toISOString()
@@ -251,16 +251,16 @@ export class CategoryController {
 
       // Check if name change conflicts with existing category
       if (name && name !== category.name) {
-        const existingCategory = await Category.findOne({ 
+        const existingICategory = await ICategory.findOne({ 
           name: { $regex: new RegExp(`^${name}$`, 'i') },
           _id: { $ne: id }
         });
-        if (existingCategory) {
+        if (existingICategory) {
           return res.status(400).json({
             success: false,
             error: {
               code: 'CATEGORY_EXISTS',
-              message: 'Category with this name already exists'
+              message: 'ICategory with this name already exists'
             },
             requestId,
             timestamp: new Date().toISOString()
@@ -279,7 +279,7 @@ export class CategoryController {
       Object.assign(category, updateData);
       await category.save();
 
-      logger.info(`Category updated successfully: ${JSON.stringify({
+      logger.info(`ICategory updated successfully: ${JSON.stringify({
         requestId,
         categoryId: id,
         name: category.name,
@@ -302,24 +302,24 @@ export class CategoryController {
   /**
    * Delete category
    */
-  static async deleteCategory(req: Request, res: Response, next: NextFunction) {
+  static async deleteICategory(req: Request, res: Response, next: NextFunction) {
     try {
       const requestId = uuidv4();
       const { id } = req.params;
 
-      logger.info(`Category deletion requested: ${JSON.stringify({
+      logger.info(`ICategory deletion requested: ${JSON.stringify({
         requestId,
         categoryId: id,
         timestamp: new Date().toISOString()
       })}`);
 
-      const category = await Category.findById(id);
+      const category = await ICategory.findById(id);
       if (!category) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'CATEGORY_NOT_FOUND',
-            message: 'Category not found'
+            message: 'ICategory not found'
           },
           requestId,
           timestamp: new Date().toISOString()
@@ -340,22 +340,22 @@ export class CategoryController {
       }
 
       // TODO: Check if category is in use by templates
-      // const templatesUsingCategory = await Template.countDocuments({ category: category.name });
-      // if (templatesUsingCategory > 0) {
+      // const templatesUsingICategory = await Template.countDocuments({ category: category.name });
+      // if (templatesUsingICategory > 0) {
       //   return res.status(400).json({
       //     success: false,
       //     error: {
       //       code: 'CATEGORY_IN_USE',
-      //       message: `Cannot delete category. ${templatesUsingCategory} templates are using this category.`
+      //       message: `Cannot delete category. ${templatesUsingICategory} templates are using this category.`
       //     },
       //     requestId,
       //     timestamp: new Date().toISOString()
       //   });
       // }
 
-      await Category.findByIdAndDelete(id);
+      await ICategory.findByIdAndDelete(id);
 
-      logger.info(`Category deleted successfully: ${JSON.stringify({
+      logger.info(`ICategory deleted successfully: ${JSON.stringify({
         requestId,
         categoryId: id,
         categoryName: category.name,
@@ -364,7 +364,7 @@ export class CategoryController {
 
       res.json({
         success: true,
-        message: 'Category deleted successfully',
+        message: 'ICategory deleted successfully',
         requestId,
         timestamp: new Date().toISOString()
       });

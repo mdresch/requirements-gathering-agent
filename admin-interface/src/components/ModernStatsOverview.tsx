@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -42,11 +42,7 @@ export default function ModernStatsOverview() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRealStats();
-  }, []);
-
-  const loadRealStats = async () => {
+  const loadRealStats = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -78,7 +74,11 @@ export default function ModernStatsOverview() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadRealStats();
+  }, [loadRealStats]);
 
   const loadFallbackStats = async () => {
     try {

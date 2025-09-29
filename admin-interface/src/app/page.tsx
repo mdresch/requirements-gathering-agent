@@ -203,6 +203,11 @@ export default function HomePage() {
     router.push('/categories');
   };
 
+  const handleGenerateDocument = (template: Template) => {
+    // Navigate to web interface with the selected template
+    window.open(`/web-interface?templateId=${template.id}`, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -550,6 +555,7 @@ export default function HomePage() {
               onEdit={handleEditTemplate}
               onViewDetails={handleViewTemplate}
               onDelete={handleDeleteTemplate}
+              onGenerateDocument={handleGenerateDocument}
               onPageChange={handlePageChange}
               currentPage={searchParams.page || 1}
               totalPages={totalPages}

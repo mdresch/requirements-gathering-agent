@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Database, 
   RefreshCw, 
@@ -61,16 +61,7 @@ export default function EnhancedComplianceDataIntegration({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    initializeWebSocket();
-    loadDataQuality();
-    
-    return () => {
-      cleanup();
-    };
-  }, [projectId]);
-
-  const initializeWebSocket = () => {
+  const initializeWebSocket = useCallback(() => {
     try {
       // WebSocket endpoint not yet implemented in main server
       console.log('⚠️ WebSocket connection disabled - endpoint not implemented in main server');
@@ -133,7 +124,7 @@ export default function EnhancedComplianceDataIntegration({
       console.error('❌ Error initializing WebSocket:', error);
       setError('Failed to initialize connection');
     }
-  };
+  }, []);
 
   const handleWebSocketMessage = (message: any) => {
     setConnectionStatus(prev => ({
@@ -211,7 +202,7 @@ export default function EnhancedComplianceDataIntegration({
     }, 30000); // Ping every 30 seconds
   };
 
-  const loadDataQuality = async () => {
+  const loadDataQuality = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -239,7 +230,16 @@ export default function EnhancedComplianceDataIntegration({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    initializeWebSocket();
+    loadDataQuality();
+    
+    return () => {
+      cleanup();
+    };
+  }, [projectId, initializeWebSocket, loadDataQuality]);
 
   const refreshData = async () => {
     await loadDataQuality();

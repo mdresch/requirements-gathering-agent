@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Workflow, 
   Play, 
@@ -92,12 +92,7 @@ export default function ComplianceWorkflowEngine({
   const [filterStandard, setFilterStandard] = useState<string>('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
 
-  useEffect(() => {
-    loadWorkflows();
-    loadInstances();
-  }, [projectId]);
-
-  const loadWorkflows = async () => {
+  const loadWorkflows = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -120,9 +115,9 @@ export default function ComplianceWorkflowEngine({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
-  const loadInstances = async () => {
+  const loadInstances = useCallback(async () => {
     try {
       // Try to load real instances from API
       const response = await fetch(`/api/v1/standards/workflow-instances?projectId=${projectId}`);
@@ -139,7 +134,12 @@ export default function ComplianceWorkflowEngine({
       // Use mock data as fallback
       setInstances(generateMockInstances());
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadWorkflows();
+    loadInstances();
+  }, [loadWorkflows, loadInstances]);
 
   const generateMockWorkflows = (): ComplianceWorkflow[] => [
     {

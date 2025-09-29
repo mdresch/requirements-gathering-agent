@@ -15,39 +15,62 @@
 import { Schema } from 'mongoose';
 
 // Core Models (Phase 1 Foundation)
-export { TemplateModel, ITemplate } from './Template.model.js';
-export { ProjectModel, IProject } from './Project.model.js';
-export { CategoryModel, ICategory } from './Category.model.js';
-export { FeedbackModel, IFeedback } from './Feedback.model.js';
-export { AuditTrailModel, IAuditTrail } from './AuditTrail.model.js';
-export { StakeholderModel, IStakeholder } from './Stakeholder.model.js';
+export { TemplateModel } from './Template.model.js';
+export type { ITemplate } from './Template.model.js';
+export { ProjectModel } from './Project.model.js';
+export type { IProject } from './Project.model.js';
+export { CategoryModel } from './Category.model.js';
+export type { ICategory } from './Category.model.js';
+export { FeedbackModel } from './Feedback.model.js';
+export type { IFeedback } from './Feedback.model.js';
+export { AuditTrailModel } from './AuditTrail.model.js';
+export type { IAuditTrail } from './AuditTrail.model.js';
+export { StakeholderModel } from './Stakeholder.model.js';
+export type { IStakeholder } from './Stakeholder.model.js';
 
 // Existing Models (already in the codebase)
-export { DocumentReviewModel, IDocumentReview } from './Review.js';
-export { ReviewerProfileModel, IReviewerProfile } from './ReviewerProfile.js';
-export { ReviewWorkflowConfigModel, IReviewWorkflowConfig } from './ReviewWorkflow.js';
-export { GenerationJobModel, IGenerationJob } from './GenerationJob.js';
-export { ProjectDocument, IProjectDocument } from './ProjectDocument.js';
-export { ScopeChange, IScopeChange } from './ScopeChange.js';
-export { UserSession, IUserSession } from './UserSession.model.js';
+export { DocumentReviewModel } from './Review.js';
+export type { IDocumentReview } from './Review.js';
+export { ReviewerProfileModel } from './ReviewerProfile.js';
+export type { IReviewerProfile } from './ReviewerProfile.js';
+export { ReviewWorkflowConfigModel } from './ReviewWorkflow.js';
+export type { IReviewWorkflowConfig } from './ReviewWorkflow.js';
+export { GenerationJobModel } from './GenerationJob.js';
+export type { IGenerationJob } from './GenerationJob.js';
+export { ProjectDocument } from './ProjectDocument.js';
+export type { IProjectDocument } from './ProjectDocument.js';
+export { ScopeChange } from './ScopeChange.js';
+export type { IScopeChange } from './ScopeChange.js';
+export { UserSession } from './UserSession.model.js';
+export type { IUserSession } from './UserSession.model.js';
 
 // Compliance and Analytics Models
-export { ComplianceIssueModel, IComplianceIssue } from './ComplianceIssue.model.js';
-export { ComplianceMetricsModel, IComplianceMetrics } from './ComplianceMetrics.model.js';
-export { ComplianceNotificationModel, IComplianceNotification } from './ComplianceNotification.model.js';
-export { ComplianceWorkflow, IComplianceWorkflow } from './ComplianceWorkflow.model.js';
+export { ComplianceIssueModel } from './ComplianceIssue.model.js';
+export type { IComplianceIssue } from './ComplianceIssue.model.js';
+export { ComplianceMetricsModel } from './ComplianceMetrics.model.js';
+export type { IComplianceMetrics } from './ComplianceMetrics.model.js';
+export { ComplianceNotificationModel } from './ComplianceNotification.model.js';
+export type { IComplianceNotification } from './ComplianceNotification.model.js';
+export { ComplianceWorkflow } from './ComplianceWorkflow.model.js';
+export type { IComplianceWorkflow } from './ComplianceWorkflow.model.js';
 
 // AI and Billing Models
-export { AIBillingUsage, IAIBillingUsage } from './AIBillingUsage.model.js';
-export { AIContextTracking, IAIContextTracking } from './AIContextTracking.model.js';
+export { AIBillingUsage } from './AIBillingUsage.model.js';
+export type { IAIBillingUsage } from './AIBillingUsage.model.js';
+export { AIContextTracking } from './AIContextTracking.model.js';
+export type { IAIContextTracking } from './AIContextTracking.model.js';
 
 // Monitoring and Alerting Models
-export { Alert, IAlert } from './Alert.model.js';
-export { RealTimeMetrics, IRealTimeMetrics } from './RealTimeMetrics.model.js';
+export { Alert } from './Alert.model.js';
+export type { IAlert } from './Alert.model.js';
+export { RealTimeMetrics } from './RealTimeMetrics.model.js';
+export type { IRealTimeMetrics } from './RealTimeMetrics.model.js';
 
 // Document Audit Models
-export { DocumentAuditTrail, IDocumentAuditTrail } from './DocumentAuditTrail.model.js';
-export { DocumentFeedback, IDocumentFeedback } from './DocumentFeedback.js';
+export { DocumentAuditTrail } from './DocumentAuditTrail.model.js';
+export type { IDocumentAuditTrail } from './DocumentAuditTrail.model.js';
+export { DocumentFeedback } from './DocumentFeedback.js';
+export type { IDocumentFeedback } from './DocumentFeedback.js';
 
 /**
  * Model Registry

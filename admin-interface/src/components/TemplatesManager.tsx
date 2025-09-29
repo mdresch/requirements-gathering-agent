@@ -16,6 +16,7 @@ import SearchFilters from '@/components/SearchFilters';
 import { Plus, Trash2, FolderOpen } from 'lucide-react';
 import TemplateDeleteModal from './TemplateDeleteModal';
 import DeletedTemplatesModal from './DeletedTemplatesModal';
+import TemplateDocumentGenerationModal from './TemplateDocumentGenerationModal';
 
 export default function TemplatesManager() {
   const router = useRouter();
@@ -34,6 +35,8 @@ export default function TemplatesManager() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
+  const [showGenerationModal, setShowGenerationModal] = useState(false);
+  const [templateForGeneration, setTemplateForGeneration] = useState<Template | null>(null);
 
   const loadTemplates = useCallback(
     async (params: TemplateSearchParams = searchParams) => {
@@ -85,6 +88,11 @@ export default function TemplatesManager() {
   const handleViewDetails = (template: Template) => {
     setSelectedTemplate(template);
     setIsViewingDetails(true);
+  };
+
+  const handleGenerateDocument = (template: Template) => {
+    setTemplateForGeneration(template);
+    setShowGenerationModal(true);
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -280,6 +288,7 @@ export default function TemplatesManager() {
         onEdit={handleEditTemplate}
         onViewDetails={handleViewDetails}
         onDelete={handleDeleteTemplate}
+        onGenerateDocument={handleGenerateDocument}
         onPageChange={handlePageChange}
         currentPage={searchParams.page || 1}
         totalPages={totalPages}
@@ -300,6 +309,17 @@ export default function TemplatesManager() {
         isOpen={showDeletedTemplates}
         onClose={() => setShowDeletedTemplates(false)}
         onTemplateRestored={handleTemplateRestored}
+      />
+
+      {/* Template Document Generation Modal */}
+      <TemplateDocumentGenerationModal
+        isOpen={showGenerationModal}
+        onClose={() => {
+          setShowGenerationModal(false);
+          setTemplateForGeneration(null);
+        }}
+        template={templateForGeneration}
+        projectId="current-project"
       />
     </div>
   );

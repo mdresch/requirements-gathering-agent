@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FileText, 
   User, 
@@ -111,7 +111,7 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
   });
 
   // Fetch audit trail data
-  const fetchAuditTrail = async () => {
+  const fetchAuditTrail = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -149,10 +149,10 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentId, projectId, userId, filters, pagination.page, pagination.limit]);
 
   // Fetch audit trail stats
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams({
         ...(documentId && { documentId }),
@@ -177,12 +177,12 @@ const DocumentAuditTrail: React.FC<DocumentAuditTrailProps> = ({
       console.error('Error fetching audit trail stats:', error);
       toast.error('Failed to fetch audit trail statistics');
     }
-  };
+  }, [documentId, projectId, userId, filters]);
 
   useEffect(() => {
     fetchAuditTrail();
     fetchStats();
-  }, [documentId, projectId, userId, filters, pagination.page, pagination.limit]);
+  }, [fetchAuditTrail, fetchStats]);
 
   const toggleEntryExpansion = (entryId: string) => {
     setExpandedEntries(prev => {

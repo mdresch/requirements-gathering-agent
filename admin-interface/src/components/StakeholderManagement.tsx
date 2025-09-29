@@ -106,7 +106,7 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
   };
 
   const filteredStakeholders = stakeholders.filter(stakeholder => {
-    const statusMatch = filter === 'all' || (filter === 'active' ? stakeholder.isActive : !stakeholder.isActive);
+    const statusMatch = filter === 'all' || (filter === 'active' ? stakeholder.status === 'active' : stakeholder.status !== 'active');
     const roleMatch = roleFilter === 'all' || stakeholder.role === roleFilter;
     return statusMatch && roleMatch;
   });
@@ -499,7 +499,7 @@ function StakeholderCard({
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getInfluenceColor(stakeholder.influence)}`}>
               {stakeholder.influence} influence
             </span>
-            {stakeholder.isActive ? (
+            {stakeholder.status === 'active' ? (
               <CheckCircle className="w-4 h-4 text-green-500" />
             ) : (
               <UserX className="w-4 h-4 text-gray-400" />
@@ -563,7 +563,7 @@ function StakeholderCard({
             <Edit className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onDelete(stakeholder.id, stakeholder.name)}
+            onClick={() => onDelete(stakeholder.id, stakeholder.name || 'Unknown')}
             className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             title="Delete stakeholder"
           >

@@ -2,7 +2,7 @@
 
 import { Template } from '@/types/template';
 import { formatRelativeTime, truncateText } from '@/lib/utils';
-import { Edit, Trash2, Eye, Tag, Calendar, FileText, Key, Code } from 'lucide-react';
+import { Edit, Trash2, Eye, Tag, Calendar, FileText, Key, Code, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuditTrail } from '../hooks/useAuditTrail';
 
@@ -12,6 +12,7 @@ interface TemplateListProps {
   onEdit: (template: Template) => void;
   onViewDetails: (template: Template) => void;
   onDelete: (templateId: string) => void;
+  onGenerateDocument: (template: Template) => void;
   onPageChange: (page: number) => void;
   currentPage: number;
   totalPages: number;
@@ -25,6 +26,7 @@ export default function TemplateList({
   onEdit,
   onViewDetails,
   onDelete,
+  onGenerateDocument,
   onPageChange,
   currentPage,
   totalPages,
@@ -337,6 +339,15 @@ export default function TemplateList({
                       whileTap={{ scale: 0.9 }}
                     >
                       <Edit className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => onGenerateDocument(template)}
+                      className="p-3 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-300 btn-modern"
+                      title="Generate document"
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Play className="w-5 h-5" />
                     </motion.button>
                     <motion.button
                       onClick={() => handleDelete(template.id, template.name, template.templateType)}

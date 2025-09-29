@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, Calendar, AlertTriangle, CheckCircle, Clock, Mail, MessageSquare, Settings, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../lib/api';
@@ -45,16 +45,8 @@ export default function NotificationSystem({ projectId }: NotificationSystemProp
     reminderTypes: ['deadline', 'milestone', 'reminder']
   });
 
-  useEffect(() => {
-    loadData();
-    generateNotifications();
-    
-    // Check for notifications every 5 minutes
-    const interval = setInterval(generateNotifications, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [projectId]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.getProjectStakeholders(projectId);
@@ -68,9 +60,9 @@ export default function NotificationSystem({ projectId }: NotificationSystemProp
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
-  const generateNotifications = () => {
+  const generateNotifications = useCallback(() => {
     const newNotifications: Notification[] = [];
     const now = new Date();
 
@@ -171,7 +163,16 @@ export default function NotificationSystem({ projectId }: NotificationSystemProp
       const newUniqueNotifications = [...newNotifications, ...mockNotifications].filter(n => !existingIds.has(n.id));
       return [...prev, ...newUniqueNotifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     });
-  };
+  }, [stakeholders]);
+
+  useEffect(() => {
+    loadData();
+    generateNotifications();
+    
+    // Check for notifications every 5 minutes
+    const interval = setInterval(generateNotifications, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [loadData, generateNotifications]);
 
   const markAsRead = (notificationId: string) => {
     setNotifications(prev => 
