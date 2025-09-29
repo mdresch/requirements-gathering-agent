@@ -171,7 +171,7 @@ export default function HomePage() {
       if (response.success) {
         // Check if this was a "no changes" response
         if (response.data?.message === 'No changes detected, template preserved') {
-          toast('No changes detected - template preserved', { type: 'info' });
+          toast('No changes detected - template preserved');
         } else {
           toast.success(selectedTemplate ? 'Template updated successfully' : 'Template created successfully');
         }

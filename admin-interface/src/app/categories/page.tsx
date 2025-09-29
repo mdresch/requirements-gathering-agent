@@ -221,9 +221,9 @@ export default function CategoriesPage() {
 
     try {
       setError(null);
-      const response = await categoryApiClient.updateCategory(editingCategory._id, formData);
+      const response = await categoryApiClient.updateCategory(editingCategory.id, formData);
       setCategories(prev => prev.map(cat => 
-        cat._id === editingCategory._id ? response.data : cat
+        cat.id === editingCategory.id ? response.data : cat
       ));
       setEditingCategory(null);
       setShowIconDropdown(false);
@@ -245,7 +245,7 @@ export default function CategoriesPage() {
     try {
       setError(null);
       await categoryApiClient.deleteCategory(id);
-      setCategories(prev => prev.filter(cat => cat._id !== id));
+      setCategories(prev => prev.filter(cat => cat.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete category');
     }
@@ -254,11 +254,11 @@ export default function CategoriesPage() {
   const handleToggleActive = async (category: Category) => {
     try {
       setError(null);
-      const response = await categoryApiClient.updateCategory(category._id, {
+      const response = await categoryApiClient.updateCategory(category.id, {
         isActive: !category.isActive
       });
       setCategories(prev => prev.map(cat => 
-        cat._id === category._id ? response.data : cat
+        cat.id === category.id ? response.data : cat
       ));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update category');
@@ -523,7 +523,7 @@ export default function CategoriesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredCategories.map((category) => (
                     <motion.tr
-                      key={category._id}
+                      key={category.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="hover:bg-gray-50"
@@ -588,7 +588,7 @@ export default function CategoriesPage() {
                           </button>
                           {!category.isSystem && (
                             <button
-                              onClick={() => handleDeleteCategory(category._id)}
+                              onClick={() => handleDeleteCategory(category.id)}
                               className="text-red-600 hover:text-red-900"
                             >
                               <Trash2 className="w-4 h-4" />

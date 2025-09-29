@@ -199,8 +199,8 @@ export default function TemplateDocumentGenerationModal({
       const response = await apiClient.generateDocuments(generationData);
       
       // Update progress during generation
-      progressService.updateStep({ stepId: 'generate-content', progress: 50, details: 'AI is processing the request...' });
-      progressService.updateStep({ stepId: 'generate-content', progress: 100, details: 'Content generation completed' });
+      progressService.updateStep({ stepId: 'generate-content', status: 'in-progress', progress: 50, details: 'AI is processing the request...' });
+      progressService.updateStep({ stepId: 'generate-content', status: 'in-progress', progress: 100, details: 'Content generation completed' });
       progressService.completeStep('generate-content', 'AI content generation completed successfully');
 
       console.log('📋 Generation API response:', response);

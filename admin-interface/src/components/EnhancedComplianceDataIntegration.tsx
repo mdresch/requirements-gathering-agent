@@ -18,6 +18,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
+import { apiClient } from '../lib/api';
 
 interface RealTimeDataProps {
   projectId?: string;

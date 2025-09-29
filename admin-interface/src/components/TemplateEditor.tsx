@@ -59,17 +59,17 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         console.error('Failed to load categories:', error);
         // Fallback to predefined categories
         setCategories([
-          { _id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '8', name: 'documentation', description: 'Documentation templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '9', name: 'testing', description: 'Testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '10', name: 'deployment', description: 'Deployment templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '11', name: 'api-testing', description: 'API testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
+          { id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '8', name: 'documentation', description: 'Documentation templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '9', name: 'testing', description: 'Testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '10', name: 'deployment', description: 'Deployment templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '11', name: 'api-testing', description: 'API testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -82,7 +82,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
   useEffect(() => {
     if (template) {
       console.log('🔄 TemplateEditor: Loading template data:', {
-        id: template._id || template.id,
+        id: template.id,
         name: template.name,
         contentLength: template.content?.length || 0,
         contentPreview: template.content?.substring(0, 100) + '...',
@@ -419,7 +419,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               >
                 <option key="select-category" value="">{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
                 {categories.map((cat, index) => (
-                  <option key={cat._id || `category-${index}`} value={cat.name}>
+                  <option key={cat.id || `category-${index}`} value={cat.name}>
                     {cat.name} - {cat.description}
                   </option>
                 ))}
