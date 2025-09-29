@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npx next build",
   "outputDirectory": ".next",
   "installCommand": "npm install --legacy-peer-deps"
 }

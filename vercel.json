@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "bash -c 'cd admin-interface && npm install --legacy-peer-deps && npm run build'",
+  "buildCommand": "bash -c 'cd admin-interface && npm install --legacy-peer-deps && npx next build'",
   "outputDirectory": "admin-interface/.next",
   "installCommand": "npm install --legacy-peer-deps"
 }
