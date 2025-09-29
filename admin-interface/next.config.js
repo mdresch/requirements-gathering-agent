@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  outputFileTracingRoot: '/home/runner/work/requirements-gathering-agent/requirements-gathering-agent',
+  // outputFileTracingRoot: '/home/runner/work/requirements-gathering-agent/requirements-gathering-agent',
   
   // Image optimization settings
   images: {
