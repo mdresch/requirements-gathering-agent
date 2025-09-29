@@ -379,7 +379,7 @@ export class ComplianceAuditService {
       const events = await DocumentAuditTrail.find(query).lean();
 
       // Analyze events
-      const analytics = {
+      const analytics: any = {
         totalEvents: events.length,
         eventsByType: {},
         eventsByStandard: {},
@@ -399,52 +399,58 @@ export class ComplianceAuditService {
       };
 
       events.forEach(event => {
-        const eventType = event.contextData?.eventType;
-        const standardType = event.contextData?.standardType;
+        const eventType = (event.contextData as any)?.eventType;
+        const standardType = (event.contextData as any)?.standardType;
         const severity = event.severity;
         const category = event.category;
         const userName = event.userName;
 
         // Count by type
-        analytics.eventsByType[eventType] = (analytics.eventsByType[eventType] || 0) + 1;
-        analytics.eventsByStandard[standardType] = (analytics.eventsByStandard[standardType] || 0) + 1;
+        if (eventType) {
+          analytics.eventsByType[eventType] = (analytics.eventsByType[eventType] || 0) + 1;
+        }
+        if (standardType) {
+          analytics.eventsByStandard[standardType] = (analytics.eventsByStandard[standardType] || 0) + 1;
+        }
         analytics.eventsBySeverity[severity] = (analytics.eventsBySeverity[severity] || 0) + 1;
         analytics.eventsByCategory[category] = (analytics.eventsByCategory[category] || 0) + 1;
-        analytics.topUsers[userName] = (analytics.topUsers[userName] || 0) + 1;
+        if (userName) {
+          analytics.topUsers[userName] = (analytics.topUsers[userName] || 0) + 1;
+        }
 
         // Categorize events
         if (eventType === 'SCORE_CHANGE') {
           analytics.scoreChanges.push({
             timestamp: event.timestamp,
             standardType,
-            previousScore: event.contextData?.previousScore,
-            newScore: event.contextData?.newScore,
-            changePercentage: event.contextData?.changePercentage
+            previousScore: (event.contextData as any)?.previousScore,
+            newScore: (event.contextData as any)?.newScore,
+            changePercentage: (event.contextData as any)?.changePercentage
           });
         } else if (eventType?.includes('ISSUE')) {
           analytics.issueEvents.push({
             timestamp: event.timestamp,
             eventType,
             standardType,
-            issueId: event.contextData?.issueId,
-            issueTitle: event.contextData?.issueTitle,
-            severity: event.contextData?.issueSeverity
+            issueId: (event.contextData as any)?.issueId,
+            issueTitle: (event.contextData as any)?.issueTitle,
+            severity: (event.contextData as any)?.issueSeverity
           });
         } else if (eventType?.includes('WORKFLOW')) {
           analytics.workflowEvents.push({
             timestamp: event.timestamp,
             eventType,
-            workflowId: event.contextData?.workflowId,
-            workflowName: event.contextData?.workflowName,
-            workflowStatus: event.contextData?.workflowStatus
+            workflowId: (event.contextData as any)?.workflowId,
+            workflowName: (event.contextData as any)?.workflowName,
+            workflowStatus: (event.contextData as any)?.workflowStatus
           });
         } else if (eventType === 'STANDARD_ASSESSMENT') {
           analytics.assessmentEvents.push({
             timestamp: event.timestamp,
             standardType,
-            assessmentType: event.contextData?.assessmentType,
-            complianceLevel: event.contextData?.complianceLevel,
-            score: event.contextData?.newScore
+            assessmentType: (event.contextData as any)?.assessmentType,
+            complianceLevel: (event.contextData as any)?.complianceLevel,
+            score: (event.contextData as any)?.newScore
           });
         }
 

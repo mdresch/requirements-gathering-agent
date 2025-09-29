@@ -1,7 +1,7 @@
 // Phase 1: Compliance Notifications Routes - Real Database Implementation
 // Replaces mock data with actual MongoDB operations
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import ComplianceNotificationsController from '../controllers/ComplianceNotificationsController.js';
 import { logger } from '../../utils/logger.js';
@@ -21,7 +21,7 @@ router.get('/analytics',
     query('userId').optional().isString().withMessage('User ID must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -57,7 +57,7 @@ router.get('/',
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -92,7 +92,7 @@ router.post('/',
     body('category').isIn(['COMPLIANCE', 'ISSUE', 'WORKFLOW', 'SYSTEM', 'USER']).withMessage('Invalid category')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -123,7 +123,7 @@ router.put('/:notificationId/read',
     param('notificationId').isMongoId().withMessage('Valid notification ID is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -155,7 +155,7 @@ router.put('/mark-all-read',
     query('userId').optional().isString().withMessage('User ID must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -186,7 +186,7 @@ router.delete('/:notificationId',
     param('notificationId').isMongoId().withMessage('Valid notification ID is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -220,7 +220,7 @@ router.post('/compliance-event',
     body('details').isObject().withMessage('Event details are required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

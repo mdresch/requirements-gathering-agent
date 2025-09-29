@@ -97,14 +97,21 @@ export class UserSessionService {
       }
       
       // Add activity to session
-      await session.addActivity(activity);
+      if (!session.activities) {
+        session.activities = [];
+      }
+      session.activities.push({
+        ...activity,
+        timestamp: new Date(),
+        metadata: activity.metadata || {}
+      });
       
       // Track in real-time metrics
       realTimeMetricsService.trackUserActivity({
         userId: session.userId,
         sessionId: sessionId,
         timestamp: new Date(),
-        activity: activity
+        activity: activity as any // Cast to expected activity type
       });
       
       logger.debug('User activity tracked', {
@@ -140,7 +147,9 @@ export class UserSessionService {
       });
       
       // End the session
-      await session.endSession();
+      session.endTime = new Date();
+      session.isActive = false;
+      await session.save();
       
       logger.info('User session ended', {
         userId: session.userId,
@@ -159,8 +168,8 @@ export class UserSessionService {
    */
   public static async getActiveSessions(userId: string): Promise<any[]> {
     try {
-      const sessions = await UserSession.getActiveSessions(userId);
-      return sessions.map(session => ({
+      const sessions = await UserSession.find({ userId, isActive: true });
+      return sessions.map((session: any) => ({
         sessionId: session.sessionId,
         startTime: session.startTime,
         lastActivity: session.lastActivity,
@@ -279,7 +288,19 @@ export class UserSessionService {
    */
   public static async cleanupInactiveSessions(inactiveThresholdMinutes: number = 30): Promise<number> {
     try {
-      const result = await UserSession.cleanupInactiveSessions(inactiveThresholdMinutes);
+      const cutoffTime = new Date(Date.now() - inactiveThresholdMinutes * 60 * 1000);
+      const result = await UserSession.updateMany(
+        { 
+          isActive: true, 
+          lastActivity: { $lt: cutoffTime } 
+        },
+        { 
+          $set: { 
+            isActive: false, 
+            endTime: new Date() 
+          } 
+        }
+      );
       logger.info(`Cleaned up ${result.modifiedCount} inactive sessions`);
       return result.modifiedCount || 0;
     } catch (error: any) {
@@ -323,7 +344,7 @@ export class UserSessionService {
           }
         },
         {
-          $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 }
+          $sort: { '_id.year': 1 as const, '_id.month': 1 as const, '_id.day': 1 as const }
         }
       ];
       

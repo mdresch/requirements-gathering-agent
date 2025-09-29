@@ -215,10 +215,7 @@ export class AIContextTrackingService {
             requestId: generationJobId,
             projectId: trackingRecord.projectId,
             userId: 'system', // TODO: Get actual user ID from context
-            operation: 'ai_completion',
-            generationJobId: trackingRecord.generationJobId,
-            documentId: trackingRecord.documentId,
-            templateId: trackingRecord.templateId
+            operation: 'ai_completion'
           }
         });
 
@@ -430,7 +427,8 @@ export class AIContextTrackingService {
       
       // Check if database is connected using improved connection handling
       const dbConnection = (await import('../config/database.js')).default;
-      if (!dbConnection.isConnectionActive()) {
+      const isConnected = await dbConnection.healthCheck();
+      if (!isConnected) {
         logger.warn('Database not connected, attempting to reconnect...');
         
         try {

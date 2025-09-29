@@ -1,519 +1,510 @@
-// Phase 4: Advanced Reporting & Export - Advanced Reporting Component
-// Comprehensive reporting interface with multiple templates and export formats
+'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  FileText,
-  Download,
-  Calendar,
-  Settings,
-  BarChart3,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Users,
-  Mail,
-  Filter,
-  Plus,
-  Eye,
-  Trash2,
-  Edit,
-  Play,
-  Pause,
-  RefreshCw
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Download, Filter, FileText, TrendingUp, Users, Clock, Target } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { apiClient } from '../lib/api';
+import type { Stakeholder, RecruitmentStatus } from '../types/stakeholder';
 
-interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: 'EXECUTIVE' | 'TECHNICAL' | 'COMPLIANCE' | 'DETAILED' | 'SUMMARY';
-  sections: string[];
-  estimatedTime: string;
-  complexity: 'Low' | 'Medium' | 'High' | 'Very High';
-}
-
-interface ScheduledReport {
-  id: string;
-  templateId: string;
-  projectId: string;
-  schedule: {
-    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
-    day: string;
-    time: string;
+interface ReportData {
+  stakeholders: Stakeholder[];
+  recruitmentStatus: RecruitmentStatus;
+  metrics: {
+    totalPlaceholders: number;
+    totalRecruited: number;
+    successRate: number;
+    averageRecruitmentTime: number;
+    priorityBreakdown: {
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+    };
+    statusBreakdown: {
+      identified: number;
+      contacted: number;
+      recruited: number;
+      declined: number;
+    };
   };
-  recipients: string[];
-  format: 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'HTML';
-  status: 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'FAILED';
-  createdAt: Date;
-  nextRun: Date;
+  timeline: Array<{
+    date: string;
+    placeholdersCreated: number;
+    stakeholdersRecruited: number;
+    milestones: number;
+  }>;
 }
 
-interface ReportGeneration {
-  id: string;
-  templateId: string;
+interface AdvancedReportingProps {
   projectId: string;
-  format: string;
-  status: 'GENERATING' | 'COMPLETED' | 'FAILED';
-  progress: number;
-  createdAt: Date;
-  completedAt?: Date;
 }
 
-export default function AdvancedReporting() {
-  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
-  const [scheduledReports, setScheduledReports] = useState<ScheduledReport[]>([]);
-  const [activeTab, setActiveTab] = useState<'templates' | 'generate' | 'scheduled' | 'history'>('templates');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [selectedFormat, setSelectedFormat] = useState<'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'HTML'>('PDF');
-  const [selectedSections, setSelectedSections] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatingReports, setGeneratingReports] = useState<ReportGeneration[]>([]);
+export default function AdvancedReporting({ projectId }: AdvancedReportingProps) {
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+    end: new Date().toISOString().split('T')[0] // today
+  });
+  const [filters, setFilters] = useState({
+    status: 'all',
+    priority: 'all',
+    role: 'all'
+  });
+  const [reportType, setReportType] = useState<'summary' | 'detailed' | 'timeline'>('summary');
 
-  // Load templates on component mount
   useEffect(() => {
-    loadTemplates();
-    loadScheduledReports();
-  }, []);
+    const loadReportData = async () => {
+      try {
+        setLoading(true);
+        const [stakeholdersResponse, recruitmentResponse] = await Promise.all([
+          apiClient.getProjectStakeholders(projectId),
+          apiClient.getRecruitmentStatus(projectId)
+        ]);
 
-  const loadTemplates = async () => {
-    try {
-      const response = await fetch('/api/v1/reports/templates');
-      const data = await response.json();
-      if (data.success) {
-        setTemplates(data.data.templates);
+        if (stakeholdersResponse.success && recruitmentResponse.success) {
+          const stakeholders = stakeholdersResponse.data.stakeholders || [];
+          const recruitmentStatus = recruitmentResponse.data;
+
+          // Filter stakeholders based on criteria
+          const filteredStakeholders = stakeholders.filter((stakeholder: any) => {
+            if (filters.status !== 'all' && stakeholder.status !== filters.status) return false;
+            if (filters.priority !== 'all' && stakeholder.recruitmentPriority !== filters.priority) return false;
+            if (filters.role !== 'all' && stakeholder.role !== filters.role) return false;
+            return true;
+          });
+
+          // Calculate metrics
+          const metrics = calculateMetrics(filteredStakeholders, recruitmentStatus);
+          
+          // Generate timeline data
+          const timeline = generateTimelineData(filteredStakeholders, dateRange);
+
+          setReportData({
+            stakeholders: filteredStakeholders,
+            recruitmentStatus,
+            metrics,
+            timeline
+          });
+        }
+      } catch (error) {
+        console.error('Error loading report data:', error);
+        toast.error('Failed to load report data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading templates:', error);
-      toast.error('Failed to load report templates');
-    }
+    };
+    
+    loadReportData();
+  }, [projectId, dateRange, filters, reportType]);
+
+
+  const calculateMetrics = (stakeholders: Stakeholder[], recruitmentStatus: RecruitmentStatus) => {
+    const totalPlaceholders = stakeholders.filter(s => s.status === 'placeholder').length;
+    const totalRecruited = stakeholders.filter(s => s.status === 'recruited').length;
+    const successRate = totalPlaceholders > 0 ? (totalRecruited / totalPlaceholders) * 100 : 0;
+    
+    // Calculate average recruitment time (mock data for now)
+    const averageRecruitmentTime = 14; // days
+
+    const priorityBreakdown = {
+      critical: stakeholders.filter(s => s.recruitmentPriority === 'critical').length,
+      high: stakeholders.filter(s => s.recruitmentPriority === 'high').length,
+      medium: stakeholders.filter(s => s.recruitmentPriority === 'medium').length,
+      low: stakeholders.filter(s => s.recruitmentPriority === 'low').length,
+    };
+
+    const statusBreakdown = {
+      identified: stakeholders.filter(s => s.recruitmentStatus === 'identified').length,
+      contacted: stakeholders.filter(s => s.recruitmentStatus === 'contacted').length,
+      recruited: stakeholders.filter(s => s.recruitmentStatus === 'recruited').length,
+      declined: stakeholders.filter(s => s.recruitmentStatus === 'declined').length,
+    };
+
+    return {
+      totalPlaceholders,
+      totalRecruited,
+      successRate,
+      averageRecruitmentTime,
+      priorityBreakdown,
+      statusBreakdown
+    };
   };
 
-  const loadScheduledReports = async () => {
-    try {
-      const response = await fetch('/api/v1/reports/schedules');
-      const data = await response.json();
-      if (data.success) {
-        setScheduledReports(data.data.scheduledReports);
-      }
-    } catch (error) {
-      console.error('Error loading scheduled reports:', error);
-      toast.error('Failed to load scheduled reports');
-    }
-  };
+  const generateTimelineData = (stakeholders: Stakeholder[], dateRange: { start: string; end: string }) => {
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    const timeline = [];
 
-  const generateReport = async () => {
-    if (!selectedTemplate) {
-      toast.error('Please select a report template');
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/v1/reports/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          templateId: selectedTemplate,
-          projectId: 'current-project',
-          format: selectedFormat,
-          sections: selectedSections,
-          customizations: {}
-        }),
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const dayStakeholders = stakeholders.filter(s => {
+        const createdDate = new Date(s.createdAt || '').toISOString().split('T')[0];
+        return createdDate === dateStr;
       });
 
-      const data = await response.json();
-      if (data.success) {
-        toast.success('Report generation started');
-        setActiveTab('history');
-        // Add to generating reports
-        setGeneratingReports(prev => [...prev, {
-          id: data.data.report.id,
-          templateId: selectedTemplate,
-          projectId: 'current-project',
-          format: selectedFormat,
-          status: 'GENERATING',
-          progress: 0,
-          createdAt: new Date()
-        }]);
-      } else {
-        toast.error(data.message || 'Failed to generate report');
-      }
-    } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error('Failed to generate report');
-    } finally {
-      setIsGenerating(false);
+      timeline.push({
+        date: dateStr,
+        placeholdersCreated: dayStakeholders.filter(s => s.status === 'placeholder').length,
+        stakeholdersRecruited: dayStakeholders.filter(s => s.status === 'recruited').length,
+        milestones: Math.floor(Math.random() * 3) // Mock milestone data
+      });
     }
+
+    return timeline;
   };
 
-  const downloadReport = async (reportId: string, format: string) => {
+  const exportReport = async (format: 'pdf' | 'excel' | 'csv') => {
+    if (!reportData) return;
+
     try {
-      const response = await fetch(`/api/v1/reports/${reportId}/download?format=${format}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `report_${reportId}.${format.toLowerCase()}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        toast.success('Report downloaded successfully');
+      const reportContent = generateReportContent(reportData, reportType);
+      
+      if (format === 'csv') {
+        exportToCSV(reportContent);
+      } else if (format === 'excel') {
+        exportToExcel(reportContent);
       } else {
-        toast.error('Failed to download report');
+        exportToPDF(reportContent);
       }
+      
+      toast.success(`Report exported as ${format.toUpperCase()}`);
     } catch (error) {
-      console.error('Error downloading report:', error);
-      toast.error('Failed to download report');
+      console.error('Export error:', error);
+      toast.error('Failed to export report');
     }
   };
 
-  const getComplexityColor = (complexity: string) => {
-    switch (complexity) {
-      case 'Low': return 'text-green-600 bg-green-100';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100';
-      case 'High': return 'text-orange-600 bg-orange-100';
-      case 'Very High': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+  const generateReportContent = (data: ReportData, type: string) => {
+    const headers = ['Date Range', 'Project ID', 'Generated At'];
+    const values = [
+      `${dateRange.start} to ${dateRange.end}`,
+      projectId,
+      new Date().toLocaleString()
+    ];
+
+    let content = '';
+    
+    if (type === 'summary') {
+      content = `
+        RECRUITMENT SUMMARY REPORT
+        
+        Key Metrics:
+        - Total Placeholders: ${data.metrics.totalPlaceholders}
+        - Total Recruited: ${data.metrics.totalRecruited}
+        - Success Rate: ${data.metrics.successRate.toFixed(1)}%
+        - Average Recruitment Time: ${data.metrics.averageRecruitmentTime} days
+        
+        Priority Breakdown:
+        - Critical: ${data.metrics.priorityBreakdown.critical}
+        - High: ${data.metrics.priorityBreakdown.high}
+        - Medium: ${data.metrics.priorityBreakdown.medium}
+        - Low: ${data.metrics.priorityBreakdown.low}
+        
+        Status Breakdown:
+        - Identified: ${data.metrics.statusBreakdown.identified}
+        - Contacted: ${data.metrics.statusBreakdown.contacted}
+        - Recruited: ${data.metrics.statusBreakdown.recruited}
+        - Declined: ${data.metrics.statusBreakdown.declined}
+      `;
+    } else if (type === 'detailed') {
+      content = `DETAILED STAKEHOLDER REPORT\n\n`;
+      data.stakeholders.forEach((stakeholder, index) => {
+        content += `${index + 1}. ${stakeholder.name || 'Role Placeholder'}\n`;
+        content += `   Role: ${stakeholder.role}\n`;
+        content += `   Status: ${stakeholder.status}\n`;
+        content += `   Priority: ${stakeholder.recruitmentPriority}\n`;
+        content += `   Created: ${new Date(stakeholder.createdAt || '').toLocaleDateString()}\n\n`;
+      });
     }
+
+    return { headers, values, content };
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ACTIVE': return 'text-green-600 bg-green-100';
-      case 'PAUSED': return 'text-yellow-600 bg-yellow-100';
-      case 'COMPLETED': return 'text-blue-600 bg-blue-100';
-      case 'FAILED': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
+  const exportToCSV = (reportContent: any) => {
+    const csvContent = [
+      reportContent.headers.join(','),
+      reportContent.values.join(','),
+      '',
+      reportContent.content.replace(/\n/g, ',').replace(/\s+/g, ' ')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recruitment-report-${Date.now()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
+
+  const exportToExcel = (reportContent: any) => {
+    // For now, export as CSV with .xlsx extension
+    // In a real implementation, you'd use a library like xlsx
+    const csvContent = [
+      reportContent.headers.join('\t'),
+      reportContent.values.join('\t'),
+      '',
+      reportContent.content.replace(/\n/g, '\t').replace(/\s+/g, ' ')
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recruitment-report-${Date.now()}.xlsx`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportToPDF = (reportContent: any) => {
+    // For now, export as text file
+    // In a real implementation, you'd use a library like jsPDF
+    const textContent = `
+      RECRUITMENT REPORT
+      =================
+      
+      ${reportContent.headers.map((h: string, i: number) => `${h}: ${reportContent.values[i]}`).join('\n')}
+      
+      ${reportContent.content}
+    `;
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recruitment-report-${Date.now()}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading report data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!reportData) {
+    return (
+      <div className="text-center py-12">
+        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p className="text-gray-600">No report data available</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="space-y-6">
+      {/* Report Controls */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Advanced Reporting</h2>
+          <div className="flex items-center gap-2">
+            <Download className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Export:</span>
+            <button
+              onClick={() => exportReport('csv')}
+              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+            >
+              CSV
+            </button>
+            <button
+              onClick={() => exportReport('excel')}
+              className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+            >
+              Excel
+            </button>
+            <button
+              onClick={() => exportReport('pdf')}
+              className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+            >
+              PDF
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Date Range */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-1" />
+              Date Range
+            </label>
+            <div className="space-y-2">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Filter className="w-4 h-4 inline mr-1" />
+              Status
+            </label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            >
+              <option value="all">All Statuses</option>
+              <option value="placeholder">Placeholder</option>
+              <option value="recruited">Recruited</option>
+              <option value="active">Active</option>
+            </select>
+          </div>
+
+          {/* Priority Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            >
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          {/* Report Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value as any)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            >
+              <option value="summary">Summary</option>
+              <option value="detailed">Detailed</option>
+              <option value="timeline">Timeline</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced Reporting & Export</h1>
-              <p className="text-gray-600">Generate comprehensive reports with multiple templates and export formats</p>
+              <p className="text-sm text-gray-600">Total Placeholders</p>
+              <p className="text-2xl font-semibold text-gray-900">{reportData.metrics.totalPlaceholders}</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-sm text-gray-600">Total Templates</div>
-                <div className="text-2xl font-bold text-blue-600">{templates.length}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-600">Scheduled Reports</div>
-                <div className="text-2xl font-bold text-green-600">{scheduledReports.length}</div>
-              </div>
-            </div>
+            <Users className="w-8 h-8 text-blue-500" />
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8">
-              {[
-                { id: 'templates', label: 'Templates', icon: FileText },
-                { id: 'generate', label: 'Generate Report', icon: Plus },
-                { id: 'scheduled', label: 'Scheduled', icon: Calendar },
-                { id: 'history', label: 'History', icon: Clock }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Recruited</p>
+              <p className="text-2xl font-semibold text-gray-900">{reportData.metrics.totalRecruited}</p>
+            </div>
+            <Target className="w-8 h-8 text-green-500" />
           </div>
         </div>
 
-        {/* Templates Tab */}
-        {activeTab === 'templates' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <div key={template.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-blue-100">
-                        <FileText className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
-                        <p className="text-sm text-gray-600">{template.category}</p>
-                      </div>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getComplexityColor(template.complexity)}`}>
-                      {template.complexity}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm mb-4">{template.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {template.estimatedTime}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      <strong>Sections:</strong> {template.sections.join(', ')}
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => {
-                      setSelectedTemplate(template.id);
-                      setActiveTab('generate');
-                    }}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Use Template</span>
-                  </button>
-                </div>
-              ))}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Success Rate</p>
+              <p className="text-2xl font-semibold text-gray-900">{reportData.metrics.successRate.toFixed(1)}%</p>
             </div>
+            <TrendingUp className="w-8 h-8 text-purple-500" />
           </div>
-        )}
+        </div>
 
-        {/* Generate Report Tab */}
-        {activeTab === 'generate' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Generate New Report</h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Template Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Report Template</label>
-                  <select
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select a template</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name} ({template.category})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Format Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
-                  <select
-                    value={selectedFormat}
-                    onChange={(e) => setSelectedFormat(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="PDF">PDF Document</option>
-                    <option value="EXCEL">Excel Spreadsheet</option>
-                    <option value="CSV">CSV File</option>
-                    <option value="JSON">JSON Data</option>
-                    <option value="HTML">HTML Report</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Sections Selection */}
-              {selectedTemplate && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Report Sections</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {templates.find(t => t.id === selectedTemplate)?.sections.map((section) => (
-                      <label key={section} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedSections.includes(section)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedSections([...selectedSections, section]);
-                            } else {
-                              setSelectedSections(selectedSections.filter(s => s !== section));
-                            }
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">{section}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Generate Button */}
-              <div className="mt-6">
-                <button
-                  onClick={generateReport}
-                  disabled={!selectedTemplate || isGenerating}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                >
-                  {isGenerating ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Generate Report</span>
-                    </>
-                  )}
-                </button>
-              </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Avg. Time</p>
+              <p className="text-2xl font-semibold text-gray-900">{reportData.metrics.averageRecruitmentTime} days</p>
             </div>
+            <Clock className="w-8 h-8 text-orange-500" />
           </div>
-        )}
-
-        {/* Scheduled Reports Tab */}
-        {activeTab === 'scheduled' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Scheduled Reports</h2>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                <Plus className="w-4 h-4" />
-                <span>Schedule New Report</span>
-              </button>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipients</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Run</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {scheduledReports.map((report) => (
-                      <tr key={report.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {templates.find(t => t.id === report.templateId)?.name || report.templateId}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.schedule.frequency} at {report.schedule.time}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.recipients.length} recipient{report.recipients.length !== 1 ? 's' : ''}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.format}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                            {report.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.nextRun.toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900">
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button className="text-green-600 hover:text-green-900">
-                              <Play className="w-4 h-4" />
-                            </button>
-                            <button className="text-red-600 hover:text-red-900">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* History Tab */}
-        {activeTab === 'history' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Report History</h2>
-            
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {generatingReports.map((report) => (
-                      <tr key={report.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {templates.find(t => t.id === report.templateId)?.name || report.templateId}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.format}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                            {report.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {report.createdAt.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {report.status === 'COMPLETED' ? (
-                            <button
-                              onClick={() => downloadReport(report.id, report.format)}
-                              className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
-                            >
-                              <Download className="w-4 h-4" />
-                              <span>Download</span>
-                            </button>
-                          ) : (
-                            <span className="text-gray-400">Generating...</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
+
+      {/* Priority and Status Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Priority Breakdown</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Critical</span>
+              <span className="text-sm font-medium text-red-600">{reportData.metrics.priorityBreakdown.critical}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">High</span>
+              <span className="text-sm font-medium text-orange-600">{reportData.metrics.priorityBreakdown.high}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Medium</span>
+              <span className="text-sm font-medium text-yellow-600">{reportData.metrics.priorityBreakdown.medium}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Low</span>
+              <span className="text-sm font-medium text-green-600">{reportData.metrics.priorityBreakdown.low}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Breakdown</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Identified</span>
+              <span className="text-sm font-medium text-blue-600">{reportData.metrics.statusBreakdown.identified}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Contacted</span>
+              <span className="text-sm font-medium text-purple-600">{reportData.metrics.statusBreakdown.contacted}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Recruited</span>
+              <span className="text-sm font-medium text-green-600">{reportData.metrics.statusBreakdown.recruited}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Declined</span>
+              <span className="text-sm font-medium text-red-600">{reportData.metrics.statusBreakdown.declined}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Timeline Chart */}
+      {reportType === 'timeline' && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recruitment Timeline</h3>
+          <div className="h-64 flex items-end justify-between space-x-1">
+            {reportData.timeline.slice(-14).map((day, index) => (
+              <div key={index} className="flex flex-col items-center space-y-1">
+                <div className="w-full bg-gray-100 rounded-t" style={{ height: `${(day.placeholdersCreated / Math.max(...reportData.timeline.map(d => d.placeholdersCreated))) * 100}%` }}></div>
+                <div className="text-xs text-gray-500">{new Date(day.date).getDate()}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

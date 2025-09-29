@@ -211,8 +211,8 @@ export class DocumentGenerator {
             let timeSaved = 2; // Default conservative estimate
             
             try {
-                const { Template } = await import('../../models/Template.model.js');
-                const template = await Template.findOne({ documentKey: documentKey });
+                const { TemplateModel } = await import('../../models/Template.model.js');
+                const template = await TemplateModel.findOne({ documentKey: documentKey });
                 if (template && template.metadata?.estimatedTime) {
                     const estimatedTime = template.metadata.estimatedTime;
                     

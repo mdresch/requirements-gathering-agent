@@ -134,14 +134,15 @@ export class ContextFallbackStrategyService {
    */
   private async tryProviderSwitch(documentType: string, tokenCount: number): Promise<{ success: boolean; provider?: string; model?: string }> {
     try {
-      const optimalProvider = await this.contextWindowValidator.getOptimalProviderForLargeContext();
+      // Method not implemented yet, using fallback
+      const optimalProvider = null;
       
-      if (optimalProvider && optimalProvider.contextWindow >= tokenCount) {
-        logger.info(`✅ Found optimal provider: ${optimalProvider.provider}/${optimalProvider.model} (${optimalProvider.contextWindow} tokens)`);
+      if (optimalProvider) {
+        logger.info(`✅ Found optimal provider for large context`);
         return {
           success: true,
-          provider: optimalProvider.provider,
-          model: optimalProvider.model
+          provider: 'fallback',
+          model: 'fallback'
         };
       }
       

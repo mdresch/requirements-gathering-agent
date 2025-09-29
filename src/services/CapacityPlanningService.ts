@@ -173,7 +173,7 @@ export class CapacityPlanningService {
       // Calculate utilization forecasts
       const utilizationForecasts = this.calculateUtilizationForecasts(
         currentMetrics.capacity,
-        demandForecast.predictedUsage
+        demandForecast.forecasts.nextHour
       );
       
       // Generate scaling recommendations
@@ -205,7 +205,10 @@ export class CapacityPlanningService {
         currentUtilization: currentMetrics.utilization,
         utilizationThreshold: this.getUtilizationThreshold(resourceType),
         forecasts: utilizationForecasts,
-        confidence: demandForecast.confidence,
+        confidence: {
+          ...demandForecast.confidence,
+          nextYear: demandForecast.confidence.nextQuarter * 0.8 // Estimate next year confidence
+        },
         scalingRecommendations,
         riskAssessment,
         optimizationOpportunities

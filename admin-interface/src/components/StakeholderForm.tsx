@@ -43,8 +43,18 @@ export default function StakeholderForm({
 
   useEffect(() => {
     if (stakeholder) {
-      const { id, isActive, createdAt, updatedAt, ...stakeholderData } = stakeholder;
-      setFormData(stakeholderData);
+      const { id, createdAt, updatedAt, ...stakeholderData } = stakeholder;
+      setFormData({
+        ...stakeholderData,
+        name: stakeholderData.name || '',
+        title: stakeholderData.title || '',
+        email: stakeholderData.email || undefined,
+        phone: stakeholderData.phone || undefined,
+        department: stakeholderData.department || undefined,
+        requirements: stakeholderData.requirements || [''],
+        concerns: stakeholderData.concerns || [''],
+        expectations: stakeholderData.expectations || ['']
+      });
     } else {
       setFormData({
         name: '',
@@ -107,9 +117,9 @@ export default function StakeholderForm({
       // Filter out empty array items
       const cleanedData = {
         ...formData,
-        requirements: formData.requirements.filter(req => req.trim() !== ''),
-        concerns: formData.concerns.filter(concern => concern.trim() !== ''),
-        expectations: formData.expectations.filter(expectation => expectation.trim() !== '')
+        requirements: (formData.requirements || []).filter(req => req.trim() !== ''),
+        concerns: (formData.concerns || []).filter(concern => concern.trim() !== ''),
+        expectations: (formData.expectations || []).filter(expectation => expectation.trim() !== '')
       };
 
       let response;
@@ -177,7 +187,7 @@ export default function StakeholderForm({
               </label>
               <input
                 type="text"
-                value={formData.name}
+                value={formData.name || ''}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -189,7 +199,7 @@ export default function StakeholderForm({
               </label>
               <input
                 type="text"
-                value={formData.title}
+                value={formData.title || ''}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -203,7 +213,7 @@ export default function StakeholderForm({
                 Role *
               </label>
               <select
-                value={formData.role}
+                value={formData.role || 'stakeholder'}
                 onChange={(e) => handleInputChange('role', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -220,7 +230,7 @@ export default function StakeholderForm({
               </label>
               <input
                 type="text"
-                value={formData.department}
+                value={formData.department || ''}
                 onChange={(e) => handleInputChange('department', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -235,7 +245,7 @@ export default function StakeholderForm({
               </label>
               <input
                 type="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -246,7 +256,7 @@ export default function StakeholderForm({
               </label>
               <input
                 type="tel"
-                value={formData.phone}
+                value={formData.phone || ''}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -260,7 +270,7 @@ export default function StakeholderForm({
                 Influence Level
               </label>
               <select
-                value={formData.influence}
+                value={formData.influence || 'medium'}
                 onChange={(e) => handleInputChange('influence', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -275,7 +285,7 @@ export default function StakeholderForm({
                 Interest Level
               </label>
               <select
-                value={formData.interest}
+                value={formData.interest || 'medium'}
                 onChange={(e) => handleInputChange('interest', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -289,7 +299,7 @@ export default function StakeholderForm({
                 Communication Preference
               </label>
               <select
-                value={formData.communicationPreference}
+                value={formData.communicationPreference || 'email'}
                 onChange={(e) => handleInputChange('communicationPreference', e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -311,7 +321,7 @@ export default function StakeholderForm({
                 type="range"
                 min="1"
                 max="5"
-                value={formData.powerLevel}
+                value={formData.powerLevel || 3}
                 onChange={(e) => handleInputChange('powerLevel', parseInt(e.target.value))}
                 className="w-full"
               />
@@ -324,7 +334,7 @@ export default function StakeholderForm({
                 type="range"
                 min="1"
                 max="5"
-                value={formData.engagementLevel}
+                value={formData.engagementLevel || 3}
                 onChange={(e) => handleInputChange('engagementLevel', parseInt(e.target.value))}
                 className="w-full"
               />
@@ -336,7 +346,7 @@ export default function StakeholderForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Requirements
             </label>
-            {formData.requirements.map((req, index) => (
+            {(formData.requirements || []).map((req, index) => (
               <div key={index} className="flex items-center space-x-2 mb-2">
                 <input
                   type="text"
@@ -345,7 +355,7 @@ export default function StakeholderForm({
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter requirement"
                 />
-                {formData.requirements.length > 1 && (
+                {(formData.requirements || []).length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeArrayItem('requirements', index)}
@@ -370,7 +380,7 @@ export default function StakeholderForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Concerns
             </label>
-            {formData.concerns.map((concern, index) => (
+            {(formData.concerns || []).map((concern, index) => (
               <div key={index} className="flex items-center space-x-2 mb-2">
                 <input
                   type="text"
@@ -379,7 +389,7 @@ export default function StakeholderForm({
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter concern"
                 />
-                {formData.concerns.length > 1 && (
+                {(formData.concerns || []).length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeArrayItem('concerns', index)}
@@ -404,7 +414,7 @@ export default function StakeholderForm({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Expectations
             </label>
-            {formData.expectations.map((expectation, index) => (
+            {(formData.expectations || []).map((expectation, index) => (
               <div key={index} className="flex items-center space-x-2 mb-2">
                 <input
                   type="text"
@@ -413,7 +423,7 @@ export default function StakeholderForm({
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter expectation"
                 />
-                {formData.expectations.length > 1 && (
+                {(formData.expectations || []).length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeArrayItem('expectations', index)}
@@ -439,7 +449,7 @@ export default function StakeholderForm({
               Notes
             </label>
             <textarea
-              value={formData.notes}
+              value={formData.notes || ''}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"

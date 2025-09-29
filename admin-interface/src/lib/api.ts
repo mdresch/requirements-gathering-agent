@@ -1221,6 +1221,66 @@ export async function getGenerationJobStats(projectId?: string): Promise<any> {
   }
 }
 
+// Workflow Instance API functions
+export const getWorkflowInstances = async (projectId: string): Promise<any> => {
+  try {
+    console.log('🔍 getWorkflowInstances called for project:', projectId);
+    const response = await request(`/workflow-instances/project/${projectId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Workflow instances response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting workflow instances:', error);
+    throw error;
+  }
+};
+
+export const createWorkflowInstance = async (workflowData: any): Promise<any> => {
+  try {
+    console.log('🔍 createWorkflowInstance called:', workflowData);
+    const response = await request('/workflow-instances', {
+      method: 'POST',
+      body: JSON.stringify(workflowData),
+    });
+    console.log('✅ Workflow instance created:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowInstance = async (workflowId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowInstance called for ${workflowId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow instance updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowStep = async (workflowId: string, stepId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowStep called for ${workflowId}/${stepId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}/steps/${stepId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow step updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow step:', error);
+    throw error;
+  }
+};
+
 // API Client object for easy importing
 export const apiClient = {
   // Templates
@@ -1280,6 +1340,15 @@ export const apiClient = {
   updateStakeholder,
   deleteStakeholder,
   getStakeholderAnalytics,
+  createRolePlaceholder,
+  recruitStakeholder,
+  getRecruitmentStatus,
+  
+  // Workflow Management
+  getWorkflowInstances,
+  createWorkflowInstance,
+  updateWorkflowInstance,
+  updateWorkflowStep,
 };
 
 // Quality Assessment API functions
@@ -1431,6 +1500,52 @@ export async function getStakeholderAnalytics(projectId: string): Promise<any> {
     throw error;
   }
 }
+
+// Role Placeholder Management API functions
+export async function createRolePlaceholder(projectId: string, placeholderData: any): Promise<any> {
+  try {
+    console.log('🔍 createRolePlaceholder called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/role-placeholder`, {
+      method: 'POST',
+      body: JSON.stringify(placeholderData),
+    });
+    console.log('✅ Create role placeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating role placeholder:', error);
+    throw error;
+  }
+}
+
+export async function recruitStakeholder(stakeholderId: string, recruitmentData: any): Promise<any> {
+  try {
+    console.log('🔍 recruitStakeholder called for stakeholder:', stakeholderId);
+    const response = await request(`/stakeholders/${stakeholderId}/recruit`, {
+      method: 'PUT',
+      body: JSON.stringify(recruitmentData),
+    });
+    console.log('✅ Recruit stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error recruiting stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function getRecruitmentStatus(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getRecruitmentStatus called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/recruitment-status`, {
+      method: 'GET',
+    });
+    console.log('✅ Recruitment status response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting recruitment status:', error);
+    throw error;
+  }
+}
+
 
 // Soft deleted templates API endpoints
 export async function getDeletedTemplates(params?: {

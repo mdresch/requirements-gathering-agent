@@ -259,6 +259,9 @@ export class ComplianceIssuesService {
       issue.updatedBy = updateData.updatedBy;
 
       // Add to history
+      if (!issue.history) {
+        issue.history = [];
+      }
       issue.history.push({
         action: 'UPDATED',
         description: `Issue updated by ${updateData.updatedBy}`,
@@ -302,7 +305,14 @@ export class ComplianceIssuesService {
         createdAt: new Date()
       };
 
+      if (!issue.comments) {
+        issue.comments = [];
+      }
       issue.comments.push(comment);
+      
+      if (!issue.history) {
+        issue.history = [];
+      }
       issue.history.push({
         action: 'COMMENT_ADDED',
         description: `Comment added by ${commentData.author}`,

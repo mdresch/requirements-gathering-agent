@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -109,11 +109,7 @@ export default function ComplianceAnalyticsDashboard({ projectId }: ComplianceAn
   const [selectedStandard, setSelectedStandard] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [projectId, timeRange, selectedStandard]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -163,7 +159,11 @@ export default function ComplianceAnalyticsDashboard({ projectId }: ComplianceAn
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, timeRange]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   const refreshData = async () => {
     setRefreshing(true);

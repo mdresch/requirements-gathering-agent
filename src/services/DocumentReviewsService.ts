@@ -303,8 +303,11 @@ export class DocumentReviewsService {
         feedback: feedbackData.feedback.map(fb => ({
           ...fb,
           id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          status: 'open',
-          createdAt: new Date()
+          type: fb.type as any, // Cast to FeedbackType
+          severity: fb.severity as any, // Cast to severity type
+          status: 'open' as any, // Cast to ReviewFeedback status type
+          createdAt: new Date(),
+          updatedAt: new Date()
         })),
         decision: feedbackData.decision,
         overallComments: feedbackData.overallComments,
@@ -352,7 +355,9 @@ export class DocumentReviewsService {
 
       const reviewer = {
         ...reviewerData,
-        status: 'assigned',
+        role: reviewerData.role as any, // Cast to ReviewerRole
+        expertise: reviewerData.expertise || [], // Ensure expertise is always an array
+        status: 'assigned' as any, // Cast to ReviewerAssignment status type
         assignedAt: new Date()
       };
 

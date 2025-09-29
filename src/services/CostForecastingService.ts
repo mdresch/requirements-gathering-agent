@@ -245,7 +245,7 @@ export class CostForecastingService {
         const budgetStatus = this.determineBudgetStatus(budget, projectedUtilization);
         
         // Generate recommendations
-        const recommendations = this.generateBudgetRecommendations(budget, costForecast, projectedUtilization);
+        const recommendations = this.generateDetailedBudgetRecommendations(budget, costForecast, projectedUtilization);
         
         // Generate alerts
         const alerts = this.generateBudgetAlerts(budget, projectedUtilization);
@@ -834,7 +834,7 @@ export class CostForecastingService {
     return 'on_track';
   }
 
-  private generateBudgetRecommendations(
+  private generateDetailedBudgetRecommendations(
     budget: any,
     costForecast: DetailedCostForecast,
     projectedUtilization: any

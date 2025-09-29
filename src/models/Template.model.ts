@@ -20,7 +20,7 @@ export interface ITemplate extends Document {
     author?: string;
     framework?: string;
     complexity?: string;
-    estimatedTime?: string;
+    estimatedTime?: string | number;
     dependencies?: string[];
     version?: string;
   };
@@ -46,55 +46,198 @@ export interface ITemplate extends Document {
 }
 
 const TemplateSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  description: { type: String, default: '' },
-  category: { type: String, required: true },
-  documentKey: { type: String, required: true, unique: true },
-  template_type: { type: String, required: true, default: 'basic' },
-  ai_instructions: { type: String, required: true, minlength: 10 },
-  prompt_template: { type: String, required: true, minlength: 10 },
-  generation_function: { type: String, required: true },
+  name: { 
+    type: String, 
+    required: [true, 'Template name is required'],
+    trim: true,
+    minlength: [1, 'Template name must be at least 1 character'],
+    maxlength: [200, 'Template name cannot exceed 200 characters']
+  },
+  description: { 
+    type: String, 
+    default: '',
+    trim: true,
+    maxlength: [1000, 'Description cannot exceed 1000 characters']
+  },
+  category: { 
+    type: String, 
+    required: [true, 'Category is required'],
+    trim: true,
+    maxlength: [100, 'Category name cannot exceed 100 characters']
+  },
+  documentKey: { 
+    type: String, 
+    required: [true, 'Document key is required'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[a-z0-9-]+$/, 'Document key can only contain lowercase letters, numbers, and hyphens']
+  },
+  template_type: { 
+    type: String, 
+    required: [true, 'Template type is required'],
+    enum: {
+      values: ['basic', 'advanced', 'custom', 'system'],
+      message: 'Template type must be one of: basic, advanced, custom, system'
+    },
+    default: 'basic'
+  },
+  ai_instructions: { 
+    type: String, 
+    required: [true, 'AI instructions are required'],
+    minlength: [10, 'AI instructions must be at least 10 characters'],
+    maxlength: [5000, 'AI instructions cannot exceed 5000 characters']
+  },
+  prompt_template: { 
+    type: String, 
+    required: [true, 'Prompt template is required'],
+    minlength: [10, 'Prompt template must be at least 10 characters'],
+    maxlength: [10000, 'Prompt template cannot exceed 10000 characters']
+  },
+  generation_function: { 
+    type: String, 
+    required: [true, 'Generation function is required'],
+    trim: true,
+    maxlength: [200, 'Generation function name cannot exceed 200 characters']
+  },
   contextPriority: { 
     type: String, 
-    enum: ['low', 'medium', 'high', 'critical'], 
+    enum: {
+      values: ['low', 'medium', 'high', 'critical'],
+      message: 'Context priority must be one of: low, medium, high, critical'
+    },
     default: 'medium' 
   },
   metadata: {
-    tags: { type: [String], default: [] },
+    tags: { 
+      type: [String], 
+      default: [],
+      validate: {
+        validator: function(tags: string[]) {
+          return tags.length <= 20;
+        },
+        message: 'Cannot have more than 20 tags'
+      }
+    },
     variables: { type: [Schema.Types.Mixed], default: [] },
     layout: { type: Schema.Types.Mixed, default: {} },
-    emoji: { type: String, default: '📄' },
-    priority: { type: Number, default: 100 },
-    source: { type: String, default: 'unknown' },
-    author: { type: String },
-    framework: { type: String },
-    complexity: { type: String },
-    estimatedTime: { type: String },
-    dependencies: { type: [String], default: [] },
-    version: { type: String }
+    emoji: { 
+      type: String, 
+      default: '📄',
+      maxlength: [10, 'Emoji cannot exceed 10 characters']
+    },
+    priority: { 
+      type: Number, 
+      default: 100,
+      min: [1, 'Priority must be at least 1'],
+      max: [1000, 'Priority cannot exceed 1000']
+    },
+    source: { 
+      type: String, 
+      default: 'unknown',
+      maxlength: [100, 'Source cannot exceed 100 characters']
+    },
+    author: { 
+      type: String,
+      maxlength: [100, 'Author name cannot exceed 100 characters']
+    },
+    framework: { 
+      type: String,
+      enum: {
+        values: ['babok', 'pmbok', 'dmbok', 'agile', 'waterfall', 'hybrid', 'custom'],
+        message: 'Framework must be one of: babok, pmbok, dmbok, agile, waterfall, hybrid, custom'
+      }
+    },
+    complexity: { 
+      type: String,
+      enum: {
+        values: ['simple', 'moderate', 'complex', 'expert'],
+        message: 'Complexity must be one of: simple, moderate, complex, expert'
+      }
+    },
+    estimatedTime: { 
+      type: Schema.Types.Mixed,
+      validate: {
+        validator: function(value: any) {
+          if (typeof value === 'string') {
+            return /^\d+[hmd]$/.test(value); // e.g., "2h", "30m", "1d"
+          }
+          if (typeof value === 'number') {
+            return value > 0 && value <= 1000; // minutes
+          }
+          return false;
+        },
+        message: 'Estimated time must be a positive number (minutes) or string like "2h", "30m", "1d"'
+      }
+    },
+    dependencies: { 
+      type: [String], 
+      default: [],
+      validate: {
+        validator: function(deps: string[]) {
+          return deps.length <= 50;
+        },
+        message: 'Cannot have more than 50 dependencies'
+      }
+    },
+    version: { 
+      type: String,
+      match: [/^\d+\.\d+(\.\d+)?$/, 'Version must be in format like "1.0" or "1.0.1"']
+    }
   },
-  version: { type: Number, default: 1 },
-  is_active: { type: Boolean, default: false }, // Default new templates to inactive for review
-  is_system: { type: Boolean, default: false },
-  created_by: { type: String, required: true },
+  version: { 
+    type: Number, 
+    default: 1,
+    min: [1, 'Version must be at least 1']
+  },
+  is_active: { 
+    type: Boolean, 
+    default: false // Default new templates to inactive for review
+  },
+  is_system: { 
+    type: Boolean, 
+    default: false 
+  },
+  created_by: { 
+    type: String, 
+    required: [true, 'Created by field is required'],
+    trim: true,
+    maxlength: [100, 'Created by field cannot exceed 100 characters']
+  },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   // Soft delete fields
   deleted_at: { type: Date },
-  deleted_by: { type: String },
-  delete_reason: { type: String },
+  deleted_by: { 
+    type: String,
+    maxlength: [100, 'Deleted by field cannot exceed 100 characters']
+  },
+  delete_reason: { 
+    type: String,
+    maxlength: [500, 'Delete reason cannot exceed 500 characters']
+  },
   is_deleted: { type: Boolean, default: false },
   // Audit trail
   audit_trail: [{
     action: {
       type: String,
-      enum: ['created', 'updated', 'soft_deleted', 'restored', 'hard_deleted'],
-      required: true
+      enum: {
+        values: ['created', 'updated', 'soft_deleted', 'restored', 'hard_deleted'],
+        message: 'Action must be one of: created, updated, soft_deleted, restored, hard_deleted'
+      },
+      required: [true, 'Audit action is required']
     },
     timestamp: { type: Date, default: Date.now },
-    user_id: { type: String, required: true },
+    user_id: { 
+      type: String, 
+      required: [true, 'User ID is required for audit trail'],
+      maxlength: [100, 'User ID cannot exceed 100 characters']
+    },
     changes: Schema.Types.Mixed,
-    reason: String
+    reason: { 
+      type: String,
+      maxlength: [500, 'Audit reason cannot exceed 500 characters']
+    }
   }]
 });
 

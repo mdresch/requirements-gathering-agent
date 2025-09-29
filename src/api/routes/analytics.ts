@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import dbConnection from '../../config/database.js';
+import { createSuccessResponse } from '../../utils/idUtils.js';
 
 const router = Router();
 
@@ -15,24 +16,30 @@ router.get('/homepage', async (req: Request, res: Response) => {
     }
     
     const db = connection.db;
+    if (!db) {
+      throw new Error('Database instance not available');
+    }
+    
+    // Type assertion to help TypeScript understand db is not null
+    const database = db as NonNullable<typeof db>;
     
     // Get templates count (active only)
-    const activeTemplatesCount = await db.collection('templates').countDocuments({ is_active: { $ne: false } });
+    const activeTemplatesCount = await database.collection('templates').countDocuments({ is_active: { $ne: false } });
     
     // Get users count (active users)
-    const activeUsersCount = await db.collection('users').countDocuments({ isActive: true });
+    const activeUsersCount = await database.collection('users').countDocuments({ isActive: true });
     
     // Get projects for calculations
-    const projects = await db.collection('projects').find({}).toArray();
+    const projects = await database.collection('projects').find({}).toArray();
     
     // Calculate conservative time saved using low amounts from template ranges
     // Only include active (non-deleted) documents
-    const projectDocuments = await db.collection('projectdocuments').find({
+    const projectDocuments = await database.collection('projectdocuments').find({
       deletedAt: { $exists: false }
     }).toArray();
     
     // Get all templates to extract time estimates
-    const templates = await db.collection('templates').find({ is_active: { $ne: false } }).toArray();
+    const templates = await database.collection('templates').find({ is_active: { $ne: false } }).toArray();
     
     // Build dynamic time estimates from template metadata
     const TIME_ESTIMATES: Record<string, number> = {};
@@ -89,7 +96,7 @@ router.get('/homepage', async (req: Request, res: Response) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const recentActivities = await db.collection('realtime_metrics').countDocuments({
+    const recentActivities = await database.collection('realtime_metrics').countDocuments({
       timestamp: { $gte: thirtyDaysAgo.toISOString() }
     });
     
@@ -102,22 +109,21 @@ router.get('/homepage', async (req: Request, res: Response) => {
       }
     });
     
-    res.status(200).json({
-      success: true,
-      data: {
-        templatesCreated: activeTemplatesCount,
-        activeUsers: activeUsersCount,
-        timeSaved: timeSaved,
-        successRate: successRate,
-        totalProjects: projects.length,
-        completedProjects: completedProjects,
-        totalDocuments: projectDocuments.length,
-        totalTemplates: templates.length,
-        templateBreakdown: templateBreakdown,
-        recentActivities: recentActivities,
-        lastUpdated: new Date().toISOString()
-      }
-    });
+    const analyticsData = {
+      templatesCreated: activeTemplatesCount,
+      activeUsers: activeUsersCount,
+      timeSaved: timeSaved,
+      successRate: successRate,
+      totalProjects: projects.length,
+      completedProjects: completedProjects,
+      totalDocuments: projectDocuments.length,
+      totalTemplates: templates.length,
+      templateBreakdown: templateBreakdown,
+      recentActivities: recentActivities,
+      lastUpdated: new Date().toISOString()
+    };
+
+    res.status(200).json(createSuccessResponse(analyticsData, 'Analytics data retrieved successfully'));
     
   } catch (error) {
     console.error('❌ Analytics error:', error);
@@ -141,14 +147,20 @@ router.get('/active-documents-count', async (req: Request, res: Response) => {
     }
     
     const db = connection.db;
+    if (!db) {
+      throw new Error('Database instance not available');
+    }
+    
+    // Type assertion to help TypeScript understand db is not null
+    const database = db as NonNullable<typeof db>;
     
     // Count active documents (where deletedAt doesn't exist or is null)
-    const activeDocumentsCount = await db.collection('projectdocuments').countDocuments({
+    const activeDocumentsCount = await database.collection('projectdocuments').countDocuments({
       deletedAt: { $exists: false }
     });
     
     // Also get breakdown by status for additional insights
-    const statusBreakdown = await db.collection('projectdocuments').aggregate([
+    const statusBreakdown = await database.collection('projectdocuments').aggregate([
       {
         $match: {
           deletedAt: { $exists: false }
@@ -166,7 +178,7 @@ router.get('/active-documents-count', async (req: Request, res: Response) => {
     ]).toArray();
     
     // Get breakdown by document type
-    const typeBreakdown = await db.collection('projectdocuments').aggregate([
+    const typeBreakdown = await database.collection('projectdocuments').aggregate([
       {
         $match: {
           deletedAt: { $exists: false }
@@ -187,15 +199,14 @@ router.get('/active-documents-count', async (req: Request, res: Response) => {
     console.log(`📊 Status breakdown:`, statusBreakdown);
     console.log(`📊 Type breakdown:`, typeBreakdown);
     
-    res.status(200).json({
-      success: true,
-      data: {
-        totalActiveDocuments: activeDocumentsCount,
-        statusBreakdown: statusBreakdown,
-        typeBreakdown: typeBreakdown,
-        lastUpdated: new Date().toISOString()
-      }
-    });
+    const documentsData = {
+      totalActiveDocuments: activeDocumentsCount,
+      statusBreakdown: statusBreakdown,
+      typeBreakdown: typeBreakdown,
+      lastUpdated: new Date().toISOString()
+    };
+
+    res.status(200).json(createSuccessResponse(documentsData, 'Active documents count retrieved successfully'));
     
   } catch (error) {
     console.error('❌ Active documents count error:', error);

@@ -216,7 +216,7 @@ export class AdvancedContextCompressionService {
       return strategies.find(s => s.name === 'hybrid-compression') || strategies[4];
     } else if (analysis.averageTokens > 5000) { // Large documents
       return strategies.find(s => s.name === 'semantic-compression') || strategies[1];
-    } else if (analysis.qualityScores.every(score => score < 50)) { // Low quality documents
+    } else if (analysis.qualityScores.every((score: number) => score < 50)) { // Low quality documents
       return strategies.find(s => s.name === 'keyword-extraction') || strategies[2];
     } else {
       return strategies.find(s => s.name === 'template-based') || strategies[3];

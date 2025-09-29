@@ -1,7 +1,7 @@
 // Phase 1: Compliance Metrics Routes - Real Database Implementation
 // Replaces mock data with actual MongoDB operations
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import ComplianceMetricsController from '../controllers/ComplianceMetricsController.js';
 import { logger } from '../../utils/logger.js';
@@ -22,7 +22,7 @@ router.get('/analytics',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid ISO 8601 date')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -54,7 +54,7 @@ router.get('/projects/:projectId',
     query('standardType').optional().isString().withMessage('Standard type must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -85,7 +85,7 @@ router.get('/latest',
     query('projectId').optional().isString().withMessage('Project ID must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -119,7 +119,7 @@ router.post('/',
     body('dataSource').optional().isString().withMessage('Data source must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -150,7 +150,7 @@ router.put('/:metricId/trends',
     param('metricId').isMongoId().withMessage('Valid metric ID is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

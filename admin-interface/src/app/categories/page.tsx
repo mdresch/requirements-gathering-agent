@@ -129,8 +129,24 @@ export default function CategoriesPage() {
 
   // Load categories on component mount
   useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await categoryApiClient.getCategories(
+          { search: searchTerm || undefined },
+          { page: 1, limit: 100, sort: 'name', order: 'asc' }
+        );
+        setCategories(response.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     loadCategories();
-  }, []);
+  }, [searchTerm]);
 
   // Handle click outside to close icon dropdown
   useEffect(() => {
@@ -164,7 +180,7 @@ export default function CategoriesPage() {
     setShowIconDropdown(false);
   };
 
-  const loadCategories = async () => {
+  const refreshCategories = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -179,6 +195,7 @@ export default function CategoriesPage() {
       setLoading(false);
     }
   };
+
 
   const handleCreateCategory = async () => {
     try {
@@ -318,7 +335,7 @@ export default function CategoriesPage() {
               </div>
             </div>
             <button
-              onClick={loadCategories}
+              onClick={refreshCategories}
               className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Refresh

@@ -15,6 +15,7 @@ import ModernFeatureShowcase from '@/components/ModernFeatureShowcase';
 import ModernStatsOverview from '@/components/ModernStatsOverview';
 import SystemStatus from '@/components/SystemStatus';
 import DeletedTemplatesModal from '@/components/DeletedTemplatesModal';
+import TemplateDeleteModal from '@/components/TemplateDeleteModal';
 import { Plus, Search, Filter, BarChart3, Sparkles, Trash2, FolderOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -40,6 +41,9 @@ export default function HomePage() {
   const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // console.log('🏠 HomePage component mounted/re-rendered');
   // console.log('🗑️ showDeletedTemplates state:', showDeletedTemplates);
@@ -57,8 +61,7 @@ export default function HomePage() {
         page: searchParams.page, 
         limit: searchParams.limit,
         search: searchParams.search,
-        category: searchParams.category,
-        templateType: searchParams.templateType
+        category: searchParams.category
       });
       
       if (response.success && response.data) {
@@ -110,22 +113,45 @@ export default function HomePage() {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
+    // Find the template to get its name
+    const template = templates.find(t => t.id === templateId);
+    if (!template) {
+      toast.error('Template not found');
+      return;
+    }
+
+    setTemplateToDelete({ id: templateId, name: template.name });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async (reason: string) => {
+    if (!templateToDelete) return;
+
+    setIsDeleting(true);
     try {
-      console.log('HomePage: Deleting template with id:', templateId);
+      console.log('HomePage: Deleting template with id:', templateToDelete.id, 'and reason:', reason);
       
-      const response = await apiClient.deleteTemplate(templateId, 'Deleted from homepage');
+      const response = await apiClient.deleteTemplate(templateToDelete.id, reason);
       
       if (response.success) {
         toast.success('Template deleted successfully');
-        // Reload templates
         loadTemplates();
+        setDeleteModalOpen(false);
+        setTemplateToDelete(null);
       } else {
         toast.error(response.error || 'Failed to delete template');
       }
     } catch (error) {
       console.error('HomePage: Delete template error:', error);
       toast.error('Failed to delete template');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setTemplateToDelete(null);
   };
 
   const handleTemplateRestored = () => {
@@ -607,6 +633,15 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Template Modal */}
+      <TemplateDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        templateName={templateToDelete?.name || ''}
+        isLoading={isDeleting}
+      />
 
       {/* Deleted Templates Modal */}
       <DeletedTemplatesModal

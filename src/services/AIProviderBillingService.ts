@@ -179,8 +179,7 @@ export class AIProviderBillingService {
         cost: {
           currency: cost.currency,
           amount: cost.amount,
-          costPerToken: cost.costPerToken,
-          breakdown: cost.breakdown
+          costPerToken: cost.costPerToken
         }
       };
 
@@ -207,15 +206,7 @@ export class AIProviderBillingService {
         cost: {
           currency: 'USD',
           amount: 0,
-          costPerToken: 0,
-          breakdown: {
-            promptCost: 0,
-            completionCost: 0,
-            promptTokens: data.usage?.promptTokens || 0,
-            completionTokens: data.usage?.completionTokens || 0,
-            totalTokens: data.usage?.totalTokens || 0,
-            estimated: true
-          }
+          costPerToken: 0
         }
       };
     }

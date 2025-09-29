@@ -248,7 +248,7 @@ export default function DeletedTemplatesModal({
             <div className="space-y-4">
               {filteredTemplates.map((template) => (
                 <div
-                  key={template._id || template.id}
+                  key={template.id}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between">

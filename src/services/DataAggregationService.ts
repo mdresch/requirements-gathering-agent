@@ -177,7 +177,6 @@ export class DataAggregationService {
           metadata: dp.metadata
         })),
         statistics,
-        trend,
         forecast
       };
     } catch (error: any) {

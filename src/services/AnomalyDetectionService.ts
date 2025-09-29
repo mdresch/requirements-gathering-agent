@@ -414,6 +414,9 @@ export class AnomalyDetectionService {
     const seasonalIndices = this.calculateSeasonalIndices(baselineData, 24); // Daily pattern
     const recentIndices = this.calculateSeasonalIndices(recentData, 24);
     
+    // Calculate baseline mean
+    const baselineMean = baselineData.reduce((sum, d) => sum + d.value, 0) / baselineData.length;
+    
     for (let i = 0; i < Math.min(seasonalIndices.length, recentIndices.length); i++) {
       const baselineIndex = seasonalIndices[i];
       const recentIndex = recentIndices[i];
@@ -434,7 +437,7 @@ export class AnomalyDetectionService {
           actualValue: recentValue,
           deviation: Math.abs(recentValue - expectedValue) / expectedValue,
           confidence: 0.7,
-          context: { hour },
+          context: {},
           recommendations: ['Investigate seasonal pattern changes', 'Update baseline patterns'],
           status: 'new'
         });
@@ -476,7 +479,7 @@ export class AnomalyDetectionService {
         actualValue: lastValue,
         deviation: trendChange,
         confidence: 0.8,
-        context: { recentTrend, baselineTrend },
+        context: {},
         recommendations: ['Investigate trend change causes', 'Update forecasting models'],
         status: 'new'
       });

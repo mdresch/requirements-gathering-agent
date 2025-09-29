@@ -1,7 +1,7 @@
 // Phase 1: Compliance Issues Routes - Real Database Implementation
 // Replaces mock data with actual MongoDB operations
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import ComplianceIssuesController from '../controllers/ComplianceIssuesController.js';
 import { logger } from '../../utils/logger.js';
@@ -22,7 +22,7 @@ router.get('/analytics',
     query('endDate').optional().isISO8601().withMessage('End date must be a valid ISO 8601 date')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -58,7 +58,7 @@ router.get('/',
     query('search').optional().isString().withMessage('Search term must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -93,7 +93,7 @@ router.get('/projects/:projectId',
     query('assigneeId').optional().isString().withMessage('Assignee ID must be a string')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -131,7 +131,7 @@ router.post('/',
     body('createdBy').isString().withMessage('Created by is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -166,7 +166,7 @@ router.put('/:issueId',
     body('updatedBy').isString().withMessage('Updated by is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -199,7 +199,7 @@ router.post('/:issueId/comments',
     body('author').isString().withMessage('Author is required')
   ],
   tempAuth,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

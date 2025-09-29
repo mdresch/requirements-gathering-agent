@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Users, UserCheck, UserX, Mail, Phone, Building, Star, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, UserCheck, UserX, Mail, Phone, Building, Star, AlertTriangle, CheckCircle, Clock, Target, BarChart3, Activity, FileText, Workflow, Bell } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../lib/api';
 import StakeholderForm from './StakeholderForm';
+import RolePlaceholderManagement from './RolePlaceholderManagement';
+import RecruitmentAnalytics from './RecruitmentAnalytics';
+import RecruitmentTimeline from './RecruitmentTimeline';
+import RecruitmentMetrics from './RecruitmentMetrics';
+import AdvancedReporting from './AdvancedReporting';
+import WorkflowIntegration from './WorkflowIntegration';
+import NotificationSystem from './NotificationSystem';
+import WorkflowProgressTracker from './WorkflowProgressTracker';
 import type { Stakeholder, CreateStakeholderData } from '../types/stakeholder';
 
 interface StakeholderManagementProps {
@@ -19,6 +27,7 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
   const [editingStakeholder, setEditingStakeholder] = useState<Stakeholder | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'stakeholders' | 'placeholders' | 'analytics' | 'reporting' | 'workflow' | 'notifications' | 'progress'>('stakeholders');
 
   useEffect(() => {
     loadStakeholders();
@@ -143,60 +152,146 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Tabs */}
       <div className="px-6 py-4 border-b bg-gray-50">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">Status:</label>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">Role:</label>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Roles</option>
-              <option value="project_manager">Project Manager</option>
-              <option value="sponsor">Sponsor</option>
-              <option value="team_member">Team Member</option>
-              <option value="end_user">End User</option>
-              <option value="stakeholder">Stakeholder</option>
-            </select>
-          </div>
-
-          <div className="text-sm text-gray-600">
-            {filteredStakeholders.length} of {stakeholders.length} stakeholders
-          </div>
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setActiveTab('stakeholders')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'stakeholders' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Active Stakeholders
+          </button>
+          <button
+            onClick={() => setActiveTab('placeholders')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'placeholders' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Role Placeholders
+          </button>
+          <button
+            onClick={() => setActiveTab('progress')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'progress' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Workflow Progress
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'analytics' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Analytics
+          </button>
+          <button
+            onClick={() => setActiveTab('reporting')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'reporting' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Reporting
+          </button>
+          <button
+            onClick={() => setActiveTab('workflow')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'workflow' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Workflow className="w-4 h-4 mr-2" />
+            Workflow
+          </button>
+          <button
+            onClick={() => setActiveTab('notifications')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'notifications' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Bell className="w-4 h-4 mr-2" />
+            Notifications
+          </button>
         </div>
       </div>
 
-      {/* Stakeholder Groups */}
-      <div className="p-6">
-        {stakeholders.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No stakeholders yet</h3>
-            <p className="text-gray-500 mb-4">Add project stakeholders to get started with stakeholder management.</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add First Stakeholder
-            </button>
+      {/* Filters - Only show for stakeholders tab */}
+      {activeTab === 'stakeholders' && (
+        <div className="px-6 py-4 border-b bg-gray-50">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Status:</label>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as any)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Role:</label>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Roles</option>
+                <option value="project_manager">Project Manager</option>
+                <option value="sponsor">Sponsor</option>
+                <option value="team_member">Team Member</option>
+                <option value="end_user">End User</option>
+                <option value="stakeholder">Stakeholder</option>
+              </select>
+            </div>
+
+            <div className="text-sm text-gray-600">
+              {filteredStakeholders.length} of {stakeholders.length} stakeholders
+            </div>
           </div>
-        ) : (
-          <div className="space-y-8">
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="p-6">
+        {activeTab === 'stakeholders' ? (
+          stakeholders.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No stakeholders yet</h3>
+              <p className="text-gray-500 mb-4">Add project stakeholders to get started with stakeholder management.</p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add First Stakeholder
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-8">
             {/* Project Manager */}
             {groupedStakeholders.project_manager.length > 0 && (
               <div>
@@ -296,7 +391,43 @@ export default function StakeholderManagement({ projectId, projectName }: Stakeh
                 </div>
               </div>
             )}
+            </div>
+          )
+        ) : activeTab === 'analytics' ? (
+          <div className="space-y-6">
+            <RecruitmentAnalytics 
+              projectId={projectId} 
+              projectName={projectName} 
+            />
+            <RecruitmentTimeline 
+              projectId={projectId} 
+            />
+            <RecruitmentMetrics 
+              projectId={projectId} 
+              projectName={projectName} 
+            />
           </div>
+        ) : activeTab === 'reporting' ? (
+          <AdvancedReporting 
+            projectId={projectId} 
+          />
+        ) : activeTab === 'workflow' ? (
+          <WorkflowIntegration 
+            projectId={projectId} 
+          />
+        ) : activeTab === 'notifications' ? (
+          <NotificationSystem 
+            projectId={projectId} 
+          />
+        ) : activeTab === 'progress' ? (
+          <WorkflowProgressTracker 
+            projectId={projectId} 
+          />
+        ) : (
+          <RolePlaceholderManagement 
+            projectId={projectId} 
+            projectName={projectName} 
+          />
         )}
       </div>
 
@@ -399,12 +530,12 @@ function StakeholderCard({
           )}
 
           <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <span>Power: {stakeholder.powerLevel}/5</span>
-            <span>Engagement: {stakeholder.engagementLevel}/5</span>
-            <span>Interest: {stakeholder.interest}</span>
+            <span>Power: {stakeholder.powerLevel || 0}/5</span>
+            <span>Engagement: {stakeholder.engagementLevel || 0}/5</span>
+            <span>Interest: {stakeholder.interest || 'medium'}</span>
           </div>
 
-          {stakeholder.requirements.length > 0 && (
+          {stakeholder.requirements && stakeholder.requirements.length > 0 && (
             <div className="mt-3">
               <p className="text-sm font-medium text-gray-700 mb-1">Requirements:</p>
               <div className="flex flex-wrap gap-1">
