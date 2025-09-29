@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   FileText, 
   User, 
@@ -187,7 +187,7 @@ const EnhancedAuditTrail: React.FC<EnhancedAuditTrailProps> = ({
   });
 
   // Fetch enhanced audit trail data
-  const fetchAuditTrail = async () => {
+  const fetchAuditTrail = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -231,11 +231,11 @@ const EnhancedAuditTrail: React.FC<EnhancedAuditTrailProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, filters]);
 
   useEffect(() => {
     fetchAuditTrail();
-  }, [pagination.page, filters]);
+  }, [fetchAuditTrail]);
 
   const toggleEntryExpansion = (entryId: string) => {
     const newExpanded = new Set(expandedEntries);

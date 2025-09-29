@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, BarChart3, Clock, Database, Cpu, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '@/lib/api';
@@ -49,20 +49,7 @@ export default function ContextUtilizationModal({ isOpen, onClose, document }: C
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && document?.id) {
-      fetchContextMetrics();
-    }
-  }, [isOpen, document?.id]);
-
-  useEffect(() => {
-    if (contextMetrics) {
-      calculateBreakdown();
-      generateRecommendations();
-    }
-  }, [contextMetrics]);
-
-  const fetchContextMetrics = async () => {
+  const fetchContextMetrics = useCallback(async () => {
     if (!document?.id) return;
     
     setLoading(true);
@@ -84,9 +71,9 @@ export default function ContextUtilizationModal({ isOpen, onClose, document }: C
     } finally {
       setLoading(false);
     }
-  };
+  }, [document?.id]);
 
-  const calculateBreakdown = () => {
+  const calculateBreakdown = useCallback(() => {
     if (!contextMetrics) return;
 
     const totalTokens = contextMetrics.totalTokensUsed;
@@ -125,9 +112,9 @@ export default function ContextUtilizationModal({ isOpen, onClose, document }: C
     ];
 
     setBreakdown(breakdownData);
-  };
+  }, [contextMetrics]);
 
-  const generateRecommendations = () => {
+  const generateRecommendations = useCallback(() => {
     if (!contextMetrics) return;
 
     const recommendationsList: string[] = [];
@@ -157,7 +144,20 @@ export default function ContextUtilizationModal({ isOpen, onClose, document }: C
     }
 
     setRecommendations(recommendationsList);
-  };
+  }, [contextMetrics]);
+
+  useEffect(() => {
+    if (isOpen && document?.id) {
+      fetchContextMetrics();
+    }
+  }, [isOpen, document?.id, fetchContextMetrics]);
+
+  useEffect(() => {
+    if (contextMetrics) {
+      calculateBreakdown();
+      generateRecommendations();
+    }
+  }, [contextMetrics, calculateBreakdown, generateRecommendations]);
 
   const getUtilizationColor = (percentage: number) => {
     if (percentage < 30) return 'text-green-600 bg-green-100';

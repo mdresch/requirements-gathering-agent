@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -29,6 +29,7 @@ interface RealStatsData {
   activeUsers: number;
   timeSaved: number;
   successRate: number;
+  totalDocuments: number;
 }
 
 export default function ModernStatsOverview() {
@@ -36,31 +37,30 @@ export default function ModernStatsOverview() {
     templatesCreated: 0,
     activeUsers: 0,
     timeSaved: 0,
-    successRate: 0
+    successRate: 0,
+    totalDocuments: 0
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRealStats();
-  }, []);
-
-  const loadRealStats = async () => {
+  const loadRealStats = useCallback(async () => {
     try {
       setLoading(true);
       
       // Fetch analytics from the new dedicated endpoint
-      const response = await fetch('/api/v1/analytics/homepage');
+      const API_BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1' : '/api/v1';
+      const response = await fetch(`${API_BASE_URL}/analytics/homepage`);
       const analyticsData = await response.json();
       
       if (analyticsData.success && analyticsData.data) {
         const data = analyticsData.data;
-        console.log('📊 Homepage analytics loaded:', data);
+        // console.log('📊 Homepage analytics loaded:', data);
         
         setRealStats({
           templatesCreated: data.templatesCreated,
           activeUsers: data.activeUsers,
           timeSaved: data.timeSaved,
-          successRate: data.successRate
+          successRate: data.successRate,
+          totalDocuments: data.totalDocuments
         });
       } else {
         console.error('Analytics API failed:', analyticsData);
@@ -74,7 +74,11 @@ export default function ModernStatsOverview() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadRealStats();
+  }, [loadRealStats]);
 
   const loadFallbackStats = async () => {
     try {
@@ -98,7 +102,8 @@ export default function ModernStatsOverview() {
         templatesCreated: templatesCount,
         activeUsers: 3, // Default fallback
         timeSaved: timeSaved,
-        successRate: Math.round(successRate)
+        successRate: Math.round(successRate),
+        totalDocuments: projects.length // Estimate based on projects
       });
     } catch (error) {
       console.error('Fallback stats failed:', error);
@@ -107,7 +112,8 @@ export default function ModernStatsOverview() {
         templatesCreated: 24,
         activeUsers: 3,
         timeSaved: 22,
-        successRate: 95
+        successRate: 95,
+        totalDocuments: 15 // Default fallback
       });
     }
   };
@@ -133,7 +139,7 @@ export default function ModernStatsOverview() {
       icon: Clock,
       label: 'Time Saved',
       value: loading ? '...' : `${realStats.timeSaved}h`,
-      change: '+23%',
+      change: `Conservative estimate from ${realStats.totalDocuments} docs`,
       positive: true,
       color: 'from-purple-500 to-pink-500'
     },

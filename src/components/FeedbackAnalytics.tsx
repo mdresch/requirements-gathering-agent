@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -60,7 +60,7 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
 
-  const loadFeedbackAnalytics = async () => {
+  const loadFeedbackAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -98,7 +98,12 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
       let trends = [];
       
       if (trendsResponse.success && trendsResponse.data?.trends) {
-        trends = trendsResponse.data.trends;
+        // Transform backend data to match frontend expectations
+        trends = trendsResponse.data.trends.map((trend: any) => ({
+          period: trend._id || trend.date || 'Unknown',
+          rating: trend.averageRating || 0,
+          volume: trend.count || 0
+        }));
         console.log(`📊 Real trends data for ${timeframe}:`, trends);
         console.log(`📊 Total trend records: ${trends.length}`);
       } else {
@@ -111,8 +116,14 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
       const performanceResponse = await getDocumentPerformance(timeframe);
       let documentPerformance = [];
       
-      if (performanceResponse.success && performanceResponse.data?.documentPerformance) {
-        documentPerformance = performanceResponse.data.documentPerformance;
+      if (performanceResponse.success && performanceResponse.data?.performance) {
+        // Transform backend data to match frontend expectations
+        documentPerformance = performanceResponse.data.performance.map((perf: any) => ({
+          documentType: perf._id || 'Unknown',
+          averageRating: perf.averageRating || 0,
+          totalRatings: perf.totalRatings || perf.count || 0,
+          feedbackCount: perf.count || 0
+        }));
         console.log(`📈 Real document performance data for ${timeframe}:`, documentPerformance);
       } else {
         // Fallback to empty performance data if API fails
@@ -189,11 +200,11 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, timeframe]);
 
   useEffect(() => {
     loadFeedbackAnalytics();
-  }, [projectId, timeframe]);
+  }, [loadFeedbackAnalytics]);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
@@ -327,12 +338,12 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
             <div key={index} className="flex-1 flex flex-col items-center">
               <div 
                 className="w-full bg-blue-500 rounded-t"
-                style={{ height: `${(trend.rating / 5) * 200}px` }}
+                style={{ height: `${((trend.rating || 0) / 5) * 200}px` }}
               ></div>
               <div className="mt-2 text-xs text-gray-600 text-center">
-                <div>{trend.period}</div>
-                <div className="font-medium">{trend.rating.toFixed(1)}</div>
-                <div className="text-gray-400">{trend.volume} reviews</div>
+                <div>{trend.period || 'Unknown'}</div>
+                <div className="font-medium">{(trend.rating || 0).toFixed(1)}</div>
+                <div className="text-gray-400">{trend.volume || 0} reviews</div>
               </div>
             </div>
           ))}
@@ -347,11 +358,11 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
             <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex-1">
                 <h3 className="font-medium text-gray-900 capitalize">
-                  {doc.documentType.replace('-', ' ')}
+                  {(doc.documentType || 'Unknown').replace('-', ' ')}
                 </h3>
                 <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                  <span>{doc.feedbackCount} reviews</span>
-                  <span>Quality: {doc.qualityScore}%</span>
+                  <span>{doc.feedbackCount || 0} reviews</span>
+                  <span>Quality: {(doc.averageRating || 0).toFixed(1)}/5</span>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -360,11 +371,11 @@ export default function FeedbackAnalytics({ projectId }: FeedbackAnalyticsProps)
                     <Star
                       key={star}
                       className={`w-4 h-4 ${
-                        star <= doc.averageRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        star <= (doc.averageRating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                       }`}
                     />
                   ))}
-                  <span className="ml-2 text-sm font-medium">{doc.averageRating.toFixed(1)}</span>
+                  <span className="ml-2 text-sm font-medium">{(doc.averageRating || 0).toFixed(1)}</span>
                 </div>
                 {getTrendIcon(doc.trend)}
               </div>

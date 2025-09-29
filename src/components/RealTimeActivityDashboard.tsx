@@ -41,35 +41,60 @@ interface UserActivity {
 }
 
 interface SessionTracking {
-  sessionId: string;
+  id: string;
   userId: string;
   userName: string;
-  startTime: string;
+  projectId: string;
+  projectName: string;
+  sessionStart: string;
   lastActivity: string;
-  totalDuration: number;
-  activities: UserActivity[];
-  isActive: boolean;
-  metadata: {
+  status: string;
+  activityCount: number;
+  ipAddress: string;
+  userAgent: string;
+  // Optional metadata for backward compatibility
+  metadata?: {
     ipAddress: string;
     userAgent: string;
     deviceType: string;
     browser: string;
     os: string;
   };
+  // Legacy fields for compatibility
+  sessionId?: string;
+  startTime?: string;
+  totalDuration?: number;
+  activities?: UserActivity[];
+  isActive?: boolean;
 }
 
 interface ActivityAnalytics {
+  totalSessions: number;
+  activeUsers: number;
+  averageSessionDuration: number;
+  sessionsByProject: Record<string, number>;
+  recentActivity: Array<{
+    id: string;
+    userId: string;
+    userName: string;
+    action: string;
+    projectId: string;
+    projectName: string;
+    timestamp: string;
+    details: string;
+  }>;
+  activityTrends: Record<string, number>;
+  peakActivityHour: number;
+  mostActiveUsers: Array<{
+    userId: string;
+    userName: string;
+    activityCount: number;
+  }>;
   totalActivities: number;
   activitiesByType: Record<string, number>;
   activitiesByComponent: Record<string, number>;
   activitiesByUser: Record<string, number>;
   activeSessions: number;
-  sessionStats: {
-    totalSessions: number;
-    averageSessionDuration: number;
-    longestSession: number;
-    shortestSession: number;
-  };
   trends: {
     hourly: Record<string, number>;
     daily: Record<string, number>;
@@ -109,16 +134,24 @@ const RealTimeActivityDashboard: React.FC = () => {
     loadData();
     connectWebSocket();
     
+    // Set up polling as fallback when WebSocket is not available
+    const pollInterval = setInterval(() => {
+      if (!wsConnected) {
+        loadData();
+      }
+    }, 30000); // Poll every 30 seconds when WebSocket is not available
+    
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
       }
+      clearInterval(pollInterval);
     };
-  }, [filters]);
+  }, [filters, wsConnected]);
 
   const connectWebSocket = () => {
     try {
-      const ws = new WebSocket('ws://requirements-gathering-agent.vercel.app/ws/activity');
+      const ws = new WebSocket('ws://localhost:3002/ws/activity');
       
       ws.onopen = () => {
         setWsConnected(true);
@@ -148,13 +181,15 @@ const RealTimeActivityDashboard: React.FC = () => {
       };
       
       ws.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
+        console.warn('⚠️ WebSocket connection failed - continuing with REST API only:', error);
         setWsConnected(false);
+        // Don't attempt to reconnect immediately on error
+        wsRef.current = null;
       };
       
       wsRef.current = ws;
     } catch (error) {
-      console.error('❌ Error connecting to WebSocket:', error);
+      console.warn('⚠️ WebSocket not available - using REST API only:', error);
       setWsConnected(false);
     }
   };
@@ -165,7 +200,7 @@ const RealTimeActivityDashboard: React.FC = () => {
 
     try {
       // Load active sessions
-      const sessionsResponse = await fetch('/api/v1/real-time-activity/sessions');
+      const sessionsResponse = await fetch('http://localhost:3002/api/v1/real-time-activity/sessions');
       const sessionsData = await sessionsResponse.json();
 
       if (sessionsData.success) {
@@ -178,7 +213,7 @@ const RealTimeActivityDashboard: React.FC = () => {
       if (filters.startDate) analyticsParams.append('startDate', filters.startDate);
       if (filters.endDate) analyticsParams.append('endDate', filters.endDate);
 
-      const analyticsResponse = await fetch(`/api/v1/real-time-activity/analytics?${analyticsParams}`);
+      const analyticsResponse = await fetch(`http://localhost:3002/api/v1/real-time-activity/analytics?${analyticsParams}`);
       const analyticsData = await analyticsResponse.json();
 
       if (analyticsData.success) {
@@ -305,7 +340,7 @@ const RealTimeActivityDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Sessions</p>
-                  <p className="text-2xl font-bold text-gray-900">{analytics.activeSessions}</p>
+                  <p className="text-2xl font-bold text-gray-900">{analytics.activeSessions || 0}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
@@ -316,7 +351,7 @@ const RealTimeActivityDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Activities</p>
-                  <p className="text-2xl font-bold text-gray-900">{analytics.totalActivities}</p>
+                  <p className="text-2xl font-bold text-gray-900">{analytics.totalActivities || 0}</p>
                 </div>
                 <Activity className="h-8 w-8 text-green-600" />
               </div>
@@ -328,7 +363,7 @@ const RealTimeActivityDashboard: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Avg Session Duration</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatDuration(analytics.sessionStats.averageSessionDuration)}
+                    {formatDuration(analytics.averageSessionDuration || 0)}
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-purple-600" />
@@ -341,7 +376,7 @@ const RealTimeActivityDashboard: React.FC = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Unique Users</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Object.keys(analytics.activitiesByUser).length}
+                    {Object.keys(analytics.activitiesByUser || {}).length}
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-orange-600" />
@@ -363,7 +398,7 @@ const RealTimeActivityDashboard: React.FC = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={Object.entries(analytics.activitiesByType).map(([type, count]) => ({
+                    data={Object.entries(analytics.activitiesByType || {}).map(([type, count]) => ({
                       name: type.replace('_', ' '),
                       value: count
                     }))}
@@ -375,7 +410,7 @@ const RealTimeActivityDashboard: React.FC = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {Object.entries(analytics.activitiesByType).map((_, index) => (
+                    {Object.entries(analytics.activitiesByType || {}).map((_, index) => (
                       <Cell key={`cell-${index}`} fill={['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00'][index % 5]} />
                     ))}
                   </Pie>
@@ -392,7 +427,7 @@ const RealTimeActivityDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={Object.entries(analytics.topPages)
+                <BarChart data={Object.entries(analytics.topPages || {})
                   .sort(([,a], [,b]) => b - a)
                   .slice(0, 10)
                   .map(([page, count]) => ({
@@ -422,33 +457,33 @@ const RealTimeActivityDashboard: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {sessions.map((session) => (
-              <div key={session.sessionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div key={session.id || session.sessionId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      {getDeviceIcon(session.metadata.deviceType)}
+                      {getDeviceIcon(session.metadata?.deviceType || 'desktop')}
                       <h4 className="font-medium text-gray-900">{session.userName}</h4>
                       <Badge variant="outline" className="text-xs">
-                        {session.metadata.deviceType}
+                        {session.metadata?.deviceType || 'desktop'}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {session.metadata.browser}
+                        {session.metadata?.browser || 'Unknown'}
                       </Badge>
                     </div>
                     <div className="text-sm text-gray-600 mb-2">
-                      Session: {session.sessionId.substring(0, 8)}... • 
-                      Started: {formatTimestamp(session.startTime)} • 
+                      Session: {(session.id || session.sessionId || '').substring(0, 8)}... • 
+                      Started: {formatTimestamp(session.sessionStart || session.startTime || session.lastActivity)} • 
                       Last Activity: {formatTimestamp(session.lastActivity)} • 
-                      Duration: {formatDuration(session.totalDuration)}
+                      Duration: {formatDuration(session.totalDuration || 0)}
                     </div>
                     <div className="text-sm text-gray-600">
-                      IP: {session.metadata.ipAddress} • 
-                      Activities: {session.activities.length}
+                      IP: {session.metadata?.ipAddress || session.ipAddress || 'Unknown'} • 
+                      Activities: {session.activities?.length || session.activityCount || 0}
                     </div>
-                    {session.activities.length > 0 && (
+                    {(session.activities?.length || 0) > 0 && (
                       <div className="mt-2 space-y-1">
                         <p className="text-xs font-medium text-gray-700">Recent Activities:</p>
-                        {session.activities.slice(-3).map((activity, index) => (
+                        {(session.activities || []).slice(-3).map((activity, index) => (
                           <div key={index} className="flex items-center space-x-2 text-xs text-gray-600">
                             {getActivityIcon(activity.activityType)}
                             <span>{activity.activityType.replace('_', ' ')}</span>

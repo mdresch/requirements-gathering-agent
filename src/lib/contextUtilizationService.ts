@@ -56,15 +56,15 @@ interface DocumentTraceability {
 }
 
 export class ContextUtilizationService {
-  private static readonly API_BASE_URL = '/api/v1';
+  private static readonly API_BASE_URL = '/api';
 
   /**
    * Get project analytics from audit trail data
    */
   static async getProjectAnalytics(projectId: string): Promise<ContextUtilizationMetrics> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/audit-trail/simple?page=1&limit=1000`, {
-        headers: { 'X-API-Key': 'dev-api-key-123' }
+      const response = await fetch(`${this.API_BASE_URL}/context-utilization?projectId=${projectId}`, {
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!response.ok) {
@@ -113,8 +113,8 @@ export class ContextUtilizationService {
    */
   static async getDocumentTraceability(documentId: string): Promise<DocumentTraceability[]> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/audit-trail/simple?page=1&limit=1000`, {
-        headers: { 'X-API-Key': 'dev-api-key-123' }
+      const response = await fetch(`${this.API_BASE_URL}/context-utilization?documentId=${documentId}`, {
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!response.ok) {

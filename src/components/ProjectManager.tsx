@@ -85,8 +85,18 @@ export default function ProjectManager() {
           setProjects(projectsData);
           
           // Update pagination info if available
-          if (response.data && typeof response.data === 'object' && response.data.totalPages) {
-            // Pagination data is in response.data
+          if (response.data && typeof response.data === 'object' && response.data.pagination) {
+            // Pagination data is in response.data.pagination
+            console.log('📊 Setting pagination from response.data.pagination:', {
+              totalPages: response.data.pagination.totalPages,
+              total: response.data.pagination.total,
+              page: response.data.pagination.page
+            });
+            setTotalPages(response.data.pagination.totalPages || 1);
+            setTotalItems(response.data.pagination.total || projectsData.length);
+            setCurrentPage(response.data.pagination.page || page);
+          } else if (response.data && typeof response.data === 'object' && response.data.totalPages) {
+            // Fallback to response.data (direct pagination properties)
             console.log('📊 Setting pagination from response.data:', {
               totalPages: response.data.totalPages,
               total: response.data.total,
@@ -226,6 +236,10 @@ export default function ProjectManager() {
 
   const router = useRouter();
   const handleViewProject = (project: Project) => {
+    if (!project.id) {
+      toast.error('Project ID not found');
+      return;
+    }
     router.push(`/projects/${project.id}`);
   };
 
@@ -400,8 +414,8 @@ export default function ProjectManager() {
       {/* Projects Grid */}
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {projects.map((project) => (
-          <div key={project.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+          {projects.map((project, index) => (
+          <div key={project.id || `project-${index}`} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
             <div className="p-6">
               {/* Project Header */}
               <div className="flex justify-between items-start mb-4">

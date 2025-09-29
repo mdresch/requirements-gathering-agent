@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { DocumentConverter, DocumentContent } from '@/lib/documentConverter';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { 
   FileText, 
   MessageSquare, 
@@ -18,7 +25,11 @@ import {
   Trash2,
   Award,
   Users,
-  Cpu
+  Cpu,
+  ChevronDown,
+  File,
+  FileImage,
+  FileCode
 } from 'lucide-react';
 import type { Project } from '../types/project';
 import FeedbackModal from './FeedbackModal';
@@ -336,7 +347,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       window.removeEventListener('documentDeleted', handleDocumentDeleted);
       window.removeEventListener('documentRestored', handleDocumentRestored);
     };
-  }, [project?.id]);
+  }, [project]);
 
   const handleSubmitFeedback = async (feedbackData: any) => {
     try {
@@ -466,17 +477,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
     }
   };
 
-  const handleDownloadDocument = async (doc: DocumentItem) => {
+  const handleDownloadDocument = async (doc: DocumentItem, format: 'md' | 'pdf' | 'docx' = 'md') => {
     try {
       // Show loading state
-      const loadingToast = toast.loading('Preparing download...');
+      const loadingToast = toast.loading(`Preparing ${format.toUpperCase()} download...`);
       
       // Fetch actual document content from database
       const response = await apiClient.getDocumentById(doc.id);
       
       toast.dismiss(loadingToast);
       
-      let documentContent = doc.content;
+      let documentContent = doc.content || '';
       
       if (response.success && response.data && response.data.content) {
         documentContent = response.data.content;
@@ -484,20 +495,51 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         documentContent = `# ${doc.name}\n\nThis document was generated as part of the ${project?.name || 'Unknown'} project.\n\n## Details\n- Category: ${doc.category}\n- Quality Score: ${doc.qualityScore}%\n- Last Generated: ${doc.lastGenerated}\n\n---\n*Document content not available.*`;
       }
       
+      const documentData: DocumentContent = {
+        title: doc.name,
+        content: documentContent || '',
+        metadata: {
+          author: 'Requirements Gathering Agent',
+          date: doc.lastGenerated || new Date().toLocaleDateString(),
+          version: '1.0'
+        }
+      };
+
+      let blob: Blob;
+      let filename: string;
+
+      switch (format) {
+        case 'md':
+          blob = new Blob([documentContent || ''], { 
+            type: DocumentConverter.getMimeType('md') 
+          });
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('md')}`;
+          break;
+        case 'pdf':
+          blob = await DocumentConverter.convertToPDF(documentData);
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('pdf')}`;
+          break;
+        case 'docx':
+          blob = await DocumentConverter.convertToDOCX(documentData);
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('docx')}`;
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
+      
       // Create and trigger download
       const element = document.createElement('a');
-      const file = new Blob([documentContent || ''], { type: 'text/markdown' });
-      element.href = URL.createObjectURL(file);
-      element.download = `${doc.name}.md`;
+      element.href = URL.createObjectURL(blob);
+      element.download = filename;
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
       
       // Show success toast
-      toast.success(`Downloaded ${doc.name}`);
+      toast.success(`Downloaded ${doc.name} as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast.error('Failed to download document');
+      toast.error(`Failed to download document as ${format.toUpperCase()}`);
     }
   };
 
@@ -1010,20 +1052,23 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                                         <Star
                                           key={star}
                                           className={`w-3 h-3 ${
-                                            star <= feedback.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                            star <= (feedback.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                                           }`}
                                         />
                                       ))}
                                     </div>
-                                    <span className="text-xs text-gray-600">{feedback.rating}/5</span>
+                                    <span className="text-xs text-gray-600">{feedback.rating || 0}/5</span>
                                   </div>
                                   <span className="text-xs text-gray-500">
-                                    {new Date(feedback.submittedAt).toLocaleDateString()}
+                                    {feedback.submittedAt ? new Date(feedback.submittedAt).toLocaleDateString() : 'Unknown Date'}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-900 font-medium truncate">{feedback.title}</p>
+                                <p className="text-sm text-gray-900 font-medium truncate">{feedback.title || 'Untitled Feedback'}</p>
                                 <p className="text-xs text-gray-600 mt-1">
-                                  {feedback.documentType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                  {feedback.documentType ? 
+                                    feedback.documentType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) :
+                                    'General Feedback'
+                                  }
                                 </p>
                               </div>
                             ))}
@@ -1097,7 +1142,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                       id: `feedback-${feedback._id}`,
                       type: 'feedback',
                       title: `New feedback received`,
-                      subtitle: `${feedback.title} on ${feedback.documentType.replace('-', ' ')}`,
+                      subtitle: `${feedback.title} on ${feedback.documentType ? feedback.documentType.replace('-', ' ') : 'General Document'}`,
                       time: timeAgo,
                       rating: feedback.rating,
                       icon: MessageSquare,
@@ -1242,13 +1287,39 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <button
-                        onClick={() => handleDownloadDocument(document)}
-                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Download Document"
-                      >
-                        <Download className="w-5 h-5" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Download Document"
+                          >
+                            <Download className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'md')}
+                            className="flex items-center space-x-2"
+                          >
+                            <FileCode className="w-4 h-4" />
+                            <span>Markdown (.md)</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'pdf')}
+                            className="flex items-center space-x-2"
+                          >
+                            <FileImage className="w-4 h-4" />
+                            <span>PDF (.pdf)</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'docx')}
+                            className="flex items-center space-x-2"
+                          >
+                            <File className="w-4 h-4" />
+                            <span>Word (.docx)</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <button
                         onClick={() => handleShowQualityScore(document)}
                         className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"

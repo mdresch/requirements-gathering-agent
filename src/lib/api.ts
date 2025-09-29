@@ -1,6 +1,7 @@
 // api.ts
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
+// Deployment trigger: 2025-01-27
 
 // Use local API during development, Vercel API in production
 const API_BASE_URL = typeof window !== 'undefined' 
@@ -125,21 +126,18 @@ export async function getTemplates(params?: {
     if (params?.category && params.category !== 'all') queryParams.append('category', params.category);
     if (params?.search) queryParams.append('search', params.search);
     
+    // Add cache-busting parameter to ensure fresh data
+    queryParams.append('_t', Date.now().toString());
+    
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('📊 Templates API Response:', response);
-    console.log('📊 Response success:', response.success);
-    console.log('📊 Response data structure:', response.data);
     
     // Handle both array response and paginated response structures
     const templatesData = Array.isArray(response.data) 
       ? response.data 
       : response.data?.templates || response.data?.data || [];
     
-    console.log('📊 Templates data extracted:', templatesData);
-    console.log('📊 Number of templates:', templatesData.length);
-    console.log('📊 First template:', templatesData[0]);
     
     // Transform the API response to match expected Template interface
     const transformedTemplates = (templatesData || []).map((template: any) => ({
@@ -175,10 +173,10 @@ export async function getTemplates(params?: {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.data?.total || response.pagination?.total || transformedTemplates.length,
-        page: response.data?.page || response.pagination?.page || 1,
-        limit: response.data?.limit || response.pagination?.limit || 20,
-        totalPages: response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.limit || response.pagination?.limit || 20))
+        total: response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length,
+        page: response.data?.pagination?.page || response.data?.page || response.pagination?.page || 1,
+        limit: response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20,
+        totalPages: response.data?.pagination?.pages || response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
@@ -196,6 +194,7 @@ export async function getTemplates(params?: {
                tags: ["business", "case", "analysis", "strategy"],
                content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
                aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
+               documentKey: "business-case",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -224,8 +223,9 @@ export async function getTemplates(params?: {
                description: "Comprehensive stakeholder identification, analysis, and engagement strategy", 
                category: "Stakeholder Management",
                tags: ["stakeholder", "analysis", "engagement", "communication"],
-               content: "# Stakeholder Analysis\n\n## Stakeholder Identification\n\n## Stakeholder Analysis Matrix\n\n## Engagement Strategy\n\n## Communication Plan",
-               aiInstructions: "Create detailed stakeholder analysis following PMBOK stakeholder management guidelines.",
+               content: "# Stakeholder Analysis\n\n## Executive Summary\n- Purpose and scope of stakeholder analysis\n- Key stakeholder insights and recommendations\n- Critical engagement priorities\n\n## Stakeholder Identification\n\n### Internal Stakeholders\n| Stakeholder | Role/Title | Department | Interest Level | Influence Level |\n|-------------|------------|------------|----------------|-----------------|\n| [Name/Role] | [Title] | [Dept] | [High/Med/Low] | [High/Med/Low] |\n\n### External Stakeholders\n| Stakeholder | Organization | Relationship | Interest Level | Influence Level |\n|-------------|--------------|--------------|----------------|-----------------|\n| [Name/Role] | [Org] | [Type] | [High/Med/Low] | [High/Med/Low] |\n\n## Stakeholder Assessment\n\n### Power/Interest Grid\n**High Power, High Interest (Manage Closely)**\n- [Stakeholder 1]: [Brief description and key concerns]\n- [Stakeholder 2]: [Brief description and key concerns]\n\n**High Power, Low Interest (Keep Satisfied)**\n- [Stakeholder 1]: [Brief description and engagement approach]\n- [Stakeholder 2]: [Brief description and engagement approach]\n\n**Low Power, High Interest (Keep Informed)**\n- [Stakeholder 1]: [Brief description and information needs]\n- [Stakeholder 2]: [Brief description and information needs]\n\n**Low Power, Low Interest (Monitor)**\n- [Stakeholder 1]: [Brief description and monitoring approach]\n- [Stakeholder 2]: [Brief description and monitoring approach]\n\n## Engagement Strategies\n\n### Communication Plan\n| Stakeholder | Frequency | Method | Content Type | Responsible |\n|-------------|-----------|--------|--------------|-------------|\n| [Name] | [Frequency] | [Method] | [Type] | [Person] |\n\n### Risk Mitigation\n**Stakeholder Risks:**\n| Risk | Stakeholder | Impact | Probability | Mitigation Strategy |\n|------|-------------|--------|-------------|-------------------|\n| [Risk] | [Who] | [H/M/L] | [H/M/L] | [Strategy] |\n\n## Recommendations\n\n### Immediate Actions\n1. [Action 1]: [Description and timeline]\n2. [Action 2]: [Description and timeline]\n3. [Action 3]: [Description and timeline]\n\n### Long-term Strategies\n1. [Strategy 1]: [Description and implementation approach]\n2. [Strategy 2]: [Description and implementation approach]\n3. [Strategy 3]: [Description and implementation approach]",
+               aiInstructions: "You are a project management expert specializing in stakeholder analysis and engagement strategies. Create comprehensive stakeholder assessments that identify, analyze, and provide actionable engagement strategies. Focus on creating detailed stakeholder profiles, power/interest grids, communication plans, and risk mitigation strategies. Generate content that includes stakeholder identification, assessment matrices, engagement strategies, and monitoring plans.",
+               documentKey: "stakeholder-analysis",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -256,6 +256,7 @@ export async function getTemplates(params?: {
                tags: ["scope", "deliverables", "boundaries", "requirements"],
                content: "# Scope Statement\n\n## Project Scope\n\n## Deliverables\n\n## Acceptance Criteria\n\n## Scope Boundaries",
                aiInstructions: "Generate comprehensive scope statement following PMBOK scope management practices.",
+               documentKey: "scope-statement",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -286,6 +287,7 @@ export async function getTemplates(params?: {
                tags: ["risk", "assessment", "mitigation", "monitoring"],
                content: "# Risk Register\n\n## Risk Identification\n\n## Risk Assessment\n\n## Risk Response Planning\n\n## Risk Monitoring",
                aiInstructions: "Create comprehensive risk register following PMBOK risk management guidelines.",
+               documentKey: "risk-register",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -571,6 +573,8 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
   });
     
     console.log('✅ updateTemplate response:', response);
+    console.log('📝 Response data message:', response.data?.message);
+    console.log('📝 Response success:', response.success);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
@@ -805,6 +809,16 @@ export async function deleteProject(id: string): Promise<any> {
   }
 }
 
+// Enhanced Standards Compliance API endpoints
+export async function getEnhancedStandardsCompliance(projectId?: string): Promise<any> {
+  const endpoint = projectId ? `/standards/enhanced/dashboard?projectId=${projectId}` : '/standards/enhanced/dashboard';
+  return request(endpoint);
+}
+
+export async function getEnhancedDataQuality(projectId: string): Promise<any> {
+  return request(`/standards/enhanced/data-quality/${projectId}`);
+}
+
 // Standards Compliance API endpoints
 export async function getStandardsCompliance(projectId?: string): Promise<any> {
   const endpoint = projectId ? `/standards/analyze?projectId=${projectId}` : '/standards/dashboard';
@@ -820,9 +834,25 @@ export async function generateComplianceReport(projectId: string, standards?: st
 
 // Feedback API endpoints
 export async function submitFeedback(feedbackData: any): Promise<any> {
+  // Map frontend fields to API expected fields
+  const apiData = {
+    ...feedbackData,
+    content: feedbackData.description || feedbackData.content, // Map description to content
+    documentId: feedbackData.documentPath || feedbackData.documentId, // Map documentPath to documentId
+    userId: feedbackData.submittedBy || feedbackData.userId,
+    userName: feedbackData.submittedByName || feedbackData.userName,
+    title: feedbackData.title || `Feedback for ${feedbackData.documentType || 'Document'}`,
+    feedbackType: feedbackData.feedbackType || 'general',
+    category: feedbackData.category || 'suggestion',
+    priority: feedbackData.priority || 'medium',
+    severity: feedbackData.severity || 'minor',
+    tags: feedbackData.tags || [],
+    metadata: feedbackData.metadata || {}
+  };
+
   return request('/feedback', {
     method: 'POST',
-    body: JSON.stringify(feedbackData),
+    body: JSON.stringify(apiData),
   });
 }
 
@@ -877,6 +907,52 @@ export async function getTemplateStats(): Promise<any> {
 
 export async function getTemplateCategories(): Promise<any> {
   return request('/templates/categories');
+}
+
+// Template Usage Analytics API endpoint
+export async function getTemplateUsageAnalytics(): Promise<any> {
+  try {
+    const response = await request('/analytics/projects');
+    
+    if (response.success && response.data) {
+      // Extract template usage data from the analytics response
+      const templateUsage = response.data.templateUsage || [];
+      
+      return {
+        success: true,
+        data: {
+          templateUsage: templateUsage,
+          totalUsage: templateUsage.reduce((sum: number, template: any) => sum + template.usage, 0),
+          mostPopularTemplates: templateUsage
+            .sort((a: any, b: any) => b.usage - a.usage)
+            .slice(0, 10),
+          trendingUp: templateUsage.filter((t: any) => t.trend === 1),
+          trendingDown: templateUsage.filter((t: any) => t.trend === -1),
+          categoryUsage: templateUsage.reduce((acc: any, template: any) => {
+            const category = template.category || 'General';
+            acc[category] = (acc[category] || 0) + template.usage;
+            return acc;
+          }, {})
+        }
+      };
+    } else {
+      throw new Error('Failed to retrieve template usage analytics');
+    }
+  } catch (error) {
+    console.error('❌ getTemplateUsageAnalytics error:', error);
+    return {
+      success: false,
+      data: {
+        templateUsage: [],
+        totalUsage: 0,
+        mostPopularTemplates: [],
+        trendingUp: [],
+        trendingDown: [],
+        categoryUsage: {}
+      },
+      error: 'Failed to retrieve template usage analytics'
+    };
+  }
 }
 
 // Project Documents API functions
@@ -1008,7 +1084,7 @@ export async function getDeletedProjectDocuments(projectId: string): Promise<any
     
     return {
       success: true,
-      data: response.documents || []
+      data: response.data || []
     };
   } catch (error) {
     console.error('❌ getDeletedProjectDocuments error:', error);
@@ -1042,6 +1118,8 @@ export async function generateDocuments(data: {
   framework?: string;
 }): Promise<any> {
   try {
+    console.log('🔧 generateDocuments API client called with:', data);
+    
     const response = await request('/document-generation/generate-only', {
       method: 'POST',
       headers: {
@@ -1055,6 +1133,8 @@ export async function generateDocuments(data: {
         framework: data.framework
       }),
     });
+    
+    console.log('🔧 generateDocuments API client response:', response);
     return response;
   } catch (error) {
     console.error('❌ generateDocuments error:', error);
@@ -1181,6 +1261,66 @@ export async function getGenerationJobStats(projectId?: string): Promise<any> {
   }
 }
 
+// Workflow Instance API functions
+export const getWorkflowInstances = async (projectId: string): Promise<any> => {
+  try {
+    console.log('🔍 getWorkflowInstances called for project:', projectId);
+    const response = await request(`/workflow-instances/project/${projectId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Workflow instances response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting workflow instances:', error);
+    throw error;
+  }
+};
+
+export const createWorkflowInstance = async (workflowData: any): Promise<any> => {
+  try {
+    console.log('🔍 createWorkflowInstance called:', workflowData);
+    const response = await request('/workflow-instances', {
+      method: 'POST',
+      body: JSON.stringify(workflowData),
+    });
+    console.log('✅ Workflow instance created:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowInstance = async (workflowId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowInstance called for ${workflowId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow instance updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowStep = async (workflowId: string, stepId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowStep called for ${workflowId}/${stepId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}/steps/${stepId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow step updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow step:', error);
+    throw error;
+  }
+};
+
 // API Client object for easy importing
 export const apiClient = {
   // Templates
@@ -1191,6 +1331,7 @@ export const apiClient = {
   getTemplate,
   getTemplateStats,
   getTemplateCategories,
+  getTemplateUsageAnalytics,
   
   // Projects
   getProjects,
@@ -1211,6 +1352,8 @@ export const apiClient = {
   
   // Standards Compliance
   getStandardsCompliance,
+  getEnhancedStandardsCompliance,
+  getEnhancedDataQuality,
   generateComplianceReport,
   
   // Feedback
@@ -1239,6 +1382,15 @@ export const apiClient = {
   updateStakeholder,
   deleteStakeholder,
   getStakeholderAnalytics,
+  createRolePlaceholder,
+  recruitStakeholder,
+  getRecruitmentStatus,
+  
+  // Workflow Management
+  getWorkflowInstances,
+  createWorkflowInstance,
+  updateWorkflowInstance,
+  updateWorkflowStep,
 };
 
 // Quality Assessment API functions
@@ -1391,6 +1543,52 @@ export async function getStakeholderAnalytics(projectId: string): Promise<any> {
   }
 }
 
+// Role Placeholder Management API functions
+export async function createRolePlaceholder(projectId: string, placeholderData: any): Promise<any> {
+  try {
+    console.log('🔍 createRolePlaceholder called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/role-placeholder`, {
+      method: 'POST',
+      body: JSON.stringify(placeholderData),
+    });
+    console.log('✅ Create role placeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating role placeholder:', error);
+    throw error;
+  }
+}
+
+export async function recruitStakeholder(stakeholderId: string, recruitmentData: any): Promise<any> {
+  try {
+    console.log('🔍 recruitStakeholder called for stakeholder:', stakeholderId);
+    const response = await request(`/stakeholders/${stakeholderId}/recruit`, {
+      method: 'PUT',
+      body: JSON.stringify(recruitmentData),
+    });
+    console.log('✅ Recruit stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error recruiting stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function getRecruitmentStatus(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getRecruitmentStatus called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/recruitment-status`, {
+      method: 'GET',
+    });
+    console.log('✅ Recruitment status response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting recruitment status:', error);
+    throw error;
+  }
+}
+
+
 // Soft deleted templates API endpoints
 export async function getDeletedTemplates(params?: {
   category?: string;
@@ -1416,8 +1614,8 @@ export async function getDeletedTemplates(params?: {
     
     return {
       success: true,
-      data: response.data || [],
-      pagination: response.pagination || {}
+      data: response.data || { templates: [], pagination: {} },
+      pagination: response.data?.pagination || {}
     };
   } catch (error) {
     console.error('❌ getDeletedTemplates error:', error);

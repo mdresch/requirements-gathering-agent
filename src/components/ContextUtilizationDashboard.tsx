@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -110,7 +110,7 @@ const ContextUtilizationDashboard: React.FC = () => {
     secondary: '#8b5cf6' // Purple
   };
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       setRefreshing(true);
       console.log('Fetching real context utilization data...');
@@ -151,11 +151,11 @@ const ContextUtilizationDashboard: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [selectedProject, selectedDocument]);
 
   useEffect(() => {
     fetchMetrics();
-  }, [selectedProject, selectedDocument]);
+  }, [fetchMetrics]);
 
   const handleRefresh = () => {
     fetchMetrics();

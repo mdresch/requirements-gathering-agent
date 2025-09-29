@@ -242,7 +242,7 @@ export default function FeedbackModal({
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-sm"
               rows={4}
               placeholder="Detailed description of your feedback"
               maxLength={2000}
@@ -258,7 +258,7 @@ export default function FeedbackModal({
             <textarea
               value={formData.suggestedImprovement}
               onChange={(e) => setFormData(prev => ({ ...prev, suggestedImprovement: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-sm"
               rows={3}
               placeholder="How would you improve this document?"
               maxLength={2000}

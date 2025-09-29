@@ -26,7 +26,9 @@ export interface AuditTrailEntry {
 }
 
 class AuditTrailService {
-  private baseUrl = '/api/v1/audit-trail';
+  private baseUrl = typeof window !== 'undefined'
+    ? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1/audit-trail' : '/api/v1/audit-trail')
+    : 'http://localhost:3002/api/v1/audit-trail';
 
   /**
    * Create an audit trail entry

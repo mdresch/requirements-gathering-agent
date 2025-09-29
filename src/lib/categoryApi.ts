@@ -1,6 +1,8 @@
 import { Category, CreateCategoryRequest, UpdateCategoryRequest, CategoryFilters, CategoryPagination } from '@/types/category';
 
-const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1' : '/api/v1')
+  : 'http://localhost:3002/api/v1';
 
 export class CategoryApiClient {
   private baseUrl: string;

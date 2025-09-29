@@ -307,10 +307,9 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         }
       }
 
-      // Only mark generation as completed when all steps are done and progress is 100%
-      if (overallProgress === 100) {
-        setGenerationCompleted(true);
-      }
+      // Mark generation as completed when all steps are done
+      setGenerationCompleted(true);
+      setOverallProgress(100);
       
       let actualGeneratedDocument;
       
@@ -343,7 +342,7 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         
         
         // Call the real document generation API
-        const response = await fetch('/api/v1/document-generation/generate-only', {
+        const response = await fetch('http://localhost:3002/api/v1/document-generation/generate-only', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -351,7 +350,6 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
           },
           body: JSON.stringify(requestBody)
         });
-
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -373,33 +371,16 @@ const ContextTrackingModal: React.FC<ContextTrackingModalProps> = ({
         const generatedDoc = result.generatedDocuments[0];
         console.log('📄 Generated document:', generatedDoc);
         
-        // Now fetch the actual document content from the database
-        const documentResponse = await fetch(`/api/v1/projects/documents/${generatedDoc.id}`, {
-          headers: {
-            'X-API-Key': 'dev-api-key-123'
-          }
-        });
+        // Use the content directly from the generation response
+        const documentContent = generatedDoc.content || `# ${generatedDoc.title || getDocumentNameFromType(documentType)}\n\nDocument generated successfully with AI context injection.\n\nThis document was created using the ${provider} provider with the ${model} model.`;
         
-        let documentContent = `# ${generatedDoc.name || getDocumentNameFromType(documentType)}\n\nDocument generated successfully with AI context injection.\n\nThis document was created using the ${provider} provider with the ${model} model.`;
-        
-        if (documentResponse.ok) {
-          const documentData = await documentResponse.json();
-          console.log('📄 Document data response:', documentData);
-          if (documentData.success && documentData.data && documentData.data.content) {
-            documentContent = documentData.data.content;
-            console.log('📝 Retrieved actual document content');
-          } else {
-            console.warn('⚠️ Document data missing content:', documentData);
-          }
-        } else {
-          console.error('❌ Failed to fetch document content:', documentResponse.status, documentResponse.statusText);
-        }
+        console.log('📝 Using document content from generation response');
         
         // Create a proper generated document object with real data
         actualGeneratedDocument = {
-          id: generatedDoc.id || `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: generatedDoc.name || getDocumentNameFromType(documentType),
-          type: generatedDoc.type || documentType,
+          id: generatedDoc.documentId || `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: generatedDoc.title || getDocumentNameFromType(documentType),
+          type: generatedDoc.documentKey || documentType,
           content: documentContent,
           category: generatedDoc.category || getCategoryFromDocumentType(documentType),
           framework: 'multi',
