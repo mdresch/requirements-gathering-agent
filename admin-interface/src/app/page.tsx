@@ -13,6 +13,7 @@ import Navbar from '@/components/Navbar';
 import ModernHero from '@/components/ModernHero';
 import ModernFeatureShowcase from '@/components/ModernFeatureShowcase';
 import ModernStatsOverview from '@/components/ModernStatsOverview';
+import SystemStatus from '@/components/SystemStatus';
 import DeletedTemplatesModal from '@/components/DeletedTemplatesModal';
 import { Plus, Search, Filter, BarChart3, Sparkles, Trash2, FolderOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,11 +37,12 @@ export default function HomePage() {
     limit: 6,
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
 
-  console.log('🏠 HomePage component mounted/re-rendered');
-  console.log('🗑️ showDeletedTemplates state:', showDeletedTemplates);
+  // console.log('🏠 HomePage component mounted/re-rendered');
+  // console.log('🗑️ showDeletedTemplates state:', showDeletedTemplates);
 
   // Ensure we're fully mounted on client side
   useEffect(() => {
@@ -50,16 +52,20 @@ export default function HomePage() {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      console.log('HomePage: Loading templates from API...');
+      // console.log('HomePage: Loading templates from API...');
       const response = await apiClient.getTemplates({ 
         page: searchParams.page, 
-        limit: searchParams.limit 
+        limit: searchParams.limit,
+        search: searchParams.search,
+        category: searchParams.category,
+        templateType: searchParams.templateType
       });
       
       if (response.success && response.data) {
         setTemplates(response.data.templates);
         setTotalPages(response.data.totalPages);
-        console.log('HomePage: Templates loaded successfully:', response.data.templates.length);
+        setTotalCount(response.data.total);
+        // console.log('HomePage: Templates loaded successfully:', response.data.templates.length);
         toast.success(`Loaded ${response.data.templates.length} templates from API`);
       } else {
         console.error('HomePage: Templates response failed:', response);
@@ -416,6 +422,16 @@ export default function HomePage() {
           )}
         </AnimatePresence>
 
+        {/* System Status */}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <SystemStatus />
+        </motion.div>
+
         {/* Modern Feature Showcase */}
         <div className="mb-16">
           <ModernFeatureShowcase />
@@ -511,6 +527,7 @@ export default function HomePage() {
               onPageChange={handlePageChange}
               currentPage={searchParams.page || 1}
               totalPages={totalPages}
+              totalCount={totalCount}
               selectedTemplate={selectedTemplate}
             />
           </div>

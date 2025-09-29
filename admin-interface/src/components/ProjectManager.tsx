@@ -85,8 +85,18 @@ export default function ProjectManager() {
           setProjects(projectsData);
           
           // Update pagination info if available
-          if (response.data && typeof response.data === 'object' && response.data.totalPages) {
-            // Pagination data is in response.data
+          if (response.data && typeof response.data === 'object' && response.data.pagination) {
+            // Pagination data is in response.data.pagination
+            console.log('📊 Setting pagination from response.data.pagination:', {
+              totalPages: response.data.pagination.totalPages,
+              total: response.data.pagination.total,
+              page: response.data.pagination.page
+            });
+            setTotalPages(response.data.pagination.totalPages || 1);
+            setTotalItems(response.data.pagination.total || projectsData.length);
+            setCurrentPage(response.data.pagination.page || page);
+          } else if (response.data && typeof response.data === 'object' && response.data.totalPages) {
+            // Fallback to response.data (direct pagination properties)
             console.log('📊 Setting pagination from response.data:', {
               totalPages: response.data.totalPages,
               total: response.data.total,

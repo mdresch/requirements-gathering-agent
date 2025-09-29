@@ -796,7 +796,7 @@ This document contains the generated content for ${template.name} based on the $
     
     if (template && template.documentKey) {
       // Validate document key format - reject 'Document ID' and ensure proper format
-      if (template.documentKey === 'Document ID' || !/^[a-z0-9-]+$/.test(template.documentKey)) {
+      if (template.documentKey === 'Document ID' || !/^[a-z0-9\-]+$/.test(template.documentKey)) {
         console.error(`❌ Invalid document key "${template.documentKey}" for template ${templateId}. Document keys must be lowercase with hyphens (e.g., "business-case"). Using name mapping as fallback.`);
         return getDocumentKeyFromTemplateName(templateName);
       }

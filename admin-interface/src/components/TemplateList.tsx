@@ -15,6 +15,7 @@ interface TemplateListProps {
   onPageChange: (page: number) => void;
   currentPage: number;
   totalPages: number;
+  totalCount: number;
   selectedTemplate?: Template | null;
 }
 
@@ -27,6 +28,7 @@ export default function TemplateList({
   onPageChange,
   currentPage,
   totalPages,
+  totalCount,
   selectedTemplate,
 }: TemplateListProps) {
   const auditTrail = useAuditTrail();
@@ -142,7 +144,7 @@ export default function TemplateList({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Templates ({templates.length})
+          Templates ({templates.length} out of {totalCount})
         </motion.h2>
         
         <div className="space-y-6">

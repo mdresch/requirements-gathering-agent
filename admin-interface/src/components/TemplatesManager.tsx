@@ -32,6 +32,7 @@ export default function TemplatesManager() {
     limit: 6,
   });
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [showDeletedTemplates, setShowDeletedTemplates] = useState(false);
 
   const loadTemplates = useCallback(
@@ -44,6 +45,7 @@ export default function TemplatesManager() {
         if (response.success && response.data) {
           setTemplates(response.data.templates);
           setTotalPages(response.data.totalPages);
+          setTotalCount(response.data.total);
           console.log('✅ Templates loaded successfully:', response.data.templates.length);
           
           // Mock data is working correctly, no need to show any message
@@ -281,6 +283,7 @@ export default function TemplatesManager() {
         onPageChange={handlePageChange}
         currentPage={searchParams.page || 1}
         totalPages={totalPages}
+        totalCount={totalCount}
       />
 
       {/* Delete Confirmation Modal */}

@@ -207,6 +207,31 @@ export class DocumentGenerator {
             // Extract project ID from context using helper method
             const projectId = this.extractProjectId();
             
+            // Get conservative time saved value from template metadata
+            let timeSaved = 2; // Default conservative estimate
+            
+            try {
+                const { Template } = await import('../../models/Template.model.js');
+                const template = await Template.findOne({ documentKey: documentKey });
+                if (template && template.metadata?.estimatedTime) {
+                    const estimatedTime = template.metadata.estimatedTime;
+                    
+                    if (typeof estimatedTime === 'string') {
+                        // Extract first number from strings like "2-4 hours", "6-8 hours", "7-9 hours"
+                        const match = estimatedTime.match(/(\d+)/);
+                        if (match) {
+                            timeSaved = parseInt(match[1]);
+                        }
+                    } else if (typeof estimatedTime === 'number') {
+                        timeSaved = estimatedTime;
+                    }
+                }
+            } catch (error) {
+                console.warn(`⚠️ Could not fetch template for time saved calculation, using default: ${error}`);
+            }
+            
+            console.log(`⏱️ Using conservative time estimate: ${timeSaved} hours for document type: ${documentKey}`);
+            
             const documentData = {
                 projectId: projectId,
                 name: config.title,
@@ -218,6 +243,7 @@ export class DocumentGenerator {
                 framework: typeof this.context === 'string' ? 'multi' : (this.context as any).framework || 'multi',
                 qualityScore: 0, // Will be updated by compliance validation
                 wordCount: content.split(' ').length,
+                timeSaved: timeSaved, // Time saved from template
                 tags: [config.category, 'generated'],
                 generatedAt: new Date(),
                 generatedBy: 'ADPA-System',

@@ -128,18 +128,12 @@ export async function getTemplates(params?: {
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('📊 Templates API Response:', response);
-    console.log('📊 Response success:', response.success);
-    console.log('📊 Response data structure:', response.data);
     
     // Handle both array response and paginated response structures
     const templatesData = Array.isArray(response.data) 
       ? response.data 
       : response.data?.templates || response.data?.data || [];
     
-    console.log('📊 Templates data extracted:', templatesData);
-    console.log('📊 Number of templates:', templatesData.length);
-    console.log('📊 First template:', templatesData[0]);
     
     // Transform the API response to match expected Template interface
     const transformedTemplates = (templatesData || []).map((template: any) => ({
@@ -175,10 +169,10 @@ export async function getTemplates(params?: {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.data?.total || response.pagination?.total || transformedTemplates.length,
-        page: response.data?.page || response.pagination?.page || 1,
-        limit: response.data?.limit || response.pagination?.limit || 20,
-        totalPages: response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.limit || response.pagination?.limit || 20))
+        total: response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length,
+        page: response.data?.pagination?.page || response.data?.page || response.pagination?.page || 1,
+        limit: response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20,
+        totalPages: response.data?.pagination?.pages || response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
@@ -879,6 +873,52 @@ export async function getTemplateCategories(): Promise<any> {
   return request('/templates/categories');
 }
 
+// Template Usage Analytics API endpoint
+export async function getTemplateUsageAnalytics(): Promise<any> {
+  try {
+    const response = await request('/analytics/projects');
+    
+    if (response.success && response.data) {
+      // Extract template usage data from the analytics response
+      const templateUsage = response.data.templateUsage || [];
+      
+      return {
+        success: true,
+        data: {
+          templateUsage: templateUsage,
+          totalUsage: templateUsage.reduce((sum: number, template: any) => sum + template.usage, 0),
+          mostPopularTemplates: templateUsage
+            .sort((a: any, b: any) => b.usage - a.usage)
+            .slice(0, 10),
+          trendingUp: templateUsage.filter((t: any) => t.trend === 1),
+          trendingDown: templateUsage.filter((t: any) => t.trend === -1),
+          categoryUsage: templateUsage.reduce((acc: any, template: any) => {
+            const category = template.category || 'General';
+            acc[category] = (acc[category] || 0) + template.usage;
+            return acc;
+          }, {})
+        }
+      };
+    } else {
+      throw new Error('Failed to retrieve template usage analytics');
+    }
+  } catch (error) {
+    console.error('❌ getTemplateUsageAnalytics error:', error);
+    return {
+      success: false,
+      data: {
+        templateUsage: [],
+        totalUsage: 0,
+        mostPopularTemplates: [],
+        trendingUp: [],
+        trendingDown: [],
+        categoryUsage: {}
+      },
+      error: 'Failed to retrieve template usage analytics'
+    };
+  }
+}
+
 // Project Documents API functions
 export async function getProjectDocuments(projectId: string): Promise<any> {
   try {
@@ -1191,6 +1231,7 @@ export const apiClient = {
   getTemplate,
   getTemplateStats,
   getTemplateCategories,
+  getTemplateUsageAnalytics,
   
   // Projects
   getProjects,
@@ -1416,8 +1457,8 @@ export async function getDeletedTemplates(params?: {
     
     return {
       success: true,
-      data: response.data || [],
-      pagination: response.pagination || {}
+      data: response.data || { templates: [], pagination: {} },
+      pagination: response.data?.pagination || {}
     };
   } catch (error) {
     console.error('❌ getDeletedTemplates error:', error);

@@ -335,11 +335,42 @@ export default async (req, res) => {
         // Get projects for calculations
         const projects = await db.collection('projects').find({}).toArray();
         
-        // Calculate time saved from actual document values
-        const projectDocuments = await db.collection('projectdocuments').find({}).toArray();
+        // Calculate conservative time saved using low amounts from template ranges
+        // Only include active (non-deleted) documents
+        const projectDocuments = await db.collection('projectdocuments').find({
+          deletedAt: { $exists: false }
+        }).toArray();
+        
+        // Get all templates to extract time estimates
+        const templates = await db.collection('templates').find({ is_active: { $ne: false } }).toArray();
+        
+        // Build dynamic time estimates from template metadata
+        const TIME_ESTIMATES = {};
+        templates.forEach(template => {
+          const docKey = template.documentKey || template.name || 'unknown';
+          let timeSaved = 2; // Default conservative estimate
+          
+          if (template.metadata?.estimatedTime) {
+            const estimatedTime = template.metadata.estimatedTime;
+            
+            if (typeof estimatedTime === 'string') {
+              // Extract first number from strings like "2-4 hours", "6-8 hours", "7-9 hours"
+              const match = estimatedTime.match(/(\d+)/);
+              if (match) {
+                timeSaved = parseInt(match[1]);
+              }
+            } else if (typeof estimatedTime === 'number') {
+              timeSaved = estimatedTime;
+            }
+          }
+          
+          TIME_ESTIMATES[docKey] = timeSaved;
+        });
+        
         const timeSaved = projectDocuments.reduce((total, doc) => {
-          // Sum up the actual time saved values from each document
-          return total + (doc.timeSaved || 0);
+          const docType = doc.type || 'unknown';
+          const timePerDoc = TIME_ESTIMATES[docType] || 2; // Default to 2 hours for unknown types
+          return total + timePerDoc;
         }, 0);
         
         // Calculate success rate based on completed projects
@@ -365,7 +396,7 @@ export default async (req, res) => {
             successRate: successRate,
             totalProjects: projects.length,
             completedProjects: completedProjects,
-            totalDocuments: projectDocuments,
+            totalDocuments: projectDocuments.length,
             recentActivities: recentActivities,
             lastUpdated: new Date().toISOString()
           },

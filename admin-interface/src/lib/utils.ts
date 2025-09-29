@@ -53,7 +53,7 @@ export function validateTemplate(template: any): { isValid: boolean; errors: str
     errors.push('Document key is required');
   } else if (template.documentKey === 'Document ID') {
     errors.push('Document key cannot be "Document ID". Please use a proper processor identification key (e.g., "business-case")');
-  } else if (!/^[a-z0-9-]+$/.test(template.documentKey)) {
+  } else if (!/^[a-z0-9\-]+$/.test(template.documentKey)) {
     errors.push('Document key must be lowercase with hyphens only (e.g., "business-case")');
   }
   

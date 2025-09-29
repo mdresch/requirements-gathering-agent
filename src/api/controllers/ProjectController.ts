@@ -4,7 +4,7 @@
 import { Request, Response } from 'express';
 import { Project, IProject } from '../../models/Project.js';
 import { ProjectDocument } from '../../models/ProjectDocument.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../config/logger.js';
 import { validationResult } from 'express-validator';
 
 export class ProjectController {
