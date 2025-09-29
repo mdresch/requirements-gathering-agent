@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart3, 
   FileText, 
@@ -95,15 +95,7 @@ export default function ComprehensiveDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<'overview' | 'performance' | 'trends' | 'health'>('overview');
 
-  useEffect(() => {
-    loadDashboardData();
-    
-    // Auto-refresh every 5 minutes
-    const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -214,7 +206,15 @@ export default function ComprehensiveDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+    
+    // Auto-refresh every 5 minutes
+    const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [loadDashboardData]);
 
   const generateQualityTrends = (overall: number, babok: number, pmbok: number, feedback: number) => {
     const trends = [];

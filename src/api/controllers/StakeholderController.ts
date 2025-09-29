@@ -3,6 +3,13 @@ import { Stakeholder, IStakeholder } from '../../models/Stakeholder.js';
 import { Project } from '../../models/Project.js';
 import { logger } from '../../utils/logger.js';
 import { validationResult } from 'express-validator';
+import { 
+  createSuccessResponse, 
+  createPaginatedResponse, 
+  transformDocuments,
+  validateAndConvertId,
+  handleIdValidationError 
+} from '../../utils/idUtils.js';
 
 export class StakeholderController {
   
@@ -41,25 +48,30 @@ export class StakeholderController {
         stakeholders: stakeholders.filter(s => s.role === 'stakeholder')
       };
 
-      res.json({
-        success: true,
-        data: {
-          stakeholders,
-          groupedStakeholders,
-          summary: {
-            total: stakeholders.length,
-            byRole: {
-              project_manager: groupedStakeholders.project_manager.length,
-              sponsors: groupedStakeholders.sponsors.length,
-              team_members: groupedStakeholders.team_members.length,
-              end_users: groupedStakeholders.end_users.length,
-              stakeholders: groupedStakeholders.stakeholders.length
-            },
-            active: stakeholders.filter(s => s.isActive).length,
-            inactive: stakeholders.filter(s => !s.isActive).length
-          }
+      const responseData = {
+        stakeholders: transformDocuments(stakeholders),
+        groupedStakeholders: {
+          project_manager: transformDocuments(groupedStakeholders.project_manager),
+          sponsors: transformDocuments(groupedStakeholders.sponsors),
+          team_members: transformDocuments(groupedStakeholders.team_members),
+          end_users: transformDocuments(groupedStakeholders.end_users),
+          stakeholders: transformDocuments(groupedStakeholders.stakeholders)
+        },
+        summary: {
+          total: stakeholders.length,
+          byRole: {
+            project_manager: groupedStakeholders.project_manager.length,
+            sponsors: groupedStakeholders.sponsors.length,
+            team_members: groupedStakeholders.team_members.length,
+            end_users: groupedStakeholders.end_users.length,
+            stakeholders: groupedStakeholders.stakeholders.length
+          },
+          active: stakeholders.filter(s => s.isActive).length,
+          inactive: stakeholders.filter(s => !s.isActive).length
         }
-      });
+      };
+
+      res.json(createSuccessResponse(responseData, 'Stakeholders retrieved successfully'));
 
       logger.info(`📊 Retrieved ${stakeholders.length} stakeholders for project ${projectId}`);
     } catch (error: any) {

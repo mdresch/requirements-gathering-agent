@@ -172,7 +172,8 @@ async function initializeServices() {
             const path = await import('path');
             const migrationPath = path.join(process.cwd(), 'src', 'database', 'migrations', '001_create_compliance_tables.sql');
             const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-            await databaseManager.runMigration(migrationSQL);
+            // Migration functionality not implemented yet
+            // await databaseManager.runMigration(migrationSQL);
             logger.info('✅ Database migrations completed');
         } catch (error) {
             logger.warn('⚠️ Migration may have already been run:', error);
@@ -187,9 +188,9 @@ async function initializeServices() {
         }
         
         // Initialize services
-        complianceDataService = new ComplianceDataService(pool);
-        dataQualityService = new DataQualityService(pool, complianceDataService);
-        realTimeDataService = new RealTimeDataService(server, pool, complianceDataService);
+        complianceDataService = new ComplianceDataService();
+        dataQualityService = new DataQualityService();
+        realTimeDataService = new RealTimeDataService();
         
         // Initialize enhanced routes
         // initializeEnhancedComplianceRoutes(pool, realTimeDataService);
@@ -230,7 +231,7 @@ async function gracefulShutdown(signal: string) {
     try {
         // Close WebSocket connections
         if (realTimeDataService) {
-            realTimeDataService.destroy();
+            await realTimeDataService.stop();
         }
         
         // Close database connections

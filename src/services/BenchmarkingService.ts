@@ -637,7 +637,7 @@ export class BenchmarkingService {
         default: return 50;
       }
     });
-    return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    return scores.reduce((sum: number, score) => sum + score, 0) / scores.length;
   }
 
   private calculateMetricScore(current: number, baseline: number, target: number): number {

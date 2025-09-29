@@ -118,9 +118,9 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             disabled={categoriesLoading}
           >
-            <option value="">{categoriesLoading ? 'Loading categories...' : 'All categories'}</option>
-            {categories.map(category => (
-              <option key={category._id} value={category.name}>
+            <option key="all-categories" value="">{categoriesLoading ? 'Loading categories...' : 'All categories'}</option>
+            {categories.map((category, index) => (
+              <option key={`category-${category.name || index}`} value={category.name}>
                 {category.name} - {category.description}
               </option>
             ))}
@@ -134,11 +134,11 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
             onChange={(e) => handleFilterChange('templateType', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All template types</option>
-            <option value="ai_instruction">AI Instruction</option>
-            <option value="document">Document Template</option>
-            <option value="form">Form Template</option>
-            <option value="report">Report Template</option>
+            <option key="all-types" value="">All template types</option>
+            <option key="ai-instruction" value="ai_instruction">AI Instruction</option>
+            <option key="document" value="document">Document Template</option>
+            <option key="form" value="form">Form Template</option>
+            <option key="report" value="report">Report Template</option>
           </select>
         </div>
       </div>
@@ -175,11 +175,11 @@ export default function SearchFilters({ onSearch, initialParams }: SearchFilters
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 title="Select number of results per page"
               >
-                <option value={6}>6 per page</option>
-                <option value={10}>10 per page</option>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
-                <option value={100}>100 per page</option>
+                <option key="per-page-6" value={6}>6 per page</option>
+                <option key="per-page-10" value={10}>10 per page</option>
+                <option key="per-page-20" value={20}>20 per page</option>
+                <option key="per-page-50" value={50}>50 per page</option>
+                <option key="per-page-100" value={100}>100 per page</option>
               </select>
             </div>
           </div>

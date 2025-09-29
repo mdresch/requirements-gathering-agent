@@ -2,7 +2,7 @@
 
 **Document:** introduction-business-analysis-body-of-knowledge  
 **Document Type:** babok  
-**Validation Date:** 2025-09-24T16:21:37.780Z  
+**Validation Date:** 2025-09-28T14:34:23.640Z  
 **Compliance Score:** 92%  
 **Compliance Status:** MOSTLY_COMPLIANT  
 

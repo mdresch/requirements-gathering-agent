@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Database, 
   RefreshCw, 
@@ -18,6 +18,7 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
+import { apiClient } from '../lib/api';
 
 interface RealTimeDataProps {
   projectId?: string;
@@ -61,23 +62,14 @@ export default function EnhancedComplianceDataIntegration({
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    initializeWebSocket();
-    loadDataQuality();
-    
-    return () => {
-      cleanup();
-    };
-  }, [projectId]);
-
-  const initializeWebSocket = () => {
+  const initializeWebSocket = useCallback(() => {
     try {
       // WebSocket endpoint not yet implemented in main server
       console.log('⚠️ WebSocket connection disabled - endpoint not implemented in main server');
       return;
       
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//localhost:3002/ws/compliance`;
+      const wsUrl = `${protocol}//requirements-gathering-agent.vercel.app/ws/compliance`;
       
       wsRef.current = new WebSocket(wsUrl);
       
@@ -133,7 +125,7 @@ export default function EnhancedComplianceDataIntegration({
       console.error('❌ Error initializing WebSocket:', error);
       setError('Failed to initialize connection');
     }
-  };
+  }, []);
 
   const handleWebSocketMessage = (message: any) => {
     setConnectionStatus(prev => ({
@@ -211,13 +203,12 @@ export default function EnhancedComplianceDataIntegration({
     }, 30000); // Ping every 30 seconds
   };
 
-  const loadDataQuality = async () => {
+  const loadDataQuality = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/standards/enhanced/data-quality/${projectId || 'current-project'}`);
-      const result = await response.json();
+      const result = await apiClient.getEnhancedDataQuality(projectId || 'current-project');
       
       if (result.success && result.data?.currentQuality) {
         const quality = result.data.currentQuality;
@@ -239,7 +230,16 @@ export default function EnhancedComplianceDataIntegration({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    initializeWebSocket();
+    loadDataQuality();
+    
+    return () => {
+      cleanup();
+    };
+  }, [projectId, initializeWebSocket, loadDataQuality]);
 
   const refreshData = async () => {
     await loadDataQuality();

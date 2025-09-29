@@ -59,17 +59,17 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         console.error('Failed to load categories:', error);
         // Fallback to predefined categories
         setCategories([
-          { _id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '8', name: 'documentation', description: 'Documentation templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '9', name: 'testing', description: 'Testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '10', name: 'deployment', description: 'Deployment templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
-          { _id: '11', name: 'api-testing', description: 'API testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
+          { id: '1', name: 'pmbok', description: 'PMBOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '2', name: 'babok', description: 'BABOK Guide templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '3', name: 'requirements', description: 'Requirements management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '4', name: 'technical-design', description: 'Technical design templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '5', name: 'quality-assurance', description: 'Quality assurance templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '6', name: 'project-management', description: 'Project management templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '7', name: 'business-analysis', description: 'Business analysis templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '8', name: 'documentation', description: 'Documentation templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '9', name: 'testing', description: 'Testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '10', name: 'deployment', description: 'Deployment templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 },
+          { id: '11', name: 'api-testing', description: 'API testing templates', isActive: true, isSystem: true, createdBy: 'system', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
         ]);
       } finally {
         setCategoriesLoading(false);
@@ -81,15 +81,17 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
 
   useEffect(() => {
     if (template) {
-      console.log('TemplateEditor: Loading template data:', template);
-      console.log('TemplateEditor: Template content length:', template.content?.length || 0);
-      console.log('TemplateEditor: Template content:', template.content);
-      console.log('TemplateEditor: Template aiInstructions:', template.aiInstructions);
-      console.log('TemplateEditor: Template metadata:', template.metadata);
-      console.log('TemplateEditor: Template metadata author:', template.metadata?.author);
-      console.log('TemplateEditor: Template metadata framework:', template.metadata?.framework);
+      console.log('🔄 TemplateEditor: Loading template data:', {
+        id: template.id,
+        name: template.name,
+        contentLength: template.content?.length || 0,
+        contentPreview: template.content?.substring(0, 100) + '...',
+        aiInstructionsLength: template.aiInstructions?.length || 0,
+        aiInstructionsPreview: template.aiInstructions?.substring(0, 50) + '...',
+        fullTemplate: template // Log the entire template object
+      });
       
-      setFormData({
+      const newFormData = {
         name: template.name || '',
         description: template.description || '',
         category: template.category || '',
@@ -112,9 +114,16 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
           version: template.metadata?.version || '1.0.0',
           author: template.metadata?.author || '',
         },
+      };
+      
+      console.log('🔄 TemplateEditor: Setting form data:', {
+        contentLength: newFormData.content?.length || 0,
+        contentPreview: newFormData.content?.substring(0, 100) + '...',
+        aiInstructionsLength: newFormData.aiInstructions?.length || 0,
+        aiInstructionsPreview: newFormData.aiInstructions?.substring(0, 50) + '...'
       });
       
-      console.log('TemplateEditor: Form data set with content length:', template.content?.length || 0);
+      setFormData(newFormData);
     }
   }, [template]);
 
@@ -134,7 +143,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         .replace(/^-|-$/g, '');
       
       // Ensure document key is not empty and follows proper format
-      if (documentKey && /^[a-z0-9-]+$/.test(documentKey)) {
+      if (documentKey && /^[a-z0-9\-]+$/.test(documentKey)) {
         setFormData(prev => ({
           ...prev,
           documentKey: documentKey
@@ -344,7 +353,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
         </div>
       </div>
 
-      <div className="p-6 max-h-96 overflow-y-auto">
+      <div className="p-6 max-h-[70vh] overflow-y-auto">
         {/* Error Display */}
         {errors.length > 0 && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -408,9 +417,9 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 aria-label="Category"
                 disabled={categoriesLoading}
               >
-                <option value="">{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
-                {categories.map(cat => (
-                  <option key={cat._id} value={cat.name}>
+                <option key="select-category" value="">{categoriesLoading ? 'Loading categories...' : 'Select a category'}</option>
+                {categories.map((cat, index) => (
+                  <option key={cat.id || `category-${index}`} value={cat.name}>
                     {cat.name} - {cat.description}
                   </option>
                 ))}
@@ -428,10 +437,10 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 onChange={(e) => handleInputChange('templateType', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="ai_instruction">AI Instruction</option>
-                <option value="document">Document Template</option>
-                <option value="form">Form Template</option>
-                <option value="report">Report Template</option>
+                <option key="ai-instruction" value="ai_instruction">AI Instruction</option>
+                <option key="document" value="document">Document Template</option>
+                <option key="form" value="form">Form Template</option>
+                <option key="report" value="report">Report Template</option>
               </select>
             </div>
 
@@ -446,7 +455,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 onChange={(e) => {
                   const value = e.target.value;
                   // Validate document key format
-                  if (value === '' || /^[a-z0-9-]+$/.test(value)) {
+                  if (value === '' || /^[a-z0-9\-]+$/.test(value)) {
                     handleInputChange('documentKey', value);
                   } else {
                     // Show error for invalid format
@@ -454,16 +463,16 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                   }
                 }}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${
-                  formData.documentKey && !/^[a-z0-9-]+$/.test(formData.documentKey) 
+                  formData.documentKey && !/^[a-z0-9\-]+$/.test(formData.documentKey) 
                     ? 'border-red-500 bg-red-50' 
                     : 'border-gray-300'
                 }`}
                 placeholder="business-case"
-                pattern="^[a-z0-9-]+$"
+                pattern="^[a-z0-9\-]+$"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Unique identifier for document generation (lowercase with hyphens). Auto-generated from template name.
-                {formData.documentKey && !/^[a-z0-9-]+$/.test(formData.documentKey) && (
+                {formData.documentKey && !/^[a-z0-9\-]+$/.test(formData.documentKey) && (
                   <span className="text-red-500 block mt-1">
                     ⚠️ Invalid format. Use lowercase letters, numbers, and hyphens only.
                   </span>
@@ -481,95 +490,95 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 onChange={(e) => handleInputChange('generationFunction', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <optgroup label="Core Analysis Documents">
-                  <option value="getAiGenericDocument">Generic Document (Default)</option>
-                  <option value="getAiSummaryAndGoals">Summary and Goals</option>
-                  <option value="getAiUserStories">User Stories</option>
-                  <option value="getAiUserPersonas">User Personas</option>
-                  <option value="getAiKeyRolesAndNeeds">Key Roles and Needs</option>
-                  <option value="getAiProjectStatementOfWork">Project Statement of Work</option>
-                  <option value="getAiBusinessCase">Business Case</option>
+                <optgroup key="core-analysis" label="Core Analysis Documents">
+                  <option key="getAiGenericDocument" value="getAiGenericDocument">Generic Document (Default)</option>
+                  <option key="getAiSummaryAndGoals" value="getAiSummaryAndGoals">Summary and Goals</option>
+                  <option key="getAiUserStories" value="getAiUserStories">User Stories</option>
+                  <option key="getAiUserPersonas" value="getAiUserPersonas">User Personas</option>
+                  <option key="getAiKeyRolesAndNeeds" value="getAiKeyRolesAndNeeds">Key Roles and Needs</option>
+                  <option key="getAiProjectStatementOfWork" value="getAiProjectStatementOfWork">Project Statement of Work</option>
+                  <option key="getAiBusinessCase" value="getAiBusinessCase">Business Case</option>
                 </optgroup>
                 
-                <optgroup label="Strategic Statements">
-                  <option value="getMissionVisionAndCoreValues">Mission, Vision & Core Values</option>
-                  <option value="getProjectPurpose">Project Purpose</option>
+                <optgroup key="strategic-statements" label="Strategic Statements">
+                  <option key="getMissionVisionAndCoreValues" value="getMissionVisionAndCoreValues">Mission, Vision & Core Values</option>
+                  <option key="getProjectPurpose" value="getProjectPurpose">Project Purpose</option>
                 </optgroup>
                 
-                <optgroup label="Project Charter">
-                  <option value="getAiProjectCharter">Project Charter</option>
-                  <option value="getAiProjectManagementPlan">Project Management Plan</option>
+                <optgroup key="project-charter" label="Project Charter">
+                  <option key="getAiProjectCharter" value="getAiProjectCharter">Project Charter</option>
+                  <option key="getAiProjectManagementPlan" value="getAiProjectManagementPlan">Project Management Plan</option>
                 </optgroup>
                 
-                <optgroup label="PMBOK Process Functions">
-                  <option value="getAiDirectAndManageProjectWorkProcess">Direct and Manage Project Work</option>
-                  <option value="getAiPerformIntegratedChangeControlProcess">Perform Integrated Change Control</option>
-                  <option value="getAiCloseProjectOrPhaseProcess">Close Project or Phase</option>
-                  <option value="getAiValidateScopeProcess">Validate Scope Process</option>
-                  <option value="getAiControlScopeProcess">Control Scope Process</option>
+                <optgroup key="pmbok-process" label="PMBOK Process Functions">
+                  <option key="getAiDirectAndManageProjectWorkProcess" value="getAiDirectAndManageProjectWorkProcess">Direct and Manage Project Work</option>
+                  <option key="getAiPerformIntegratedChangeControlProcess" value="getAiPerformIntegratedChangeControlProcess">Perform Integrated Change Control</option>
+                  <option key="getAiCloseProjectOrPhaseProcess" value="getAiCloseProjectOrPhaseProcess">Close Project or Phase</option>
+                  <option key="getAiValidateScopeProcess" value="getAiValidateScopeProcess">Validate Scope Process</option>
+                  <option key="getAiControlScopeProcess" value="getAiControlScopeProcess">Control Scope Process</option>
                 </optgroup>
                 
-                <optgroup label="Management Plans">
-                  <option value="getAiScopeManagementPlan">Scope Management Plan</option>
-                  <option value="getAiRiskManagementPlan">Risk Management Plan</option>
-                  <option value="getAiCostManagementPlan">Cost Management Plan</option>
-                  <option value="getAiQualityManagementPlan">Quality Management Plan</option>
-                  <option value="getAiResourceManagementPlan">Resource Management Plan</option>
-                  <option value="getAiCommunicationManagementPlan">Communication Management Plan</option>
-                  <option value="getAiProcurementManagementPlan">Procurement Management Plan</option>
+                <optgroup key="management-plans" label="Management Plans">
+                  <option key="getAiScopeManagementPlan" value="getAiScopeManagementPlan">Scope Management Plan</option>
+                  <option key="getAiRiskManagementPlan" value="getAiRiskManagementPlan">Risk Management Plan</option>
+                  <option key="getAiCostManagementPlan" value="getAiCostManagementPlan">Cost Management Plan</option>
+                  <option key="getAiQualityManagementPlan" value="getAiQualityManagementPlan">Quality Management Plan</option>
+                  <option key="getAiResourceManagementPlan" value="getAiResourceManagementPlan">Resource Management Plan</option>
+                  <option key="getAiCommunicationManagementPlan" value="getAiCommunicationManagementPlan">Communication Management Plan</option>
+                  <option key="getAiProcurementManagementPlan" value="getAiProcurementManagementPlan">Procurement Management Plan</option>
                 </optgroup>
                 
-                <optgroup label="Stakeholder Management">
-                  <option value="getAiStakeholderEngagementPlan">Stakeholder Engagement Plan</option>
-                  <option value="getAiStakeholderRegister">Stakeholder Register</option>
-                  <option value="getAiStakeholderAnalysis">Stakeholder Analysis</option>
+                <optgroup key="stakeholder-management" label="Stakeholder Management">
+                  <option key="getAiStakeholderEngagementPlan" value="getAiStakeholderEngagementPlan">Stakeholder Engagement Plan</option>
+                  <option key="getAiStakeholderRegister" value="getAiStakeholderRegister">Stakeholder Register</option>
+                  <option key="getAiStakeholderAnalysis" value="getAiStakeholderAnalysis">Stakeholder Analysis</option>
                 </optgroup>
                 
-                <optgroup label="Planning Artifacts">
-                  <option value="getAiWbs">Work Breakdown Structure</option>
-                  <option value="getAiWbsDictionary">WBS Dictionary</option>
-                  <option value="getAiActivityList">Activity List</option>
-                  <option value="getAiActivityDurationEstimates">Activity Duration Estimates</option>
-                  <option value="getAiActivityResourceEstimates">Activity Resource Estimates</option>
-                  <option value="getAiScheduleNetworkDiagram">Schedule Network Diagram</option>
-                  <option value="getAiMilestoneList">Milestone List</option>
-                  <option value="getAiDevelopScheduleInput">Develop Schedule Input</option>
+                <optgroup key="planning-artifacts" label="Planning Artifacts">
+                  <option key="getAiWbs" value="getAiWbs">Work Breakdown Structure</option>
+                  <option key="getAiWbsDictionary" value="getAiWbsDictionary">WBS Dictionary</option>
+                  <option key="getAiActivityList" value="getAiActivityList">Activity List</option>
+                  <option key="getAiActivityDurationEstimates" value="getAiActivityDurationEstimates">Activity Duration Estimates</option>
+                  <option key="getAiActivityResourceEstimates" value="getAiActivityResourceEstimates">Activity Resource Estimates</option>
+                  <option key="getAiScheduleNetworkDiagram" value="getAiScheduleNetworkDiagram">Schedule Network Diagram</option>
+                  <option key="getAiMilestoneList" value="getAiMilestoneList">Milestone List</option>
+                  <option key="getAiDevelopScheduleInput" value="getAiDevelopScheduleInput">Develop Schedule Input</option>
                 </optgroup>
                 
-                <optgroup label="Technical Analysis">
-                  <option value="getAiDataModelSuggestions">Data Model Suggestions</option>
-                  <option value="getAiTechStackAnalysis">Tech Stack Analysis</option>
-                  <option value="getAiRiskAnalysis">Risk Analysis</option>
-                  <option value="getAiAcceptanceCriteria">Acceptance Criteria</option>
-                  <option value="getAiComplianceConsiderations">Compliance Considerations</option>
-                  <option value="getAiUiUxConsiderations">UI/UX Considerations</option>
+                <optgroup key="technical-analysis" label="Technical Analysis">
+                  <option key="getAiDataModelSuggestions" value="getAiDataModelSuggestions">Data Model Suggestions</option>
+                  <option key="getAiTechStackAnalysis" value="getAiTechStackAnalysis">Tech Stack Analysis</option>
+                  <option key="getAiRiskAnalysis" value="getAiRiskAnalysis">Risk Analysis</option>
+                  <option key="getAiAcceptanceCriteria" value="getAiAcceptanceCriteria">Acceptance Criteria</option>
+                  <option key="getAiComplianceConsiderations" value="getAiComplianceConsiderations">Compliance Considerations</option>
+                  <option key="getAiUiUxConsiderations" value="getAiUiUxConsiderations">UI/UX Considerations</option>
                 </optgroup>
                 
-                <optgroup label="Technical Recommendations">
-                  <option value="getAiTechnicalRecommendations">Technical Recommendations</option>
-                  <option value="getAiTechnologySelectionCriteria">Technology Selection Criteria</option>
-                  <option value="getAiTechnicalImplementationRoadmap">Technical Implementation Roadmap</option>
-                  <option value="getAiTechnologyGovernanceFramework">Technology Governance Framework</option>
+                <optgroup key="technical-recommendations" label="Technical Recommendations">
+                  <option key="getAiTechnicalRecommendations" value="getAiTechnicalRecommendations">Technical Recommendations</option>
+                  <option key="getAiTechnologySelectionCriteria" value="getAiTechnologySelectionCriteria">Technology Selection Criteria</option>
+                  <option key="getAiTechnicalImplementationRoadmap" value="getAiTechnicalImplementationRoadmap">Technical Implementation Roadmap</option>
+                  <option key="getAiTechnologyGovernanceFramework" value="getAiTechnologyGovernanceFramework">Technology Governance Framework</option>
                 </optgroup>
                 
-                <optgroup label="Requirements Management">
-                  <option value="getAiRequirementsManagementPlan">Requirements Management Plan</option>
-                  <option value="getAiCollectRequirementsProcess">Collect Requirements Process</option>
-                  <option value="getAiRequirementsDocumentation">Requirements Documentation</option>
-                  <option value="getAiRequirementsTraceabilityMatrix">Requirements Traceability Matrix</option>
+                <optgroup key="requirements-management" label="Requirements Management">
+                  <option key="getAiRequirementsManagementPlan" value="getAiRequirementsManagementPlan">Requirements Management Plan</option>
+                  <option key="getAiCollectRequirementsProcess" value="getAiCollectRequirementsProcess">Collect Requirements Process</option>
+                  <option key="getAiRequirementsDocumentation" value="getAiRequirementsDocumentation">Requirements Documentation</option>
+                  <option key="getAiRequirementsTraceabilityMatrix" value="getAiRequirementsTraceabilityMatrix">Requirements Traceability Matrix</option>
                 </optgroup>
                 
-                <optgroup label="Scope Management">
-                  <option value="getAiPlanScopeManagement">Plan Scope Management</option>
-                  <option value="getAiDefineScopeProcess">Define Scope Process</option>
-                  <option value="getAiProjectScopeStatement">Project Scope Statement</option>
-                  <option value="getAiCreateWbsProcess">Create WBS Process</option>
-                  <option value="getAiScopeBaseline">Scope Baseline</option>
-                  <option value="getAiWorkPerformanceInformationScope">Work Performance Information Scope</option>
+                <optgroup key="scope-management" label="Scope Management">
+                  <option key="getAiPlanScopeManagement" value="getAiPlanScopeManagement">Plan Scope Management</option>
+                  <option key="getAiDefineScopeProcess" value="getAiDefineScopeProcess">Define Scope Process</option>
+                  <option key="getAiProjectScopeStatement" value="getAiProjectScopeStatement">Project Scope Statement</option>
+                  <option key="getAiCreateWbsProcess" value="getAiCreateWbsProcess">Create WBS Process</option>
+                  <option key="getAiScopeBaseline" value="getAiScopeBaseline">Scope Baseline</option>
+                  <option key="getAiWorkPerformanceInformationScope" value="getAiWorkPerformanceInformationScope">Work Performance Information Scope</option>
                 </optgroup>
                 
-                <optgroup label="DMBOK Data Management">
-                  <option value="getAiDmbokDataManagementStrategy">DMBOK Data Management Strategy</option>
+                <optgroup key="dmbok-data-management" label="DMBOK Data Management">
+                  <option key="getAiDmbokDataManagementStrategy" value="getAiDmbokDataManagementStrategy">DMBOK Data Management Strategy</option>
                 </optgroup>
               </select>
               <p className="text-xs text-gray-500 mt-1">
@@ -587,10 +596,10 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 onChange={(e) => handleInputChange('contextPriority', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="low">Low - Minimal context value</option>
-                <option value="medium">Medium - Standard context value</option>
-                <option value="high">High - Important for context</option>
-                <option value="critical">Critical - Essential for context</option>
+                <option key="low" value="low">Low - Minimal context value</option>
+                <option key="medium" value="medium">Medium - Standard context value</option>
+                <option key="high" value="high">High - Important for context</option>
+                <option key="critical" value="critical">Critical - Essential for context</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Higher priority documents will be prioritized when building context for new document generation.
@@ -676,8 +685,8 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               <textarea
                 value={formData.content}
                 onChange={(e) => handleInputChange('content', e.target.value)}
-                rows={12}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                rows={20}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="Enter your template content here..."
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -692,8 +701,8 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
               <textarea
                 value={formData.aiInstructions}
                 onChange={(e) => handleInputChange('aiInstructions', e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                rows={8}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="You are a Project Management Professional with extensive knowledge..."
                 minLength={10}
               />
@@ -710,7 +719,7 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                 value={formData.promptTemplate}
                 onChange={(e) => handleInputChange('promptTemplate', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
                 placeholder="Generate a comprehensive [Document Type] following [Framework] standards..."
                 minLength={10}
               />
@@ -744,9 +753,9 @@ export default function TemplateEditor({ template, onSave, onCancel }: TemplateE
                   onChange={(e) => handleMetadataChange('complexity', e.target.value as 'simple' | 'moderate' | 'advanced')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="simple">Simple</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="advanced">Advanced</option>
+                  <option key="simple" value="simple">Simple</option>
+                  <option key="moderate" value="moderate">Moderate</option>
+                  <option key="advanced" value="advanced">Advanced</option>
                 </select>
               </div>
             </div>

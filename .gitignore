@@ -75,6 +75,7 @@ demo-enhanced-context.mjs
 tests/
 __tests__/
 test/
+test-*.json
 
 # Ignore Next.js build output
 admin-interface/.next/

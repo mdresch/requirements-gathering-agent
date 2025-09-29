@@ -1,15 +1,14 @@
 // api.ts
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
+// Deployment trigger: 2025-01-27
 
-const API_BASE_URL = typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:3002/api/v1';
+// Use local API during development, Vercel API in production
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? (process.env.NODE_ENV === 'development' ? 'http://localhost:3002/api/v1' : '/api/v1')
+  : 'http://localhost:3002/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'dev-api-key-123';
 
-console.log('🔧 API Configuration:', {
-  API_BASE_URL,
-  API_KEY: API_KEY ? 'Present' : 'Missing',
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-});
 
 // Request queue and rate limiting
 const requestQueue: Array<() => Promise<any>> = [];
@@ -36,7 +35,6 @@ async function request(endpoint: string, options: RequestInit = {}): Promise<any
       };
 
       try {
-        console.log(`🌐 Making API request to: ${url}`, config.method || 'GET');
         
         const response = await fetch(url, config);
 
@@ -66,7 +64,6 @@ async function request(endpoint: string, options: RequestInit = {}): Promise<any
         }
 
         const data = await response.json();
-        console.log('✅ API Response received:', data);
         resolve(data);
       } catch (error) {
         console.error('❌ API request failed:', error);
@@ -120,7 +117,6 @@ export async function getTemplates(params?: {
   category?: string;
   search?: string;
 }): Promise<any> {
-  console.log('🔍 getTemplates called - connecting to MongoDB database');
   
   try {
     // Make real API call to backend server which connects to MongoDB
@@ -130,49 +126,57 @@ export async function getTemplates(params?: {
     if (params?.category && params.category !== 'all') queryParams.append('category', params.category);
     if (params?.search) queryParams.append('search', params.search);
     
+    // Add cache-busting parameter to ensure fresh data
+    queryParams.append('_t', Date.now().toString());
+    
     const url = `/templates${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('✅ Templates loaded from MongoDB database:', response);
     
-           // Transform the API response to match expected Template interface
-           const transformedTemplates = (response.data || []).map((template: any) => ({
-             id: template.id.toString(),
+    // Handle both array response and paginated response structures
+    const templatesData = Array.isArray(response.data) 
+      ? response.data 
+      : response.data?.templates || response.data?.data || [];
+    
+    
+    // Transform the API response to match expected Template interface
+    const transformedTemplates = (templatesData || []).map((template: any) => ({
+             id: template._id?.toString() || template.id?.toString() || Math.random().toString(),
              name: template.name,
              description: template.description,
              category: template.category || 'General', // Default category if not provided
-             tags: template.tags || [template.category || 'general'], // Use category as tag if no tags
-             content: template.templateData?.content || template.content || '',
-             aiInstructions: template.templateData?.aiInstructions || template.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
+             tags: template.metadata?.tags || template.tags || [template.category || 'general'], // Use category as tag if no tags
+             content: template.prompt_template || template.content || template.templateData?.content || '',
+             aiInstructions: template.ai_instructions || template.aiInstructions || template.templateData?.aiInstructions || `Generate a comprehensive ${template.name.toLowerCase()} document.`,
              documentKey: template.documentKey || '', // Include documentKey
-             generationFunction: template.generationFunction || 'getAiGenericDocument', // Include generationFunction
-             templateType: template.templateType || 'ai_instruction',
-             isActive: template.isActive !== undefined ? template.isActive : true,
-             version: template.version || '1.0.0',
+             generationFunction: template.generation_function || template.generationFunction || 'getAiGenericDocument', // Include generationFunction
+             templateType: template.template_type || template.templateType || 'ai_instruction',
+             isActive: template.is_active !== undefined ? template.is_active : (template.isActive !== undefined ? template.isActive : true),
+             version: template.version?.toString() || '1.0.0',
              contextPriority: template.contextPriority || 'medium', // Default priority for context building
              contextRequirements: template.contextRequirements || [],
-             variables: template.templateData?.variables || template.variables || {},
+             variables: template.metadata?.variables || template.variables || {},
              metadata: {
                framework: template.metadata?.framework || 'general',
                complexity: template.metadata?.complexity || 'medium',
                estimatedTime: template.metadata?.estimatedTime || '2-4 hours',
                dependencies: template.metadata?.dependencies || [],
-               version: template.metadata?.version || '1.0.0',
-               author: template.metadata?.author || 'System',
+               version: template.metadata?.version || template.version?.toString() || '1.0.0',
+               author: template.created_by || template.metadata?.author || 'System',
                ...template.metadata // Include any other metadata fields
              },
-             createdAt: template.createdAt || new Date().toISOString(),
-             updatedAt: template.updatedAt || new Date().toISOString()
+             createdAt: template.created_at || template.createdAt || new Date().toISOString(),
+             updatedAt: template.updated_at || template.updatedAt || new Date().toISOString()
            }));
 
     return {
       success: true,
       data: {
         templates: transformedTemplates,
-        total: response.pagination?.total || 0,
-        page: response.pagination?.page || 1,
-        limit: response.pagination?.limit || 20,
-        totalPages: response.pagination?.pages || Math.ceil((response.pagination?.total || 0) / (response.pagination?.limit || 20))
+        total: response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length,
+        page: response.data?.pagination?.page || response.data?.page || response.pagination?.page || 1,
+        limit: response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20,
+        totalPages: response.data?.pagination?.pages || response.data?.totalPages || response.pagination?.pages || Math.ceil((response.data?.pagination?.total || response.data?.total || response.pagination?.total || transformedTemplates.length) / (response.data?.pagination?.limit || response.data?.limit || response.pagination?.limit || 20))
       },
       message: 'Templates loaded successfully'
     };
@@ -190,6 +194,7 @@ export async function getTemplates(params?: {
                tags: ["business", "case", "analysis", "strategy"],
                content: "# Business Case Template\n\n## Executive Summary\n\n## Problem Statement\n\n## Solution Overview\n\n## Financial Analysis\n\n## Recommendations",
                aiInstructions: "Generate a comprehensive business case document following standard business analysis practices.",
+               documentKey: "business-case",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -218,8 +223,9 @@ export async function getTemplates(params?: {
                description: "Comprehensive stakeholder identification, analysis, and engagement strategy", 
                category: "Stakeholder Management",
                tags: ["stakeholder", "analysis", "engagement", "communication"],
-               content: "# Stakeholder Analysis\n\n## Stakeholder Identification\n\n## Stakeholder Analysis Matrix\n\n## Engagement Strategy\n\n## Communication Plan",
-               aiInstructions: "Create detailed stakeholder analysis following PMBOK stakeholder management guidelines.",
+               content: "# Stakeholder Analysis\n\n## Executive Summary\n- Purpose and scope of stakeholder analysis\n- Key stakeholder insights and recommendations\n- Critical engagement priorities\n\n## Stakeholder Identification\n\n### Internal Stakeholders\n| Stakeholder | Role/Title | Department | Interest Level | Influence Level |\n|-------------|------------|------------|----------------|-----------------|\n| [Name/Role] | [Title] | [Dept] | [High/Med/Low] | [High/Med/Low] |\n\n### External Stakeholders\n| Stakeholder | Organization | Relationship | Interest Level | Influence Level |\n|-------------|--------------|--------------|----------------|-----------------|\n| [Name/Role] | [Org] | [Type] | [High/Med/Low] | [High/Med/Low] |\n\n## Stakeholder Assessment\n\n### Power/Interest Grid\n**High Power, High Interest (Manage Closely)**\n- [Stakeholder 1]: [Brief description and key concerns]\n- [Stakeholder 2]: [Brief description and key concerns]\n\n**High Power, Low Interest (Keep Satisfied)**\n- [Stakeholder 1]: [Brief description and engagement approach]\n- [Stakeholder 2]: [Brief description and engagement approach]\n\n**Low Power, High Interest (Keep Informed)**\n- [Stakeholder 1]: [Brief description and information needs]\n- [Stakeholder 2]: [Brief description and information needs]\n\n**Low Power, Low Interest (Monitor)**\n- [Stakeholder 1]: [Brief description and monitoring approach]\n- [Stakeholder 2]: [Brief description and monitoring approach]\n\n## Engagement Strategies\n\n### Communication Plan\n| Stakeholder | Frequency | Method | Content Type | Responsible |\n|-------------|-----------|--------|--------------|-------------|\n| [Name] | [Frequency] | [Method] | [Type] | [Person] |\n\n### Risk Mitigation\n**Stakeholder Risks:**\n| Risk | Stakeholder | Impact | Probability | Mitigation Strategy |\n|------|-------------|--------|-------------|-------------------|\n| [Risk] | [Who] | [H/M/L] | [H/M/L] | [Strategy] |\n\n## Recommendations\n\n### Immediate Actions\n1. [Action 1]: [Description and timeline]\n2. [Action 2]: [Description and timeline]\n3. [Action 3]: [Description and timeline]\n\n### Long-term Strategies\n1. [Strategy 1]: [Description and implementation approach]\n2. [Strategy 2]: [Description and implementation approach]\n3. [Strategy 3]: [Description and implementation approach]",
+               aiInstructions: "You are a project management expert specializing in stakeholder analysis and engagement strategies. Create comprehensive stakeholder assessments that identify, analyze, and provide actionable engagement strategies. Focus on creating detailed stakeholder profiles, power/interest grids, communication plans, and risk mitigation strategies. Generate content that includes stakeholder identification, assessment matrices, engagement strategies, and monitoring plans.",
+               documentKey: "stakeholder-analysis",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -250,6 +256,7 @@ export async function getTemplates(params?: {
                tags: ["scope", "deliverables", "boundaries", "requirements"],
                content: "# Scope Statement\n\n## Project Scope\n\n## Deliverables\n\n## Acceptance Criteria\n\n## Scope Boundaries",
                aiInstructions: "Generate comprehensive scope statement following PMBOK scope management practices.",
+               documentKey: "scope-statement",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -280,6 +287,7 @@ export async function getTemplates(params?: {
                tags: ["risk", "assessment", "mitigation", "monitoring"],
                content: "# Risk Register\n\n## Risk Identification\n\n## Risk Assessment\n\n## Risk Response Planning\n\n## Risk Monitoring",
                aiInstructions: "Create comprehensive risk register following PMBOK risk management guidelines.",
+               documentKey: "risk-register",
                templateType: "ai_instruction",
                isActive: true,
                version: "1.0.0",
@@ -520,7 +528,6 @@ export async function getTemplates(params?: {
              }
            ];
     
-    console.log('✅ Returning mock templates (database unavailable)');
     return {
       success: true,
       data: {
@@ -537,15 +544,12 @@ export async function getTemplates(params?: {
 
 export async function createTemplate(template: any): Promise<any> {
   try {
-    console.log('🔍 createTemplate called with:', template);
-    
     // Make real API call to backend server which saves to MongoDB
     const response = await request('/templates', {
     method: 'POST',
     body: JSON.stringify(template),
   });
     
-    console.log('✅ Template created in MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ createTemplate error:', error);
@@ -558,7 +562,9 @@ export async function createTemplate(template: any): Promise<any> {
 
 export async function updateTemplate(id: string, template: any): Promise<any> {
   try {
-    console.log(`🔍 updateTemplate called for id: ${id} with:`, template);
+    console.log('🚀 updateTemplate called with:', { id, template });
+    console.log('🚀 API_BASE_URL:', API_BASE_URL);
+    console.log('🚀 Full URL will be:', `${API_BASE_URL}/templates/${id}`);
     
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/templates/${id}`, {
@@ -566,7 +572,9 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
     body: JSON.stringify(template),
   });
     
-    console.log('✅ Template updated in MongoDB database:', response);
+    console.log('✅ updateTemplate response:', response);
+    console.log('📝 Response data message:', response.data?.message);
+    console.log('📝 Response success:', response.success);
     return response;
   } catch (error) {
     console.error('❌ updateTemplate error:', error);
@@ -579,7 +587,6 @@ export async function updateTemplate(id: string, template: any): Promise<any> {
 
 export async function deleteTemplate(id: string, reason?: string): Promise<any> {
   try {
-    console.log(`🔍 deleteTemplate called for id: ${id}, reason: ${reason}`);
     
     // Make real API call to backend server which deletes from MongoDB
     const response = await request(`/templates/${id}`, {
@@ -588,7 +595,6 @@ export async function deleteTemplate(id: string, reason?: string): Promise<any> 
       headers: reason ? { 'Content-Type': 'application/json' } : undefined
     });
     
-    console.log('✅ Template deleted from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ deleteTemplate error:', error);
@@ -601,12 +607,8 @@ export async function deleteTemplate(id: string, reason?: string): Promise<any> 
 
 export async function getTemplate(id: string): Promise<any> {
   try {
-    console.log(`🔍 getTemplate called for id: ${id}`);
-    
     // Make real API call to backend server which retrieves from MongoDB
     const response = await request(`/templates/${id}`);
-    
-    console.log('✅ Template retrieved from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ getTemplate error:', error);
@@ -620,7 +622,6 @@ export async function getTemplate(id: string): Promise<any> {
 // Projects API endpoints - now connected to MongoDB database
 export async function getProjects(params?: any): Promise<any> {
   try {
-    console.log('🔍 getProjects called - connecting to MongoDB database');
     
     // Make real API call to backend server which retrieves from MongoDB
     const queryParams = new URLSearchParams();
@@ -632,7 +633,16 @@ export async function getProjects(params?: any): Promise<any> {
     const url = `/projects${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     const response = await request(url);
     
-    console.log('✅ Projects loaded from MongoDB database:', response);
+    // Convert MongoDB _id to id for frontend compatibility
+    if (response.success && response.data && response.data.projects) {
+      response.data.projects = response.data.projects.map((project: any) => {
+        if (project._id && !project.id) {
+          project.id = project._id;
+        }
+        return project;
+      });
+    }
+    
     return response;
   } catch (error) {
     console.error('❌ Failed to load projects from database, using mock data:', error);
@@ -693,7 +703,6 @@ export async function getProjects(params?: any): Promise<any> {
       }
     ];
     
-    console.log(`✅ Returning ${mockProjects.length} mock projects (database unavailable)`);
     return {
       success: true,
       data: {
@@ -710,16 +719,17 @@ export async function getProjects(params?: any): Promise<any> {
 // Fetch a single project by ID
 export async function getProjectById(id: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectById called with id: ${id}`);
-    
     // Make real API call to backend server which retrieves from MongoDB
     const response = await request(`/projects/${id}`);
     
-    console.log('✅ Project retrieved from MongoDB database:', response);
-    
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
-      return response.data;
+      // Convert MongoDB _id to id for frontend compatibility
+      const project = response.data;
+      if (project._id && !project.id) {
+        project.id = project._id;
+      }
+      return project;
     } else {
       console.warn('⚠️ Project not found or API call failed:', response);
       return null;
@@ -733,15 +743,11 @@ export async function getProjectById(id: string): Promise<any> {
 // Create a new project
 export async function createProject(projectData: any): Promise<any> {
   try {
-    console.log('🔍 createProject called with:', projectData);
-    
     // Make real API call to backend server which saves to MongoDB
     const response = await request('/projects', {
       method: 'POST',
       body: JSON.stringify(projectData),
     });
-    
-    console.log('✅ Project created in MongoDB database:', response);
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
@@ -763,15 +769,11 @@ export async function createProject(projectData: any): Promise<any> {
 
 export async function updateProject(id: string, projectData: any): Promise<any> {
   try {
-    console.log(`🔍 updateProject called for id: ${id} with:`, projectData);
-    
     // Make real API call to backend server which updates MongoDB
     const response = await request(`/projects/${id}`, {
       method: 'PUT',
       body: JSON.stringify(projectData),
     });
-    
-    console.log('✅ Project updated in MongoDB database:', response);
     
     // Return the project data directly, not the full API response
     if (response.success && response.data) {
@@ -793,14 +795,10 @@ export async function updateProject(id: string, projectData: any): Promise<any> 
 
 export async function deleteProject(id: string): Promise<any> {
   try {
-    console.log(`🔍 deleteProject called for id: ${id}`);
-    
     // Make real API call to backend server which deletes from MongoDB
     const response = await request(`/projects/${id}`, {
       method: 'DELETE',
     });
-    
-    console.log('✅ Project deleted from MongoDB database:', response);
     return response;
   } catch (error) {
     console.error('❌ deleteProject error:', error);
@@ -809,6 +807,16 @@ export async function deleteProject(id: string): Promise<any> {
       error: 'Failed to delete project'
     };
   }
+}
+
+// Enhanced Standards Compliance API endpoints
+export async function getEnhancedStandardsCompliance(projectId?: string): Promise<any> {
+  const endpoint = projectId ? `/standards/enhanced/dashboard?projectId=${projectId}` : '/standards/enhanced/dashboard';
+  return request(endpoint);
+}
+
+export async function getEnhancedDataQuality(projectId: string): Promise<any> {
+  return request(`/standards/enhanced/data-quality/${projectId}`);
 }
 
 // Standards Compliance API endpoints
@@ -826,19 +834,31 @@ export async function generateComplianceReport(projectId: string, standards?: st
 
 // Feedback API endpoints
 export async function submitFeedback(feedbackData: any): Promise<any> {
+  // Map frontend fields to API expected fields
+  const apiData = {
+    ...feedbackData,
+    content: feedbackData.description || feedbackData.content, // Map description to content
+    documentId: feedbackData.documentPath || feedbackData.documentId, // Map documentPath to documentId
+    userId: feedbackData.submittedBy || feedbackData.userId,
+    userName: feedbackData.submittedByName || feedbackData.userName,
+    title: feedbackData.title || `Feedback for ${feedbackData.documentType || 'Document'}`,
+    feedbackType: feedbackData.feedbackType || 'general',
+    category: feedbackData.category || 'suggestion',
+    priority: feedbackData.priority || 'medium',
+    severity: feedbackData.severity || 'minor',
+    tags: feedbackData.tags || [],
+    metadata: feedbackData.metadata || {}
+  };
+
   return request('/feedback', {
     method: 'POST',
-    body: JSON.stringify(feedbackData),
+    body: JSON.stringify(apiData),
   });
 }
 
 export async function getProjectFeedback(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectFeedback called for project: ${projectId}`);
-    
     const response = await request(`/feedback/project/${projectId}`);
-    
-    console.log('✅ Project feedback retrieved from database:', response);
     
     if (response.success && response.data) {
       // The backend returns feedback in response.data.feedback
@@ -889,14 +909,56 @@ export async function getTemplateCategories(): Promise<any> {
   return request('/templates/categories');
 }
 
+// Template Usage Analytics API endpoint
+export async function getTemplateUsageAnalytics(): Promise<any> {
+  try {
+    const response = await request('/analytics/projects');
+    
+    if (response.success && response.data) {
+      // Extract template usage data from the analytics response
+      const templateUsage = response.data.templateUsage || [];
+      
+      return {
+        success: true,
+        data: {
+          templateUsage: templateUsage,
+          totalUsage: templateUsage.reduce((sum: number, template: any) => sum + template.usage, 0),
+          mostPopularTemplates: templateUsage
+            .sort((a: any, b: any) => b.usage - a.usage)
+            .slice(0, 10),
+          trendingUp: templateUsage.filter((t: any) => t.trend === 1),
+          trendingDown: templateUsage.filter((t: any) => t.trend === -1),
+          categoryUsage: templateUsage.reduce((acc: any, template: any) => {
+            const category = template.category || 'General';
+            acc[category] = (acc[category] || 0) + template.usage;
+            return acc;
+          }, {})
+        }
+      };
+    } else {
+      throw new Error('Failed to retrieve template usage analytics');
+    }
+  } catch (error) {
+    console.error('❌ getTemplateUsageAnalytics error:', error);
+    return {
+      success: false,
+      data: {
+        templateUsage: [],
+        totalUsage: 0,
+        mostPopularTemplates: [],
+        trendingUp: [],
+        trendingDown: [],
+        categoryUsage: {}
+      },
+      error: 'Failed to retrieve template usage analytics'
+    };
+  }
+}
+
 // Project Documents API functions
 export async function getProjectDocuments(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectDocuments called for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents`);
-    
-    console.log('✅ Project documents retrieved from database:', response);
     
     if (response.success && response.data) {
       return response.data;
@@ -924,14 +986,10 @@ export async function getProjectDocuments(projectId: string): Promise<any> {
 
 export async function createProjectDocument(projectId: string, documentData: any): Promise<any> {
   try {
-    console.log(`🔍 createProjectDocument called for project: ${projectId}`, documentData);
-    
     const response = await request(`/projects/${projectId}/documents`, {
     method: 'POST',
       body: JSON.stringify(documentData),
     });
-    
-    console.log('✅ Project document created in database:', response);
     
     if (response.success && response.data) {
       return {
@@ -952,14 +1010,10 @@ export async function createProjectDocument(projectId: string, documentData: any
 
 export async function updateProjectDocument(documentId: string, documentData: any): Promise<any> {
   try {
-    console.log(`🔍 updateProjectDocument called for document: ${documentId}`, documentData);
-    
     const response = await request(`/projects/documents/${documentId}`, {
       method: 'PUT',
       body: JSON.stringify(documentData),
     });
-    
-    console.log('✅ Project document updated in database:', response);
     
     if (response.success && response.data) {
     return { 
@@ -980,13 +1034,9 @@ export async function updateProjectDocument(documentId: string, documentData: an
 
 export async function deleteProjectDocument(documentId: string): Promise<any> {
   try {
-    console.log(`🔍 Soft delete project document: ${documentId}`);
-    
     const response = await request(`/projects/documents/${documentId}`, {
       method: 'DELETE'
     });
-    
-    console.log('✅ Project document soft deleted:', response);
     
     if (response.success) {
       return {
@@ -1007,13 +1057,9 @@ export async function deleteProjectDocument(documentId: string): Promise<any> {
 
 export async function restoreProjectDocument(documentId: string): Promise<any> {
   try {
-    console.log(`🔍 Restore project document: ${documentId}`);
-    
     const response = await request(`/projects/documents/${documentId}/restore`, {
       method: 'PUT'
     });
-    
-    console.log('✅ Project document restored:', response);
     
     if (response.success) {
       return {
@@ -1034,15 +1080,11 @@ export async function restoreProjectDocument(documentId: string): Promise<any> {
 
 export async function getDeletedProjectDocuments(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 Get deleted documents for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents/deleted`);
-    
-    console.log('✅ Deleted documents retrieved:', response);
     
     return {
       success: true,
-      data: response.documents || []
+      data: response.data || []
     };
   } catch (error) {
     console.error('❌ getDeletedProjectDocuments error:', error);
@@ -1055,11 +1097,7 @@ export async function getDeletedProjectDocuments(projectId: string): Promise<any
 
 export async function getProjectDocumentStats(projectId: string): Promise<any> {
   try {
-    console.log(`🔍 getProjectDocumentStats called for project: ${projectId}`);
-    
     const response = await request(`/projects/${projectId}/documents/stats`);
-    
-    console.log('✅ Project document stats retrieved from database:', response);
     
     if (response.success && response.data) {
       return response.data;
@@ -1080,6 +1118,8 @@ export async function generateDocuments(data: {
   framework?: string;
 }): Promise<any> {
   try {
+    console.log('🔧 generateDocuments API client called with:', data);
+    
     const response = await request('/document-generation/generate-only', {
       method: 'POST',
       headers: {
@@ -1093,6 +1133,8 @@ export async function generateDocuments(data: {
         framework: data.framework
       }),
     });
+    
+    console.log('🔧 generateDocuments API client response:', response);
     return response;
   } catch (error) {
     console.error('❌ generateDocuments error:', error);
@@ -1219,6 +1261,66 @@ export async function getGenerationJobStats(projectId?: string): Promise<any> {
   }
 }
 
+// Workflow Instance API functions
+export const getWorkflowInstances = async (projectId: string): Promise<any> => {
+  try {
+    console.log('🔍 getWorkflowInstances called for project:', projectId);
+    const response = await request(`/workflow-instances/project/${projectId}`, {
+      method: 'GET',
+    });
+    console.log('✅ Workflow instances response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting workflow instances:', error);
+    throw error;
+  }
+};
+
+export const createWorkflowInstance = async (workflowData: any): Promise<any> => {
+  try {
+    console.log('🔍 createWorkflowInstance called:', workflowData);
+    const response = await request('/workflow-instances', {
+      method: 'POST',
+      body: JSON.stringify(workflowData),
+    });
+    console.log('✅ Workflow instance created:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowInstance = async (workflowId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowInstance called for ${workflowId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow instance updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow instance:', error);
+    throw error;
+  }
+};
+
+export const updateWorkflowStep = async (workflowId: string, stepId: string, updates: any): Promise<any> => {
+  try {
+    console.log(`🔍 updateWorkflowStep called for ${workflowId}/${stepId}:`, updates);
+    const response = await request(`/workflow-instances/${workflowId}/steps/${stepId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    console.log('✅ Workflow step updated:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error updating workflow step:', error);
+    throw error;
+  }
+};
+
 // API Client object for easy importing
 export const apiClient = {
   // Templates
@@ -1229,6 +1331,7 @@ export const apiClient = {
   getTemplate,
   getTemplateStats,
   getTemplateCategories,
+  getTemplateUsageAnalytics,
   
   // Projects
   getProjects,
@@ -1249,6 +1352,8 @@ export const apiClient = {
   
   // Standards Compliance
   getStandardsCompliance,
+  getEnhancedStandardsCompliance,
+  getEnhancedDataQuality,
   generateComplianceReport,
   
   // Feedback
@@ -1277,6 +1382,15 @@ export const apiClient = {
   updateStakeholder,
   deleteStakeholder,
   getStakeholderAnalytics,
+  createRolePlaceholder,
+  recruitStakeholder,
+  getRecruitmentStatus,
+  
+  // Workflow Management
+  getWorkflowInstances,
+  createWorkflowInstance,
+  updateWorkflowInstance,
+  updateWorkflowStep,
 };
 
 // Quality Assessment API functions
@@ -1429,6 +1543,52 @@ export async function getStakeholderAnalytics(projectId: string): Promise<any> {
   }
 }
 
+// Role Placeholder Management API functions
+export async function createRolePlaceholder(projectId: string, placeholderData: any): Promise<any> {
+  try {
+    console.log('🔍 createRolePlaceholder called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/role-placeholder`, {
+      method: 'POST',
+      body: JSON.stringify(placeholderData),
+    });
+    console.log('✅ Create role placeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error creating role placeholder:', error);
+    throw error;
+  }
+}
+
+export async function recruitStakeholder(stakeholderId: string, recruitmentData: any): Promise<any> {
+  try {
+    console.log('🔍 recruitStakeholder called for stakeholder:', stakeholderId);
+    const response = await request(`/stakeholders/${stakeholderId}/recruit`, {
+      method: 'PUT',
+      body: JSON.stringify(recruitmentData),
+    });
+    console.log('✅ Recruit stakeholder response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error recruiting stakeholder:', error);
+    throw error;
+  }
+}
+
+export async function getRecruitmentStatus(projectId: string): Promise<any> {
+  try {
+    console.log('🔍 getRecruitmentStatus called for project:', projectId);
+    const response = await request(`/stakeholders/project/${projectId}/recruitment-status`, {
+      method: 'GET',
+    });
+    console.log('✅ Recruitment status response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Error getting recruitment status:', error);
+    throw error;
+  }
+}
+
+
 // Soft deleted templates API endpoints
 export async function getDeletedTemplates(params?: {
   category?: string;
@@ -1454,8 +1614,8 @@ export async function getDeletedTemplates(params?: {
     
     return {
       success: true,
-      data: response.data || [],
-      pagination: response.pagination || {}
+      data: response.data || { templates: [], pagination: {} },
+      pagination: response.data?.pagination || {}
     };
   } catch (error) {
     console.error('❌ getDeletedTemplates error:', error);

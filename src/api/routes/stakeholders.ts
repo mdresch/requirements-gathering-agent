@@ -1,6 +1,7 @@
 import express from 'express';
 import { StakeholderController } from '../controllers/StakeholderController.js';
 import { body, param, query } from 'express-validator';
+import { validateObjectIdParam } from '../../utils/idUtils.js';
 
 const router = express.Router();
 

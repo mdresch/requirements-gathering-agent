@@ -1,122 +1,48 @@
 import Joi from 'joi';
 import { uuidSchema, paginationSchema } from './documentSchemas.js';
+import { enhancedSchemas } from './enhancedSchemas.js';
 
-// Template creation and update schemas
-export const templateCreateSchema = {
-  body: Joi.object({
-    name: Joi.string().min(1).max(100).required(),
-    description: Joi.string().max(500).optional(),
-    category: Joi.string().max(50).optional(),
-    tags: Joi.array().items(Joi.string().max(30)).max(10).optional(),
-    // Required for document generation
-    aiInstructions: Joi.string().min(10).required().messages({
-      'string.min': 'AI instructions must be at least 10 characters long',
-      'any.required': 'AI instructions are required for document generation'
-    }),
-    promptTemplate: Joi.string().min(10).required().messages({
-      'string.min': 'Prompt template must be at least 10 characters long',
-      'any.required': 'Prompt template is required for document generation'
-    }),
-    generationFunction: Joi.string().required().messages({
-      'any.required': 'Generation function is required to map to document processor'
-    }),
-    templateData: Joi.object({
-      content: Joi.string().required(),
-      aiInstructions: Joi.string().min(10).required(),
-      variables: Joi.array().items(
-        Joi.object({
-          name: Joi.string().required(),
-          type: Joi.string().valid('text', 'number', 'date', 'boolean', 'array', 'object').required(),
-          required: Joi.boolean().default(false),
-          description: Joi.string().optional(),
-          defaultValue: Joi.any().optional()
-        })
-      ).optional(),
-      layout: Joi.object({
-        pageSize: Joi.string().valid('A4', 'Letter', 'Legal').default('A4'),
-        orientation: Joi.string().valid('portrait', 'landscape').default('portrait'),
-        margins: Joi.object({
-          top: Joi.number().min(0).default(20),
-          bottom: Joi.number().min(0).default(20),
-          left: Joi.number().min(0).default(20),
-          right: Joi.number().min(0).default(20)
-        }).optional()
-      }).optional()
-    }).required(),
-    isActive: Joi.boolean().default(true)
-  })
-};
+// Enhanced template schemas using the comprehensive validation patterns
+export const templateCreateSchema = enhancedSchemas.template.create;
+export const templateUpdateSchema = enhancedSchemas.template.update;
+export const templateGetSchema = enhancedSchemas.template.get;
+export const templateDeleteSchema = enhancedSchemas.template.delete;
+export const templateListSchema = enhancedSchemas.template.list;
 
-export const templateUpdateSchema = {
-  body: Joi.object({
-    name: Joi.string().min(1).max(100).optional(),
-    description: Joi.string().max(500).optional(),
-    category: Joi.string().max(50).optional(),
-    tags: Joi.array().items(Joi.string().max(30)).max(10).optional(),
-    templateData: Joi.object({
-      content: Joi.string().optional(),
-      variables: Joi.array().items(
-        Joi.object({
-          name: Joi.string().required(),
-          type: Joi.string().valid('text', 'number', 'date', 'boolean', 'array', 'object').required(),
-          required: Joi.boolean().default(false),
-          description: Joi.string().optional(),
-          defaultValue: Joi.any().optional()
-        })
-      ).optional(),
-      layout: Joi.object({
-        pageSize: Joi.string().valid('A4', 'Letter', 'Legal').optional(),
-        orientation: Joi.string().valid('portrait', 'landscape').optional(),
-        margins: Joi.object({
-          top: Joi.number().min(0).optional(),
-          bottom: Joi.number().min(0).optional(),
-          left: Joi.number().min(0).optional(),
-          right: Joi.number().min(0).optional()
-        }).optional()
-      }).optional()
-    }).optional(),
-    isActive: Joi.boolean().optional()
-  }),
-  params: Joi.object({
-    templateId: uuidSchema
-  })
-};
-
-export const templateGetSchema = {
-  params: Joi.object({
-    templateId: uuidSchema
-  })
-};
-
-export const templateDeleteSchema = {
-  params: Joi.object({
-    templateId: uuidSchema
-  })
-};
-
-export const templateListSchema = {
-  query: paginationSchema.keys({
-    category: Joi.string().optional(),
-    tag: Joi.string().optional(),
-    search: Joi.string().max(100).optional(),
-    isActive: Joi.boolean().optional()
-  })
-};
-
+// Additional template-specific schemas
 export const templateValidateSchema = {
   body: Joi.object({
-    templateData: Joi.object({
-      content: Joi.string().required(),
-      variables: Joi.array().items(
-        Joi.object({
-          name: Joi.string().required(),
-          type: Joi.string().valid('text', 'number', 'date', 'boolean', 'array', 'object').required(),
-          required: Joi.boolean().default(false),
-          description: Joi.string().optional(),
-          defaultValue: Joi.any().optional()
-        })
-      ).optional()
-    }).required(),
-    testData: Joi.object().optional()
+    name: Joi.string().trim().min(1).max(100).required(),
+    description: Joi.string().trim().min(1).max(500).required(),
+    category: Joi.string().trim().min(1).max(50).required(),
+    documentKey: Joi.string().trim().min(1).max(50).pattern(/^[a-zA-Z0-9_-]+$/).required(),
+    template_type: Joi.string().trim().min(1).max(50).required(),
+    ai_instructions: Joi.string().trim().min(10).max(5000).required(),
+    prompt_template: Joi.string().trim().min(10).max(10000).required(),
+    generation_function: Joi.string().trim().min(1).max(100).required()
+  })
+};
+
+// Common schemas for reuse across different validators
+export const commonSchemas = {
+  objectId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required().messages({
+    'string.pattern.base': 'Invalid ID format',
+    'any.required': 'ID is required'
+  }),
+  
+  pagination: Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
+    sort: Joi.string().valid('created_at', 'updated_at', 'name', 'status').default('created_at'),
+    order: Joi.string().valid('asc', 'desc').default('desc')
+  }),
+  
+  search: Joi.string().trim().max(100).optional(),
+  
+  auditTrailEntry: Joi.object({
+    action: Joi.string().valid('created', 'updated', 'deleted', 'restored', 'activated', 'deactivated').required(),
+    timestamp: Joi.date().default(Date.now),
+    userId: Joi.string().trim().max(100).required(),
+    reason: Joi.string().trim().max(500).optional()
   })
 };

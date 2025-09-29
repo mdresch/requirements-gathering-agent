@@ -204,7 +204,8 @@ export class DatabaseTemplateService {
    * Get the templates collection from MongoDB
    */
   private async getTemplatesCollection() {
-    if (!dbConnection.isConnectionActive()) {
+    const isConnected = await dbConnection.healthCheck();
+    if (!isConnected) {
       await dbConnection.connect();
     }
     

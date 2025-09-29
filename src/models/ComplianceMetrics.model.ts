@@ -99,4 +99,7 @@ ComplianceMetricsSchema.index({
   name: 'dashboard_query_index' 
 });
 
-export default mongoose.model<IComplianceMetrics>('ComplianceMetrics', ComplianceMetricsSchema);
+const ComplianceMetricsModel = mongoose.model<IComplianceMetrics>('ComplianceMetrics', ComplianceMetricsSchema);
+
+export default ComplianceMetricsModel;
+export { ComplianceMetricsModel };

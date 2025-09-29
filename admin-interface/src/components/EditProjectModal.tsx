@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Calendar, DollarSign, User, Tag, AlertTriangle } from 'lucide-react';
+import { X, Save, Calendar, DollarSign, User, Tag, AlertTriangle, Clock, CheckCircle, Info, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { apiClient } from '../lib/api';
 import type { Project } from '../types/project';
@@ -48,10 +48,11 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   useEffect(() => {
     if (project && isOpen) {
-      console.log('EditProjectModal: Populating form with project data:', project);
       const newFormData = {
         name: project.name || '',
         description: project.description || '',
@@ -67,9 +68,8 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
         scopeControlEnabled: project.scopeControlEnabled || false
       };
       setFormData(newFormData);
-      console.log('EditProjectModal: Form data set:', newFormData);
-    } else if (isOpen && !project) {
-      console.log('EditProjectModal: Modal is open but no project data available');
+      setHasChanges(false);
+      setShowValidationErrors(false);
     }
   }, [project, isOpen]);
 
@@ -78,6 +78,10 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
       ...prev,
       [field]: value
     }));
+    setHasChanges(true);
+    if (showValidationErrors) {
+      setShowValidationErrors(false);
+    }
   };
 
   const handleAddTag = () => {
@@ -87,6 +91,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
         tags: [...prev.tags, tagInput.trim()]
       }));
       setTagInput('');
+      setHasChanges(true);
     }
   };
 
@@ -95,13 +100,34 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
+    setHasChanges(true);
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    
+    if (!formData.name.trim()) {
+      errors.push('Project name is required');
+    }
+    
+    if (formData.startDate && formData.endDate && formData.startDate > formData.endDate) {
+      errors.push('End date must be after start date');
+    }
+    
+    if (formData.budget && (isNaN(parseFloat(formData.budget)) || parseFloat(formData.budget) < 0)) {
+      errors.push('Budget must be a valid positive number');
+    }
+    
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim()) {
-      toast.error('Project name is required');
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setShowValidationErrors(true);
+      validationErrors.forEach(error => toast.error(error));
       return;
     }
 
@@ -118,6 +144,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
       
       toast.success('Project updated successfully');
       onUpdate(updatedProject);
+      setHasChanges(false);
       onClose();
     } catch (error) {
       console.error('Failed to update project:', error);
@@ -129,34 +156,44 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Debug log to see current form data
-  console.log('EditProjectModal: Current form data:', formData);
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Project</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+              <Zap className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Edit Project</h2>
+              <p className="text-sm text-gray-500">{project?.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {hasChanges && (
+              <div className="flex items-center space-x-1 text-sm text-orange-600">
+                <Clock className="w-4 h-4" />
+                <span>Unsaved changes</span>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {/* Debug info - remove this in production */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600">
-            <strong>Debug:</strong> Project: {project?.name || 'No project'}, Form populated: {formData.name ? 'Yes' : 'No'}<br/>
-            <strong>Project ID:</strong> {project?.id || 'No ID'}, <strong>Owner:</strong> {project?.owner || 'No owner'}<br/>
-            <strong>Modal Open:</strong> {isOpen ? 'Yes' : 'No'}, <strong>Has Project:</strong> {project ? 'Yes' : 'No'}
-          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -166,9 +203,17 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                    showValidationErrors && !formData.name.trim() 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300'
+                  }`}
                   required
+                  placeholder="Enter a descriptive project name"
                 />
+                {showValidationErrors && !formData.name.trim() && (
+                  <p className="mt-1 text-sm text-red-600">Project name is required</p>
+                )}
               </div>
 
               <div>
@@ -179,8 +224,12 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-sans text-sm"
+                  placeholder="Describe the project objectives, scope, and key deliverables"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  {formData.description.length}/500 characters
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -254,7 +303,10 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
             {/* Project Details */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Project Details</h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <Info className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-medium text-gray-900">Project Details</h3>
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -371,39 +423,61 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
               {/* Scope Control */}
               <div className="border-t pt-4">
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="flex items-center space-x-2 mb-3">
                   <AlertTriangle className="w-5 h-5 text-orange-500" />
                   <h4 className="text-sm font-medium text-gray-900">Scope Control</h4>
                 </div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.scopeControlEnabled}
-                    onChange={(e) => handleInputChange('scopeControlEnabled', e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Enable scope control and change management</span>
-                </label>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.scopeControlEnabled}
+                      onChange={(e) => handleInputChange('scopeControlEnabled', e.target.checked)}
+                      className="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">Enable scope control and change management</span>
+                      <p className="text-xs text-gray-600 mt-1">
+                        When enabled, all scope changes will require approval and be tracked in the audit trail.
+                      </p>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              <span>{loading ? 'Saving...' : 'Save Changes'}</span>
-            </button>
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <div className="text-sm text-gray-500">
+              {hasChanges ? (
+                <span className="flex items-center space-x-1 text-orange-600">
+                  <Clock className="w-4 h-4" />
+                  <span>You have unsaved changes</span>
+                </span>
+              ) : (
+                <span className="flex items-center space-x-1 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>All changes saved</span>
+                </span>
+              )}
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !hasChanges}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

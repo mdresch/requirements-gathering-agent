@@ -385,17 +385,19 @@ export class RealTimeActivityTrackingService {
       let sessionCount = 0;
 
       activities.forEach(activity => {
-        const activityType = activity.contextData?.activityType || activity.action;
-        const component = activity.contextData?.component || 'unknown';
+        const activityType = (activity.contextData as any)?.activityType || activity.action;
+        const component = (activity.contextData as any)?.component || 'unknown';
         const userName = activity.userName;
 
         // Count by type
         analytics.activitiesByType[activityType] = (analytics.activitiesByType[activityType] || 0) + 1;
         analytics.activitiesByComponent[component] = (analytics.activitiesByComponent[component] || 0) + 1;
-        analytics.activitiesByUser[userName] = (analytics.activitiesByUser[userName] || 0) + 1;
+        if (userName) {
+          analytics.activitiesByUser[userName] = (analytics.activitiesByUser[userName] || 0) + 1;
+        }
 
         // Track pages
-        const page = activity.contextData?.page;
+        const page = (activity.contextData as any)?.page;
         if (page) {
           analytics.topPages[page] = (analytics.topPages[page] || 0) + 1;
         }
@@ -404,7 +406,7 @@ export class RealTimeActivityTrackingService {
         analytics.topActions[activity.action] = (analytics.topActions[activity.action] || 0) + 1;
 
         // Session duration tracking
-        const duration = activity.contextData?.duration;
+        const duration = (activity.contextData as any)?.duration;
         if (duration) {
           totalSessionDuration += duration;
           sessionCount++;

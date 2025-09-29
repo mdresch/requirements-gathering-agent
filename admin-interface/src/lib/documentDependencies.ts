@@ -233,39 +233,30 @@ export function validateDocumentDependencies(
   templateId: string,
   availableDocuments: Array<{ id: string; name: string; templateId?: string }>
 ): DependencyValidationResult {
-  console.log(`🔍 Validating dependencies for template ID: "${templateId}"`);
-  
   // First, try to find the template directly by templateId
   let template = DOCUMENT_DEPENDENCIES[templateId];
-  console.log(`📋 Direct lookup result: ${template ? 'Found' : 'Not found'}`);
   
   // If not found, try to map from document key to MongoDB ObjectId
   if (!template) {
     const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[templateId];
-    console.log(`🔗 Document key mapping result: ${mappedTemplateId || 'No mapping found'}`);
     if (mappedTemplateId) {
       template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
-      console.log(`📋 Mapped template lookup result: ${template ? 'Found' : 'Not found'}`);
     }
   }
   
   // If still not found, try reverse mapping from MongoDB ObjectId to document key
   if (!template) {
     const mappedDocumentKey = TEMPLATE_ID_TO_DOCUMENT_KEY[templateId];
-    console.log(`🔄 Reverse mapping result: ${mappedDocumentKey || 'No reverse mapping found'}`);
     if (mappedDocumentKey) {
       const mappedTemplateId = DOCUMENT_TYPE_TO_TEMPLATE_ID[mappedDocumentKey];
-      console.log(`🔗 Second mapping result: ${mappedTemplateId || 'No second mapping found'}`);
       if (mappedTemplateId) {
         template = DOCUMENT_DEPENDENCIES[mappedTemplateId];
-        console.log(`📋 Second mapped template lookup result: ${template ? 'Found' : 'Not found'}`);
       }
     }
   }
   
   // Final fallback: try to find by template name similarity
   if (!template) {
-    console.log(`🔍 Attempting name-based fallback for: "${templateId}"`);
     const normalizedTemplateId = templateId.toLowerCase().replace(/[^a-z0-9]/g, '');
     
     for (const [id, dep] of Object.entries(DOCUMENT_DEPENDENCIES)) {
@@ -279,12 +270,7 @@ export function validateDocumentDependencies(
   }
   
   if (!template) {
-    console.warn(`⚠️ Template '${templateId}' not found in dependency registry after all attempts`);
-    console.log(`📋 Available template IDs: ${Object.keys(DOCUMENT_DEPENDENCIES).join(', ')}`);
-    console.log(`🔗 Available document key mappings: ${Object.keys(DOCUMENT_TYPE_TO_TEMPLATE_ID).join(', ')}`);
-    
     // Return a valid result for unknown templates to prevent blocking document generation
-    console.log(`🔄 Unknown template fallback: returning valid result with no dependencies`);
     return {
       isValid: true,
       missingDependencies: [],

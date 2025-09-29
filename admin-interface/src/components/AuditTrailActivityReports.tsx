@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -104,6 +104,33 @@ interface AuditTrailActivityData {
     complianceScore: number;
     standardsCompliance: Record<string, number>;
   };
+  enhancedComplianceMetrics: {
+    complianceChecks: Array<{
+      id: string;
+      timestamp: string;
+      checkType: string;
+      status: string;
+      score: number;
+      details: string | { totalRequirements?: number; compliantRequirements?: number; nonCompliantRequirements?: number };
+      projectId?: string;
+    }>;
+    complianceReports: Array<{
+      id: string;
+      reportName: string;
+      status: string;
+      score: number;
+      createdAt: string;
+      details: string;
+    }>;
+    qualityAssessments: Array<{
+      id: string;
+      assessmentType: string;
+      score: number;
+      status: string;
+      createdAt: string;
+      details: string;
+    }>;
+  };
   dataQualityMetrics: {
     totalDocuments: number;
     qualityScore: number;
@@ -171,11 +198,7 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'security' | 'compliance' | 'users' | 'trends'>('overview');
 
-  useEffect(() => {
-    loadActivityData();
-  }, [projectId, timeRange, selectedCategory, selectedSeverity]);
-
-  const loadActivityData = async () => {
+  const loadActivityData = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -228,19 +251,20 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, timeRange]);
+
+  useEffect(() => {
+    loadActivityData();
+  }, [loadActivityData]);
 
   const transformAuditData = (data: any): AuditTrailActivityData => {
     return {
       totalActivities: data.totalEntries || 0,
-      activitiesByType: data.activitiesByType || {},
-      activitiesByUser: data.mostActiveUsers?.reduce((acc: any, user: any) => {
-        acc[user.userName || user.user] = user.activityCount || user.count || 0;
-        return acc;
-      }, {}) || {},
-      activitiesByProject: data.activitiesByProject || {},
-      activitiesBySeverity: data.activitiesBySeverity || {},
-      activitiesByCategory: data.activitiesByCategory || {},
+      activitiesByType: data.entriesByAction || {},
+      activitiesByUser: data.entriesByUser || {},
+      activitiesByProject: data.entriesByProject || {},
+      activitiesBySeverity: data.entriesBySeverity || {},
+      activitiesByCategory: data.entriesByCategory || {},
       recentActivities: data.recentActivities || [],
       trends: data.trends || { daily: {}, weekly: {}, monthly: {} },
       securityEvents: data.securityEvents || [],
@@ -250,6 +274,11 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
         failedChecks: data.complianceMetrics?.failedChecks || 0,
         complianceScore: data.complianceMetrics?.averageScore || 0,
         standardsCompliance: data.complianceMetrics?.standardsCompliance || {}
+      },
+      enhancedComplianceMetrics: data.enhancedComplianceMetrics || {
+        complianceChecks: [],
+        complianceReports: [],
+        qualityAssessments: []
       },
       dataQualityMetrics: {
         totalDocuments: data.dataQualityMetrics?.totalDocuments || 0,
@@ -261,7 +290,7 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
       userActivityMetrics: {
         totalUsers: data.userActivityMetrics?.totalUsers || 0,
         activeUsers: data.userActivityMetrics?.activeUsers || 0,
-        topActiveUsers: data.mostActiveUsers || []
+        topActiveUsers: data.userActivityMetrics?.topActiveUsers || []
       }
     };
   };
@@ -406,6 +435,11 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
           'DMBOK': 92,
           'ISO': 87
         }
+      },
+      enhancedComplianceMetrics: {
+        complianceChecks: [],
+        complianceReports: [],
+        qualityAssessments: []
       },
       dataQualityMetrics: {
         totalDocuments: 234,
@@ -789,6 +823,7 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
       {/* Compliance Tab */}
       {activeTab === 'compliance' && (
         <div className="space-y-6">
+          {/* Compliance Overview */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Compliance Metrics */}
             <Card>
@@ -844,6 +879,128 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enhanced Compliance Data */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Compliance Checks */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Recent Compliance Checks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {activityData.enhancedComplianceMetrics.complianceChecks.length > 0 ? (
+                    activityData.enhancedComplianceMetrics.complianceChecks.slice(0, 5).map((check) => (
+                      <div key={check.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{check.checkType}</p>
+                          <p className="text-xs text-gray-500">
+                            {typeof check.details === 'object' 
+                              ? `Requirements: ${check.details.totalRequirements || 0} total, ${check.details.compliantRequirements || 0} compliant, ${check.details.nonCompliantRequirements || 0} non-compliant`
+                              : check.details || 'Compliance check performed'
+                            }
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(check.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            variant={check.status === 'passed' ? "default" : check.status === 'failed' ? "destructive" : "secondary"}
+                            className={check.status === 'passed' ? "bg-green-100 text-green-800" : check.status === 'failed' ? "" : "bg-yellow-100 text-yellow-800"}
+                          >
+                            {check.status}
+                          </Badge>
+                          <p className="text-sm font-bold mt-1">{check.score}%</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No compliance checks available</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Compliance Reports */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Compliance Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {activityData.enhancedComplianceMetrics.complianceReports.length > 0 ? (
+                    activityData.enhancedComplianceMetrics.complianceReports.slice(0, 5).map((report) => (
+                      <div key={report.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{report.reportName}</p>
+                          <p className="text-xs text-gray-500">{report.details}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(report.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            variant={report.status === 'completed' ? "default" : "secondary"}
+                            className={report.status === 'completed' ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800"}
+                          >
+                            {report.status}
+                          </Badge>
+                          <p className="text-sm font-bold mt-1">{report.score}%</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No compliance reports available</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quality Assessments */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Target className="h-5 w-5 mr-2" />
+                  Quality Assessments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {activityData.enhancedComplianceMetrics.qualityAssessments.length > 0 ? (
+                    activityData.enhancedComplianceMetrics.qualityAssessments.slice(0, 5).map((assessment) => (
+                      <div key={assessment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">{assessment.assessmentType}</p>
+                          <p className="text-xs text-gray-500">{assessment.details}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(assessment.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            variant={assessment.status === 'completed' ? "default" : "secondary"}
+                            className={assessment.status === 'completed' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}
+                          >
+                            {assessment.status}
+                          </Badge>
+                          <p className="text-sm font-bold mt-1">{assessment.score}%</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No quality assessments available</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -930,27 +1087,103 @@ export default function AuditTrailActivityReports({ projectId }: AuditTrailActiv
             <CardHeader>
               <CardTitle className="flex items-center">
                 <TrendingUp className="h-5 w-5 mr-2" />
-                Activity Trends
+                Activity Trends - Daily (Last 30 Days)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={formatTrendData(activityData.trends.daily)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="formattedDate" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#3B82F6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {Object.keys(activityData.trends.daily).length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={formatTrendData(activityData.trends.daily)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="formattedDate" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="count" 
+                      stroke="#3B82F6" 
+                      strokeWidth={2}
+                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-gray-500">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No activity trends data available</p>
+                    <p className="text-sm">Activity data will appear here as users interact with the system</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Weekly Trends (Last 12 Weeks)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(activityData.trends.weekly).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={formatTrendData(activityData.trends.weekly)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="formattedDate" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#10B981" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-500">
+                    <div className="text-center">
+                      <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No weekly trends data</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Monthly Trends (Last 12 Months)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(activityData.trends.monthly).length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={formatTrendData(activityData.trends.monthly)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="formattedDate" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#8B5CF6" 
+                        fill="#8B5CF6" 
+                        fillOpacity={0.3}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-500">
+                    <div className="text-center">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No monthly trends data</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>

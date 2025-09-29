@@ -29,6 +29,7 @@ import { writeFile } from 'fs/promises';
 import { PMBOKValidator } from '../pmbokValidation/PMBOKValidator.js';
 import { ComplianceValidationService, DocumentComplianceValidation, ComplianceValidationConfig } from '../../services/ComplianceValidationService.js';
 import { createProcessor } from './ProcessorFactory.js';
+import { createDatabaseFirstProcessor } from './DatabaseFirstProcessorFactory.js';
 import { ContextManager } from '../contextManager.js';
 import { 
     createDirectoryStructure, 
@@ -207,6 +208,122 @@ export class DocumentGenerator {
             // Extract project ID from context using helper method
             const projectId = this.extractProjectId();
             
+            // DATABASE-FIRST APPROACH: Check if document already exists
+            const existingDocument = await ProjectDocument.findOne({
+                projectId: projectId,
+                type: documentKey,
+                deletedAt: null
+            });
+
+            if (existingDocument) {
+                // Document exists - check if it has been manually modified
+                const isManuallyModified = this.isDocumentManuallyModified(existingDocument);
+                
+                if (isManuallyModified) {
+                    console.log(`🛡️ PRESERVING manually modified document: ${config.title} (ID: ${existingDocument._id})`);
+                    console.log(`   Last modified: ${existingDocument.lastModified}`);
+                    console.log(`   Modified by: ${existingDocument.lastModifiedBy}`);
+                    return existingDocument._id.toString();
+                } else {
+                    // Document exists but is auto-generated - update it
+                    console.log(`🔄 Updating existing auto-generated document: ${config.title} (ID: ${existingDocument._id})`);
+                    
+                    // Get conservative time saved value from template metadata
+                    let timeSaved = 2; // Default conservative estimate
+                    
+                    try {
+                        const { TemplateModel } = await import('../../models/Template.model.js');
+                        const template = await TemplateModel.findOne({ documentKey: documentKey });
+                        if (template && template.metadata?.estimatedTime) {
+                            const estimatedTime = template.metadata.estimatedTime;
+                            
+                            if (typeof estimatedTime === 'string') {
+                                // Extract first number from strings like "2-4 hours", "6-8 hours", "7-9 hours"
+                                const match = estimatedTime.match(/(\d+)/);
+                                if (match) {
+                                    timeSaved = parseInt(match[1]);
+                                }
+                            } else if (typeof estimatedTime === 'number') {
+                                timeSaved = estimatedTime;
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ Could not fetch template for time saved calculation, using default: ${error}`);
+                    }
+
+                    // Update existing document
+                    existingDocument.content = content;
+                    existingDocument.wordCount = content.split(' ').length;
+                    existingDocument.timeSaved = timeSaved;
+                    existingDocument.lastModified = new Date();
+                    existingDocument.lastModifiedBy = 'ADPA-System';
+                    existingDocument.metadata = {
+                        ...existingDocument.metadata,
+                        templateId: documentKey,
+                        generationJobId: `job-${Date.now()}`,
+                        complianceScore: 0,
+                        automatedChecks: []
+                    };
+
+                    await existingDocument.save();
+                    console.log(`✅ Updated existing document: ${config.title} (ID: ${existingDocument._id})`);
+
+                    // Perform quality assessment
+                    try {
+                        console.log(`🔍 Starting quality assessment for ${config.title}...`);
+                        const qualityService = QualityAssessmentService.getInstance();
+                        
+                        const projectContext = typeof this.context === 'string' 
+                            ? { projectId: this.context } 
+                            : this.context;
+                        
+                        const qualityResult = await qualityService.assessDocumentQuality(
+                            content,
+                            documentKey,
+                            projectContext,
+                            existingDocument.framework
+                        );
+
+                        // Update document with quality assessment results
+                        await qualityService.updateDocumentQualityScore(existingDocument._id.toString(), qualityResult);
+                        
+                        console.log(`✅ Quality assessment completed for ${config.title}: ${qualityResult.overallScore}%`);
+                    } catch (qualityError) {
+                        console.warn(`⚠️ Quality assessment failed for ${config.title}:`, qualityError);
+                    }
+
+                    return existingDocument._id.toString();
+                }
+            }
+
+            // Document doesn't exist - create new one
+            console.log(`🆕 Creating new document: ${config.title}`);
+            
+            // Get conservative time saved value from template metadata
+            let timeSaved = 2; // Default conservative estimate
+            
+            try {
+                const { TemplateModel } = await import('../../models/Template.model.js');
+                const template = await TemplateModel.findOne({ documentKey: documentKey });
+                if (template && template.metadata?.estimatedTime) {
+                    const estimatedTime = template.metadata.estimatedTime;
+                    
+                    if (typeof estimatedTime === 'string') {
+                        // Extract first number from strings like "2-4 hours", "6-8 hours", "7-9 hours"
+                        const match = estimatedTime.match(/(\d+)/);
+                        if (match) {
+                            timeSaved = parseInt(match[1]);
+                        }
+                    } else if (typeof estimatedTime === 'number') {
+                        timeSaved = estimatedTime;
+                    }
+                }
+            } catch (error) {
+                console.warn(`⚠️ Could not fetch template for time saved calculation, using default: ${error}`);
+            }
+            
+            console.log(`⏱️ Using conservative time estimate: ${timeSaved} hours for document type: ${documentKey}`);
+            
             const documentData = {
                 projectId: projectId,
                 name: config.title,
@@ -218,6 +335,7 @@ export class DocumentGenerator {
                 framework: typeof this.context === 'string' ? 'multi' : (this.context as any).framework || 'multi',
                 qualityScore: 0, // Will be updated by compliance validation
                 wordCount: content.split(' ').length,
+                timeSaved: timeSaved, // Time saved from template
                 tags: [config.category, 'generated'],
                 generatedAt: new Date(),
                 generatedBy: 'ADPA-System',
@@ -234,7 +352,7 @@ export class DocumentGenerator {
             const document = new ProjectDocument(documentData);
             await document.save();
 
-            console.log(`✅ Saved to database: ${config.title} (ID: ${document._id}, Project ID: ${projectId})`);
+            console.log(`✅ Created new document: ${config.title} (ID: ${document._id}, Project ID: ${projectId})`);
 
             // Perform quality assessment after document is saved
             try {
@@ -266,6 +384,39 @@ export class DocumentGenerator {
             console.error(`❌ Error saving document to database: ${error.message}`);
             return null;
         }
+    }
+
+    /**
+     * Check if a document has been manually modified by a user
+     * @param document The document to check
+     * @returns true if manually modified, false if auto-generated
+     */
+    private isDocumentManuallyModified(document: any): boolean {
+        // Check if lastModifiedBy is not 'ADPA-System'
+        if (document.lastModifiedBy && document.lastModifiedBy !== 'ADPA-System') {
+            return true;
+        }
+
+        // Check if document has been modified after generation
+        const timeSinceGeneration = document.lastModified.getTime() - document.generatedAt.getTime();
+        const generationThreshold = 5 * 60 * 1000; // 5 minutes threshold
+        
+        // If modified significantly after generation, likely manual
+        if (timeSinceGeneration > generationThreshold) {
+            return true;
+        }
+
+        // Check metadata for manual modification indicators
+        if (document.metadata && document.metadata.manuallyModified) {
+            return true;
+        }
+
+        // Check if content contains manual modification markers
+        if (document.content && document.content.includes('<!-- MANUALLY_MODIFIED -->')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -664,8 +815,10 @@ export class DocumentGenerator {
 
             console.log(`✅ Context window validation passed: ${contextValidation.availableTokens} tokens available`);
 
-            // Use generic ProcessorFactory to create and run the processor
-            const processor = await createProcessor(task.key);
+            // Use Database-First ProcessorFactory to create and run the processor
+            // This ensures we use templates from the database instead of TypeScript files
+            console.log(`🔄 Database-First Generation: Creating processor for ${task.key}`);
+            const processor = await createDatabaseFirstProcessor(task.key);
             
             // Update progress
             if (jobId) {

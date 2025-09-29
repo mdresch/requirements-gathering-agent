@@ -1,54 +1,72 @@
 'use client';
 
 import { useMemo, useEffect, useState } from 'react';
-import { BarChart3, FileText, Tags, Layers, Activity } from 'lucide-react';
+import { BarChart3, FileText, Tags, Layers, Activity, TrendingUp, TrendingDown, Star } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
 export default function TemplateStats() {
   const [templates, setTemplates] = useState<any[]>([]);
+  const [usageAnalytics, setUsageAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadTemplates = async () => {
+    const loadData = async () => {
       try {
-        const response = await apiClient.getTemplates();
-        if (response.success && response.data) {
-          setTemplates(response.data.templates || []);
+        // Load templates and usage analytics in parallel
+        const [templatesResponse, analyticsResponse] = await Promise.all([
+          apiClient.getTemplates({ page: 1, limit: 1000 }),
+          apiClient.getTemplateUsageAnalytics()
+        ]);
+        
+        if (templatesResponse.success && templatesResponse.data) {
+          setTemplates(templatesResponse.data.templates || []);
+        }
+        
+        if (analyticsResponse.success && analyticsResponse.data) {
+          setUsageAnalytics(analyticsResponse.data);
         }
       } catch (error) {
-        console.error('Failed to load templates for stats:', error);
+        console.error('Failed to load data for stats:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadTemplates();
+    loadData();
   }, []);
 
   // Compute stats from API templates
   const stats = useMemo(() => {
-    const totalTemplates = Array.isArray(templates) ? templates.length : 0;
+    // Filter out deleted templates for accurate counts
+    const activeTemplates = templates.filter((tpl: any) => 
+      !tpl.deletedAt && !tpl.is_deleted
+    );
+    
+    const totalTemplates = activeTemplates.length;
     const categories: Record<string, number> = {};
-    const tags: Record<string, number> = {};
-    templates.forEach((tpl: any) => {
+    const templateTypes: Record<string, number> = {};
+    
+    activeTemplates.forEach((tpl: any) => {
+      // Count categories
       if (tpl.category) {
         categories[tpl.category] = (categories[tpl.category] || 0) + 1;
       }
-      if (Array.isArray(tpl.tags)) {
-        tpl.tags.forEach((tag: string) => {
-          tags[tag] = (tags[tag] || 0) + 1;
-        });
+      
+      // Count template types
+      if (tpl.template_type) {
+        templateTypes[tpl.template_type] = (templateTypes[tpl.template_type] || 0) + 1;
       }
     });
+    
     return {
       totalTemplates,
       categoriesCount: Object.keys(categories).length,
       topCategories: Object.entries(categories)
         .map(([category, count]) => ({ category, count }))
         .sort((a, b) => b.count - a.count),
-      topTags: Object.entries(tags)
-        .map(([tag, count]) => ({ tag, count }))
+      topTemplateTypes: Object.entries(templateTypes)
+        .map(([type, count]) => ({ type, count }))
         .sort((a, b) => b.count - a.count),
-      activeTemplates: totalTemplates, // All are active for now
+      activeTemplates: totalTemplates,
     };
   }, [templates]);
 
@@ -67,7 +85,7 @@ export default function TemplateStats() {
     },
     {
       title: 'Template Types',
-      value: stats.topTags.length,
+      value: stats.topTemplateTypes.length,
       icon: Tags,
       color: 'purple',
     },
@@ -134,7 +152,7 @@ export default function TemplateStats() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Top Categories */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">Top Categories</h3>
@@ -169,14 +187,14 @@ export default function TemplateStats() {
         <div>
           <h3 className="text-lg font-medium text-gray-900 mb-4">Template Types</h3>
           <div className="space-y-3">
-            {stats.topTags.slice(0, 5).map((type, index) => (
-              <div key={type.tag} className="flex items-center justify-between">
+            {stats.topTemplateTypes.slice(0, 5).map((type, index) => (
+              <div key={type.type} className="flex items-center justify-between">
                 <div className="flex items-center">
                   <span className="text-sm font-medium text-gray-600 mr-2">
                     #{index + 1}
                   </span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {type.tag}
+                    {type.type}
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -198,26 +216,98 @@ export default function TemplateStats() {
         </div>
       </div>
 
-      {/* Summary Section */}
-      <div className="mt-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Summary</h3>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <p className="font-medium text-gray-900">{stats.totalTemplates}</p>
-              <p className="text-gray-600">Total Templates</p>
+      {/* Template Usage Analytics */}
+      {usageAnalytics && (
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <Star className="w-5 h-5 mr-2 text-yellow-500" />
+            Template Usage Analytics
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Most Popular Templates */}
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Most Popular Templates</h4>
+              <div className="space-y-3">
+                {usageAnalytics.mostPopularTemplates.slice(0, 5).map((template: any, index: number) => (
+                  <div key={`popular-${template.name}-${index}`} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-gray-600 mr-2">
+                        #{index + 1}
+                      </span>
+                      <span className="text-sm text-gray-900 truncate max-w-[200px]" title={template.name}>
+                        {template.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-yellow-500 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min((template.usage / usageAnalytics.totalUsage) * 100, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 min-w-[2rem]">
+                        {template.usage}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="text-center">
-              <p className="font-medium text-gray-900">{stats.categoriesCount}</p>
-              <p className="text-gray-600">Categories</p>
-            </div>
-            <div className="text-center">
-              <p className="font-medium text-gray-900">{stats.topTags.length}</p>
-              <p className="text-gray-600">Template Types</p>
+
+            {/* Trending Templates */}
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-3">Trending Templates</h4>
+              <div className="space-y-4">
+                {/* Trending Up */}
+                <div>
+                  <div className="flex items-center mb-2">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <span className="text-sm font-medium text-green-700">Trending Up</span>
+                  </div>
+                  <div className="space-y-2">
+                    {usageAnalytics.trendingUp.slice(0, 3).map((template: any, index: number) => (
+                      <div key={`trending-up-${template.name}-${index}`} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-900 truncate max-w-[250px]" title={template.name}>
+                          {template.name}
+                        </span>
+                        <div className="flex items-center">
+                          <span className="text-xs text-green-600 mr-1">+</span>
+                          <span className="text-sm font-medium text-gray-900">{template.usage}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trending Down */}
+                <div>
+                  <div className="flex items-center mb-2">
+                    <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+                    <span className="text-sm font-medium text-red-700">Trending Down</span>
+                  </div>
+                  <div className="space-y-2">
+                    {usageAnalytics.trendingDown.slice(0, 3).map((template: any, index: number) => (
+                      <div key={`trending-down-${template.name}-${index}`} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-900 truncate max-w-[250px]" title={template.name}>
+                          {template.name}
+                        </span>
+                        <div className="flex items-center">
+                          <span className="text-xs text-red-600 mr-1">-</span>
+                          <span className="text-sm font-medium text-gray-900">{template.usage}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }

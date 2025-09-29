@@ -18,10 +18,11 @@
     "multi-standard-api": "dist/server.js"
   },
   "scripts": {
-    "build": "tsc && npm run copy-configs",
+    "build": "cd admin-interface && npm install --legacy-peer-deps && npm run build",
+    "vercel-build": "cd admin-interface && npm install --legacy-peer-deps && npm run build",
     "setup-review-system": "node dist/cli.js setup-review-system",
     "copy-configs": "node -e \"const fs=require('fs'),path=require('path'),glob=require('glob');glob.sync('src/**/*.json').forEach(f=>{const d=f.replace('src','dist');fs.mkdirSync(path.dirname(d),{recursive:true});fs.copyFileSync(f,d);});\"",
-    "start": "node dist/server.js",
+    "start": "node dist/api/simple-server.js",
     "api:start": "node dist/server.js",
     "api:enhanced": "node scripts/start-enhanced-server.js",
     "api:phase1-mock": "node dist/phase1/mock-server.js",

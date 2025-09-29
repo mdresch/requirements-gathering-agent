@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, BarChart3, TrendingUp, AlertTriangle, CheckCircle, Target, FileText, Star, RefreshCw, Download } from 'lucide-react';
 import { apiClient, getDocumentQuality, assessDocumentQuality } from '../lib/api';
 
@@ -45,13 +45,8 @@ export default function QualityReportModal({
   const [isAssessing, setIsAssessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && documentId) {
-      loadQualityData();
-    }
-  }, [isOpen, documentId]);
 
-  const loadQualityData = async () => {
+  const loadQualityData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -69,7 +64,13 @@ export default function QualityReportModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [documentId]);
+
+  useEffect(() => {
+    if (isOpen && documentId) {
+      loadQualityData();
+    }
+  }, [isOpen, documentId, loadQualityData]);
 
   const handleReassess = async () => {
     try {

@@ -61,10 +61,10 @@ export default function DeletedTemplatesModal({
       const response = await getDeletedTemplates(params);
       
       if (response.success) {
-        setDeletedTemplates(response.data || []);
-        setTotalPages(response.pagination?.totalPages || 1);
-        setTotalItems(response.pagination?.total || 0);
-        console.log('✅ Deleted templates loaded:', response.data?.length);
+        setDeletedTemplates(response.data?.templates || []);
+        setTotalPages(Math.ceil((response.data?.pagination?.total || 0) / 10));
+        setTotalItems(response.data?.pagination?.total || 0);
+        console.log('✅ Deleted templates loaded:', response.data?.templates?.length);
       } else {
         console.error('❌ Failed to load deleted templates:', response.error);
         toast.error(response.error || 'Failed to load deleted templates');
@@ -121,7 +121,7 @@ export default function DeletedTemplatesModal({
     loadDeletedTemplates(1);
   };
 
-  const filteredTemplates = deletedTemplates.filter(template =>
+  const filteredTemplates = (deletedTemplates || []).filter(template =>
     template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     template.category.toLowerCase().includes(searchTerm.toLowerCase())

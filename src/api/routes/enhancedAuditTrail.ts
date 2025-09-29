@@ -5,6 +5,13 @@ import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { logger } from '../../utils/logger.js';
 import { EnhancedAuditTrailService } from '../../services/EnhancedAuditTrailService.js';
+import { 
+  createSuccessResponse, 
+  createPaginatedResponse, 
+  validateObjectIdParam,
+  isValidObjectId,
+  createIdErrorResponse 
+} from '../../utils/idUtils.js';
 
 const router = Router();
 const enhancedAuditTrailService = new EnhancedAuditTrailService();
@@ -15,9 +22,24 @@ router.get('/enhanced',
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    query('documentId').optional().isString().withMessage('Document ID must be a string'),
-    query('projectId').optional().isString().withMessage('Project ID must be a string'),
-    query('userId').optional().isString().withMessage('User ID must be a string'),
+    query('documentId').optional().custom((value) => {
+      if (value && !isValidObjectId(value)) {
+        throw new Error('Document ID must be a valid ObjectId');
+      }
+      return true;
+    }),
+    query('projectId').optional().custom((value) => {
+      if (value && !isValidObjectId(value)) {
+        throw new Error('Project ID must be a valid ObjectId');
+      }
+      return true;
+    }),
+    query('userId').optional().custom((value) => {
+      if (value && !isValidObjectId(value)) {
+        throw new Error('User ID must be a valid ObjectId');
+      }
+      return true;
+    }),
     query('action').optional().isString().withMessage('Action must be a string'),
     query('category').optional().isString().withMessage('Category must be a string'),
     query('severity').optional().isString().withMessage('Severity must be a string'),
@@ -90,20 +112,18 @@ router.get('/enhanced',
         parseInt(limit as string)
       );
 
-      res.json({
-        success: true,
-        message: 'Enhanced audit trail retrieved successfully',
-        data: {
-          entries: result.entries,
-          pagination: {
-            page: parseInt(page as string),
-            limit: parseInt(limit as string),
-            total: result.total,
-            pages: result.pages
-          },
-          analytics: result.analytics
-        }
-      });
+      const paginationData = {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total: result.total,
+        pages: result.pages
+      };
+
+      res.json(createPaginatedResponse(
+        result.entries,
+        paginationData,
+        'Enhanced audit trail retrieved successfully'
+      ));
 
     } catch (error) {
       logger.error('❌ Error fetching enhanced audit trail:', error);
@@ -148,11 +168,7 @@ router.get('/enhanced/analytics',
       const result = await enhancedAuditTrailService.getEnhancedAuditTrail(filters, 1, 1);
       const analytics = result.analytics;
 
-      res.json({
-        success: true,
-        message: 'Enhanced audit analytics retrieved successfully',
-        data: analytics
-      });
+      res.json(createSuccessResponse(analytics, 'Enhanced audit analytics retrieved successfully'));
 
     } catch (error) {
       logger.error('❌ Error fetching enhanced audit analytics:', error);
@@ -212,19 +228,17 @@ router.get('/enhanced/compliance/:projectId',
         entry.dataQuality
       );
 
-      res.json({
-        success: true,
-        message: 'Compliance audit trail retrieved successfully',
-        data: {
-          entries: complianceEntries,
-          analytics: result.analytics,
-          complianceSummary: {
-            totalComplianceEvents: complianceEntries.length,
-            averageComplianceScore: result.analytics.complianceScoreTrends.reduce((sum, trend) => sum + trend.currentScore, 0) / result.analytics.complianceScoreTrends.length || 0,
-            qualityTrends: result.analytics.dataQualityTrends
-          }
+      const complianceData = {
+        entries: complianceEntries,
+        analytics: result.analytics,
+        complianceSummary: {
+          totalComplianceEvents: complianceEntries.length,
+          averageComplianceScore: result.analytics.complianceScoreTrends.reduce((sum, trend) => sum + trend.currentScore, 0) / result.analytics.complianceScoreTrends.length || 0,
+          qualityTrends: result.analytics.dataQualityTrends
         }
-      });
+      };
+
+      res.json(createSuccessResponse(complianceData, 'Compliance audit trail retrieved successfully'));
 
     } catch (error) {
       logger.error('❌ Error fetching compliance audit trail:', error);
@@ -272,21 +286,19 @@ router.get('/enhanced/user/:userId',
 
       const result = await enhancedAuditTrailService.getEnhancedAuditTrail(filters, 1, 100);
 
-      res.json({
-        success: true,
-        message: 'User audit trail retrieved successfully',
-        data: {
-          entries: result.entries,
-          analytics: result.analytics,
-          userSummary: {
-            userId,
-            totalActions: result.entries.length,
-            lastActivity: result.entries[0]?.timestamp,
-            topActions: result.analytics.entriesByAction,
-            complianceScore: result.analytics.userActivitySummary.find(u => u.userId === userId)?.complianceScore || 0
-          }
+      const userData = {
+        entries: result.entries,
+        analytics: result.analytics,
+        userSummary: {
+          userId,
+          totalActions: result.entries.length,
+          lastActivity: result.entries[0]?.timestamp,
+          topActions: result.analytics.entriesByAction,
+          complianceScore: result.analytics.userActivitySummary.find(u => u.userId === userId)?.complianceScore || 0
         }
-      });
+      };
+
+      res.json(createSuccessResponse(userData, 'User audit trail retrieved successfully'));
 
     } catch (error) {
       logger.error('❌ Error fetching user audit trail:', error);

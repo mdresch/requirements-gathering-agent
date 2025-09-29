@@ -15,6 +15,7 @@ export interface IProjectDocument extends Document {
   framework: 'babok' | 'pmbok' | 'multi';
   qualityScore: number;
   wordCount: number;
+  timeSaved: number; // Time saved in hours from template
   tags: string[];
   generatedAt: Date;
   generatedBy: string;
@@ -106,6 +107,12 @@ const ProjectDocumentSchema: Schema = new Schema({
     type: Number,
     min: 0,
     default: 0
+  },
+  timeSaved: {
+    type: Number,
+    min: 0,
+    default: 0,
+    comment: 'Time saved in hours from template'
   },
   tags: [{
     type: String,

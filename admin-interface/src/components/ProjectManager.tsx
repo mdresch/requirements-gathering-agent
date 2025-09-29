@@ -73,6 +73,7 @@ export default function ProjectManager() {
       const response = await apiClient.getProjects(params);
       
       console.log('📊 API Response:', response);
+      console.log('📊 Pagination data:', response.data);
       
       if (response.success && response.data) {
         // Handle both array response and paginated response structures
@@ -84,18 +85,40 @@ export default function ProjectManager() {
           setProjects(projectsData);
           
           // Update pagination info if available
-          if (response.pagination) {
+          if (response.data && typeof response.data === 'object' && response.data.pagination) {
+            // Pagination data is in response.data.pagination
+            console.log('📊 Setting pagination from response.data.pagination:', {
+              totalPages: response.data.pagination.totalPages,
+              total: response.data.pagination.total,
+              page: response.data.pagination.page
+            });
+            setTotalPages(response.data.pagination.totalPages || 1);
+            setTotalItems(response.data.pagination.total || projectsData.length);
+            setCurrentPage(response.data.pagination.page || page);
+          } else if (response.data && typeof response.data === 'object' && response.data.totalPages) {
+            // Fallback to response.data (direct pagination properties)
+            console.log('📊 Setting pagination from response.data:', {
+              totalPages: response.data.totalPages,
+              total: response.data.total,
+              page: response.data.page
+            });
+            setTotalPages(response.data.totalPages || 1);
+            setTotalItems(response.data.total || projectsData.length);
+            setCurrentPage(response.data.page || page);
+          } else if (response.pagination && typeof response.pagination === 'object') {
+            // Fallback to response.pagination
+            console.log('📊 Setting pagination from response.pagination:', response.pagination);
             setTotalPages(response.pagination.totalPages || 1);
             setTotalItems(response.pagination.totalItems || projectsData.length);
             setCurrentPage(response.pagination.currentPage || page);
           } else {
             // Fallback pagination calculation
+            console.log('📊 Using fallback pagination calculation');
             setTotalPages(1);
             setTotalItems(projectsData.length);
             setCurrentPage(page);
           }
           
-          console.log('✅ Projects loaded successfully:', projectsData.length);
           toast.success(`Loaded ${projectsData.length} projects`);
         } else {
           console.error('❌ Projects data is not an array:', projectsData);
@@ -138,6 +161,11 @@ export default function ProjectManager() {
       loadProjects(currentPage);
     }
   }, [currentPage]);
+
+  // Debug pagination state
+  useEffect(() => {
+    console.log('📊 Pagination state updated:', { totalPages, currentPage, totalItems, loading });
+  }, [totalPages, currentPage, totalItems, loading]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -187,12 +215,10 @@ export default function ProjectManager() {
 
   const handleProjectCreate = async (data: { name: string; description: string; framework: 'babok' | 'pmbok' | 'multi' }) => {
     try {
-      console.log('🔍 Creating project with data:', data);
       
       const response = await apiClient.createProject(data);
       
       if (response.success) {
-        console.log('✅ Project created successfully:', response.data);
         
         // Add the new project to the local state
         setProjects([response.data, ...(projects || [])]);
@@ -210,6 +236,10 @@ export default function ProjectManager() {
 
   const router = useRouter();
   const handleViewProject = (project: Project) => {
+    if (!project.id) {
+      toast.error('Project ID not found');
+      return;
+    }
     router.push(`/projects/${project.id}`);
   };
 
@@ -220,12 +250,10 @@ export default function ProjectManager() {
 
   const handleUpdateProject = async (projectData: any) => {
     try {
-      console.log('🔍 Updating project with data:', projectData);
       
       const response = await apiClient.updateProject(projectData.id, projectData);
       
       if (response.success) {
-        console.log('✅ Project updated successfully:', response.data);
         
         // Update the project in the local state
         setProjects((projects || []).map(p => 
@@ -249,12 +277,10 @@ export default function ProjectManager() {
   const handleDeleteProject = async (project: Project) => {
     if (confirm(`Are you sure you want to delete "${project.name || 'this project'}"?`)) {
       try {
-        console.log('🔍 Deleting project:', project.id);
         
         const response = await apiClient.deleteProject(project.id);
         
         if (response.success) {
-          console.log('✅ Project deleted successfully');
           setProjects((projects || []).filter(p => p.id !== project.id));
           toast.success('Project deleted successfully');
         } else {
@@ -269,7 +295,6 @@ export default function ProjectManager() {
   };
 
   const handleGenerateReport = (project: Project) => {
-    console.log('🔍 Opening report modal for project:', project.id);
     setSelectedProject(project);
     setShowReportModal(true);
   };
@@ -389,8 +414,8 @@ export default function ProjectManager() {
       {/* Projects Grid */}
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {projects.map((project) => (
-          <div key={project.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+          {projects.map((project, index) => (
+          <div key={project.id || `project-${index}`} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
             <div className="p-6">
               {/* Project Header */}
               <div className="flex justify-between items-start mb-4">

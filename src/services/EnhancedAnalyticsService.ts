@@ -38,22 +38,22 @@ export class EnhancedAnalyticsService {
       // Check database health first
       const dbHealth = await dbConnection.healthCheck();
       
-      if (dbHealth.status === 'unhealthy') {
+      if (!dbHealth) {
         logger.error('Database is unhealthy, cannot provide analytics');
         return this.getDegradedAnalytics('Database unhealthy', 'unhealthy');
       }
       
       // Attempt to get real data with connection resilience
-      const analyticsData = await this.fetchAnalyticsData(projectId, dbHealth.status === 'degraded');
+      const analyticsData = await this.fetchAnalyticsData(projectId, !dbHealth);
       
       const processingTime = Date.now() - startTime;
       logger.info(`Analytics processing completed in ${processingTime}ms`);
       
       return {
         ...analyticsData,
-        connectionStatus: dbHealth.status,
+        connectionStatus: dbHealth ? 'healthy' : 'unhealthy',
         lastUpdated: new Date().toISOString(),
-        dataQuality: this.assessDataQuality(analyticsData, dbHealth.status)
+        dataQuality: this.assessDataQuality(analyticsData, dbHealth ? 'healthy' : 'unhealthy')
       };
       
     } catch (error: any) {
@@ -236,7 +236,7 @@ export class EnhancedAnalyticsService {
     try {
       const dbHealth = await dbConnection.healthCheck();
       
-      if (dbHealth.status === 'unhealthy') {
+      if (!dbHealth) {
         return {
           status: 'unhealthy',
           message: 'Database unavailable',
@@ -250,14 +250,14 @@ export class EnhancedAnalyticsService {
       const totalContextRecords = await AIContextTracking.countDocuments({ status: 'completed' });
       
       return {
-        status: dbHealth.status,
+        status: dbHealth ? 'healthy' : 'unhealthy',
         analytics: {
           totalProjects,
           totalDocuments,
           totalContextRecords,
-          connectionStatus: dbHealth.status,
+          connectionStatus: dbHealth ? 'healthy' : 'unhealthy',
           lastUpdated: new Date().toISOString(),
-          dataQuality: dbHealth.status === 'healthy' ? 'good' : 'degraded'
+          dataQuality: dbHealth ? 'good' : 'degraded'
         }
       };
       

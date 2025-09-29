@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { DocumentConverter, DocumentContent } from '@/lib/documentConverter';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { 
   FileText, 
   MessageSquare, 
@@ -18,7 +25,11 @@ import {
   Trash2,
   Award,
   Users,
-  Cpu
+  Cpu,
+  ChevronDown,
+  File,
+  FileImage,
+  FileCode
 } from 'lucide-react';
 import type { Project } from '../types/project';
 import FeedbackModal from './FeedbackModal';
@@ -30,6 +41,7 @@ import QualityReportModal from './QualityReportModal';
 import StakeholderManagement from './StakeholderManagement';
 import ContextUtilizationModal from './ContextUtilizationModal';
 import { apiClient } from '../lib/api';
+import { useAuditTrail } from '../hooks/useAuditTrail';
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -107,28 +119,22 @@ const getTimeAgo = (date: Date): string => {
 
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject }) => {
   const [project, setProject] = useState<Project | null>(initialProject || null);
+  const auditTrail = useAuditTrail();
   
-  // Debug logging
-  console.log('ProjectDetails: Initial project received:', initialProject);
-  console.log('ProjectDetails: Current project state:', project);
   
   // Ensure project state is updated when initialProject changes
   useEffect(() => {
     if (initialProject) {
-      console.log('ProjectDetails: Updating project state with initialProject:', initialProject);
       setProject(initialProject);
     } else {
-      console.log('ProjectDetails: No initialProject provided, attempting to fetch project data');
       // Fallback: if no initial project data, try to fetch it
       const fetchProject = async () => {
         try {
           // Get project ID from URL or props
           const projectId = (initialProject as Project | undefined)?.id || window.location.pathname.split('/').pop();
           if (projectId) {
-            console.log('ProjectDetails: Fetching project data for ID:', projectId);
             const projectData = await apiClient.getProjectById(projectId);
             if (projectData) {
-              console.log('ProjectDetails: Fetched project data:', projectData);
               setProject(projectData);
             }
           }
@@ -139,6 +145,23 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       fetchProject();
     }
   }, [initialProject]);
+
+  // Log project view to audit trail
+  useEffect(() => {
+    if (project?.id && project?.name) {
+      const logProjectView = async () => {
+        try {
+          await auditTrail.logProjectViewed({
+            projectId: project.id,
+            projectName: project.name
+          });
+        } catch (error) {
+          console.error('Failed to log project view:', error);
+        }
+      };
+      logProjectView();
+    }
+  }, [project?.id, project?.name, auditTrail]);
   
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'stakeholders' | 'feedback'>('overview');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -166,18 +189,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
     if (!project?.id) return;
     
     try {
-      console.log('Loading feedback data for project:', project.id);
       const response = await apiClient.getProjectFeedback(project.id);
-      
-      console.log('Raw feedback response in loadFeedbackData:', response);
       
       if (response.success && response.data) {
         // The API returns feedback in response.data.feedback
         const feedbackArray = response.data.feedback || response.data;
         setFeedbackData(feedbackArray);
-        console.log('Loaded feedback data:', feedbackArray);
       } else {
-        console.warn('No feedback data found for project, response:', response);
         setFeedbackData([]);
       }
     } catch (error) {
@@ -188,9 +206,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
 
   // Calculate document ratings from feedback
   const calculateDocumentRatings = useCallback((documents: DocumentItem[], feedback: any[]) => {
-    console.log('Calculating document ratings:', { documents, feedback });
-    console.log('Documents count:', documents.length);
-    console.log('Feedback count:', feedback.length);
     
     const result = documents.map(doc => {
       // More flexible matching logic
@@ -210,8 +225,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         return false;
       });
       
-      console.log(`Document "${doc.name}" matched ${docFeedback.length} feedback items:`, docFeedback);
-      
       const feedbackCount = docFeedback.length;
       const averageRating = feedbackCount > 0 
         ? docFeedback.reduce((sum, f) => sum + f.rating, 0) / feedbackCount
@@ -228,7 +241,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       };
     });
     
-    console.log('Calculated document ratings result:', result);
     return result;
   }, []);
 
@@ -238,11 +250,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       try {
         if (!project?.id) return;
         
-        console.log('Loading documents and calculating ratings for project:', project.id);
-        console.log('Feedback data available:', feedbackData.length, 'items');
-        
         const projectDocuments = await apiClient.getProjectDocuments(project.id);
-        console.log('Loaded project documents:', projectDocuments);
         
         // Convert ProjectDocument format to DocumentItem format
         const documentItems: DocumentItem[] = projectDocuments.map((doc: any) => ({
@@ -260,11 +268,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         }));
         
         // Calculate ratings from feedback data
-        console.log('About to calculate ratings with', documentItems.length, 'documents and', feedbackData.length, 'feedback items');
         const documentsWithRatings = calculateDocumentRatings(documentItems, feedbackData);
-        console.log('Calculated ratings result:', documentsWithRatings);
         setDocuments(documentsWithRatings);
-        console.log('✅ Documents loaded and ratings calculated successfully');
       } catch (error) {
         console.error('Failed to load project documents:', error);
         setDocuments([]);
@@ -284,7 +289,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
   // Listen for document deletion/restoration events from DocumentViewer
   useEffect(() => {
     const handleDocumentDeleted = () => {
-      console.log('Document deleted event received, refreshing documents...');
       // Reload documents from database
       const loadDocuments = async () => {
         try {
@@ -311,7 +315,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
     };
 
     const handleDocumentRestored = () => {
-      console.log('Document restored event received, refreshing documents...');
       // Reload documents from database
       const loadDocuments = async () => {
         try {
@@ -344,30 +347,21 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       window.removeEventListener('documentDeleted', handleDocumentDeleted);
       window.removeEventListener('documentRestored', handleDocumentRestored);
     };
-  }, [project?.id]);
+  }, [project]);
 
   const handleSubmitFeedback = async (feedbackData: any) => {
     try {
-      console.log('Submitting feedback:', feedbackData);
-      
       const response = await apiClient.submitFeedback(feedbackData);
       
       if (response.success) {
-        console.log('Feedback submitted successfully:', response.data);
         
         // Refresh feedback data first
         await loadFeedbackData();
         
         // Get updated feedback data for recalculation
         if (project?.id) {
-          console.log('Refreshing documents and ratings after feedback submission...');
-          
           const updatedFeedbackResponse = await apiClient.getProjectFeedback(project.id);
-          console.log('Raw feedback response:', updatedFeedbackResponse);
-          
           const updatedFeedback = updatedFeedbackResponse.success ? updatedFeedbackResponse.data : [];
-          
-          console.log('Updated feedback data:', updatedFeedback);
           
           // Refresh documents to show updated ratings
           const projectDocuments = await apiClient.getProjectDocuments(project.id);
@@ -384,12 +378,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
             content: doc.content || ''
           }));
           
-          console.log('Document items before rating calculation:', documentItems);
-          
           // Recalculate ratings with updated feedback data
           const documentsWithRatings = calculateDocumentRatings(documentItems, updatedFeedback);
-          console.log('Documents with updated ratings:', documentsWithRatings);
-          
           setDocuments(documentsWithRatings);
         }
         
@@ -487,17 +477,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
     }
   };
 
-  const handleDownloadDocument = async (doc: DocumentItem) => {
+  const handleDownloadDocument = async (doc: DocumentItem, format: 'md' | 'pdf' | 'docx' = 'md') => {
     try {
       // Show loading state
-      const loadingToast = toast.loading('Preparing download...');
+      const loadingToast = toast.loading(`Preparing ${format.toUpperCase()} download...`);
       
       // Fetch actual document content from database
       const response = await apiClient.getDocumentById(doc.id);
       
       toast.dismiss(loadingToast);
       
-      let documentContent = doc.content;
+      let documentContent = doc.content || '';
       
       if (response.success && response.data && response.data.content) {
         documentContent = response.data.content;
@@ -505,20 +495,51 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         documentContent = `# ${doc.name}\n\nThis document was generated as part of the ${project?.name || 'Unknown'} project.\n\n## Details\n- Category: ${doc.category}\n- Quality Score: ${doc.qualityScore}%\n- Last Generated: ${doc.lastGenerated}\n\n---\n*Document content not available.*`;
       }
       
+      const documentData: DocumentContent = {
+        title: doc.name,
+        content: documentContent || '',
+        metadata: {
+          author: 'Requirements Gathering Agent',
+          date: doc.lastGenerated || new Date().toLocaleDateString(),
+          version: '1.0'
+        }
+      };
+
+      let blob: Blob;
+      let filename: string;
+
+      switch (format) {
+        case 'md':
+          blob = new Blob([documentContent || ''], { 
+            type: DocumentConverter.getMimeType('md') 
+          });
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('md')}`;
+          break;
+        case 'pdf':
+          blob = await DocumentConverter.convertToPDF(documentData);
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('pdf')}`;
+          break;
+        case 'docx':
+          blob = await DocumentConverter.convertToDOCX(documentData);
+          filename = `${doc.name}.${DocumentConverter.getFileExtension('docx')}`;
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
+      
       // Create and trigger download
       const element = document.createElement('a');
-      const file = new Blob([documentContent || ''], { type: 'text/markdown' });
-      element.href = URL.createObjectURL(file);
-      element.download = `${doc.name}.md`;
+      element.href = URL.createObjectURL(blob);
+      element.download = filename;
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
       
       // Show success toast
-      toast.success(`Downloaded ${doc.name}`);
+      toast.success(`Downloaded ${doc.name} as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast.error('Failed to download document');
+      toast.error(`Failed to download document as ${format.toUpperCase()}`);
     }
   };
 
@@ -632,7 +653,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
 
   const handleGenerateDocuments = async (selectedTemplates: string[], newGeneratedDocuments?: GeneratedDocument[]) => {
     try {
-      console.log('Generating documents for templates:', selectedTemplates);
       
       if (newGeneratedDocuments && newGeneratedDocuments.length > 0) {
         // Add new generated documents to the list
@@ -676,7 +696,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
 
   const handleSingleDocumentGenerated = async (generatedDocument: GeneratedDocument) => {
     try {
-      console.log('Single document generated:', generatedDocument);
       
       // Add the generated document to the list
       setGeneratedDocuments(prev => [...prev, generatedDocument]);
@@ -684,7 +703,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
       // Reload documents from database to get the latest state
       try {
         if (!project) return;
-        console.log('🔄 Reloading documents for project:', project.id);
         const projectDocuments = await apiClient.getProjectDocuments(project.id);
         const documentItems: DocumentItem[] = projectDocuments.map((doc: any) => ({
           id: doc.id || doc._id || 'unknown-id',
@@ -700,7 +718,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
         }));
         
         setDocuments(documentItems);
-        console.log('✅ Documents reloaded successfully after generation');
         toast.success('Document added to project successfully!');
       } catch (error: any) {
         console.error('❌ Error reloading documents from database:', error);
@@ -737,12 +754,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
 
   if (!project) return <div>No project data available.</div>;
 
-  // Debug logging
-  console.log('Documents state:', documents);
-  console.log('Generated documents state:', generatedDocuments);
-  console.log('Should show View Documents button:', (documents.length > 0 || generatedDocuments.length > 0));
-  console.log('Documents length:', documents.length);
-  console.log('Generated documents length:', generatedDocuments.length);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1041,20 +1052,23 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                                         <Star
                                           key={star}
                                           className={`w-3 h-3 ${
-                                            star <= feedback.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                            star <= (feedback.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                                           }`}
                                         />
                                       ))}
                                     </div>
-                                    <span className="text-xs text-gray-600">{feedback.rating}/5</span>
+                                    <span className="text-xs text-gray-600">{feedback.rating || 0}/5</span>
                                   </div>
                                   <span className="text-xs text-gray-500">
-                                    {new Date(feedback.submittedAt).toLocaleDateString()}
+                                    {feedback.submittedAt ? new Date(feedback.submittedAt).toLocaleDateString() : 'Unknown Date'}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-900 font-medium truncate">{feedback.title}</p>
+                                <p className="text-sm text-gray-900 font-medium truncate">{feedback.title || 'Untitled Feedback'}</p>
                                 <p className="text-xs text-gray-600 mt-1">
-                                  {feedback.documentType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                  {feedback.documentType ? 
+                                    feedback.documentType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) :
+                                    'General Feedback'
+                                  }
                                 </p>
                               </div>
                             ))}
@@ -1128,7 +1142,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                       id: `feedback-${feedback._id}`,
                       type: 'feedback',
                       title: `New feedback received`,
-                      subtitle: `${feedback.title} on ${feedback.documentType.replace('-', ' ')}`,
+                      subtitle: `${feedback.title} on ${feedback.documentType ? feedback.documentType.replace('-', ' ') : 'General Document'}`,
                       time: timeAgo,
                       rating: feedback.rating,
                       icon: MessageSquare,
@@ -1273,13 +1287,39 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <button
-                        onClick={() => handleDownloadDocument(document)}
-                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Download Document"
-                      >
-                        <Download className="w-5 h-5" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Download Document"
+                          >
+                            <Download className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'md')}
+                            className="flex items-center space-x-2"
+                          >
+                            <FileCode className="w-4 h-4" />
+                            <span>Markdown (.md)</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'pdf')}
+                            className="flex items-center space-x-2"
+                          >
+                            <FileImage className="w-4 h-4" />
+                            <span>PDF (.pdf)</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDownloadDocument(document, 'docx')}
+                            className="flex items-center space-x-2"
+                          >
+                            <File className="w-4 h-4" />
+                            <span>Word (.docx)</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <button
                         onClick={() => handleShowQualityScore(document)}
                         className="p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
@@ -1446,18 +1486,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project: initialProject
 
       {/* Edit Project Modal */}
       {showEditProjectModal && (
-        <>
-          {console.log('ProjectDetails: Modal is open, passing project to EditProjectModal:', project)}
-          {console.log('ProjectDetails: Project has name?', !!project?.name)}
-          {console.log('ProjectDetails: Project has description?', !!project?.description)}
-          {console.log('ProjectDetails: Project has owner?', !!project?.owner)}
-          <EditProjectModal
-            isOpen={showEditProjectModal}
-            onClose={() => setShowEditProjectModal(false)}
-            project={project}
-            onUpdate={handleUpdateProject}
-          />
-        </>
+        <EditProjectModal
+          isOpen={showEditProjectModal}
+          onClose={() => setShowEditProjectModal(false)}
+          project={project}
+          onUpdate={handleUpdateProject}
+        />
       )}
 
       {/* Quality Score Modal */}

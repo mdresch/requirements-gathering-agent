@@ -2,7 +2,7 @@
 
 **Document:** business-analysis-planning-and-monitoring  
 **Document Type:** babok  
-**Validation Date:** 2025-09-24T15:53:39.962Z  
+**Validation Date:** 2025-09-28T14:01:04.118Z  
 **Compliance Score:** 94%  
 **Compliance Status:** MOSTLY_COMPLIANT  
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PerformanceGauge from './PerformanceGauge';
 import { apiClient } from '../lib/api';
 
@@ -46,11 +46,7 @@ export default function PerformanceDashboard({ projectId }: PerformanceDashboard
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadPerformanceMetrics();
-  }, [projectId]);
-
-  const loadPerformanceMetrics = async () => {
+  const loadPerformanceMetrics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -139,7 +135,11 @@ export default function PerformanceDashboard({ projectId }: PerformanceDashboard
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPerformanceMetrics();
+  }, [loadPerformanceMetrics]);
 
   const calculateDocumentQuality = (projectsResponse: any): number => {
     if (!projectsResponse.success || !projectsResponse.data) {
