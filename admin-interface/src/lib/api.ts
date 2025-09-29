@@ -1,6 +1,7 @@
 // api.ts
 // filepath: c:\Users\menno\Source\Repos\requirements-gathering-agent\admin-interface\src\lib\api.ts
 // Updated: 2025-09-18 - Connected to MongoDB database via backend API server
+// Deployment trigger: 2025-01-27
 
 // Use local API during development, Vercel API in production
 const API_BASE_URL = typeof window !== 'undefined' 
@@ -814,9 +815,25 @@ export async function generateComplianceReport(projectId: string, standards?: st
 
 // Feedback API endpoints
 export async function submitFeedback(feedbackData: any): Promise<any> {
+  // Map frontend fields to API expected fields
+  const apiData = {
+    ...feedbackData,
+    content: feedbackData.description || feedbackData.content, // Map description to content
+    documentId: feedbackData.documentPath || feedbackData.documentId, // Map documentPath to documentId
+    userId: feedbackData.submittedBy || feedbackData.userId,
+    userName: feedbackData.submittedByName || feedbackData.userName,
+    title: feedbackData.title || `Feedback for ${feedbackData.documentType || 'Document'}`,
+    feedbackType: feedbackData.feedbackType || 'general',
+    category: feedbackData.category || 'suggestion',
+    priority: feedbackData.priority || 'medium',
+    severity: feedbackData.severity || 'minor',
+    tags: feedbackData.tags || [],
+    metadata: feedbackData.metadata || {}
+  };
+
   return request('/feedback', {
     method: 'POST',
-    body: JSON.stringify(feedbackData),
+    body: JSON.stringify(apiData),
   });
 }
 
