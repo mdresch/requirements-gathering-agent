@@ -377,6 +377,286 @@ app.post('/api/v1/templates', async (req: Request, res: Response) => {
     }
 });
 
+// Update template endpoint
+app.put('/api/v1/templates/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const templateData = req.body;
+        
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'MISSING_TEMPLATE_ID',
+                    message: 'Template ID is required'
+                }
+            });
+        }
+        
+        // Validate template ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_TEMPLATE_ID',
+                    message: 'Invalid template ID format'
+                }
+            });
+        }
+        
+        // Check if template exists
+        const existingTemplate = await mongoose.connection.db?.collection('templates')
+            .findOne({ 
+                _id: new mongoose.Types.ObjectId(id),
+                $or: [
+                    { deletedAt: null },
+                    { deletedAt: { $exists: false } }
+                ]
+            });
+        
+        if (!existingTemplate) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'TEMPLATE_NOT_FOUND',
+                    message: 'Template not found'
+                }
+            });
+        }
+        
+        // Prepare update data
+        const updateData = {
+            ...templateData,
+            updatedAt: new Date(),
+            version: (existingTemplate.version || 1) + 1
+        };
+        
+        // Remove fields that shouldn't be updated
+        delete updateData._id;
+        delete updateData.createdAt;
+        delete updateData.deletedAt;
+        delete updateData.deletedBy;
+        
+        // Update the template
+        const result = await mongoose.connection.db?.collection('templates')
+            .updateOne(
+                { _id: new mongoose.Types.ObjectId(id) },
+                { $set: updateData }
+            );
+        
+        if (result?.modifiedCount === 0) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'UPDATE_FAILED',
+                    message: 'Failed to update template'
+                }
+            });
+        }
+        
+        // Get the updated template
+        const updatedTemplate = await mongoose.connection.db?.collection('templates')
+            .findOne({ _id: new mongoose.Types.ObjectId(id) });
+        
+        console.log(`📝 Template updated: ${updatedTemplate?.name} (${id})`);
+        
+        res.json({
+            success: true,
+            message: 'Template updated successfully',
+            data: updatedTemplate
+        });
+        
+    } catch (error) {
+        console.error('❌ Update template error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'UPDATE_TEMPLATE_ERROR',
+                message: 'Failed to update template'
+            }
+        });
+    }
+});
+
+// Template statistics endpoint
+app.get('/api/v1/templates/stats', async (req: Request, res: Response) => {
+    try {
+        const templatesCollection = mongoose.connection.db?.collection('templates');
+        
+        if (!templatesCollection) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'DATABASE_ERROR',
+                    message: 'Database not connected'
+                }
+            });
+        }
+        
+        // Get template statistics
+        const totalTemplates = await templatesCollection.countDocuments({
+            $or: [
+                { deletedAt: null },
+                { deletedAt: { $exists: false } }
+            ]
+        });
+        
+        const deletedTemplates = await templatesCollection.countDocuments({
+            $or: [
+                { deletedAt: { $exists: true, $ne: null } },
+                { is_deleted: true }
+            ]
+        });
+        
+        // Get category counts
+        const categoryStats = await templatesCollection.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { deletedAt: null },
+                        { deletedAt: { $exists: false } }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]).toArray();
+        
+        // Get framework counts
+        const frameworkStats = await templatesCollection.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { deletedAt: null },
+                        { deletedAt: { $exists: false } }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: '$metadata.framework',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]).toArray();
+        
+        res.json({
+            success: true,
+            data: {
+                totalTemplates,
+                deletedTemplates,
+                activeTemplates: totalTemplates,
+                categoryStats: categoryStats.map(stat => ({
+                    category: stat._id || 'Uncategorized',
+                    count: stat.count
+                })),
+                frameworkStats: frameworkStats.map(stat => ({
+                    framework: stat._id || 'general',
+                    count: stat.count
+                }))
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Template stats error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'TEMPLATE_STATS_ERROR',
+                message: 'Failed to retrieve template statistics'
+            }
+        });
+    }
+});
+
+// Template categories endpoint
+app.get('/api/v1/templates/categories', async (req: Request, res: Response) => {
+    try {
+        const templatesCollection = mongoose.connection.db?.collection('templates');
+        
+        if (!templatesCollection) {
+            return res.status(500).json({
+                success: false,
+                error: {
+                    code: 'DATABASE_ERROR',
+                    message: 'Database not connected'
+                }
+            });
+        }
+        
+        // Get unique categories
+        const categories = await templatesCollection.distinct('category', {
+            $or: [
+                { deletedAt: null },
+                { deletedAt: { $exists: false } }
+            ]
+        });
+        
+        // Get category with template counts
+        const categoryStats = await templatesCollection.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { deletedAt: null },
+                        { deletedAt: { $exists: false } }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 },
+                    templates: {
+                        $push: {
+                            id: '$_id',
+                            name: '$name',
+                            description: '$description'
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]).toArray();
+        
+        res.json({
+            success: true,
+            data: {
+                categories: categories.filter(cat => cat).map(cat => ({
+                    name: cat,
+                    slug: cat.toLowerCase().replace(/\s+/g, '-')
+                })),
+                categoryStats: categoryStats.map(stat => ({
+                    category: stat._id || 'Uncategorized',
+                    count: stat.count,
+                    templates: stat.templates.slice(0, 5) // Limit to 5 templates per category
+                }))
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Template categories error:', error);
+        res.status(500).json({
+            success: false,
+            error: {
+                code: 'TEMPLATE_CATEGORIES_ERROR',
+                message: 'Failed to retrieve template categories'
+            }
+        });
+    }
+});
+
 // Deleted templates endpoint for soft delete recovery
 app.get('/api/v1/templates/deleted', async (req: Request, res: Response) => {
     try {
