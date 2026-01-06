@@ -1,4 +1,4 @@
-import type { ProjectContext } from '../../ai/types';
+import type { ProjectContext } from '../../ai/types.ts';
 
 /**
  * Company Values Template - A structured format for generating formal Company Values documents.

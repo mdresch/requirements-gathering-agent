@@ -1,4 +1,4 @@
-import type { ProjectContext } from '../../ai/types.js';
+import type { ProjectContext } from '../../ai/types.ts';
 
 /**
  * Template for the Code Review document.

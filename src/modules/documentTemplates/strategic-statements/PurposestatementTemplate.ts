@@ -1,4 +1,4 @@
-import type { ProjectContext } from '../../ai/types';
+import type { ProjectContext } from '../../ai/types.ts';
 
 /**
  * Purpose Statement Template generates the content for the Purpose Statement document.

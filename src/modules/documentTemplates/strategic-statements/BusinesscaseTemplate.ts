@@ -1,4 +1,4 @@
-import type { ProjectContext } from '../../ai/types';
+import type { ProjectContext } from '../../ai/types.ts';
 
 /**
  * @description A template for generating a formal Business Case document.

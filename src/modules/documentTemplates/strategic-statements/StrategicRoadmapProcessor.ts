@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 import { AIProcessor } from '../../ai/AIProcessor.js';
 import type { ProjectContext } from '../../ai/types.js';
+=======
+import { AIProcessor } from '../../ai/AIProcessor.ts';
+import type { ProjectContext } from '../../ai/types.ts';
+>>>>>>> Stashed changes
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
 import { StrategicRoadmapTemplate } from '../strategic-statements/StrategicRoadmapTemplate.js';
 

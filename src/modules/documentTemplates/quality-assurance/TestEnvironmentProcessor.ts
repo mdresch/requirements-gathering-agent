@@ -1,4 +1,4 @@
-import type { ProjectContext } from '../../ai/types.js';
+import type { ProjectContext } from '../../ai/types.ts';
 import type { DocumentProcessor, DocumentOutput } from '../../documentGenerator/types.js';
 
 /**
