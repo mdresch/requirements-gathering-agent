@@ -35,7 +35,7 @@
     "fs-extra": "^11.3.0",
     "react": "^16",
     "react-dom": "^16",
-    "simple-git": "^3.28.0"
+    "simple-git": "^3.32.3"
   },
   "devDependencies": {
     "@forge/cli": "^12.2.0",
